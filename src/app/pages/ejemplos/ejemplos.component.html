@@ -1,0 +1,796 @@
+<p-toast />
+
+<!-- Breadcrumb -->
+<section class="ej-section">
+  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+</section>
+
+<main class="ej-main">
+
+  <!-- ============================================================
+       1. CARDS DE MÓDULOS
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Módulos del Sistema</h2>
+    <p class="ej-section__desc">
+      Tarjetas de navegación principal. Cada módulo agrupa funcionalidades relacionadas del sistema CHIP.
+    </p>
+
+    <div class="module-grid">
+      @for (mod of modules; track mod.title) {
+        <div class="module-card" [style.background-color]="mod.bg">
+          <i [class]="mod.icon" class="module-card__icon"></i>
+          <h3 class="module-card__title">{{ mod.title }}</h3>
+          <p class="module-card__desc">{{ mod.desc }}</p>
+        </div>
+      }
+    </div>
+
+    <app-code-block [code]="codeModuleCards" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       2. TABLA CON ACCIONES
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Listado de Entidades</h2>
+    <p class="ej-section__desc">
+      Ejemplo de tabla de datos con acciones, badges de estado y paginación.
+    </p>
+
+    <div class="ej-table-toolbar">
+      <div class="ej-table-toolbar__search">
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input pInputText placeholder="Buscar entidad..." class="w-full" />
+        </span>
+      </div>
+      <p-button label="Nueva entidad" icon="pi pi-plus" />
+    </div>
+
+    <p-table [value]="entidades" [stripedRows]="true" [tableStyle]="{ 'min-width': '60rem' }">
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="id">Código <p-sortIcon field="id" /></th>
+          <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+          <th pSortableColumn="tipo">Tipo</th>
+          <th>Estado</th>
+          <th pSortableColumn="reportes">Reportes</th>
+          <th>Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-row>
+        <tr>
+          <td><strong>{{ row.id }}</strong></td>
+          <td>{{ row.nombre }}</td>
+          <td>{{ row.tipo }}</td>
+          <td>
+            <p-tag [value]="row.estado" [severity]="getStateSeverity(row.estado)" />
+          </td>
+          <td>{{ row.reportes }}</td>
+          <td>
+            <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" (onClick)="viewEntity(row)" />
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="success" pTooltip="Editar" />
+            <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" (onClick)="confirmDelete(row)" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div style="margin-top: 16px;">
+      <p-paginator [rows]="rows" [totalRecords]="totalRecords" [rowsPerPageOptions]="[5, 10, 25]" />
+    </div>
+
+    <app-code-block [code]="codeTableActions" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       3. GESTIÓN DE ENTIDADES (Formulario de búsqueda)
+       ============================================================ -->
+  <section class="ej-section">
+    <div class="page-header">
+      <div class="page-header__left">
+        <p-button icon="pi pi-chevron-left" [rounded]="true" [text]="true" severity="secondary" />
+        <div>
+          <h3 class="page-header__title"><i class="pi pi-building"></i> Gestión de Entidades</h3>
+          <p class="page-header__subtitle">Administra todas las entidades del sistema</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-card__header">
+        <h4 class="search-card__title">Búsqueda de Entidades</h4>
+        <p-button label="Nueva Entidad" icon="pi pi-plus" [outlined]="true" />
+      </div>
+
+      <div class="search-card__grid">
+        <div class="search-card__field">
+          <label for="ej-razon">Razón Social</label>
+          <input pInputText id="ej-razon" [(ngModel)]="formData.nombre" placeholder="Buscar por razón social..." class="w-full" />
+        </div>
+        <div class="search-card__field">
+          <label for="ej-nit">NIT</label>
+          <input pInputText id="ej-nit" [(ngModel)]="formData.nit" placeholder="Buscar por NIT..." class="w-full" />
+        </div>
+        <div class="search-card__field">
+          <label for="ej-sigla">SIGLA</label>
+          <input pInputText id="ej-sigla" placeholder="Buscar por SIGLA..." class="w-full" />
+        </div>
+        <div class="search-card__field">
+          <label for="ej-codigo">Código Entidad</label>
+          <input pInputText id="ej-codigo" placeholder="Buscar por código..." class="w-full" />
+        </div>
+        <div class="search-card__field">
+          <label for="ej-depto">Departamento</label>
+          <p-select
+            id="ej-depto"
+            [options]="tipoOptions"
+            [(ngModel)]="formData.tipo"
+            placeholder="Todos"
+            class="w-full"
+          />
+        </div>
+        <div class="search-card__field">
+          <label for="ej-muni">Municipio</label>
+          <p-select
+            id="ej-muni"
+            [options]="[]"
+            placeholder="Seleccione departamento"
+            class="w-full"
+            [disabled]="true"
+          />
+        </div>
+      </div>
+
+      <div class="search-card__actions">
+        <p-button label="Limpiar Filtros" icon="pi pi-times" severity="secondary" [outlined]="true" />
+        <p-button label="Buscar" icon="pi pi-search" />
+      </div>
+    </div>
+
+    <app-code-block [code]="codeSearchForm" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       4. PESTAÑAS CON CONTENIDO
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Detalle de Entidad</h2>
+    <p class="ej-section__desc">
+      Ejemplo de vista con pestañas para organizar información detallada.
+    </p>
+
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Información General</p-tab>
+        <p-tab value="1">Reportes Enviados</p-tab>
+        <p-tab value="2">Historial</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="ej-detail-grid">
+            <div class="ej-detail-item">
+              <span class="ej-detail-item__label">Código</span>
+              <span class="ej-detail-item__value">110101</span>
+            </div>
+            <div class="ej-detail-item">
+              <span class="ej-detail-item__label">Nombre</span>
+              <span class="ej-detail-item__value">Ministerio de Hacienda y Crédito Público</span>
+            </div>
+            <div class="ej-detail-item">
+              <span class="ej-detail-item__label">NIT</span>
+              <span class="ej-detail-item__value">899999090-2</span>
+            </div>
+            <div class="ej-detail-item">
+              <span class="ej-detail-item__label">Tipo</span>
+              <span class="ej-detail-item__value">Nacional</span>
+            </div>
+            <div class="ej-detail-item">
+              <span class="ej-detail-item__label">Estado</span>
+              <span class="ej-detail-item__value"><p-tag value="Activo" severity="success" /></span>
+            </div>
+            <div class="ej-detail-item">
+              <span class="ej-detail-item__label">Dirección</span>
+              <span class="ej-detail-item__value">Carrera 8 # 6C - 38, Bogotá D.C.</span>
+            </div>
+          </div>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+          <p-table [value]="[
+            { periodo: '2026-I', nombre: 'CGN-001 Balance General', fecha: '2026-03-15', estado: 'Enviado' },
+            { periodo: '2026-I', nombre: 'CGN-002 Estado de Actividad', fecha: '2026-03-15', estado: 'Enviado' },
+            { periodo: '2025-II', nombre: 'CGN-001 Balance General', fecha: '2025-09-20', estado: 'Aprobado' }
+          ]" [stripedRows]="true">
+            <ng-template #header>
+              <tr>
+                <th>Periodo</th>
+                <th>Formulario</th>
+                <th>Fecha envío</th>
+                <th>Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.periodo }}</td>
+                <td>{{ row.nombre }}</td>
+                <td>{{ row.fecha }}</td>
+                <td><p-tag [value]="row.estado" [severity]="row.estado === 'Aprobado' ? 'success' : 'info'" /></td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+        <p-tabpanel value="2">
+          <div class="ej-timeline">
+            <div class="ej-timeline__item">
+              <i class="pi pi-send ej-timeline__icon"></i>
+              <div>
+                <strong>Reporte CGN-001 enviado</strong>
+                <p>15 de marzo de 2026 - Por: Juan Pérez</p>
+              </div>
+            </div>
+            <div class="ej-timeline__item">
+              <i class="pi pi-pencil ej-timeline__icon"></i>
+              <div>
+                <strong>Datos de contacto actualizados</strong>
+                <p>10 de marzo de 2026 - Por: María García</p>
+              </div>
+            </div>
+            <div class="ej-timeline__item">
+              <i class="pi pi-check-circle ej-timeline__icon"></i>
+              <div>
+                <strong>Entidad activada en el sistema</strong>
+                <p>01 de enero de 2026 - Por: Administrador</p>
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+
+    <app-code-block [code]="codeDetailTabs" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       5. ALERTAS EN CONTEXTO
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Notificaciones en Contexto</h2>
+    <p class="ej-section__desc">
+      Ejemplo de alertas y mensajes integrados en flujos del sistema.
+    </p>
+
+    <div class="ej-alerts">
+      <p-message severity="info">
+        <strong>Periodo actual:</strong> El periodo contable vigente es 2026-I. Fecha límite de envío: 15 de abril de 2026.
+      </p-message>
+      <p-message severity="warn">
+        <strong>Atención:</strong> Tiene 3 reportes pendientes por enviar antes del cierre del periodo.
+      </p-message>
+      <p-message severity="success">
+        <strong>Completado:</strong> El reporte CGN-001 fue recibido y validado exitosamente.
+      </p-message>
+      <p-message severity="error">
+        <strong>Error de validación:</strong> El reporte CGN-002 presenta inconsistencias en las cuentas 1105 y 2405.
+      </p-message>
+    </div>
+
+    <h3>Acciones con confirmación</h3>
+    <div class="component-row">
+      <p-button label="Enviar reporte" icon="pi pi-send" (onClick)="showConfirmDialog = true" />
+      <p-button label="Descargar PDF" icon="pi pi-file-pdf" severity="success" />
+      <p-button label="Exportar Excel" icon="pi pi-file-excel" severity="secondary" [outlined]="true" />
+    </div>
+
+    <app-code-block [code]="codeContextAlerts" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       6. STEPPER / WIZARD
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Flujo por Pasos (Stepper)</h2>
+    <p class="ej-section__desc">
+      Componente de pasos para flujos multi-etapa como envío de reportes, registro de entidades
+      o procesos de validación.
+    </p>
+
+    <p-stepper [value]="activeStep" [linear]="false">
+      <p-step-list>
+        <p-step [value]="1">Datos Básicos</p-step>
+        <p-step [value]="2">Documentos</p-step>
+        <p-step [value]="3">Revisión</p-step>
+        <p-step [value]="4">Confirmación</p-step>
+      </p-step-list>
+      <p-step-panels>
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="stepper-content">
+              <h4>Paso 1: Datos Básicos de la Entidad</h4>
+              <div class="ej-form__grid">
+                <div class="ej-form__group">
+                  <label>Razón Social *</label>
+                  <input pInputText placeholder="Ingrese la razón social" class="w-full" />
+                </div>
+                <div class="ej-form__group">
+                  <label>NIT *</label>
+                  <input pInputText placeholder="000.000.000-0" class="w-full" />
+                </div>
+                <div class="ej-form__group">
+                  <label>Tipo de Entidad *</label>
+                  <p-select [options]="tipoOptions" placeholder="Seleccione" class="w-full" />
+                </div>
+                <div class="ej-form__group">
+                  <label>Departamento</label>
+                  <p-select [options]="tipoOptions" placeholder="Seleccione" class="w-full" />
+                </div>
+              </div>
+              <div class="stepper-actions">
+                <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(2)" />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="stepper-content">
+              <h4>Paso 2: Carga de Documentos</h4>
+              <p-message severity="info">
+                Adjunte los documentos requeridos. Formatos: PDF, JPG. Máximo 5MB por archivo.
+              </p-message>
+              <p-fileupload mode="basic" chooseLabel="Adjuntar RUT" chooseIcon="pi pi-upload" />
+              <p-fileupload mode="basic" chooseLabel="Adjuntar certificado" chooseIcon="pi pi-upload" />
+              <div class="stepper-actions">
+                <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="activateCallback(1)" />
+                <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(3)" />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+        <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="stepper-content">
+              <h4>Paso 3: Revisión de Información</h4>
+              <div class="ej-detail-grid">
+                <div class="ej-detail-item">
+                  <span class="ej-detail-item__label">Razón Social</span>
+                  <span class="ej-detail-item__value">Ministerio de Hacienda y Crédito Público</span>
+                </div>
+                <div class="ej-detail-item">
+                  <span class="ej-detail-item__label">NIT</span>
+                  <span class="ej-detail-item__value">899999090-2</span>
+                </div>
+                <div class="ej-detail-item">
+                  <span class="ej-detail-item__label">Tipo</span>
+                  <span class="ej-detail-item__value">Nacional</span>
+                </div>
+                <div class="ej-detail-item">
+                  <span class="ej-detail-item__label">Documentos</span>
+                  <span class="ej-detail-item__value">2 archivos adjuntos</span>
+                </div>
+              </div>
+              <div class="stepper-actions">
+                <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="activateCallback(2)" />
+                <p-button label="Confirmar" icon="pi pi-check" (onClick)="activateCallback(4)" />
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+        <p-step-panel [value]="4">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="stepper-content stepper-content--success">
+              <i class="pi pi-check-circle stepper-success-icon"></i>
+              <h4>Registro completado exitosamente</h4>
+              <p>La entidad ha sido registrada en el sistema CHIP. Se enviará un correo de confirmación.</p>
+              <p-button label="Volver al inicio" icon="pi pi-home" severity="secondary" [outlined]="true" (onClick)="activateCallback(1)" />
+            </div>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
+    </p-stepper>
+
+    <app-code-block [code]="codeStepperFlow" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       7. FORMULARIO COMPLETO DE REGISTRO
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Formulario de Registro Completo</h2>
+    <p class="ej-section__desc">
+      Formulario con todos los tipos de campos: texto, select, textarea, datepicker, checkbox,
+      radio buttons y switches. Incluye validación visual y acciones.
+    </p>
+
+    <div class="ej-form">
+      <div class="ej-form__grid">
+        <div class="ej-form__group">
+          <label for="reg-nombre">Razón Social *</label>
+          <input pInputText id="reg-nombre" [(ngModel)]="formData.nombre" placeholder="Ingrese la razón social" class="w-full" />
+        </div>
+        <div class="ej-form__group">
+          <label for="reg-nit">NIT *</label>
+          <input pInputText id="reg-nit" [(ngModel)]="formData.nit" placeholder="000.000.000-0" class="w-full" />
+        </div>
+        <div class="ej-form__group">
+          <label for="reg-tipo">Tipo de Entidad *</label>
+          <p-select id="reg-tipo" [options]="tipoOptions" [(ngModel)]="formData.tipo" placeholder="Seleccione un tipo" class="w-full" />
+        </div>
+        <div class="ej-form__group">
+          <label for="reg-fecha">Fecha de Registro</label>
+          <p-datepicker id="reg-fecha" [(ngModel)]="formRegDate" [showIcon]="true" dateFormat="dd/mm/yy" placeholder="DD/MM/AAAA" class="w-full" />
+        </div>
+        <div class="ej-form__group">
+          <label for="reg-dir">Dirección</label>
+          <input pInputText id="reg-dir" [(ngModel)]="formData.direccion" placeholder="Dirección de la entidad" class="w-full" />
+        </div>
+        <div class="ej-form__group">
+          <label>Estado</label>
+          <div class="ej-form__radios">
+            <div class="ej-form__radio-item">
+              <p-radiobutton name="estado" value="activo" [(ngModel)]="formEstado" inputId="est-act" />
+              <label for="est-act">Activo</label>
+            </div>
+            <div class="ej-form__radio-item">
+              <p-radiobutton name="estado" value="inactivo" [(ngModel)]="formEstado" inputId="est-ina" />
+              <label for="est-ina">Inactivo</label>
+            </div>
+          </div>
+        </div>
+        <div class="ej-form__group ej-form__group--full">
+          <label for="reg-obs">Observaciones</label>
+          <textarea pTextarea id="reg-obs" [(ngModel)]="formData.observaciones" rows="3" placeholder="Observaciones adicionales..." class="w-full"></textarea>
+        </div>
+        <div class="ej-form__group ej-form__group--full">
+          <div class="ej-form__switches">
+            <div class="ej-form__switch-item">
+              <p-toggleswitch [(ngModel)]="formNotify" />
+              <span>Enviar notificación por correo al registrar</span>
+            </div>
+            <div class="ej-form__switch-item">
+              <p-checkbox [(ngModel)]="formData.activo" [binary]="true" inputId="reg-terms" />
+              <label for="reg-terms">Acepto los términos y condiciones de uso del sistema CHIP</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ej-form__actions">
+        <p-button label="Cancelar" severity="secondary" [outlined]="true" icon="pi pi-times" />
+        <p-button label="Guardar entidad" icon="pi pi-save" (onClick)="onFormSubmit()" />
+      </div>
+    </div>
+
+    <app-code-block [code]="codeFullForm" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       8. DASHBOARD PREVIEW
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Panel Principal (Dashboard)</h2>
+    <p class="ej-section__desc">
+      Vista de panel principal con banner de bienvenida, tarjetas de estadísticas y accesos directos
+      a los módulos del sistema.
+    </p>
+
+    <div class="dashboard-preview">
+      <!-- Welcome banner -->
+      <div class="dash-welcome">
+        <div>
+          <h3>Bienvenido, Juan Pérez</h3>
+          <p>Sistema CHIP 2.0 — Periodo contable: <strong>2026-I</strong></p>
+        </div>
+        <p-avatar label="JP" shape="circle" size="large" [style]="{ 'background-color': '#fff', color: '#0943B5' }" />
+      </div>
+
+      <!-- Stats row -->
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat__icon" style="background: #E8F5E9; color: #4CAF50;">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div>
+            <span class="dash-stat__value">128</span>
+            <span class="dash-stat__label">Reportes enviados</span>
+          </div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat__icon" style="background: #FFFDE7; color: #F9A825;">
+            <i class="pi pi-clock"></i>
+          </div>
+          <div>
+            <span class="dash-stat__value">12</span>
+            <span class="dash-stat__label">Pendientes</span>
+          </div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat__icon" style="background: #EBF0FA; color: #0943B5;">
+            <i class="pi pi-building"></i>
+          </div>
+          <div>
+            <span class="dash-stat__value">1,024</span>
+            <span class="dash-stat__label">Entidades activas</span>
+          </div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat__icon" style="background: #FFEBEE; color: #F44336;">
+            <i class="pi pi-exclamation-triangle"></i>
+          </div>
+          <div>
+            <span class="dash-stat__value">3</span>
+            <span class="dash-stat__label">Con observaciones</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick access modules -->
+      <div class="module-grid">
+        @for (mod of modules; track mod.title) {
+          <div class="module-card" [style.background-color]="mod.bg">
+            <i [class]="mod.icon" class="module-card__icon"></i>
+            <h3 class="module-card__title">{{ mod.title }}</h3>
+            <p class="module-card__desc">{{ mod.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <app-code-block [code]="codeDashboard" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       9. LOGIN - Vista renderizada
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Pantalla de Login</h2>
+    <p class="ej-section__desc">
+      Vista renderizada de la pantalla de inicio de sesión con cobranding CGN/CHIP,
+      campos de usuario y contraseña, reCAPTCHA placeholder y enlace de recuperación.
+    </p>
+
+    <div class="login-preview">
+      <!-- GOV.CO bar -->
+      <div class="login-preview__govco">
+        <img src="assets/logos/govco-logo.png" alt="GOV.CO" style="height: 24px;" />
+        <span>Portal GOV.CO</span>
+      </div>
+
+      <!-- Login card -->
+      <div class="login-preview__body">
+        <div class="login-card-preview">
+          <div class="login-card-preview__logo">
+            <img src="assets/logos/chip-logo-2018.svg" alt="CHIP" class="login-card-preview__chip-logo" />
+          </div>
+
+          <h3 class="login-card-preview__title">Iniciar sesión</h3>
+
+          <div class="login-card-preview__form">
+            <div class="login-card-preview__field">
+              <label for="login-user">Usuario</label>
+              <input pInputText id="login-user" placeholder="Ingrese su usuario" class="w-full" />
+            </div>
+
+            <div class="login-card-preview__field">
+              <label for="login-pass">Contraseña</label>
+              <p-password id="login-pass" placeholder="Ingrese su contraseña" [toggleMask]="true" [feedback]="false" styleClass="w-full" />
+            </div>
+
+            <div class="login-card-preview__recaptcha">
+              <i class="pi pi-shield"></i>
+              <span>reCAPTCHA v3 (placeholder)</span>
+            </div>
+
+            <div class="login-card-preview__btn-right">
+              <p-button label="Ingresar" icon="pi pi-sign-in" />
+            </div>
+
+            <div class="login-card-preview__links">
+              <a href="#">¿Olvidó su contraseña?</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <app-code-block [code]="codeLoginPreview" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       10. CAMBIO DE CONTRASEÑA - Vista renderizada
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Cambio de Contraseña</h2>
+    <p class="ej-section__desc">
+      Formulario de cambio de contraseña con validación visual de requisitos,
+      campos de contraseña actual, nueva y confirmación.
+    </p>
+
+    <div class="login-preview">
+      <div class="login-preview__govco">
+        <img src="assets/logos/govco-logo.png" alt="GOV.CO" style="height: 24px;" />
+        <span>Portal GOV.CO</span>
+      </div>
+
+      <div class="login-preview__body">
+        <div class="login-card-preview">
+          <div class="login-card-preview__logo">
+            <img src="assets/logos/chip-logo-2018.svg" alt="CHIP" class="login-card-preview__chip-logo" />
+          </div>
+
+          <h3 class="login-card-preview__title">Cambiar contraseña</h3>
+          <p class="login-card-preview__subtitle">Por seguridad, debe cambiar su contraseña.</p>
+
+          <div class="login-card-preview__form">
+            <div class="login-card-preview__field">
+              <label for="pwd-current">Contraseña actual</label>
+              <p-password id="pwd-current" placeholder="Contraseña actual" [toggleMask]="true" [feedback]="false" styleClass="w-full" />
+            </div>
+
+            <div class="login-card-preview__field">
+              <label for="pwd-new">Nueva contraseña</label>
+              <p-password id="pwd-new" placeholder="Nueva contraseña" [toggleMask]="true" [feedback]="true" styleClass="w-full" />
+            </div>
+
+            <div class="login-card-preview__field">
+              <label for="pwd-confirm">Confirmar contraseña</label>
+              <p-password id="pwd-confirm" placeholder="Confirmar contraseña" [toggleMask]="true" [feedback]="false" styleClass="w-full" />
+            </div>
+
+            <div class="password-rules">
+              <p class="password-rules__title">La contraseña debe cumplir:</p>
+              <div class="password-rules__item password-rules__item--ok">
+                <i class="pi pi-check-circle"></i> Mínimo 8 caracteres
+              </div>
+              <div class="password-rules__item password-rules__item--ok">
+                <i class="pi pi-check-circle"></i> Al menos una letra mayúscula
+              </div>
+              <div class="password-rules__item">
+                <i class="pi pi-circle"></i> Al menos un número
+              </div>
+              <div class="password-rules__item">
+                <i class="pi pi-circle"></i> Al menos un carácter especial
+              </div>
+            </div>
+
+            <div class="login-card-preview__btn-right">
+              <p-button label="Cambiar contraseña" icon="pi pi-lock" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <app-code-block [code]="codeChangePassword" language="markup" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       11. DATAVIEW - Vista grid/lista
+       ============================================================ -->
+  <section class="ej-section">
+    <h2 class="ej-section__title">Vista de Entidades (Grid / Lista)</h2>
+    <p class="ej-section__desc">
+      Vista alternativa a tabla con cambio de layout entre tarjetas (grid) y listado.
+      Útil para exploración visual de registros.
+    </p>
+
+    <div class="dataview-toolbar">
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input pInputText placeholder="Buscar entidad..." />
+      </span>
+      <div class="dataview-toolbar__actions">
+        <p-button icon="pi pi-th-large" [outlined]="dataviewLayout !== 'grid'" (onClick)="dataviewLayout = 'grid'" severity="secondary" />
+        <p-button icon="pi pi-list" [outlined]="dataviewLayout !== 'list'" (onClick)="dataviewLayout = 'list'" severity="secondary" />
+      </div>
+    </div>
+
+    @if (dataviewLayout === 'grid') {
+      <div class="dataview-grid">
+        @for (ent of entidades; track ent.id) {
+          <div class="dataview-card">
+            <div class="dataview-card__header">
+              <p-avatar [label]="ent.nombre.charAt(0)" shape="circle" [style]="{ 'background-color': '#0943B5', color: '#fff' }" />
+              <p-tag [value]="ent.estado" [severity]="getStateSeverity(ent.estado)" />
+            </div>
+            <h4 class="dataview-card__title">{{ ent.nombre }}</h4>
+            <div class="dataview-card__meta">
+              <span><i class="pi pi-building"></i> {{ ent.tipo }}</span>
+              <span><i class="pi pi-hashtag"></i> {{ ent.id }}</span>
+            </div>
+            <div class="dataview-card__footer">
+              <span>{{ ent.reportes }} reportes</span>
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" />
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="dataview-list">
+        @for (ent of entidades; track ent.id) {
+          <div class="dataview-list-item">
+            <p-avatar [label]="ent.nombre.charAt(0)" shape="circle" [style]="{ 'background-color': '#0943B5', color: '#fff' }" />
+            <div class="dataview-list-item__info">
+              <strong>{{ ent.nombre }}</strong>
+              <span>{{ ent.tipo }} · Código: {{ ent.id }}</span>
+            </div>
+            <div class="dataview-list-item__right">
+              <p-tag [value]="ent.estado" [severity]="getStateSeverity(ent.estado)" />
+              <span class="dataview-list-item__reportes">{{ ent.reportes }} reportes</span>
+              <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" />
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <app-code-block [code]="codeDataView" language="markup" />
+  </section>
+
+</main>
+
+<!-- Dialog: Detalle de entidad -->
+<p-dialog
+  header="Detalle de Entidad"
+  [(visible)]="showDetailDialog"
+  [style]="{ width: '500px' }"
+  [modal]="true"
+>
+  @if (selectedEntity) {
+    <div class="ej-detail-grid">
+      <div class="ej-detail-item">
+        <span class="ej-detail-item__label">Código</span>
+        <span class="ej-detail-item__value">{{ selectedEntity.id }}</span>
+      </div>
+      <div class="ej-detail-item">
+        <span class="ej-detail-item__label">Nombre</span>
+        <span class="ej-detail-item__value">{{ selectedEntity.nombre }}</span>
+      </div>
+      <div class="ej-detail-item">
+        <span class="ej-detail-item__label">Tipo</span>
+        <span class="ej-detail-item__value">{{ selectedEntity.tipo }}</span>
+      </div>
+      <div class="ej-detail-item">
+        <span class="ej-detail-item__label">Estado</span>
+        <span class="ej-detail-item__value"><p-tag [value]="selectedEntity.estado" [severity]="getStateSeverity(selectedEntity.estado)" /></span>
+      </div>
+    </div>
+  }
+  <ng-template #footer>
+    <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="showDetailDialog = false" />
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Confirmación -->
+<p-dialog
+  header="Confirmar acción"
+  [(visible)]="showConfirmDialog"
+  [style]="{ width: '420px' }"
+  [modal]="true"
+>
+  <p>Esta seguro de que desea realizar esta acción? Esta operación no se puede deshacer.</p>
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showConfirmDialog = false" />
+    <p-button label="Confirmar" icon="pi pi-check" (onClick)="onDeleteConfirm()" />
+  </ng-template>
+</p-dialog>

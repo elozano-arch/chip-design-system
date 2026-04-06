@@ -1,0 +1,174 @@
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<section class="ds-section comenzar-header">
+  <div class="comenzar-header__icon">
+    <i class="pi pi-play-circle"></i>
+  </div>
+  <div>
+    <h1 class="ds-section__title">Comenzar</h1>
+    <p class="ds-section__desc">
+      Guía paso a paso para integrar el Design System CHIP 2.0 al proyecto Angular.
+      Seguir estas instrucciones para configurar el entorno, instalar dependencias
+      y empezar a construir interfaces consistentes con la identidad visual de la CGN.
+    </p>
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     1. PRERREQUISITOS
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section__title">
+    <span class="comenzar-step">1</span> Prerrequisitos
+  </h2>
+  <p class="ds-section__desc">
+    Antes de iniciar, asegúrate de tener instaladas las siguientes herramientas
+    y versiones en tu máquina de desarrollo.
+  </p>
+
+  <div class="comenzar-prereqs">
+    <div class="comenzar-prereq">
+      <i class="pi pi-server"></i>
+      <div>
+        <strong>Node.js 22</strong>
+        <span>Entorno de ejecución de JavaScript</span>
+      </div>
+    </div>
+    <div class="comenzar-prereq">
+      <i class="pi pi-bolt"></i>
+      <div>
+        <strong>Angular 19</strong>
+        <span>Framework de desarrollo frontend</span>
+      </div>
+    </div>
+    <div class="comenzar-prereq">
+      <i class="pi pi-box"></i>
+      <div>
+        <strong>PrimeNG 19</strong>
+        <span>Biblioteca de componentes UI para Angular</span>
+      </div>
+    </div>
+  </div>
+
+  <app-code-block [code]="codePrerequisites" language="typescript" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     2. INSTALACIÓN
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section__title">
+    <span class="comenzar-step">2</span> Instalación
+  </h2>
+  <p class="ds-section__desc">
+    Crea un nuevo proyecto Angular y agrega las dependencias necesarias.
+    Si ya tienes un proyecto existente, puedes saltar la creación e ir
+    directamente a la instalación de PrimeNG.
+  </p>
+
+  <div class="comenzar-instructions">
+    <div class="comenzar-instruction">
+      <strong>a)</strong> Crea un nuevo proyecto con Angular CLI usando SCSS como preprocesador de estilos.
+    </div>
+    <div class="comenzar-instruction">
+      <strong>b)</strong> Instala PrimeNG 19, el paquete de temas <code>&#64;primeng/themes</code> y los íconos <code>primeicons</code>.
+    </div>
+    <div class="comenzar-instruction">
+      <strong>c)</strong> Copia el archivo <code>chip-preset.ts</code> (disponible en la página de Inicio)
+      dentro de la carpeta <code>src/app/theme/</code> de tu proyecto.
+    </div>
+  </div>
+
+  <app-code-block [code]="codePrerequisites" language="typescript" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     3. CONFIGURACIÓN DE app.config.ts
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section__title">
+    <span class="comenzar-step">3</span> Configuración del Preset
+  </h2>
+  <p class="ds-section__desc">
+    Registra el <code>ChipPreset</code> en el archivo <code>app.config.ts</code>
+    usando el provider <code>providePrimeNG</code>. Esto aplicará la identidad visual
+    del Kit UI v9.2 (GOV.CO) a todos los componentes de PrimeNG automáticamente.
+  </p>
+
+  <app-code-block [code]="codeAppConfig" language="typescript" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     4. ESTILOS GLOBALES
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section__title">
+    <span class="comenzar-step">4</span> Estilos Globales
+  </h2>
+  <p class="ds-section__desc">
+    Configura el archivo <code>src/styles.scss</code> con las fuentes, variables CSS
+    y los estilos base del Design System. Estas variables estarán disponibles en todos
+    los componentes del proyecto.
+  </p>
+
+  <app-code-block [code]="codeStylesSetup" language="typescript" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     5. ESTRUCTURA DE CARPETAS
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section__title">
+    <span class="comenzar-step">5</span> Estructura de Carpetas Recomendada
+  </h2>
+  <p class="ds-section__desc">
+    Organiza el proyecto siguiendo esta estructura para mantener la consistencia
+    y facilitar el mantenimiento a largo plazo.
+  </p>
+
+  <app-code-block [code]="codeFolderStructure" language="typescript" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     6. IMPORTAR Y USAR COMPONENTES
+     ============================================================ -->
+<section class="ds-section">
+  <h2 class="ds-section__title">
+    <span class="comenzar-step">6</span> Importar y Usar Componentes
+  </h2>
+  <p class="ds-section__desc">
+    Cada componente de PrimeNG se importa individualmente como un módulo standalone.
+    A continuación se muestra un ejemplo completo de cómo crear una página que utiliza
+    botones, tablas y etiquetas.
+  </p>
+
+  <div class="comenzar-tips">
+    <div class="comenzar-tip">
+      <i class="pi pi-check-circle"></i>
+      <span>Importa solo los módulos que necesitas en cada componente para optimizar el bundle.</span>
+    </div>
+    <div class="comenzar-tip">
+      <i class="pi pi-check-circle"></i>
+      <span>Usa <code>standalone: true</code> en todos los componentes para aprovechar la arquitectura moderna de Angular 19.</span>
+    </div>
+    <div class="comenzar-tip">
+      <i class="pi pi-check-circle"></i>
+      <span>Consulta la sección de <strong>Ejemplos de Uso</strong> para ver patrones completos de formularios, tablas y diálogos.</span>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeImportExample" language="typescript" />
+</section>

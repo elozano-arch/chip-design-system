@@ -1,0 +1,281 @@
+<main class="resp-main">
+
+  <!-- ============================================================
+       1. BREAKPOINTS
+       ============================================================ -->
+  <section class="resp-section">
+    <h2 class="resp-section__title">Breakpoints</h2>
+    <p class="resp-section__desc">
+      CHIP 2.0 utiliza cinco puntos de quiebre para adaptar la interfaz a distintos tamaños de pantalla.
+      El enfoque es <strong>mobile-first</strong>: los estilos base aplican al tamaño más pequeño y se
+      amplían progresivamente con <code>min-width</code>.
+    </p>
+
+    <!-- Visual breakpoint bars -->
+    <div class="bp-chart">
+      <div class="bp-bar bp-bar--mobile">
+        <span class="bp-bar__label">Mobile</span>
+        <span class="bp-bar__range">&lt; 576px</span>
+      </div>
+      <div class="bp-bar bp-bar--tablet">
+        <span class="bp-bar__label">Tablet</span>
+        <span class="bp-bar__range">576 – 768px</span>
+      </div>
+      <div class="bp-bar bp-bar--desktop-sm">
+        <span class="bp-bar__label">Desktop small</span>
+        <span class="bp-bar__range">768 – 992px</span>
+      </div>
+      <div class="bp-bar bp-bar--desktop">
+        <span class="bp-bar__label">Desktop</span>
+        <span class="bp-bar__range">992 – 1200px</span>
+      </div>
+      <div class="bp-bar bp-bar--large">
+        <span class="bp-bar__label">Large</span>
+        <span class="bp-bar__range">&gt; 1200px</span>
+      </div>
+    </div>
+
+    <!-- Breakpoint table -->
+    <table class="bp-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Rango</th>
+          <th>Columnas del grid</th>
+          <th>Contenedor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="bp-badge bp-badge--mobile">Mobile</span></td>
+          <td>&lt; 576px</td>
+          <td>1</td>
+          <td>100% con padding 16px</td>
+        </tr>
+        <tr>
+          <td><span class="bp-badge bp-badge--tablet">Tablet</span></td>
+          <td>576 – 768px</td>
+          <td>2</td>
+          <td>100% con padding 24px</td>
+        </tr>
+        <tr>
+          <td><span class="bp-badge bp-badge--desktop-sm">Desktop small</span></td>
+          <td>768 – 992px</td>
+          <td>2 – 3</td>
+          <td>100% con padding 32px</td>
+        </tr>
+        <tr>
+          <td><span class="bp-badge bp-badge--desktop">Desktop</span></td>
+          <td>992 – 1200px</td>
+          <td>3 – 4</td>
+          <td>max-width 960px</td>
+        </tr>
+        <tr>
+          <td><span class="bp-badge bp-badge--large">Large</span></td>
+          <td>&gt; 1200px</td>
+          <td>4 – 6</td>
+          <td>max-width 1200px</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       2. GRID DE 12 COLUMNAS
+       ============================================================ -->
+  <section class="resp-section">
+    <h2 class="resp-section__title">Grid de 12 columnas</h2>
+    <p class="resp-section__desc">
+      El sistema de grilla se basa en 12 columnas flexibles con un gutter de 16px. En pantallas
+      pequeñas, todas las columnas colapsan a 100% de ancho; en tablet se agrupan de a dos.
+    </p>
+
+    <!-- Live grid demo -->
+    <div class="grid-demo">
+      <div class="grid-demo__row">
+        <div class="grid-demo__col grid-demo__col--12">col-12</div>
+      </div>
+      <div class="grid-demo__row">
+        <div class="grid-demo__col grid-demo__col--6">col-6</div>
+        <div class="grid-demo__col grid-demo__col--6">col-6</div>
+      </div>
+      <div class="grid-demo__row">
+        <div class="grid-demo__col grid-demo__col--4">col-4</div>
+        <div class="grid-demo__col grid-demo__col--4">col-4</div>
+        <div class="grid-demo__col grid-demo__col--4">col-4</div>
+      </div>
+      <div class="grid-demo__row">
+        <div class="grid-demo__col grid-demo__col--3">col-3</div>
+        <div class="grid-demo__col grid-demo__col--3">col-3</div>
+        <div class="grid-demo__col grid-demo__col--3">col-3</div>
+        <div class="grid-demo__col grid-demo__col--3">col-3</div>
+      </div>
+    </div>
+
+    <h3 class="resp-section__subtitle">Markup</h3>
+    <app-code-block [code]="codeGrid" language="markup" />
+
+    <h3 class="resp-section__subtitle">SCSS del grid</h3>
+    <app-code-block [code]="codeGridScss" language="css" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       3. COMPORTAMIENTO DE COMPONENTES
+       ============================================================ -->
+  <section class="resp-section">
+    <h2 class="resp-section__title">Comportamiento de componentes</h2>
+    <p class="resp-section__desc">
+      Cada componente se adapta de forma predecible según el breakpoint activo. A continuación
+      se documenta cómo cambian los principales elementos de la interfaz CHIP 2.0.
+    </p>
+
+    <!-- Component adaptation table -->
+    <table class="bp-table">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Desktop (&ge; 992px)</th>
+          <th>Tablet (576 – 992px)</th>
+          <th>Móvil (&lt; 576px)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Navegación</strong></td>
+          <td>Barra horizontal con enlaces visibles</td>
+          <td>Barra horizontal reducida</td>
+          <td>Colapsa a menú hamburguesa</td>
+        </tr>
+        <tr>
+          <td><strong>Tablas</strong></td>
+          <td>Tabla completa visible</td>
+          <td>Scroll horizontal automático</td>
+          <td>Scroll horizontal, columnas priorizadas</td>
+        </tr>
+        <tr>
+          <td><strong>Cards</strong></td>
+          <td>3 columnas</td>
+          <td>2 columnas</td>
+          <td>1 columna (apiladas)</td>
+        </tr>
+        <tr>
+          <td><strong>Formularios</strong></td>
+          <td>2 columnas de campos</td>
+          <td>2 columnas de campos</td>
+          <td>1 columna (campos apilados)</td>
+        </tr>
+        <tr>
+          <td><strong>Footer</strong></td>
+          <td>3 columnas lado a lado</td>
+          <td>2 columnas</td>
+          <td>Apilado verticalmente</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 class="resp-section__subtitle">Navegación responsiva</h3>
+    <app-code-block [code]="codeNavResponsive" language="css" />
+
+    <h3 class="resp-section__subtitle">Cards responsivas</h3>
+    <app-code-block [code]="codeCardsResponsive" language="css" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       4. MEDIA QUERIES
+       ============================================================ -->
+  <section class="resp-section">
+    <h2 class="resp-section__title">Media queries</h2>
+    <p class="resp-section__desc">
+      Se utilizan media queries con enfoque <strong>mobile-first</strong> (<code>min-width</code>).
+      Los estilos base se escriben para móvil y se amplían progresivamente. También se proporcionan
+      mixins SCSS para facilitar su uso.
+    </p>
+
+    <h3 class="resp-section__subtitle">Patrón mobile-first</h3>
+    <app-code-block [code]="codeMediaQueries" language="css" />
+
+    <h3 class="resp-section__subtitle">Mixins SCSS reutilizables</h3>
+    <app-code-block [code]="codeMixins" language="css" />
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       5. BUENAS PRÁCTICAS
+       ============================================================ -->
+  <section class="resp-section">
+    <h2 class="resp-section__title">Buenas prácticas</h2>
+    <p class="resp-section__desc">
+      Lineamientos para garantizar que las interfaces del sistema CHIP 2.0 funcionen correctamente
+      en todos los dispositivos.
+    </p>
+
+    <div class="best-practices">
+      <div class="best-practices__item">
+        <div class="best-practices__icon">
+          <i class="pi pi-mobile"></i>
+        </div>
+        <div>
+          <h4 class="best-practices__title">Mobile-first</h4>
+          <p class="best-practices__text">
+            Escriba los estilos base para pantallas pequeñas y use <code>min-width</code> para agregar
+            complejidad en pantallas más grandes. Esto garantiza que la experiencia móvil sea la
+            prioridad y no una adaptación posterior.
+          </p>
+        </div>
+      </div>
+
+      <div class="best-practices__item">
+        <div class="best-practices__icon">
+          <i class="pi pi-arrows-h"></i>
+        </div>
+        <div>
+          <h4 class="best-practices__title">Unidades relativas (rem / em)</h4>
+          <p class="best-practices__text">
+            Prefiera <code>rem</code> y <code>em</code> sobre <code>px</code> para tipografía y
+            espaciado. Esto permite que la interfaz escale correctamente cuando el usuario ajusta
+            el tamaño de fuente del navegador.
+          </p>
+        </div>
+      </div>
+
+      <div class="best-practices__item">
+        <div class="best-practices__icon">
+          <i class="pi pi-expand"></i>
+        </div>
+        <div>
+          <h4 class="best-practices__title">min-width y max-width</h4>
+          <p class="best-practices__text">
+            Evite anchos fijos (<code>width: 800px</code>). Use <code>max-width</code> para limitar
+            el crecimiento y <code>min-width</code> para evitar que los elementos se compriman
+            demasiado. Combine con <code>width: 100%</code> para fluidez.
+          </p>
+        </div>
+      </div>
+
+      <div class="best-practices__item">
+        <div class="best-practices__icon">
+          <i class="pi pi-stop"></i>
+        </div>
+        <div>
+          <h4 class="best-practices__title">Touch targets: 44 &times; 44px mínimo</h4>
+          <p class="best-practices__text">
+            Todos los elementos interactivos (botones, enlaces, íconos clicables) deben tener un
+            área táctil mínima de <strong>44 &times; 44 píxeles</strong> según las pautas WCAG 2.5.5.
+            Esto incluye padding suficiente aunque el contenido visible sea más pequeño.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="resp-section__subtitle">Ejemplo de código</h3>
+    <app-code-block [code]="codeBuenasPracticas" language="css" />
+  </section>
+
+</main>

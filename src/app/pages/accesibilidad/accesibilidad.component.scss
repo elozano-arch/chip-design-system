@@ -1,0 +1,221 @@
+:host {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============================================================
+   PAGE TITLE
+   ============================================================ */
+.acc-page-title {
+  font-family: 'Nunito Sans', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #0943B5;
+  margin: 32px 0 16px 0;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.acc-section {
+  padding: 16px 0;
+
+  &__title {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0943B5;
+    margin-bottom: 8px;
+  }
+
+  &__subtitle {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 24px 0 8px 0;
+  }
+
+  &__desc {
+    font-family: Verdana, sans-serif;
+    font-size: 14px;
+    color: #616161;
+    margin-bottom: 16px;
+    line-height: 1.7;
+
+    a {
+      color: #0943B5;
+      text-decoration: underline;
+
+      &:hover {
+        color: #072D7A;
+      }
+    }
+
+    code {
+      background: #EBF0FA;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #0943B5;
+      font-family: 'Courier New', Consolas, monospace;
+    }
+  }
+}
+
+/* ============================================================
+   LISTS
+   ============================================================ */
+.acc-list {
+  font-family: Verdana, sans-serif;
+  font-size: 14px;
+  color: #3B3B3B;
+  line-height: 1.7;
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+
+  li {
+    margin-bottom: 8px;
+  }
+
+  code {
+    background: #EBF0FA;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #0943B5;
+    font-family: 'Courier New', Consolas, monospace;
+  }
+}
+
+/* ============================================================
+   CONTRAST GRID
+   ============================================================ */
+.acc-contrast-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 16px 0;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.acc-contrast-card {
+  border-radius: 8px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__ratio {
+    font-family: Verdana, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &--fail {
+    position: relative;
+
+    .acc-contrast-card__ratio {
+      color: #D32F2F;
+    }
+  }
+}
+
+/* ============================================================
+   KEYBOARD TABLE
+   ============================================================ */
+.acc-keyboard-table {
+  margin: 16px 0;
+  overflow-x: auto;
+}
+
+.acc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Verdana, sans-serif;
+  font-size: 14px;
+
+  th,
+  td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid #EBEBEB;
+  }
+
+  th {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 700;
+    color: #0943B5;
+    background: #F5F7FA;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    color: #3B3B3B;
+  }
+
+  kbd {
+    display: inline-block;
+    background: #F5F5F5;
+    border: 1px solid #D6D6D6;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 13px;
+    font-family: 'Courier New', Consolas, monospace;
+    color: #1A1A1A;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  tr:hover td {
+    background: #F5F7FA;
+  }
+}
+
+/* ============================================================
+   CHECKLIST
+   ============================================================ */
+.acc-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #F0F0F0;
+    font-family: Verdana, sans-serif;
+    font-size: 14px;
+    color: #3B3B3B;
+    line-height: 1.5;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: #F5F7FA;
+    }
+  }
+
+  &__icon {
+    color: #0943B5;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}

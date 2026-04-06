@@ -1,0 +1,415 @@
+/* ==========================================================================
+   CHIP 2.0 Design System - Global Styles
+   Based on Kit UI v9.2 (GOV.CO) + CGN Corporate Identity
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,600;0,6..12,700;0,6..12,800;1,6..12,400&display=swap');
+
+/* ==========================================================================
+   Design Tokens (CSS Custom Properties)
+   ========================================================================== */
+
+:root {
+  /* --- Primary: Cobalt Blue (Kit UI v9.2) --- */
+  --chip-cobalt-50: #E8EDF8;
+  --chip-cobalt-100: #C5D2EE;
+  --chip-cobalt-200: #9EB4E3;
+  --chip-cobalt-300: #7796D8;
+  --chip-cobalt-400: #5A80CF;
+  --chip-cobalt-500: #3D6AC6;
+  --chip-cobalt-600: #1E54B8;
+  --chip-cobalt-700: #0943B5;
+  --chip-cobalt-800: #073899;
+  --chip-cobalt-900: #052D7D;
+  --chip-cobalt-950: #031E54;
+
+  /* --- Grey Scale (Kit UI v9.2) --- */
+  --chip-grey-50: #F5F5F5;
+  --chip-grey-100: #EBEBEB;
+  --chip-grey-200: #D6D6D6;
+  --chip-grey-300: #BDBDBD;
+  --chip-grey-400: #9E9E9E;
+  --chip-grey-500: #7A7A7A;
+  --chip-grey-600: #616161;
+  --chip-grey-700: #4C4C4C;
+  --chip-grey-800: #3B3B3B;
+  --chip-grey-900: #2B2B2B;
+  --chip-grey-950: #1A1A1A;
+
+  /* --- Informative (Kit UI v9.2) --- */
+  --chip-success: #4CAF50;
+  --chip-warning: #FBC02D;
+  --chip-danger: #F44336;
+  --chip-info: #0943B5;
+
+  /* --- Backgrounds (Kit UI v9.2) --- */
+  --chip-bg-solitude: #EBF0FA;
+  --chip-bg-corn-silk: #FFF8E1;
+  --chip-bg-white-smoke: #F5F5F5;
+
+  /* --- Typography --- */
+  --font-heading: 'Nunito Sans', sans-serif;
+  --font-body: Verdana, Geneva, Tahoma, sans-serif;
+
+  /* --- Spacing (8px base grid - Kit UI v9.2) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 56px;
+  --space-11: 64px;
+
+  /* --- Border Radius --- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+
+  /* --- GOV.CO Top Bar --- */
+  --govco-topbar-height: 56px;
+  --govco-topbar-bg: var(--chip-cobalt-700);
+}
+
+/* ==========================================================================
+   Base Reset & Typography (Kit UI v9.2)
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--chip-grey-800);
+  background-color: #ffffff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--chip-grey-900);
+  margin-top: 0;
+  line-height: 1.3;
+}
+
+h1 { font-size: 24px; }
+h2 { font-size: 22px; }
+h3 { font-size: 20px; }
+h4 { font-size: 22px; font-weight: 600; }
+h5 { font-size: 20px; font-weight: 600; }
+h6 { font-size: 15px; font-weight: 600; }
+
+p {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-top: 0;
+}
+
+small, .text-caption {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+a {
+  color: var(--chip-cobalt-700);
+  text-decoration: underline;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--chip-cobalt-800);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* ==========================================================================
+   Utility Classes
+   ========================================================================== */
+
+.text-cobalt { color: var(--chip-cobalt-700); }
+.text-success { color: var(--chip-success); }
+.text-warning { color: var(--chip-warning); }
+.text-danger { color: var(--chip-danger); }
+.text-muted { color: var(--chip-grey-600); }
+
+.bg-cobalt { background-color: var(--chip-cobalt-700); color: #ffffff; }
+.bg-success { background-color: var(--chip-success); color: #ffffff; }
+.bg-warning { background-color: var(--chip-warning); color: #1A1A1A; }
+.bg-danger { background-color: var(--chip-danger); color: #ffffff; }
+.bg-solitude { background-color: var(--chip-bg-solitude); }
+.bg-corn-silk { background-color: var(--chip-bg-corn-silk); }
+.bg-white-smoke { background-color: var(--chip-bg-white-smoke); }
+
+.font-heading { font-family: var(--font-heading); }
+.font-body { font-family: var(--font-body); }
+
+/* Sr-only for accessibility (Kit UI v9.2 requirement) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0.5rem 1rem;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+  background: var(--chip-cobalt-700);
+  color: #ffffff;
+  z-index: 9999;
+}
+
+/* ==========================================================================
+   Dark Mode
+   ========================================================================== */
+
+.dark-mode {
+  --dm-bg: #1a1a2e;
+  --dm-surface: #1e1e32;
+  --dm-surface-2: #252540;
+  --dm-surface-3: #2d2d4e;
+  --dm-border: #3a3a5c;
+  --dm-text: #e5e5ee;
+  --dm-text-muted: #8c8ca8;
+  --dm-text-heading: #f5f5f8;
+
+  /* Override background tokens */
+  --chip-grey-50: #1e1e32;
+  --chip-grey-100: #252540;
+  --chip-grey-200: #3a3a5c;
+  --chip-grey-300: #4a4a6a;
+  --chip-bg-solitude: rgba(9, 67, 181, 0.1);
+  --chip-bg-corn-silk: rgba(251, 192, 45, 0.08);
+  --chip-bg-white-smoke: #1e1e32;
+
+  body {
+    background-color: var(--dm-bg);
+    color: var(--dm-text);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--dm-text-heading);
+  }
+
+  p, small, label, span {
+    color: var(--dm-text);
+  }
+
+  a {
+    color: var(--chip-cobalt-300);
+    &:hover { color: var(--chip-cobalt-200); }
+  }
+
+  /* Sections */
+  .ds-section__title,
+  .ej-section__title,
+  .icon-section__title,
+  .icon-page-header__title,
+  .auth-page-header__title {
+    color: var(--chip-cobalt-300) !important;
+  }
+
+  .ds-section__desc,
+  .ej-section__desc,
+  .icon-section__desc,
+  .icon-page-header__subtitle {
+    color: var(--dm-text-muted) !important;
+  }
+
+  .ds-section h3 {
+    color: var(--dm-text) !important;
+    border-bottom-color: var(--dm-border) !important;
+  }
+
+  /* Cards & containers */
+  .cards-grid .p-card,
+  .search-card,
+  .ej-form,
+  .module-card,
+  .icon-card,
+  .bp-card,
+  .usage-card,
+  .theme-download {
+    background: var(--dm-surface) !important;
+    border-color: var(--dm-border) !important;
+    color: var(--dm-text) !important;
+  }
+
+  .module-card {
+    background: var(--dm-surface-2) !important;
+  }
+
+  .icon-card:hover,
+  .bp-card:hover,
+  .usage-card:hover {
+    background: var(--dm-surface-2) !important;
+    border-color: var(--chip-cobalt-400) !important;
+  }
+
+  .icon-card i { color: var(--chip-cobalt-300) !important; }
+  .icon-card span { color: var(--dm-text) !important; }
+  .icon-card small { color: var(--dm-text-muted) !important; }
+
+  /* Tables */
+  .typo-showcase,
+  .typo-row {
+    border-color: var(--dm-border) !important;
+    background: var(--dm-surface) !important;
+  }
+
+  .typo-label { color: var(--dm-text-muted) !important; }
+
+  /* Color swatches */
+  .text-dark { color: var(--dm-text) !important; }
+
+  /* Form elements */
+  .form-group label,
+  .form-group__title,
+  .search-card__field label,
+  .search-card__title,
+  .ej-form__group label {
+    color: var(--dm-text) !important;
+  }
+
+  .form-hint,
+  .ej-form__hint {
+    color: var(--dm-text-muted) !important;
+  }
+
+  /* Page header */
+  .page-header__title {
+    color: var(--dm-text-heading) !important;
+    i { color: var(--chip-cobalt-300) !important; }
+  }
+
+  .page-header__subtitle { color: var(--dm-text-muted) !important; }
+
+  /* Grid showcase */
+  .grid-col {
+    background-color: rgba(9, 67, 181, 0.2) !important;
+    color: var(--chip-cobalt-300) !important;
+  }
+
+  .spacing-bar {
+    background-color: rgba(9, 67, 181, 0.3) !important;
+  }
+
+  .spacing-item span { color: var(--dm-text-muted) !important; }
+
+  /* Preview boxes */
+  .preview-box {
+    background: var(--dm-surface) !important;
+    border-color: var(--dm-border) !important;
+  }
+
+  .preview-sidebar {
+    background: var(--dm-surface-2) !important;
+    border-right-color: var(--dm-border) !important;
+  }
+
+  .preview-sidebar__link {
+    color: var(--dm-text-muted) !important;
+    &--active {
+      background: rgba(9, 67, 181, 0.15) !important;
+      color: var(--chip-cobalt-300) !important;
+    }
+  }
+
+  .preview-header {
+    background: var(--dm-surface-2) !important;
+    border-bottom-color: var(--dm-border) !important;
+  }
+
+  .preview-a11y__btn {
+    border-color: var(--dm-border) !important;
+    color: var(--dm-text-muted) !important;
+  }
+
+  .preview-hamburger {
+    border-color: var(--dm-border) !important;
+    color: var(--chip-cobalt-300) !important;
+  }
+
+  /* Progress */
+  .progress-showcase label {
+    color: var(--dm-text) !important;
+  }
+
+  /* Alerts */
+  .alerts-grid { color: var(--dm-text); }
+
+  /* Component row */
+  .component-row { color: var(--dm-text); }
+
+  /* Hero */
+  .ds-hero__title { color: var(--chip-cobalt-300) !important; }
+  .ds-hero__subtitle { color: var(--dm-text-muted) !important; }
+
+  /* Theme download */
+  .theme-download__name { color: var(--chip-cobalt-300) !important; }
+  .theme-download__meta { color: var(--dm-text-muted) !important; }
+  .theme-download__features span {
+    background: var(--dm-surface-2) !important;
+    color: var(--dm-text) !important;
+  }
+
+  /* Detail items */
+  .ej-detail-item__label { color: var(--dm-text-muted) !important; }
+  .ej-detail-item__value { color: var(--dm-text) !important; }
+
+  /* Timeline */
+  .ej-timeline__item {
+    border-left-color: var(--chip-cobalt-400) !important;
+    strong { color: var(--dm-text) !important; }
+    p { color: var(--dm-text-muted) !important; }
+  }
+
+  /* Scenario list */
+  .login-scenarios {
+    background: var(--dm-surface) !important;
+  }
+
+  .scenario-item code {
+    background: rgba(9, 67, 181, 0.2) !important;
+    color: var(--chip-cobalt-300) !important;
+  }
+}

@@ -1,0 +1,187 @@
+<section class="ds-section">
+  <h2 class="ds-section__title">Tokens de Diseño</h2>
+  <p class="ds-section__desc">
+    Referencia completa de las variables CSS (custom properties) del sistema de diseño CHIP 2.0.
+    Estos tokens garantizan consistencia visual en toda la aplicación y facilitan la configuración
+    de temas y componentes.
+  </p>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     COBALT PALETTE
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Paleta Cobalt</h3>
+  <p class="ds-section__desc">
+    Color primario institucional basado en Kit UI v9.2.
+  </p>
+
+  <div class="token-grid">
+    @for (token of cobaltTokens; track token.name) {
+      <div class="token-card">
+        <div
+          class="token-card__swatch"
+          [style.background-color]="token.swatch"
+          [class.token-card__swatch--light]="isLight(token.swatch)">
+        </div>
+        <div class="token-card__info">
+          <code class="token-card__name">{{ token.name }}</code>
+          <span class="token-card__value">{{ token.value }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     GREY SCALE
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Escala de Grises</h3>
+  <p class="ds-section__desc">
+    Escala neutral utilizada para textos, bordes, fondos y elementos secundarios.
+  </p>
+
+  <div class="token-grid">
+    @for (token of greyTokens; track token.name) {
+      <div class="token-card">
+        <div
+          class="token-card__swatch"
+          [style.background-color]="token.swatch"
+          [class.token-card__swatch--light]="isLight(token.swatch)">
+        </div>
+        <div class="token-card__info">
+          <code class="token-card__name">{{ token.name }}</code>
+          <span class="token-card__value">{{ token.value }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     INFORMATIVE COLORS
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Colores Informativos</h3>
+  <p class="ds-section__desc">
+    Colores semánticos para estados de éxito, advertencia, peligro e información.
+  </p>
+
+  <div class="token-grid token-grid--wide">
+    @for (token of informativeTokens; track token.name) {
+      <div class="token-card">
+        <div
+          class="token-card__swatch"
+          [style.background-color]="token.swatch"
+          [class.token-card__swatch--light]="isLight(token.swatch)">
+        </div>
+        <div class="token-card__info">
+          <code class="token-card__name">{{ token.name }}</code>
+          <span class="token-card__value">{{ token.value }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     BACKGROUND COLORS
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Colores de Fondo</h3>
+  <p class="ds-section__desc">
+    Fondos sutiles para secciones, tarjetas y áreas destacadas.
+  </p>
+
+  <div class="token-grid token-grid--wide">
+    @for (token of backgroundTokens; track token.name) {
+      <div class="token-card">
+        <div
+          class="token-card__swatch"
+          [style.background-color]="token.swatch"
+          [class.token-card__swatch--light]="isLight(token.swatch)">
+        </div>
+        <div class="token-card__info">
+          <code class="token-card__name">{{ token.name }}</code>
+          <span class="token-card__value">{{ token.value }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     TYPOGRAPHY TOKENS
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Tipografía</h3>
+  <p class="ds-section__desc">
+    Familias tipográficas definidas para encabezados y cuerpo de texto.
+  </p>
+
+  <div class="token-table">
+    <div class="token-table__header">
+      <span>Variable</span>
+      <span>Valor</span>
+      <span>Vista previa</span>
+    </div>
+    @for (token of typographyTokens; track token.name) {
+      <div class="token-table__row">
+        <code class="token-table__name">{{ token.name }}</code>
+        <span class="token-table__value">{{ token.value }}</span>
+        <span class="token-table__preview" [style.font-family]="token.value">
+          Aa Bb Cc 0123
+        </span>
+      </div>
+    }
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     BORDER RADIUS TOKENS
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Border Radius</h3>
+  <p class="ds-section__desc">
+    Valores de redondeo para esquinas de componentes.
+  </p>
+
+  <div class="radius-grid">
+    @for (token of radiusTokens; track token.name) {
+      <div class="radius-card">
+        <div class="radius-card__preview" [style.border-radius]="token.value"></div>
+        <div class="radius-card__info">
+          <code class="radius-card__name">{{ token.name }}</code>
+          <span class="radius-card__value">{{ token.value }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     USAGE EXAMPLE
+     ============================================================ -->
+<section class="ds-section">
+  <h3 class="ds-section__subtitle">Ejemplo de Uso</h3>
+  <p class="ds-section__desc">
+    Así se utilizan los tokens en cualquier archivo CSS o SCSS del proyecto.
+  </p>
+
+  <app-code-block [code]="usageCode" language="css" />
+</section>

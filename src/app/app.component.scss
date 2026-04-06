@@ -1,0 +1,522 @@
+/* ==========================================================================
+   CHIP 2.0 Design System - Layout Styles (Sidebar Navigation)
+   ========================================================================== */
+
+$sidebar-width: 220px;
+
+/* --- Floating Panel (Accesibilidad + Servicios) --- */
+.floating-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.floating-services {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--chip-warning, #FBC02D);
+  border-radius: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.floating-btn {
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover { transform: scale(1.08); }
+
+  &--accessibility {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--chip-cobalt-700, #0943B5);
+    color: #ffffff;
+    font-size: 22px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    border: 2px solid var(--chip-cobalt-400, #5A80CF);
+  }
+
+  &__icon-svg { width: 28px; height: 28px; }
+
+  &--service {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--chip-cobalt-700, #0943B5);
+    font-size: 18px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+}
+
+/* --- Back to Top --- */
+.back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: var(--chip-cobalt-700, #0943B5);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s, background 0.2s;
+  z-index: 1000;
+
+  i { font-size: 14px; }
+  &--visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  &:hover { background: var(--chip-cobalt-800, #073899); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- GOV.CO Top Bar --- */
+.govco-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  background-color: var(--chip-cobalt-700);
+  padding: 0 24px;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 14px;
+
+  &__logo { height: 24px; width: auto; }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    a {
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 13px;
+      &:hover { text-decoration: underline; }
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 0 12px;
+    &__actions a { font-size: 11px; }
+  }
+}
+
+/* --- App Header --- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--chip-grey-200);
+
+  &__logos {
+    display: flex;
+    align-items: center;
+  }
+
+  &__cobranding {
+    height: 56px;
+    width: auto;
+
+    @media (max-width: 576px) { height: 36px; }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__toggle {
+    display: none;
+    background: none;
+    border: 1px solid var(--chip-grey-300);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    cursor: pointer;
+    color: var(--chip-cobalt-700);
+    font-size: 18px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+      border-color: var(--chip-cobalt-400);
+    }
+
+    @media (max-width: 768px) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 576px) {
+    padding: 8px 12px;
+  }
+}
+
+/* --- Accessibility Bar (inline in header) --- */
+.accessibility-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 768px) { display: none; }
+
+  button {
+    background: none;
+    border: 1px solid var(--chip-grey-300);
+    border-radius: var(--radius-sm);
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--chip-grey-700);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+
+    &:hover {
+      border-color: var(--chip-cobalt-500);
+      color: var(--chip-cobalt-700);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-500);
+      outline-offset: 2px;
+    }
+  }
+}
+
+/* --- Layout: Sidebar + Content --- */
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - 120px);
+}
+
+/* --- Sidebar --- */
+.app-sidebar {
+  width: $sidebar-width;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid var(--chip-grey-200);
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 120px);
+  overflow-y: auto;
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    gap: 2px;
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+    white-space: nowrap;
+
+    i {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+      color: var(--chip-grey-400);
+      transition: color 0.15s;
+    }
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+      color: var(--chip-cobalt-700);
+      i { color: var(--chip-cobalt-500); }
+    }
+
+    &--active {
+      background: var(--chip-cobalt-50);
+      color: var(--chip-cobalt-700);
+      font-weight: 600;
+      border-left: 3px solid var(--chip-cobalt-700);
+
+      i { color: var(--chip-cobalt-700); }
+    }
+  }
+
+  &__overlay {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    height: 100vh;
+    z-index: 998;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: none;
+
+    &--open {
+      transform: translateX(0);
+      box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+    }
+
+    &__overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 997;
+    }
+  }
+}
+
+/* --- Main Content Area --- */
+.app-content {
+  flex: 1;
+  min-width: 0;
+  background: var(--chip-grey-50, #F5F5F5);
+}
+
+/* --- Footer --- */
+.app-footer {
+  background-color: var(--chip-cobalt-700);
+  color: #ffffff;
+  margin-top: 48px;
+
+  &__main {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr;
+    gap: 32px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px;
+
+    @media (max-width: 992px) { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 576px) { grid-template-columns: 1fr; }
+  }
+
+  &__logos-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    padding-right: 32px;
+
+    @media (max-width: 992px) {
+      border-right: none;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-right: 0;
+      padding-bottom: 24px;
+      flex-direction: row;
+      gap: 32px;
+    }
+  }
+
+  &__hacienda { height: 100px; width: auto; }
+  &__govco { height: 28px; }
+
+  &__info-col {
+    p {
+      margin: 0 0 3px;
+      font-size: 13px;
+      color: #ffffff;
+      line-height: 1.5;
+    }
+  }
+
+  &__entity-name {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px;
+  }
+
+  &__slogan {
+    font-weight: 600;
+    color: #ffffff !important;
+    margin-bottom: 8px !important;
+  }
+
+  &__social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+
+    a {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 13px;
+      transition: opacity 0.2s;
+
+      i {
+        font-size: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      &:hover { opacity: 0.8; }
+    }
+  }
+
+  &__contact-col {
+    p {
+      margin: 0 0 3px;
+      font-size: 13px;
+      color: #ffffff;
+      line-height: 1.5;
+
+      a {
+        color: #ffffff;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        &:hover { opacity: 0.8; }
+      }
+    }
+  }
+
+  &__contact-title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    i { font-size: 20px; }
+  }
+
+  &__copyright {
+    margin-top: 8px !important;
+    font-size: 12px !important;
+    color: #ffffff !important;
+  }
+}
+
+/* ==========================================================================
+   DARK MODE OVERRIDES
+   ========================================================================== */
+
+:host-context(.dark-mode) {
+  .app-header {
+    background-color: #1e1e32;
+    border-bottom-color: #3a3a5c;
+  }
+
+  .app-header__toggle {
+    color: #e5e5ee;
+    border-color: #3a3a5c;
+
+    &:hover {
+      background: #252540;
+      border-color: #4a4a6a;
+    }
+  }
+
+  .accessibility-bar button {
+    color: #acacc2;
+    border-color: #3a3a5c;
+
+    &:hover {
+      color: #e5e5ee;
+      border-color: #5A80CF;
+    }
+  }
+
+  .app-sidebar {
+    background: #1e1e32;
+    border-right-color: #3a3a5c;
+  }
+
+  .app-sidebar__link {
+    color: #acacc2;
+
+    i { color: #6b6b8a; }
+
+    &:hover {
+      background: #252540;
+      color: #e5e5ee;
+      i { color: #5A80CF; }
+    }
+
+    &--active {
+      background: rgba(9, 67, 181, 0.15);
+      color: #7796D8;
+      border-left-color: #5A80CF;
+      i { color: #7796D8; }
+    }
+  }
+
+  .app-content {
+    background: #1a1a2e;
+  }
+
+  .app-footer {
+    background-color: #0d1b3e;
+  }
+
+  .govco-topbar {
+    background-color: #052D7D;
+  }
+
+  .floating-btn--accessibility {
+    background: #052D7D;
+    border-color: #3D6AC6;
+  }
+
+  .back-to-top {
+    background: #052D7D;
+    &:hover { background: #031E54; }
+  }
+}

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 36" fill="none">
+  <!-- Checkmark -->
+  <!-- Yellow segment (bottom-left of check) -->
+  <path d="M4 22 L8 26 L12 22 L12 16 L8 12 L4 16 Z" fill="#FFE000"/>
+  <!-- Cyan/Blue segment (middle of check) -->
+  <path d="M8 12 L12 16 L20 8 L16 4 Z" fill="#00ACEE"/>
+  <!-- Red segment (top of check) -->
+  <path d="M16 4 L20 8 L24 4 L20 0 Z" fill="#E4002B"/>
+  <!-- "gov.co" text with the g overlapping the checkmark area -->
+  <text x="0" y="28" font-family="'Montserrat', 'Nunito Sans', Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="0" fill="#ffffff">gov.co</text>
+</svg>

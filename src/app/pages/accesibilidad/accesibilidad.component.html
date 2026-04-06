@@ -1,0 +1,294 @@
+<!-- ============================================================
+     1. INTRODUCCIÓN
+     ============================================================ -->
+<section class="acc-section">
+  <h1 class="acc-page-title">Accesibilidad</h1>
+  <p class="acc-section__desc">
+    Guía de accesibilidad para el sistema de diseño CHIP 2.0.
+    Todos los componentes y páginas deben cumplir con los estándares
+    <strong>WCAG 2.1 nivel AA</strong> y con la
+    <strong>Resolución 1519 de 2020</strong> del Ministerio de Tecnologías de
+    la Información y las Comunicaciones de Colombia, que establece los
+    lineamientos y estándares de accesibilidad web para entidades del
+    Estado colombiano.
+  </p>
+  <p class="acc-section__desc">
+    Esta guía proporciona principios, patrones de código y una lista de
+    verificación para que los desarrolladores construyan interfaces
+    accesibles e inclusivas.
+  </p>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     2. CONTRASTE DE COLOR
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Contraste de color</h2>
+  <p class="acc-section__desc">
+    Un contraste adecuado entre texto y fondo es esencial para que
+    personas con baja visión o daltonismo puedan leer el contenido.
+    Las WCAG 2.1 nivel AA exigen:
+  </p>
+
+  <ul class="acc-list">
+    <li><strong>4.5:1</strong> de relación de contraste para texto normal (menos de 18px o menos de 14px en negrita).</li>
+    <li><strong>3:1</strong> de relación de contraste para texto grande (18px o superior, o 14px en negrita o superior).</li>
+    <li><strong>3:1</strong> de relación de contraste para componentes de interfaz y elementos gráficos.</li>
+  </ul>
+
+  <h3 class="acc-section__subtitle">Paleta Cobalt - Ejemplos de contraste</h3>
+
+  <div class="acc-contrast-grid">
+    <div class="acc-contrast-card" style="background-color: #0943B5; color: #FFFFFF;">
+      <span class="acc-contrast-card__label">Cobalt #0943B5 sobre blanco</span>
+      <span class="acc-contrast-card__ratio">Ratio: 7.05:1 &#10003;</span>
+    </div>
+    <div class="acc-contrast-card" style="background-color: #FFFFFF; color: #0943B5; border: 1px solid #D6D6D6;">
+      <span class="acc-contrast-card__label">Blanco #FFFFFF con texto Cobalt</span>
+      <span class="acc-contrast-card__ratio">Ratio: 7.05:1 &#10003;</span>
+    </div>
+    <div class="acc-contrast-card" style="background-color: #EBF0FA; color: #0943B5;">
+      <span class="acc-contrast-card__label">Cobalt Claro #EBF0FA con texto Cobalt</span>
+      <span class="acc-contrast-card__ratio">Ratio: 5.52:1 &#10003;</span>
+    </div>
+    <div class="acc-contrast-card acc-contrast-card--fail" style="background-color: #EBF0FA; color: #9E9E9E;">
+      <span class="acc-contrast-card__label">Cobalt Claro #EBF0FA con texto gris #9E9E9E</span>
+      <span class="acc-contrast-card__ratio">Ratio: 2.45:1 &#10007; No cumple</span>
+    </div>
+  </div>
+
+  <p class="acc-section__desc" style="margin-top: 16px;">
+    Utilice herramientas como
+    <a href="https://webaim.org/resources/contrastchecker/" target="_blank" rel="noopener">WebAIM Contrast Checker</a>
+    o la extensión de navegador
+    <a href="https://www.deque.com/axe/" target="_blank" rel="noopener">axe DevTools</a>
+    para verificar el contraste de sus componentes.
+  </p>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     3. NAVEGACIÓN POR TECLADO
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Navegación por teclado</h2>
+  <p class="acc-section__desc">
+    Todos los elementos interactivos deben ser operables mediante
+    teclado. Los usuarios que no pueden usar un ratón dependen
+    completamente de la navegación por teclado.
+  </p>
+
+  <div class="acc-keyboard-table">
+    <table class="acc-table">
+      <thead>
+        <tr>
+          <th>Tecla</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><kbd>Tab</kbd></td>
+          <td>Mover el foco al siguiente elemento interactivo en el orden del DOM.</td>
+        </tr>
+        <tr>
+          <td><kbd>Shift</kbd> + <kbd>Tab</kbd></td>
+          <td>Mover el foco al elemento interactivo anterior.</td>
+        </tr>
+        <tr>
+          <td><kbd>Enter</kbd></td>
+          <td>Activar botones, enlaces y enviar formularios.</td>
+        </tr>
+        <tr>
+          <td><kbd>Espacio</kbd></td>
+          <td>Activar botones, casillas de verificación y opciones de radio.</td>
+        </tr>
+        <tr>
+          <td><kbd>Escape</kbd></td>
+          <td>Cerrar diálogos modales, menús desplegables y tooltips.</td>
+        </tr>
+        <tr>
+          <td><kbd>&#8593;</kbd> / <kbd>&#8595;</kbd></td>
+          <td>Navegar entre opciones en menús, listas y selects.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="acc-section__subtitle">Indicadores de foco</h3>
+  <p class="acc-section__desc">
+    Nunca elimine el contorno de foco (<code>outline: none</code>) sin proporcionar
+    un estilo alternativo visible. Los indicadores de foco deben tener al
+    menos <strong>3:1</strong> de contraste con el fondo adyacente.
+  </p>
+
+  <h3 class="acc-section__subtitle">Orden de tabulación</h3>
+  <p class="acc-section__desc">
+    El orden de tabulación debe seguir el flujo lógico de lectura (generalmente
+    de izquierda a derecha, de arriba hacia abajo). Evite usar
+    <code>tabindex</code> con valores positivos; use <code>tabindex="0"</code>
+    para incluir un elemento en el flujo natural y <code>tabindex="-1"</code>
+    para permitir el foco programático sin incluirlo en el orden de tabulación.
+  </p>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     4. LECTORES DE PANTALLA
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Lectores de pantalla</h2>
+  <p class="acc-section__desc">
+    Los lectores de pantalla interpretan el contenido de la página y lo
+    transmiten al usuario de forma auditiva. Para que esta experiencia
+    sea adecuada, es necesario proporcionar información semántica correcta.
+  </p>
+
+  <h3 class="acc-section__subtitle">Atributos ARIA esenciales</h3>
+  <ul class="acc-list">
+    <li>
+      <strong>aria-label</strong>: Proporciona una etiqueta de texto cuando no
+      existe texto visible. Ideal para botones con solo íconos.
+    </li>
+    <li>
+      <strong>aria-labelledby</strong>: Referencia el <code>id</code> de otro
+      elemento que sirve como etiqueta. Útil cuando el texto ya existe en la página.
+    </li>
+    <li>
+      <strong>aria-describedby</strong>: Referencia el <code>id</code> de un
+      elemento que proporciona una descripción adicional (ej. instrucciones de campo).
+    </li>
+    <li>
+      <strong>role</strong>: Define el rol semántico de un elemento cuando la
+      etiqueta HTML nativa no es suficiente (ej. <code>role="alert"</code>,
+      <code>role="dialog"</code>, <code>role="tablist"</code>).
+    </li>
+    <li>
+      <strong>alt</strong>: Texto alternativo para imágenes. Debe describir el
+      contenido o la función de la imagen. Use <code>alt=""</code> para imágenes
+      puramente decorativas.
+    </li>
+  </ul>
+
+  <h3 class="acc-section__subtitle">Ejemplo: Botones con aria-label</h3>
+  <app-code-block [code]="codeAriaLabel" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     5. FORMULARIOS ACCESIBLES
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Formularios accesibles</h2>
+  <p class="acc-section__desc">
+    Los formularios son uno de los puntos de interacción más críticos.
+    Un formulario mal etiquetado puede ser completamente inutilizable
+    para usuarios de lectores de pantalla.
+  </p>
+
+  <h3 class="acc-section__subtitle">Principios clave</h3>
+  <ul class="acc-list">
+    <li>
+      Cada campo debe tener un <code>&lt;label&gt;</code> asociado mediante
+      el atributo <code>for</code> que coincida con el <code>id</code> del campo.
+    </li>
+    <li>
+      Agrupe campos relacionados con <code>&lt;fieldset&gt;</code> y proporcione
+      un título con <code>&lt;legend&gt;</code>.
+    </li>
+    <li>
+      Marque los campos obligatorios con <code>aria-required="true"</code> y
+      una indicación visual (asterisco con <code>aria-hidden="true"</code>).
+    </li>
+    <li>
+      Los mensajes de error deben usar <code>role="alert"</code> para que los
+      lectores de pantalla los anuncien automáticamente.
+    </li>
+    <li>
+      Vincule instrucciones y errores al campo con <code>aria-describedby</code>.
+    </li>
+    <li>
+      Use <code>aria-invalid="true"</code> en campos con errores de validación.
+    </li>
+  </ul>
+
+  <h3 class="acc-section__subtitle">Ejemplo: Formulario con labels y manejo de errores</h3>
+  <app-code-block [code]="codeFormAccessible" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     ENLACE SKIP TO CONTENT
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Enlace "Saltar al contenido"</h2>
+  <p class="acc-section__desc">
+    El enlace "Saltar al contenido principal" permite a los usuarios de
+    teclado y lectores de pantalla evitar la navegación repetitiva y
+    acceder directamente al contenido relevante de la página. Es un
+    requisito de la Resolución 1519 de 2020 y de las WCAG 2.1.
+  </p>
+  <app-code-block [code]="codeSkipToContent" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     GESTIÓN DE FOCO EN DIÁLOGOS
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Gestión de foco en diálogos</h2>
+  <p class="acc-section__desc">
+    Cuando un diálogo modal se abre, el foco debe moverse al interior
+    del diálogo. Al cerrarse, el foco debe regresar al elemento que
+    lo activó. El foco debe quedar atrapado dentro del diálogo mientras
+    esté abierto.
+  </p>
+
+  <ul class="acc-list">
+    <li>Use <code>role="dialog"</code> y <code>aria-modal="true"</code>.</li>
+    <li>Etiquete el diálogo con <code>aria-labelledby</code> apuntando al título.</li>
+    <li>Permita cerrar con <kbd>Escape</kbd>.</li>
+    <li>Atrape el foco con Tab dentro del diálogo.</li>
+    <li>Devuelva el foco al elemento disparador al cerrar.</li>
+  </ul>
+
+  <app-code-block [code]="codeFocusDialog" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     6. CHECKLIST PARA DESARROLLADORES
+     ============================================================ -->
+<section class="acc-section">
+  <h2 class="acc-section__title">Checklist para desarrolladores</h2>
+  <p class="acc-section__desc">
+    Antes de entregar cualquier componente o página, verifique los
+    siguientes puntos de accesibilidad:
+  </p>
+
+  <ul class="acc-checklist">
+    @for (item of checklistItems; track item) {
+      <li class="acc-checklist__item">
+        <i class="pi pi-check-square acc-checklist__icon"></i>
+        <span>{{ item }}</span>
+      </li>
+    }
+  </ul>
+
+  <p class="acc-section__desc" style="margin-top: 24px;">
+    Para una validación más completa, ejecute auditorías automatizadas con
+    <a href="https://www.deque.com/axe/" target="_blank" rel="noopener">axe DevTools</a>,
+    <a href="https://developers.google.com/web/tools/lighthouse" target="_blank" rel="noopener">Lighthouse</a>
+    o
+    <a href="https://wave.webaim.org/" target="_blank" rel="noopener">WAVE</a>,
+    y complemente con pruebas manuales de teclado y lector de pantalla.
+  </p>
+</section>

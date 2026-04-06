@@ -1,0 +1,1523 @@
+<p-toast />
+
+<!-- HERO -->
+<section class="ds-hero">
+  <div class="ds-hero__content">
+    <h1 class="ds-hero__title">CHIP 2.0 Design System</h1>
+    <p class="ds-hero__subtitle">
+      Sistema de diseño basado en el Kit UI v9.2 (GOV.CO), los lineamientos de identidad visual
+      de la CGN y la marca CHIP. Construido con Angular 19 y PrimeNG.
+    </p>
+    <div class="ds-hero__actions">
+      <p-button label="Explorar componentes" icon="pi pi-arrow-down" (onClick)="scrollTo('colores')" />
+      <p-button label="Ver código" icon="pi pi-github" severity="secondary" [outlined]="true" />
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     0. THEME DOWNLOAD
+     ============================================================ -->
+<section id="theme" class="ds-section">
+  <h2 class="ds-section__title">Theme PrimeNG</h2>
+  <p class="ds-section__desc">
+    Preset personalizado para PrimeNG basado en el Kit UI v9.2 (GOV.CO).
+    Descárgalo e impórtalo en tu proyecto Angular con PrimeNG para aplicar toda la identidad visual.
+  </p>
+
+  <div class="theme-download">
+    <div class="theme-download__info">
+      <div class="theme-download__icon">
+        <i class="pi pi-palette"></i>
+      </div>
+      <div>
+        <h3 class="theme-download__name">chip-preset.ts</h3>
+        <p class="theme-download__meta">
+          PrimeNG Theme Preset &middot; Angular 19 &middot; Kit UI v9.2
+        </p>
+        <div class="theme-download__features">
+          <span><i class="pi pi-check"></i> Paleta Cobalt (primario)</span>
+          <span><i class="pi pi-check"></i> Colores informativos</span>
+          <span><i class="pi pi-check"></i> Botones, Tags, Badges</span>
+          <span><i class="pi pi-check"></i> Modo claro y oscuro</span>
+          <span><i class="pi pi-check"></i> Formularios estilizados</span>
+          <span><i class="pi pi-check"></i> Basado en Aura</span>
+        </div>
+      </div>
+    </div>
+    <div class="theme-download__actions">
+      <p-button label="Descargar chip-preset.ts" icon="pi pi-download" (onClick)="downloadTheme()" />
+      <p-button label="Copiar código" icon="pi pi-copy" severity="secondary" [outlined]="true" (onClick)="copyTheme()" />
+    </div>
+  </div>
+
+  <h3>Instalación</h3>
+  <app-code-block [code]="codeInstall" language="typescript" />
+
+  <h3>Código completo del preset</h3>
+  <app-code-block [code]="themeSource" language="typescript" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     1. COLOR PALETTE
+     ============================================================ -->
+<section id="colores" class="ds-section">
+  <h2 class="ds-section__title">Paleta de Colores</h2>
+  <p class="ds-section__desc">
+    Colores del Kit UI v9.2 (GOV.CO). La paleta Cobalt es el color principal del sistema.
+    Los colores informativos se usan para estados y alertas. Los fondos para áreas de contenido.
+  </p>
+
+  <h3>Azul Cobalt (Primario)</h3>
+  <div class="color-grid">
+    @for (color of cobaltColors; track color.hex) {
+      <div class="color-swatch" [style.background-color]="color.hex">
+        <span [class.text-light]="color.dark" [class.text-dark]="!color.dark">
+          {{ color.name }}<br />{{ color.hex }}
+        </span>
+      </div>
+    }
+  </div>
+
+  <h3>Escala de Grises</h3>
+  <div class="color-grid">
+    @for (color of greyColors; track color.hex) {
+      <div class="color-swatch" [style.background-color]="color.hex">
+        <span [class.text-light]="color.dark" [class.text-dark]="!color.dark">
+          {{ color.name }}<br />{{ color.hex }}
+        </span>
+      </div>
+    }
+  </div>
+
+  <h3>Colores Informativos</h3>
+  <div class="color-grid color-grid--accent">
+    @for (color of informativeColors; track color.hex) {
+      <div class="color-swatch color-swatch--large" [style.background-color]="color.hex">
+        <span [class.text-light]="color.dark" [class.text-dark]="!color.dark">
+          {{ color.name }}<br />{{ color.hex }}
+        </span>
+      </div>
+    }
+  </div>
+
+  <h3>Colores de Fondo</h3>
+  <div class="color-grid color-grid--accent">
+    @for (color of bgColors; track color.hex) {
+      <div class="color-swatch color-swatch--large" [style.background-color]="color.hex" style="border: 1px solid #D6D6D6;">
+        <span class="text-dark">
+          {{ color.name }}<br />{{ color.hex }}
+        </span>
+      </div>
+    }
+  </div>
+
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     2. TYPOGRAPHY
+     ============================================================ -->
+<section id="tipografia" class="ds-section">
+  <h2 class="ds-section__title">Tipografía</h2>
+  <p class="ds-section__desc">
+    Siguiendo el Kit UI v9.2: <strong>Nunito Sans</strong> para títulos y encabezados,
+    <strong>Verdana</strong> para textos de párrafo y contenido general.
+  </p>
+
+  <div class="typo-showcase">
+    <div class="typo-row">
+      <div class="typo-label">h1 - Nunito Sans Bold 24px</div>
+      <h1 style="margin-bottom: 0;">Encabezado Principal</h1>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">h2 - Nunito Sans Bold 22px</div>
+      <h2 style="margin-bottom: 0;">Encabezado Secundario</h2>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">h3 - Nunito Sans Bold 20px</div>
+      <h3 style="margin-bottom: 0;">Encabezado Terciario</h3>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">h4 - Nunito Sans SemiBold 22px</div>
+      <h4 style="margin-bottom: 0;">Encabezado h4</h4>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">h5 - Nunito Sans SemiBold 20px</div>
+      <h5 style="margin-bottom: 0;">Encabezado h5</h5>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">h6 - Nunito Sans SemiBold 15px</div>
+      <h6 style="margin-bottom: 0;">Encabezado h6</h6>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">Body 1 - Verdana Regular 15px</div>
+      <p style="margin-bottom: 0;">Este es un texto de párrafo utilizado para contenido general del sistema CHIP.</p>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">Body 2 - Verdana Regular 14px</div>
+      <p style="margin-bottom: 0; font-size: 14px;">Texto secundario para descripciones y contenido complementario.</p>
+    </div>
+    <div class="typo-row">
+      <div class="typo-label">Caption - Verdana Regular 12px</div>
+      <small>Texto para etiquetas, notas al pie y textos auxiliares.</small>
+    </div>
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     3. BUTTONS
+     ============================================================ -->
+<section id="botones" class="ds-section">
+  <h2 class="ds-section__title">Botones</h2>
+  <p class="ds-section__desc">
+    Botones con niveles de énfasis alto, medio y bajo. Usa el botón primario para acciones principales,
+    secundario para acciones complementarias.
+  </p>
+
+  <h3>Botones Sólidos</h3>
+  <div class="component-row">
+    <p-button label="Primario" />
+    <p-button label="Secundario" severity="secondary" />
+    <p-button label="Éxito" severity="success" />
+    <p-button label="Advertencia" severity="warn" />
+    <p-button label="Peligro" severity="danger" />
+    <p-button label="Deshabilitado" [disabled]="true" />
+  </div>
+
+  <h3>Botones con Icono</h3>
+  <div class="component-row">
+    <p-button label="Guardar" icon="pi pi-save" />
+    <p-button label="Descargar" icon="pi pi-download" severity="success" />
+    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" />
+    <p-button icon="pi pi-search" [rounded]="true" />
+    <p-button icon="pi pi-plus" [rounded]="true" severity="success" />
+  </div>
+
+  <h3>Botones Outlined</h3>
+  <div class="component-row">
+    <p-button label="Primario" [outlined]="true" />
+    <p-button label="Secundario" severity="secondary" [outlined]="true" />
+    <p-button label="Éxito" severity="success" [outlined]="true" />
+    <p-button label="Advertencia" severity="warn" [outlined]="true" />
+    <p-button label="Peligro" severity="danger" [outlined]="true" />
+  </div>
+
+  <h3>Botones de Texto</h3>
+  <div class="component-row">
+    <p-button label="Primario" [text]="true" />
+    <p-button label="Secundario" severity="secondary" [text]="true" />
+    <p-button label="Éxito" severity="success" [text]="true" />
+    <p-button label="Enlace" [link]="true" />
+  </div>
+
+  <h3>Tamaños</h3>
+  <div class="component-row" style="align-items: center;">
+    <p-button label="Pequeño" size="small" />
+    <p-button label="Normal" />
+    <p-button label="Grande" size="large" />
+  </div>
+
+  <app-code-block [code]="codeButtons" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     4. FORM COMPONENTS
+     ============================================================ -->
+<section id="formularios" class="ds-section">
+  <h2 class="ds-section__title">Componentes de Formulario</h2>
+  <p class="ds-section__desc">
+    Entradas de texto, desplegables y opciones de selección según Kit UI v9.2.
+  </p>
+
+  <!-- Page header with back button -->
+  <div class="page-header">
+    <div class="page-header__left">
+      <p-button icon="pi pi-chevron-left" [rounded]="true" [text]="true" severity="secondary" />
+      <div>
+        <h3 class="page-header__title"><i class="pi pi-building"></i> Gestión de Entidades</h3>
+        <p class="page-header__subtitle">Administra todas las entidades del sistema</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search form card -->
+  <div class="search-card">
+    <div class="search-card__header">
+      <h4 class="search-card__title">Búsqueda de Entidades</h4>
+      <p-button label="Nueva Entidad" icon="pi pi-plus" [outlined]="true" />
+    </div>
+
+    <div class="search-card__grid">
+      <div class="search-card__field">
+        <label for="razon">Razón Social</label>
+        <input pInputText id="razon" [(ngModel)]="inputValue" placeholder="Buscar por razón social..." class="w-full" />
+      </div>
+      <div class="search-card__field">
+        <label for="nit">NIT</label>
+        <input pInputText id="nit" [(ngModel)]="inputValue" placeholder="Buscar por NIT..." class="w-full" />
+      </div>
+      <div class="search-card__field">
+        <label for="sigla">SIGLA</label>
+        <input pInputText id="sigla" [(ngModel)]="inputValue" placeholder="Buscar por SIGLA..." class="w-full" />
+      </div>
+      <div class="search-card__field">
+        <label for="codigo">Código Entidad</label>
+        <input pInputText id="codigo" [(ngModel)]="inputValue" placeholder="Buscar por código..." class="w-full" />
+      </div>
+      <div class="search-card__field">
+        <label for="depto">Departamento</label>
+        <p-select
+          id="depto"
+          [options]="selectOptions"
+          [(ngModel)]="selectedOption"
+          placeholder="Todos"
+          class="w-full"
+        />
+      </div>
+      <div class="search-card__field">
+        <label for="muni">Municipio</label>
+        <p-select
+          id="muni"
+          [options]="[]"
+          [(ngModel)]="selectedOption"
+          placeholder="Seleccione departamento"
+          class="w-full"
+          [disabled]="true"
+        />
+      </div>
+    </div>
+
+    <div class="search-card__actions">
+      <p-button label="Limpiar Filtros" icon="pi pi-times" severity="secondary" [outlined]="true" />
+      <p-button label="Buscar" icon="pi pi-search" />
+    </div>
+  </div>
+
+  <app-code-block [code]="codeForm" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     5. TABLE
+     ============================================================ -->
+<section id="tablas" class="ds-section">
+  <h2 class="ds-section__title">Tablas</h2>
+  <p class="ds-section__desc">
+    Tablas de datos organizadas en filas y columnas, con soporte para ordenamiento y filtrado.
+  </p>
+
+  <p-table [value]="tableData" [stripedRows]="true" [tableStyle]="{ 'min-width': '50rem' }">
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="id">ID <p-sortIcon field="id" /></th>
+        <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+        <th pSortableColumn="tipo">Tipo</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-row>
+      <tr>
+        <td>{{ row.id }}</td>
+        <td>{{ row.nombre }}</td>
+        <td>{{ row.tipo }}</td>
+        <td>
+          <p-tag [value]="row.estado" [severity]="getStateSeverity(row.estado)" />
+        </td>
+        <td>
+          <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" />
+          <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="success" pTooltip="Editar" />
+          <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" />
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <div style="margin-top: 16px;">
+    <p-paginator [rows]="rows" [totalRecords]="totalRecords" [rowsPerPageOptions]="[5, 10, 25, 50]" />
+  </div>
+
+  <app-code-block [code]="codeTable" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     6. BREADCRUMB
+     ============================================================ -->
+<section id="migadepan" class="ds-section">
+  <h2 class="ds-section__title">Miga de Pan</h2>
+  <p class="ds-section__desc">
+    Indica la ruta de navegación del usuario. Debe aparecer debajo de la cabecera en todas las secciones.
+  </p>
+
+  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+
+  <app-code-block [code]="codeBreadcrumb" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     7. ACCORDION
+     ============================================================ -->
+<section id="acordeon" class="ds-section">
+  <h2 class="ds-section__title">Acordeón</h2>
+  <p class="ds-section__desc">
+    Desplegable con encabezados que el usuario puede activar para expandir u ocultar contenido.
+  </p>
+
+  <p-accordion [multiple]="true">
+    <p-accordion-panel value="0">
+      <p-accordion-header>Reunir documentación</p-accordion-header>
+      <p-accordion-content>
+        <p>Cédula de ciudadanía: 1 original(es) en formato válido.</p>
+        <p>En caso de no tener cédula en formato válido podrá presentar: Contraseña de la cédula de ciudadanía de primera vez vigente con foto y huella y la copia del registro civil de nacimiento.</p>
+      </p-accordion-content>
+    </p-accordion-panel>
+    <p-accordion-panel value="1">
+      <p-accordion-header>Verificar requisitos</p-accordion-header>
+      <p-accordion-content>
+        <p>Verifique que cumple con todos los requisitos establecidos antes de iniciar el trámite.</p>
+      </p-accordion-content>
+    </p-accordion-panel>
+    <p-accordion-panel value="2">
+      <p-accordion-header>Realizar el trámite</p-accordion-header>
+      <p-accordion-content>
+        <p>Complete el formulario con la información requerida y adjunte los documentos solicitados.</p>
+      </p-accordion-content>
+    </p-accordion-panel>
+  </p-accordion>
+
+  <app-code-block [code]="codeAccordion" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     8. TABS
+     ============================================================ -->
+<section id="pestanas" class="ds-section">
+  <h2 class="ds-section__title">Pestañas</h2>
+  <p class="ds-section__desc">
+    Permiten acciones de selección para elementos internos navegables.
+  </p>
+
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0">Información General</p-tab>
+      <p-tab value="1">Reportes Financieros</p-tab>
+      <p-tab value="2">Histórico</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        <p>Contenido de la pestaña de información general. Aquí se muestra un resumen de la entidad y sus datos básicos.</p>
+      </p-tabpanel>
+      <p-tabpanel value="1">
+        <p>Reportes financieros consolidados de la entidad. Incluye estados financieros y notas contables.</p>
+      </p-tabpanel>
+      <p-tabpanel value="2">
+        <p>Registro histórico de reportes enviados y cambios realizados en el periodo contable.</p>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <app-code-block [code]="codeTabs" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     9. CARDS
+     ============================================================ -->
+<section id="tarjetas" class="ds-section">
+  <h2 class="ds-section__title">Tarjetas de Información</h2>
+  <p class="ds-section__desc">
+    Módulos que funcionan como enlaces para organizar y presentar información.
+  </p>
+
+  <div class="cards-grid">
+    <p-card header="Consolidación Financiera" subheader="Módulo principal">
+      <p>Gestione la consolidación de estados financieros de las entidades del Estado colombiano.</p>
+      <ng-template #footer>
+        <p-button label="Acceder" icon="pi pi-arrow-right" />
+      </ng-template>
+    </p-card>
+
+    <p-card header="Reportes CHIP" subheader="Generación de informes">
+      <p>Genere y descargue reportes contables y financieros del Sistema CHIP.</p>
+      <ng-template #footer>
+        <p-button label="Ver reportes" icon="pi pi-file" severity="success" />
+      </ng-template>
+    </p-card>
+
+    <p-card header="Gestión de Entidades" subheader="Administración">
+      <p>Administre las entidades contables públicas registradas en el sistema.</p>
+      <ng-template #footer>
+        <p-button label="Gestionar" icon="pi pi-cog" severity="secondary" />
+      </ng-template>
+    </p-card>
+  </div>
+
+  <app-code-block [code]="codeCards" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     10. ALERTS / MESSAGES
+     ============================================================ -->
+<section id="alertas" class="ds-section">
+  <h2 class="ds-section__title">Alertas y Notificaciones</h2>
+  <p class="ds-section__desc">
+    Indican cambios de estado. Alertas emergentes y tipo toast para mensajes cortos.
+  </p>
+
+  <div class="alerts-grid">
+    <p-message severity="info">
+      <strong>Información:</strong> El periodo contable actual es 2026-I.
+    </p-message>
+    <p-message severity="success">
+      <strong>Éxito:</strong> El reporte fue enviado correctamente.
+    </p-message>
+    <p-message severity="warn">
+      <strong>Advertencia:</strong> El plazo de entrega vence el 15 de abril.
+    </p-message>
+    <p-message severity="error">
+      <strong>Error:</strong> No fue posible guardar los cambios. Intente nuevamente.
+    </p-message>
+  </div>
+
+  <h3>Notificaciones Toast</h3>
+  <div class="component-row">
+    <p-button label="Info" icon="pi pi-info-circle" (onClick)="showToast('info', 'Información', 'Periodo contable actualizado')" />
+    <p-button label="Éxito" icon="pi pi-check" severity="success" (onClick)="showToast('success', 'Éxito', 'Reporte guardado correctamente')" />
+    <p-button label="Advertencia" icon="pi pi-exclamation-triangle" severity="warn" (onClick)="showToast('warn', 'Advertencia', 'Quedan 3 días para el cierre')" />
+    <p-button label="Error" icon="pi pi-times" severity="danger" (onClick)="showToast('error', 'Error', 'Fallo en la conexión al servidor')" />
+  </div>
+
+  <app-code-block [code]="codeAlerts" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     11. TAGS & BADGES
+     ============================================================ -->
+<section id="etiquetas" class="ds-section">
+  <h2 class="ds-section__title">Etiquetas y Badges</h2>
+  <p class="ds-section__desc">
+    Proveen acceso a contenido y describen tipos de información.
+  </p>
+
+  <h3>Tags</h3>
+  <div class="component-row">
+    <p-tag value="Activo" severity="success" />
+    <p-tag value="Pendiente" severity="warn" />
+    <p-tag value="Inactivo" severity="danger" />
+    <p-tag value="En revisión" severity="info" />
+    <p-tag value="Borrador" severity="secondary" />
+  </div>
+
+  <h3>Badges</h3>
+  <div class="component-row" style="align-items: center;">
+    <p-badge value="4" />
+    <p-badge value="12" severity="success" />
+    <p-badge value="3" severity="warn" />
+    <p-badge value="1" severity="danger" />
+    <i class="pi pi-bell" pBadge value="8" style="font-size: 1.5rem;"></i>
+  </div>
+
+  <app-code-block [code]="codeTags" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     12. PROGRESS BAR
+     ============================================================ -->
+<section id="progreso" class="ds-section">
+  <h2 class="ds-section__title">Indicadores de Progreso</h2>
+  <p class="ds-section__desc">
+    Barras de progreso y líneas de avance para indicar el estado del proceso.
+  </p>
+
+  <div class="progress-showcase">
+    <div>
+      <label>Progreso de carga (60%)</label>
+      <p-progressbar [value]="60" />
+    </div>
+    <div>
+      <label>Completado (100%)</label>
+      <p-progressbar [value]="100" />
+    </div>
+    <div>
+      <label>Cargando (indeterminado)</label>
+      <p-progressbar mode="indeterminate" [style]="{ height: '6px' }" />
+    </div>
+  </div>
+
+  <app-code-block [code]="codeProgress" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     13. DIALOG / MODAL
+     ============================================================ -->
+<section id="modal" class="ds-section">
+  <h2 class="ds-section__title">Alerta Modal</h2>
+  <p class="ds-section__desc">
+    Recuadros emergentes que brindan información o piden confirmación sin redirigir al usuario.
+  </p>
+
+  <p-button label="Abrir modal" icon="pi pi-external-link" (onClick)="showDialog = true" />
+
+  <p-dialog
+    header="Confirmar acción"
+    [(visible)]="showDialog"
+    [style]="{ width: '450px' }"
+    [modal]="true"
+  >
+    <p>Está seguro de que desea enviar el reporte de consolidación financiera al sistema CHIP?</p>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showDialog = false" />
+      <p-button label="Confirmar" icon="pi pi-check" (onClick)="showDialog = false" />
+    </ng-template>
+  </p-dialog>
+
+  <app-code-block [code]="codeDialog" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     14. SPACING & GRID
+     ============================================================ -->
+<section id="espaciado" class="ds-section">
+  <h2 class="ds-section__title">Espaciado y Cuadrícula</h2>
+  <p class="ds-section__desc">
+    Sistema de cuadrícula basado en Bootstrap 5.0 con 12 columnas y 24px de gutter.
+    Espaciado en múltiplos de 8px.
+  </p>
+
+  <h3>Escala de Espaciado (base 8px)</h3>
+  <div class="spacing-showcase">
+    @for (i of [1,2,3,4,5,6,7,8,9,10]; track i) {
+      <div class="spacing-item">
+        <div class="spacing-bar" [style.width.px]="i * 8"></div>
+        <span>--space-{{ i }}: {{ i <= 5 ? i * 4 : (i - 5) * 8 + 20 }}px</span>
+      </div>
+    }
+  </div>
+
+  <h3>Grid 12 Columnas</h3>
+  <div class="grid-showcase">
+    <div class="grid-row">
+      <div class="grid-col" style="flex: 6;">6</div>
+      <div class="grid-col" style="flex: 6;">6</div>
+    </div>
+    <div class="grid-row">
+      <div class="grid-col" style="flex: 4;">4</div>
+      <div class="grid-col" style="flex: 4;">4</div>
+      <div class="grid-col" style="flex: 4;">4</div>
+    </div>
+    <div class="grid-row">
+      <div class="grid-col" style="flex: 3;">3</div>
+      <div class="grid-col" style="flex: 3;">3</div>
+      <div class="grid-col" style="flex: 3;">3</div>
+      <div class="grid-col" style="flex: 3;">3</div>
+    </div>
+    <div class="grid-row">
+      <div class="grid-col" style="flex: 8;">8</div>
+      <div class="grid-col" style="flex: 4;">4</div>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeSpacing" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     15. TOOLTIP
+     ============================================================ -->
+<section id="tooltip" class="ds-section">
+  <h2 class="ds-section__title">Tooltip</h2>
+  <p class="ds-section__desc">
+    Texto emergente que aparece al pasar el cursor sobre un elemento. Útil para dar contexto
+    adicional sin ocupar espacio en la interfaz.
+  </p>
+
+  <h3>Posiciones</h3>
+  <div class="component-row">
+    <p-button label="Arriba" pTooltip="Tooltip arriba" tooltipPosition="top" />
+    <p-button label="Abajo" pTooltip="Tooltip abajo" tooltipPosition="bottom" />
+    <p-button label="Izquierda" pTooltip="Tooltip izquierda" tooltipPosition="left" />
+    <p-button label="Derecha" pTooltip="Tooltip derecha" tooltipPosition="right" />
+  </div>
+
+  <h3>En iconos de acción</h3>
+  <div class="component-row">
+    <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" />
+    <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="success" pTooltip="Editar registro" />
+    <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar registro" />
+    <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" pTooltip="Descargar archivo" />
+  </div>
+
+  <app-code-block [code]="codeTooltip" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     16. CHECKBOX & RADIO BUTTON
+     ============================================================ -->
+<section id="seleccion" class="ds-section">
+  <h2 class="ds-section__title">Checkbox y Radio Button</h2>
+  <p class="ds-section__desc">
+    Controles de selección para formularios. Checkbox permite seleccionar múltiples opciones,
+    Radio Button permite seleccionar una sola opción del grupo.
+  </p>
+
+  <h3>Checkbox</h3>
+  <div class="selection-group">
+    <p-checkbox [(ngModel)]="checkboxValues[0]" [binary]="true" inputId="cb1" />
+    <label for="cb1">Acepto los términos y condiciones</label>
+  </div>
+  <div class="selection-group">
+    <p-checkbox [(ngModel)]="checkboxValues[1]" [binary]="true" inputId="cb2" />
+    <label for="cb2">Recibir notificaciones por correo</label>
+  </div>
+  <div class="selection-group">
+    <p-checkbox [(ngModel)]="checkboxValues[2]" [binary]="true" inputId="cb3" [disabled]="true" />
+    <label for="cb3">Opción deshabilitada</label>
+  </div>
+
+  <h3>Radio Button</h3>
+  <div class="selection-group">
+    <p-radiobutton name="tipo" value="nacional" [(ngModel)]="radioValue" inputId="rb1" />
+    <label for="rb1">Nacional</label>
+  </div>
+  <div class="selection-group">
+    <p-radiobutton name="tipo" value="territorial" [(ngModel)]="radioValue" inputId="rb2" />
+    <label for="rb2">Territorial</label>
+  </div>
+  <div class="selection-group">
+    <p-radiobutton name="tipo" value="mixta" [(ngModel)]="radioValue" inputId="rb3" />
+    <label for="rb3">Mixta</label>
+  </div>
+
+  <app-code-block [code]="codeCheckboxRadio" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     17. TOGGLE SWITCH
+     ============================================================ -->
+<section id="switch" class="ds-section">
+  <h2 class="ds-section__title">Toggle Switch</h2>
+  <p class="ds-section__desc">
+    Control de activar/desactivar para opciones binarias. Proporciona retroalimentación
+    visual inmediata del estado.
+  </p>
+
+  <div class="switch-showcase">
+    <div class="switch-row">
+      <p-toggleswitch [(ngModel)]="switchValues[0]" />
+      <span>Notificaciones por correo</span>
+      <p-tag [value]="switchValues[0] ? 'Activo' : 'Inactivo'" [severity]="switchValues[0] ? 'success' : 'secondary'" />
+    </div>
+    <div class="switch-row">
+      <p-toggleswitch [(ngModel)]="switchValues[1]" />
+      <span>Modo mantenimiento</span>
+      <p-tag [value]="switchValues[1] ? 'Activo' : 'Inactivo'" [severity]="switchValues[1] ? 'success' : 'secondary'" />
+    </div>
+    <div class="switch-row">
+      <p-toggleswitch [(ngModel)]="switchValues[2]" [disabled]="true" />
+      <span>Opción deshabilitada</span>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeSwitch" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     18. DATEPICKER
+     ============================================================ -->
+<section id="datepicker" class="ds-section">
+  <h2 class="ds-section__title">Selector de Fecha</h2>
+  <p class="ds-section__desc">
+    Componente para selección de fechas y periodos. Usado en formularios de reportes,
+    filtros por rango de fechas y selección de periodos contables.
+  </p>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="dp-single">Fecha única</label>
+      <p-datepicker id="dp-single" [(ngModel)]="dateValue" [showIcon]="true" dateFormat="dd/mm/yy" placeholder="DD/MM/AAAA" class="w-full" />
+    </div>
+    <div class="form-group">
+      <label for="dp-range">Rango de fechas</label>
+      <p-datepicker id="dp-range" [(ngModel)]="dateRange" selectionMode="range" [showIcon]="true" dateFormat="dd/mm/yy" placeholder="Desde - Hasta" class="w-full" />
+    </div>
+    <div class="form-group">
+      <label for="dp-month">Mes y año</label>
+      <p-datepicker id="dp-month" [(ngModel)]="monthValue" view="month" dateFormat="mm/yy" [showIcon]="true" placeholder="MM/AAAA" class="w-full" />
+    </div>
+    <div class="form-group">
+      <label for="dp-disabled">Deshabilitado</label>
+      <p-datepicker id="dp-disabled" [disabled]="true" [showIcon]="true" placeholder="No disponible" class="w-full" />
+    </div>
+  </div>
+
+  <app-code-block [code]="codeDatepicker" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     19. CHIP
+     ============================================================ -->
+<section id="chip" class="ds-section">
+  <h2 class="ds-section__title">Chips</h2>
+  <p class="ds-section__desc">
+    Etiquetas compactas que representan entradas, atributos o filtros activos.
+    Pueden ser removibles para permitir al usuario gestionar sus selecciones.
+  </p>
+
+  <h3>Chips básicos</h3>
+  <div class="component-row">
+    <p-chip label="Angular" />
+    <p-chip label="PrimeNG" />
+    <p-chip label="CHIP 2.0" />
+  </div>
+
+  <h3>Con icono</h3>
+  <div class="component-row">
+    <p-chip label="Seguridad" icon="pi pi-shield" />
+    <p-chip label="Entidades" icon="pi pi-building" />
+    <p-chip label="Reportes" icon="pi pi-chart-bar" />
+  </div>
+
+  <h3>Removibles (filtros activos)</h3>
+  <div class="component-row">
+    @for (chip of activeFilters; track chip) {
+      <p-chip [label]="chip" [removable]="true" (onRemove)="removeFilter(chip)" />
+    }
+  </div>
+
+  <app-code-block [code]="codeChip" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     20. AVATAR
+     ============================================================ -->
+<section id="avatar" class="ds-section">
+  <h2 class="ds-section__title">Avatar</h2>
+  <p class="ds-section__desc">
+    Representación visual de un usuario. Se usa en barras de navegación, listas de usuarios
+    y perfiles. Soporta iniciales, íconos y tamaños variados.
+  </p>
+
+  <h3>Con iniciales</h3>
+  <div class="component-row" style="align-items: center;">
+    <p-avatar label="JP" shape="circle" size="large" [style]="{ 'background-color': '#0943B5', color: '#fff' }" />
+    <p-avatar label="MG" shape="circle" [style]="{ 'background-color': '#4CAF50', color: '#fff' }" />
+    <p-avatar label="AR" shape="circle" [style]="{ 'background-color': '#F44336', color: '#fff', width: '2rem', height: '2rem', 'font-size': '0.75rem' }" />
+  </div>
+
+  <h3>Con icono</h3>
+  <div class="component-row" style="align-items: center;">
+    <p-avatar icon="pi pi-user" shape="circle" size="large" [style]="{ 'background-color': '#E8EDF8', color: '#0943B5' }" />
+    <p-avatar icon="pi pi-user" shape="circle" [style]="{ 'background-color': '#E8EDF8', color: '#0943B5' }" />
+  </div>
+
+  <h3>Grupo de avatares</h3>
+  <p-avatargroup>
+    <p-avatar label="JP" shape="circle" [style]="{ 'background-color': '#0943B5', color: '#fff' }" />
+    <p-avatar label="MG" shape="circle" [style]="{ 'background-color': '#4CAF50', color: '#fff' }" />
+    <p-avatar label="AR" shape="circle" [style]="{ 'background-color': '#F44336', color: '#fff' }" />
+    <p-avatar label="+5" shape="circle" [style]="{ 'background-color': '#D6D6D6', color: '#4C4C4C' }" />
+  </p-avatargroup>
+
+  <app-code-block [code]="codeAvatar" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     21. SKELETON
+     ============================================================ -->
+<section id="skeleton" class="ds-section">
+  <h2 class="ds-section__title">Skeleton (Carga)</h2>
+  <p class="ds-section__desc">
+    Placeholders animados que indican contenido en carga. Mejoran la percepción de velocidad
+    y mantienen la estructura visual mientras se obtienen los datos.
+  </p>
+
+  <h3>Elementos individuales</h3>
+  <div class="skeleton-showcase">
+    <p-skeleton width="100%" height="2rem" />
+    <p-skeleton width="75%" height="1rem" />
+    <p-skeleton width="50%" height="1rem" />
+    <p-skeleton shape="circle" size="3rem" />
+  </div>
+
+  <h3>Tarjeta con skeleton</h3>
+  <div class="skeleton-card">
+    <p-skeleton width="100%" height="140px" />
+    <div class="skeleton-card__body">
+      <p-skeleton width="60%" height="1.5rem" />
+      <p-skeleton width="100%" height="1rem" />
+      <p-skeleton width="80%" height="1rem" />
+      <p-skeleton width="120px" height="2.5rem" borderRadius="6px" />
+    </div>
+  </div>
+
+  <h3>Tabla con skeleton</h3>
+  <div class="skeleton-table">
+    @for (i of [1,2,3,4]; track i) {
+      <div class="skeleton-table__row">
+        <p-skeleton width="60px" height="1rem" />
+        <p-skeleton width="200px" height="1rem" />
+        <p-skeleton width="100px" height="1rem" />
+        <p-skeleton width="80px" height="1.5rem" borderRadius="12px" />
+      </div>
+    }
+  </div>
+
+  <app-code-block [code]="codeSkeleton" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     22. TIMELINE
+     ============================================================ -->
+<section id="timeline" class="ds-section">
+  <h2 class="ds-section__title">Línea de Tiempo</h2>
+  <p class="ds-section__desc">
+    Visualización cronológica de eventos. Útil para historiales de actividad, registros
+    de auditoría y flujos de procesos.
+  </p>
+
+  <p-timeline [value]="timelineEvents" align="left">
+    <ng-template #content let-event>
+      <div class="timeline-event">
+        <strong>{{ event.title }}</strong>
+        <p>{{ event.description }}</p>
+        <small>{{ event.date }}</small>
+      </div>
+    </ng-template>
+    <ng-template #marker let-event>
+      <span class="timeline-marker" [style.background-color]="event.color">
+        <i [class]="event.icon"></i>
+      </span>
+    </ng-template>
+  </p-timeline>
+
+  <app-code-block [code]="codeTimeline" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     23. FILE UPLOAD
+     ============================================================ -->
+<section id="fileupload" class="ds-section">
+  <h2 class="ds-section__title">Carga de Archivos</h2>
+  <p class="ds-section__desc">
+    Componente para seleccionar y cargar archivos. Soporta arrastrar y soltar, múltiples archivos
+    y restricción por tipo y tamaño.
+  </p>
+
+  <h3>Básico</h3>
+  <p-fileupload mode="basic" chooseLabel="Seleccionar archivo" chooseIcon="pi pi-upload" />
+
+  <h3>Avanzado con drag and drop</h3>
+  <p-fileupload
+    [multiple]="true"
+    accept=".pdf,.xlsx,.csv"
+    [maxFileSize]="5000000"
+    chooseLabel="Seleccionar"
+    chooseIcon="pi pi-upload"
+    [showUploadButton]="false"
+    [showCancelButton]="false">
+    <ng-template #empty>
+      <div class="fileupload-empty">
+        <i class="pi pi-cloud-upload"></i>
+        <p>Arrastre archivos aquí o haga clic en "Seleccionar"</p>
+        <small>Formatos permitidos: PDF, Excel, CSV. Máximo 5MB por archivo.</small>
+      </div>
+    </ng-template>
+  </p-fileupload>
+
+  <app-code-block [code]="codeFileUpload" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     24. TEXTAREA
+     ============================================================ -->
+<section id="textarea" class="ds-section">
+  <h2 class="ds-section__title">Área de Texto</h2>
+  <p class="ds-section__desc">
+    Campo de texto multilínea para observaciones, descripciones y contenido extenso.
+    Soporta autoResize y contador de caracteres.
+  </p>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="ta-basic">Básico</label>
+      <textarea pTextarea id="ta-basic" rows="3" placeholder="Escriba aquí..." class="w-full"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="ta-auto">Auto-resize</label>
+      <textarea pTextarea id="ta-auto" [autoResize]="true" rows="3" placeholder="Se expande automáticamente..." class="w-full"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="ta-disabled">Deshabilitado</label>
+      <textarea pTextarea id="ta-disabled" rows="3" [disabled]="true" placeholder="No editable" class="w-full"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="ta-counter">Con contador ({{ textareaCount }}/200)</label>
+      <textarea pTextarea id="ta-counter" rows="3" [(ngModel)]="textareaCounter" [maxlength]="200" placeholder="Máximo 200 caracteres..." class="w-full"></textarea>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeTextarea" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     25. INPUT NUMBER
+     ============================================================ -->
+<section id="inputnumber" class="ds-section">
+  <h2 class="ds-section__title">Selector Numérico</h2>
+  <p class="ds-section__desc">
+    Campo numérico con botones de incremento/decremento. Soporta formato de moneda,
+    decimales y rangos. Relevante para formularios contables.
+  </p>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="num-basic">Básico</label>
+      <p-inputnumber id="num-basic" [(ngModel)]="numBasic" placeholder="Cantidad" class="w-full" />
+    </div>
+    <div class="form-group">
+      <label for="num-buttons">Con botones</label>
+      <p-inputnumber id="num-buttons" [(ngModel)]="numButtons" [showButtons]="true" [min]="0" [max]="100" class="w-full" />
+    </div>
+    <div class="form-group">
+      <label for="num-currency">Moneda (COP)</label>
+      <p-inputnumber id="num-currency" [(ngModel)]="numCurrency" mode="currency" currency="COP" locale="es-CO" class="w-full" />
+    </div>
+    <div class="form-group">
+      <label for="num-decimal">Decimales</label>
+      <p-inputnumber id="num-decimal" [(ngModel)]="numDecimal" [minFractionDigits]="2" [maxFractionDigits]="4" class="w-full" />
+    </div>
+  </div>
+
+  <app-code-block [code]="codeInputNumber" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     26. MULTISELECT
+     ============================================================ -->
+<section id="multiselect" class="ds-section">
+  <h2 class="ds-section__title">Selección Múltiple</h2>
+  <p class="ds-section__desc">
+    Selector de múltiples opciones con chips. Útil para filtros de departamentos,
+    categorías o permisos.
+  </p>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="ms-basic">Departamentos</label>
+      <p-multiselect id="ms-basic" [options]="departamentoOptions" [(ngModel)]="selectedDepartamentos" placeholder="Seleccione departamentos" class="w-full" [display]="'chip'" />
+    </div>
+    <div class="form-group">
+      <label for="ms-modules">Módulos</label>
+      <p-multiselect id="ms-modules" [options]="moduloOptions" [(ngModel)]="selectedModulos" placeholder="Seleccione módulos" class="w-full" [display]="'chip'" />
+    </div>
+  </div>
+
+  <app-code-block [code]="codeMultiSelect" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     27. MENU
+     ============================================================ -->
+<section id="menu" class="ds-section">
+  <h2 class="ds-section__title">Menú</h2>
+  <p class="ds-section__desc">
+    Menús desplegables para acciones y navegación. Incluye menú básico, menú con botón
+    y menú contextual (clic derecho).
+  </p>
+
+  <h3>Menú con botón</h3>
+  <div class="component-row">
+    <p-menu #menuRef [model]="menuItems" [popup]="true" />
+    <p-button label="Acciones" icon="pi pi-ellipsis-v" (onClick)="menuRef.toggle($event)" />
+  </div>
+
+  <h3>Split Button (acción principal + opciones)</h3>
+  <div class="component-row">
+    <p-splitbutton label="Guardar" icon="pi pi-save" [model]="splitMenuItems" />
+    <p-splitbutton label="Exportar" icon="pi pi-download" [model]="exportMenuItems" severity="secondary" [outlined]="true" />
+  </div>
+
+  <h3>Menubar (barra de navegación)</h3>
+  <p-menubar [model]="menubarItems" />
+
+  <app-code-block [code]="codeMenu" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     28. PANEL / FIELDSET
+     ============================================================ -->
+<section id="panel" class="ds-section">
+  <h2 class="ds-section__title">Panel y Fieldset</h2>
+  <p class="ds-section__desc">
+    Contenedores colapsables para agrupar campos de formulario o secciones de contenido.
+  </p>
+
+  <h3>Panel</h3>
+  <p-panel header="Información de la Entidad" [toggleable]="true">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Código CHIP</label>
+        <input pInputText value="11001000" class="w-full" readonly />
+      </div>
+      <div class="form-group">
+        <label>NIT</label>
+        <input pInputText value="899.999.061-9" class="w-full" readonly />
+      </div>
+    </div>
+  </p-panel>
+
+  <h3>Fieldset</h3>
+  <p-fieldset legend="Datos de Contacto" [toggleable]="true">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Teléfono</label>
+        <input pInputText value="+57(601) 492 64 00" class="w-full" readonly />
+      </div>
+      <div class="form-group">
+        <label>Correo</label>
+        <input pInputText value="contactenos@contaduria.gov.co" class="w-full" readonly />
+      </div>
+    </div>
+  </p-fieldset>
+
+  <app-code-block [code]="codePanel" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     29. SIDEBAR COMPONENT
+     ============================================================ -->
+<section id="sidebar-component" class="ds-section">
+  <h2 class="ds-section__title">Panel Lateral (Sidebar)</h2>
+  <p class="ds-section__desc">
+    Panel deslizable desde el borde de la pantalla. Útil para formularios de edición rápida,
+    filtros avanzados o detalles sin salir de la vista actual.
+  </p>
+
+  <div class="component-row">
+    <p-button label="Abrir desde la derecha" icon="pi pi-arrow-left" (onClick)="sidebarRight = true" />
+    <p-button label="Abrir desde la izquierda" icon="pi pi-arrow-right" severity="secondary" [outlined]="true" (onClick)="sidebarLeft = true" />
+  </div>
+
+  <p-sidebar [(visible)]="sidebarRight" position="right" [style]="{ width: '400px' }">
+    <ng-template #header>
+      <h3 style="margin: 0;">Editar Entidad</h3>
+    </ng-template>
+    <div class="sidebar-form">
+      <div class="form-group">
+        <label>Razón Social</label>
+        <input pInputText value="Ministerio de Hacienda" class="w-full" />
+      </div>
+      <div class="form-group">
+        <label>NIT</label>
+        <input pInputText value="899999090-2" class="w-full" />
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <p-select [options]="selectOptions" placeholder="Seleccione" class="w-full" />
+      </div>
+      <div class="sidebar-form__actions">
+        <p-button label="Cancelar" severity="secondary" [outlined]="true" (onClick)="sidebarRight = false" />
+        <p-button label="Guardar" icon="pi pi-save" (onClick)="sidebarRight = false" />
+      </div>
+    </div>
+  </p-sidebar>
+
+  <p-sidebar [(visible)]="sidebarLeft" position="left" [style]="{ width: '360px' }">
+    <ng-template #header>
+      <h3 style="margin: 0;">Filtros Avanzados</h3>
+    </ng-template>
+    <div class="sidebar-form">
+      <div class="form-group">
+        <label>Departamento</label>
+        <p-multiselect [options]="departamentoOptions" placeholder="Todos" class="w-full" [display]="'chip'" />
+      </div>
+      <div class="form-group">
+        <label>Estado</label>
+        <p-select [options]="selectOptions" placeholder="Todos" class="w-full" />
+      </div>
+      <div class="form-group">
+        <label>Fecha desde</label>
+        <p-datepicker [showIcon]="true" dateFormat="dd/mm/yy" placeholder="DD/MM/AAAA" class="w-full" />
+      </div>
+      <div class="sidebar-form__actions">
+        <p-button label="Limpiar" severity="secondary" [outlined]="true" icon="pi pi-times" />
+        <p-button label="Aplicar filtros" icon="pi pi-search" (onClick)="sidebarLeft = false" />
+      </div>
+    </div>
+  </p-sidebar>
+
+  <app-code-block [code]="codeSidebarComponent" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     30. CONFIRM DIALOG
+     ============================================================ -->
+<section id="confirmdialog" class="ds-section">
+  <h2 class="ds-section__title">Diálogo de Confirmación</h2>
+  <p class="ds-section__desc">
+    Diálogo estándar para acciones que requieren confirmación del usuario antes de ejecutarse.
+    Patrón obligatorio para acciones destructivas o irreversibles.
+  </p>
+
+  <div class="component-row">
+    <p-button label="Eliminar registro" icon="pi pi-trash" severity="danger" (onClick)="showConfirmDelete = true" />
+    <p-button label="Enviar reporte" icon="pi pi-send" (onClick)="showConfirmSend = true" />
+  </div>
+
+  <p-dialog header="Confirmar eliminación" [(visible)]="showConfirmDelete" [style]="{ width: '450px' }" [modal]="true">
+    <div class="confirm-content">
+      <i class="pi pi-exclamation-triangle confirm-content__icon confirm-content__icon--danger"></i>
+      <div>
+        <p><strong>¿Está seguro de eliminar este registro?</strong></p>
+        <p>Esta acción no se puede deshacer. Todos los datos asociados serán eliminados permanentemente.</p>
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showConfirmDelete = false" />
+      <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="showConfirmDelete = false" />
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog header="Confirmar envío" [(visible)]="showConfirmSend" [style]="{ width: '450px' }" [modal]="true">
+    <div class="confirm-content">
+      <i class="pi pi-question-circle confirm-content__icon confirm-content__icon--info"></i>
+      <div>
+        <p><strong>¿Desea enviar el reporte CGN-001?</strong></p>
+        <p>Una vez enviado, el reporte quedará en estado "Pendiente de revisión" y no podrá ser modificado.</p>
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showConfirmSend = false" />
+      <p-button label="Enviar" icon="pi pi-send" (onClick)="showConfirmSend = false" />
+    </ng-template>
+  </p-dialog>
+
+  <app-code-block [code]="codeConfirmDialog" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     31. GALERÍA DE LOGOS
+     ============================================================ -->
+<section id="logos" class="ds-section">
+  <h2 class="ds-section__title">Galería de Logos</h2>
+  <p class="ds-section__desc">
+    Logos institucionales disponibles en el sistema. Cada logo tiene versiones y reglas de uso
+    según el Kit UI v9.2.
+  </p>
+
+  <div class="logos-grid">
+    <div class="logo-card">
+      <div class="logo-card__preview logo-card__preview--dark">
+        <img src="assets/logos/govco-logo.png" alt="GOV.CO" />
+      </div>
+      <div class="logo-card__info">
+        <strong>GOV.CO</strong>
+        <small>govco-logo.png</small>
+        <span>Obligatorio en barra superior y footer</span>
+      </div>
+    </div>
+
+    <div class="logo-card">
+      <div class="logo-card__preview">
+        <img src="assets/logos/cobranding.svg" alt="Cobranding CGN + CHIP" />
+      </div>
+      <div class="logo-card__info">
+        <strong>Cobranding CGN + CHIP</strong>
+        <small>cobranding.svg</small>
+        <span>Header principal de la aplicación</span>
+      </div>
+    </div>
+
+    <div class="logo-card">
+      <div class="logo-card__preview logo-card__preview--dark">
+        <img src="assets/logos/hacienda-blanco.svg" alt="Min. Hacienda" />
+      </div>
+      <div class="logo-card__info">
+        <strong>Ministerio de Hacienda</strong>
+        <small>hacienda-blanco.svg</small>
+        <span>Versión blanca para fondos oscuros (footer)</span>
+      </div>
+    </div>
+
+    <div class="logo-card">
+      <div class="logo-card__preview">
+        <img src="assets/logos/chip-logo-2018.svg" alt="CHIP" />
+      </div>
+      <div class="logo-card__info">
+        <strong>CHIP - Rediseño 2018</strong>
+        <small>chip-logo-2018.svg</small>
+        <span>Logo principal del sistema CHIP</span>
+      </div>
+    </div>
+
+    <div class="logo-card">
+      <div class="logo-card__preview logo-card__preview--dark">
+        <img src="assets/logos/wheelchair.svg" alt="Accesibilidad" style="height: 48px;" />
+      </div>
+      <div class="logo-card__info">
+        <strong>Accesibilidad</strong>
+        <small>wheelchair.svg</small>
+        <span>Botón flotante de accesibilidad</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Reglas de uso</h3>
+  <div class="logos-rules">
+    <div class="logos-rule">
+      <i class="pi pi-check-circle"></i>
+      <span>Mantener las proporciones originales, no distorsionar</span>
+    </div>
+    <div class="logos-rule">
+      <i class="pi pi-check-circle"></i>
+      <span>Respetar el área de protección (espacio libre alrededor)</span>
+    </div>
+    <div class="logos-rule">
+      <i class="pi pi-check-circle"></i>
+      <span>Usar versión blanca sobre fondos oscuros, versión color sobre fondos claros</span>
+    </div>
+    <div class="logos-rule logos-rule--dont">
+      <i class="pi pi-times-circle"></i>
+      <span>No cambiar los colores institucionales de los logos</span>
+    </div>
+    <div class="logos-rule logos-rule--dont">
+      <i class="pi pi-times-circle"></i>
+      <span>No reducir por debajo de 32px de altura mínima</span>
+    </div>
+  </div>
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     32. SIDEBAR NAVIGATION
+     ============================================================ -->
+<section id="sidebar" class="ds-section">
+  <h2 class="ds-section__title">Barra Lateral de Navegación</h2>
+  <p class="ds-section__desc">
+    Menú vertical fijo a la izquierda con iconos y enlaces. En móvil se oculta y se accede
+    mediante un botón hamburguesa. El enlace activo tiene borde izquierdo azul Cobalt.
+  </p>
+
+  <div class="preview-box">
+    <div class="preview-sidebar">
+      <div class="preview-sidebar__link preview-sidebar__link--active">
+        <i class="pi pi-home"></i> Inicio
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-play"></i> Comenzar
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-th-large"></i> Ejemplos de Uso
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-image"></i> Iconografía
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-palette"></i> Tokens
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-eye"></i> Accesibilidad
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-mobile"></i> Responsive
+      </div>
+      <div class="preview-sidebar__link">
+        <i class="pi pi-clone"></i> Patrones
+      </div>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeSidebar" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     16. GOV.CO TOP BAR
+     ============================================================ -->
+<section id="govco-bar" class="ds-section">
+  <h2 class="ds-section__title">Barra Superior GOV.CO</h2>
+  <p class="ds-section__desc">
+    Barra obligatoria del Kit UI v9.2. Altura 48px, fondo Cobalt 700 (#0943B5).
+    Contiene el logo GOV.CO a la izquierda y el enlace al Portal GOV.CO a la derecha.
+  </p>
+
+  <div class="preview-box">
+    <div class="preview-govco">
+      <img src="assets/logos/govco-logo.png" alt="Logo GOV.CO" style="height: 24px;" />
+      <span>Portal GOV.CO</span>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeGovcoBar" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     17. HEADER / COBRANDING
+     ============================================================ -->
+<section id="header" class="ds-section">
+  <h2 class="ds-section__title">Cabecera con Cobranding</h2>
+  <p class="ds-section__desc">
+    Header institucional con el logo de cobranding (CGN + CHIP), la barra de accesibilidad
+    y el botón hamburguesa para móvil.
+  </p>
+
+  <div class="preview-box">
+    <div class="preview-header">
+      <img src="assets/logos/cobranding.svg" alt="Cobranding" style="height: 48px;" />
+      <div class="preview-header__right">
+        <div class="preview-a11y">
+          <span class="preview-a11y__btn"><i class="pi pi-plus"></i> A+</span>
+          <span class="preview-a11y__btn"><i class="pi pi-minus"></i> A-</span>
+          <span class="preview-a11y__btn"><i class="pi pi-sun"></i> Contraste</span>
+        </div>
+        <span class="preview-hamburger"><i class="pi pi-bars"></i></span>
+      </div>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeHeader" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     18. FOOTER
+     ============================================================ -->
+<section id="footer" class="ds-section">
+  <h2 class="ds-section__title">Pie de Página</h2>
+  <p class="ds-section__desc">
+    Footer institucional con 3 columnas: logos (Hacienda + GOV.CO), información de la entidad
+    con redes sociales, y datos de contacto con enlaces de políticas. Fondo Cobalt 700.
+  </p>
+
+  <div class="preview-box">
+    <div class="preview-footer">
+      <div class="preview-footer__logos">
+        <img src="assets/logos/hacienda-blanco.svg" alt="Hacienda" style="height: 60px;" />
+        <img src="assets/logos/govco-logo.png" alt="GOV.CO" style="height: 20px;" />
+      </div>
+      <div class="preview-footer__info">
+        <strong>Contaduría General de la Nación</strong>
+        <span>Cuentas Claras, Estado Transparente.</span>
+        <span>Dirección: Calle 26 No 69 - 76</span>
+        <div class="preview-footer__social">
+          <i class="pi pi-linkedin"></i>
+          <i class="pi pi-twitter"></i>
+          <i class="pi pi-youtube"></i>
+          <i class="pi pi-facebook"></i>
+        </div>
+      </div>
+      <div class="preview-footer__contact">
+        <strong><i class="pi pi-phone"></i> Contacto</strong>
+        <span>+57(601) 492 64 00</span>
+        <span>contactenos&#64;contaduria.gov.co</span>
+        <span style="text-decoration: underline;">Política de privacidad</span>
+      </div>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeFooter" language="markup" />
+</section>
+
+<p-divider />
+
+<!-- ============================================================
+     19. FLOATING ELEMENTS
+     ============================================================ -->
+<section id="flotantes" class="ds-section">
+  <h2 class="ds-section__title">Elementos Flotantes</h2>
+  <p class="ds-section__desc">
+    Botón "Volver arriba" y panel de accesibilidad con servicios. Fijos en la esquina inferior
+    derecha. El botón aparece al hacer scroll y el panel se expande al hacer click.
+  </p>
+
+  <div class="preview-box" style="min-height: 280px; position: relative;">
+    <!-- Panel accesibilidad preview -->
+    <div style="position: absolute; right: 24px; top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #0943B5; border: 2px solid #5A80CF; display: flex; align-items: center; justify-content: center;">
+        <img src="assets/logos/wheelchair.svg" alt="" style="width: 28px; height: 28px;" />
+      </div>
+      <div style="background: #FBC02D; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center;">
+          <i class="pi pi-eye-slash" style="color: #0943B5; font-size: 18px;"></i>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center;">
+          <i class="pi pi-comment" style="color: #0943B5; font-size: 18px;"></i>
+        </div>
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #fff; display: flex; align-items: center; justify-content: center;">
+          <i class="pi pi-envelope" style="color: #0943B5; font-size: 18px;"></i>
+        </div>
+      </div>
+    </div>
+    <!-- Volver arriba preview -->
+    <div style="position: absolute; right: 24px; bottom: 20px; display: flex; align-items: center; gap: 6px; padding: 10px 18px; background: #0943B5; color: #fff; border-radius: 8px; font-size: 13px; font-weight: 600;">
+      <i class="pi pi-chevron-up" style="font-size: 14px;"></i>
+      <span>Volver arriba</span>
+    </div>
+  </div>
+
+  <app-code-block [code]="codeFloating" language="markup" />
+</section>

@@ -1,0 +1,184 @@
+:host {
+  display: block;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Sections (reuse ds-section pattern) ── */
+.ds-section {
+  padding: 32px 0;
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__desc {
+    color: var(--chip-grey-600);
+    margin-bottom: 24px;
+    max-width: 800px;
+    line-height: 1.6;
+
+    code {
+      background: var(--chip-grey-50, #F5F5F5);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--chip-cobalt-700, #0943B5);
+    }
+  }
+}
+
+/* ── Header ── */
+.comenzar-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+
+  &__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--chip-cobalt-700, #0943B5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 26px;
+      color: #ffffff;
+    }
+  }
+}
+
+/* ── Step number badge ── */
+.comenzar-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--chip-cobalt-700, #0943B5);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Prerequisites cards ── */
+.comenzar-prereqs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.comenzar-prereq {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid var(--chip-grey-200, #D6D6D6);
+  border-radius: var(--radius-lg, 12px);
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  i {
+    font-size: 24px;
+    color: var(--chip-cobalt-700, #0943B5);
+    margin-top: 2px;
+  }
+
+  strong {
+    display: block;
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--chip-grey-900, #1A1A1A);
+    margin-bottom: 4px;
+  }
+
+  span {
+    font-size: 13px;
+    color: var(--chip-grey-600, #7A7A7A);
+  }
+}
+
+/* ── Instruction steps ── */
+.comenzar-instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.comenzar-instruction {
+  padding: 14px 20px;
+  background: var(--chip-grey-50, #F5F5F5);
+  border-radius: var(--radius-md, 8px);
+  font-size: 14px;
+  color: var(--chip-grey-800, #3B3B3B);
+  line-height: 1.5;
+
+  strong {
+    color: var(--chip-cobalt-700, #0943B5);
+    margin-right: 4px;
+  }
+
+  code {
+    background: #ffffff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--chip-cobalt-700, #0943B5);
+    border: 1px solid var(--chip-grey-200, #D6D6D6);
+  }
+}
+
+/* ── Tips ── */
+.comenzar-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.comenzar-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--chip-grey-800, #3B3B3B);
+  line-height: 1.5;
+
+  i {
+    font-size: 18px;
+    color: var(--chip-success, #4CAF50);
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+
+  code {
+    background: var(--chip-grey-50, #F5F5F5);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--chip-cobalt-700, #0943B5);
+  }
+}

@@ -1,0 +1,348 @@
+<main class="icon-main">
+
+  <!-- ============================================================
+       TITULO
+       ============================================================ -->
+  <div class="icon-page-header">
+    <i class="pi pi-palette icon-page-header__icon"></i>
+    <div>
+      <h1 class="icon-page-header__title">Iconografía</h1>
+      <p class="icon-page-header__subtitle">
+        Galería de iconos disponibles en PrimeIcons, alineados con el Kit UI v9.2 (GOV.CO).
+        Los iconos representan objetos, acciones y estados. Deben ser simples, estandarizados y escalables.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       BUENAS PRÁCTICAS (Kit UI v9.2 pág 10)
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Buenas Prácticas (Kit UI v9.2)</h2>
+    <div class="best-practices">
+      <div class="bp-card">
+        <i class="pi pi-eye bp-card__icon"></i>
+        <h4>Contraste óptimo</h4>
+        <p>Ratio mínimo 4.5:1 entre icono y fondo (WCAG 2.1). Usar colores que distingan personas con discapacidad visual.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-search-plus bp-card__icon"></i>
+        <h4>Tamaño adecuado</h4>
+        <p>Evitar iconos demasiado pequeños. Escalables en múltiplos de 4px. Mínimo 16px para legibilidad.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-check-circle bp-card__icon"></i>
+        <h4>Estandarización</h4>
+        <p>Usar iconos ampliamente conocidos. Mantener consistencia en todo el sitio web.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-desktop bp-card__icon"></i>
+        <h4>Pixel perfect</h4>
+        <p>Escalables y ajustables a la mayoría de dispositivos. Tener en cuenta ancho de trazo y nivel de detalle.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-key bp-card__icon"></i>
+        <h4>Interactividad</h4>
+        <p>Si son interactivos, deben ser accesibles por teclado. No depender solo del ratón.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-tag bp-card__icon"></i>
+        <h4>Texto alternativo</h4>
+        <p>Usar aria-label en iconos interactivos. Iconos decorativos agregados desde CSS para que no sean leídos por lectores de pantalla.</p>
+      </div>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       TAMAÑOS
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Tamaños de Iconos</h2>
+    <p class="icon-section__desc">Múltiplos de 4px según Kit UI v9.2. PrimeIcons soporta cualquier tamaño vía font-size.</p>
+
+    <div class="size-row">
+      <div class="size-item">
+        <i class="pi pi-home" style="font-size: 16px;"></i>
+        <span>16px</span>
+        <small>Mínimo</small>
+      </div>
+      <div class="size-item">
+        <i class="pi pi-home" style="font-size: 20px;"></i>
+        <span>20px</span>
+        <small>Inline</small>
+      </div>
+      <div class="size-item">
+        <i class="pi pi-home" style="font-size: 24px;"></i>
+        <span>24px</span>
+        <small>Default</small>
+      </div>
+      <div class="size-item">
+        <i class="pi pi-home" style="font-size: 32px;"></i>
+        <span>32px</span>
+        <small>Cards</small>
+      </div>
+      <div class="size-item">
+        <i class="pi pi-home" style="font-size: 40px;"></i>
+        <span>40px</span>
+        <small>Headers</small>
+      </div>
+      <div class="size-item">
+        <i class="pi pi-home" style="font-size: 48px;"></i>
+        <span>48px</span>
+        <small>Hero</small>
+      </div>
+    </div>
+
+    <h3>Uso en código</h3>
+    <div class="code-block">
+      <code>&lt;i class="pi pi-home" style="font-size: 24px;"&gt;&lt;/i&gt;</code>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: NAVEGACIÓN
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Navegación</h2>
+    <p class="icon-section__desc">Iconos para menús, navegación y orientación del usuario.</p>
+    <div class="icon-grid">
+      @for (icon of navIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: ACCIONES
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Acciones</h2>
+    <p class="icon-section__desc">Iconos para botones y acciones del usuario: guardar, editar, eliminar, enviar, etc.</p>
+    <div class="icon-grid">
+      @for (icon of actionIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: ESTADO Y ALERTAS
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Estado y Alertas</h2>
+    <p class="icon-section__desc">Iconos para mensajes informativos, de éxito, advertencia y error.</p>
+    <div class="icon-grid">
+      @for (icon of statusIcons; track icon.name) {
+        <div class="icon-card" [class]="'icon-card icon-card--' + (icon.color || '')">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: FORMULARIOS
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Formularios</h2>
+    <p class="icon-section__desc">Iconos para campos, validaciones y entradas de datos según Kit UI v9.2.</p>
+    <div class="icon-grid">
+      @for (icon of formIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: AUTENTICACIÓN Y SEGURIDAD
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Autenticación y Seguridad</h2>
+    <p class="icon-section__desc">Iconos usados en los flujos de inicio de sesión, contraseña y permisos.</p>
+    <div class="icon-grid">
+      @for (icon of authIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: ARCHIVOS Y DOCUMENTOS
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Archivos y Documentos</h2>
+    <p class="icon-section__desc">Iconos para gestión de archivos, carga, descarga y reportes.</p>
+    <div class="icon-grid">
+      @for (icon of fileIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: COMUNICACIÓN
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Comunicación</h2>
+    <p class="icon-section__desc">Iconos para correo, notificaciones y canales de contacto.</p>
+    <div class="icon-grid">
+      @for (icon of commIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: DATOS Y GRÁFICOS
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Datos y Gráficos</h2>
+    <p class="icon-section__desc">Iconos para tablas, reportes, gráficos y visualización de datos.</p>
+    <div class="icon-grid">
+      @for (icon of dataIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: SISTEMA Y CONFIGURACIÓN
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Sistema y Configuración</h2>
+    <p class="icon-section__desc">Iconos para configuración, administración y herramientas del sistema.</p>
+    <div class="icon-grid">
+      @for (icon of systemIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       GALERÍA: ACCESIBILIDAD Y SERVICIOS FLOTANTES
+       ============================================================ -->
+  <section class="icon-section">
+    <h2 class="icon-section__title">Accesibilidad y Servicios Flotantes</h2>
+    <p class="icon-section__desc">
+      Iconos para los componentes flotantes del Kit UI v9.2: botón "Volver arriba", panel de accesibilidad
+      y servicios al ciudadano. Estos elementos permanecen fijos en pantalla durante el scroll.
+    </p>
+
+    <h3>Componentes implementados</h3>
+    <div class="usage-cards">
+      <div class="usage-card usage-card--blue">
+        <div class="usage-card__icon"><i class="pi pi-chevron-up"></i></div>
+        <div class="usage-card__content">
+          <h4>Volver arriba</h4>
+          <p>Botón flotante fijo en la esquina inferior derecha. Aparece al hacer scroll (> 300px).
+          Color primario Cobalt 700 (#0943B5) según Kit UI v9.2. Tooltip: "Haz click para ir arriba".</p>
+        </div>
+      </div>
+      <div class="usage-card usage-card--blue">
+        <div class="usage-card__icon">
+          <img src="assets/logos/wheelchair.svg" alt="Accesibilidad" style="width: 24px; height: 24px;" />
+        </div>
+        <div class="usage-card__content">
+          <h4>Panel de accesibilidad</h4>
+          <p>Botón circular azul Cobalt (#0943B5) que despliega opciones: contraste, chat de ayuda y correo.
+          Los sub-botones aparecen sobre fondo Warning (#FBC02D). Icono SVG personalizado (wheelchair.svg).</p>
+        </div>
+      </div>
+      <div class="usage-card">
+        <div class="usage-card__icon"><i class="pi pi-eye-slash"></i></div>
+        <div class="usage-card__content">
+          <h4>Contraste</h4>
+          <p>Permite cambiar el contraste del sitio para usuarios con discapacidad visual.</p>
+        </div>
+      </div>
+      <div class="usage-card">
+        <div class="usage-card__icon"><i class="pi pi-comment"></i></div>
+        <div class="usage-card__content">
+          <h4>Chat de ayuda</h4>
+          <p>Abre el chat de asistencia al ciudadano para resolver dudas en línea.</p>
+        </div>
+      </div>
+      <div class="usage-card">
+        <div class="usage-card__icon"><i class="pi pi-envelope"></i></div>
+        <div class="usage-card__content">
+          <h4>Contacto por correo</h4>
+          <p>Acceso rápido al correo institucional de contacto.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Galería de iconos</h3>
+    <div class="icon-grid">
+      <!-- wheelchair.svg personalizado -->
+      <div class="icon-card">
+        <img src="assets/logos/wheelchair.svg" alt="Accesibilidad" class="icon-card__svg" />
+        <span>Accesibilidad</span>
+        <small>wheelchair.svg</small>
+      </div>
+      @for (icon of a11yIcons; track icon.name) {
+        <div class="icon-card">
+          <i [class]="'pi pi-' + icon.name"></i>
+          <span>{{ icon.label }}</span>
+          <small>pi-{{ icon.name }}</small>
+        </div>
+      }
+    </div>
+  </section>
+
+</main>
