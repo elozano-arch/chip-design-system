@@ -280,6 +280,21 @@
     display: flex;
     justify-content: center;
     gap: 12px;
+
+    a {
+      text-decoration: none;
+
+      ::ng-deep .p-button.p-button-outlined {
+        transition: all 0.2s ease;
+        cursor: pointer;
+
+        &:hover {
+          background: var(--chip-cobalt-700);
+          border-color: var(--chip-cobalt-700);
+          color: #fff;
+        }
+      }
+    }
   }
 }
 
