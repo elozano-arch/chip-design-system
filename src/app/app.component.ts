@@ -39,15 +39,15 @@ export class AppComponent {
     document.documentElement.classList.toggle('dark-mode', this.darkMode);
   }
 
+  fontScale = 100;
+
   increaseFontSize() {
-    const html = document.documentElement;
-    const current = parseFloat(getComputedStyle(html).fontSize);
-    html.style.fontSize = Math.min(current + 2, 24) + 'px';
+    this.fontScale = Math.min(this.fontScale + 10, 150);
+    document.body.style.zoom = `${this.fontScale}%`;
   }
 
   decreaseFontSize() {
-    const html = document.documentElement;
-    const current = parseFloat(getComputedStyle(html).fontSize);
-    html.style.fontSize = Math.max(current - 2, 12) + 'px';
+    this.fontScale = Math.max(this.fontScale - 10, 80);
+    document.body.style.zoom = `${this.fontScale}%`;
   }
 }
