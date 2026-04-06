@@ -378,6 +378,25 @@
   margin-bottom: 16px;
 }
 
+.upload-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.upload-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  &__name {
+    font-size: 13px;
+    color: var(--chip-grey-500);
+    font-style: italic;
+  }
+}
+
 .stepper-actions {
   display: flex;
   justify-content: flex-end;

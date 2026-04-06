@@ -29,6 +29,8 @@ import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { PasswordModule } from 'primeng/password';
 import { AvatarGroupModule } from 'primeng/avatargroup';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { MessageService, MenuItem } from 'primeng/api';
 import { CodeBlockComponent } from '../../components/code-block/code-block.component';
 
@@ -65,6 +67,8 @@ import { CodeBlockComponent } from '../../components/code-block/code-block.compo
     ProgressBarModule,
     PasswordModule,
     AvatarGroupModule,
+    IconFieldModule,
+    InputIconModule,
     CodeBlockComponent,
   ],
   providers: [MessageService],
@@ -125,6 +129,8 @@ export class EjemplosComponent {
 
   // Stepper
   activeStep = 1;
+  rutFileName = '';
+  certFileName = '';
 
   // DataView
   dataviewLayout: 'grid' | 'list' = 'grid';
@@ -187,10 +193,10 @@ export class EjemplosComponent {
 </div>`;
 
   codeTableActions = `<div class="ej-table-toolbar">
-  <span class="p-input-icon-left">
-    <i class="pi pi-search"></i>
+  <p-iconfield>
+    <p-inputicon styleClass="pi pi-search" />
     <input pInputText placeholder="Buscar entidad..." />
-  </span>
+  </p-iconfield>
   <p-button label="Nueva entidad" icon="pi pi-plus" />
 </div>
 
@@ -386,16 +392,34 @@ export class EjemplosComponent {
     <p-step [value]="4">Confirmación</p-step>
   </p-step-list>
   <p-step-panels>
-    <p-step-panel [value]="1">
+    <p-step-panel [value]="2">
       <ng-template #content
         let-activateCallback="activateCallback">
-        <!-- Formulario paso 1 -->
-        <p-button label="Siguiente"
-          icon="pi pi-arrow-right" iconPos="right"
-          (onClick)="activateCallback(2)" />
+        <h4>Paso 2: Carga de Documentos</h4>
+        <p-message severity="info">
+          Adjunte los documentos requeridos.
+          Formatos: PDF, JPG. Máximo 5MB.
+        </p-message>
+        <div class="upload-list">
+          <div class="upload-item">
+            <p-button label="Adjuntar RUT"
+              icon="pi pi-upload" [outlined]="true"
+              (onClick)="rutInput.click()" />
+            <span class="upload-item__name">
+              {{ rutFileName || 'Sin archivo' }}
+            </span>
+            <input #rutInput type="file"
+              accept=".pdf,.jpg" hidden />
+          </div>
+        </div>
+        <div class="stepper-actions">
+          <p-button label="Anterior"
+            (onClick)="activateCallback(1)" />
+          <p-button label="Siguiente"
+            (onClick)="activateCallback(3)" />
+        </div>
       </ng-template>
     </p-step-panel>
-    <!-- ... más paneles -->
   </p-step-panels>
 </p-stepper>`;
 
@@ -553,10 +577,10 @@ export class EjemplosComponent {
 
   codeDataView = `<!-- Toolbar con toggle grid/lista -->
 <div class="dataview-toolbar">
-  <span class="p-input-icon-left">
-    <i class="pi pi-search"></i>
+  <p-iconfield>
+    <p-inputicon styleClass="pi pi-search" />
     <input pInputText placeholder="Buscar entidad..." />
-  </span>
+  </p-iconfield>
   <div class="dataview-toolbar__actions">
     <p-button icon="pi pi-th-large"
       [outlined]="layout !== 'grid'"

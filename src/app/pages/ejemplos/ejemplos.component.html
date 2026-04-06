@@ -42,10 +42,10 @@
 
     <div class="ej-table-toolbar">
       <div class="ej-table-toolbar__search">
-        <span class="p-input-icon-left">
-          <i class="pi pi-search"></i>
+        <p-iconfield>
+          <p-inputicon styleClass="pi pi-search" />
           <input pInputText placeholder="Buscar entidad..." class="w-full" />
-        </span>
+        </p-iconfield>
       </div>
       <p-button label="Nueva entidad" icon="pi pi-plus" />
     </div>
@@ -348,8 +348,18 @@
               <p-message severity="info">
                 Adjunte los documentos requeridos. Formatos: PDF, JPG. Máximo 5MB por archivo.
               </p-message>
-              <p-fileupload mode="basic" chooseLabel="Adjuntar RUT" chooseIcon="pi pi-upload" />
-              <p-fileupload mode="basic" chooseLabel="Adjuntar certificado" chooseIcon="pi pi-upload" />
+              <div class="upload-list">
+                <div class="upload-item">
+                  <p-button label="Adjuntar RUT" icon="pi pi-upload" [outlined]="true" (onClick)="rutInput.click()" />
+                  <span class="upload-item__name">{{ rutFileName || 'Sin archivo seleccionado' }}</span>
+                  <input #rutInput type="file" accept=".pdf,.jpg,.jpeg" hidden (change)="rutFileName = $any($event.target).files[0]?.name || ''" />
+                </div>
+                <div class="upload-item">
+                  <p-button label="Adjuntar certificado" icon="pi pi-upload" [outlined]="true" (onClick)="certInput.click()" />
+                  <span class="upload-item__name">{{ certFileName || 'Sin archivo seleccionado' }}</span>
+                  <input #certInput type="file" accept=".pdf,.jpg,.jpeg" hidden (change)="certFileName = $any($event.target).files[0]?.name || ''" />
+                </div>
+              </div>
               <div class="stepper-actions">
                 <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" (onClick)="activateCallback(1)" />
                 <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" (onClick)="activateCallback(3)" />
@@ -695,10 +705,10 @@
     </p>
 
     <div class="dataview-toolbar">
-      <span class="p-input-icon-left">
-        <i class="pi pi-search"></i>
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
         <input pInputText placeholder="Buscar entidad..." />
-      </span>
+      </p-iconfield>
       <div class="dataview-toolbar__actions">
         <p-button icon="pi pi-th-large" [outlined]="dataviewLayout !== 'grid'" (onClick)="dataviewLayout = 'grid'" severity="secondary" />
         <p-button icon="pi pi-list" [outlined]="dataviewLayout !== 'list'" (onClick)="dataviewLayout = 'list'" severity="secondary" />
