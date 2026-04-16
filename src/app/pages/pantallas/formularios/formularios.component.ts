@@ -74,9 +74,9 @@ export class FormulariosComponent {
 
   menuFormularioItems: MenuItem[] = [
     { label: 'Abrir', icon: 'pi pi-external-link', command: () => this.messageService.add({ severity: 'info', summary: 'Abrir Formulario', detail: `Abriendo "${this.selectedFormularioForMenu?.nombre}"` }) },
-    { label: 'Validar', icon: 'pi pi-check-circle', command: () => this.messageService.add({ severity: 'success', summary: 'Validación', detail: `Formulario "${this.selectedFormularioForMenu?.codigo}" enviado a validación.` }) },
-    { separator: true },
     { label: 'Exportar', icon: 'pi pi-download', command: () => this.messageService.add({ severity: 'info', summary: 'Exportar', detail: `Exportando "${this.selectedFormularioForMenu?.codigo}"` }) },
+    { separator: true },
+    { label: 'Validar', icon: 'pi pi-check-circle', command: () => this.messageService.add({ severity: 'success', summary: 'Validación', detail: `Formulario "${this.selectedFormularioForMenu?.codigo}" enviado a validación.` }) },
   ];
 
   abrirMenuFormulario(event: Event, form: Formulario) {

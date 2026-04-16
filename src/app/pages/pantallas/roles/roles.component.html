@@ -8,9 +8,10 @@
     <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
     <div class="roles-header">
-      <div>
-        <h1 class="roles-header__title">Perfiles de Seguridad</h1>
+      <h1 class="roles-header__title">Perfiles de Seguridad</h1>
+      <div class="roles-header__row">
         <p class="roles-header__desc">Administre los perfiles del sistema CHIP y configure los permisos de acceso para cada uno.</p>
+        <p-button label="Nuevo Rol" icon="pi pi-plus" (onClick)="showNewRoleDialog = true" />
       </div>
     </div>
 
@@ -31,12 +32,9 @@
             </div>
           }
         </div>
-        <div class="chip-filters__header-right">
-          @if (activeFilterCount > 0) {
-            <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="clearFilters()" />
-          }
-          <p-button label="Nuevo rol" icon="pi pi-plus" size="small" (onClick)="showNewRoleDialog = true" />
-        </div>
+        @if (activeFilterCount > 0) {
+          <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="clearFilters()" />
+        }
       </div>
 
       @if (!filtersCollapsed) {
@@ -93,8 +91,8 @@
             <ng-template #emptymessage>
               <tr>
                 <td colspan="5" class="roles-table__empty">
-                  <i class="pi pi-search"></i>
-                  <p>No se encontraron roles que coincidan con la búsqueda.</p>
+                  <i class="pi pi-inbox"></i>
+                  <p>No se encontraron resultados para los filtros aplicados.</p>
                 </td>
               </tr>
             </ng-template>
@@ -644,11 +642,11 @@
   [style]="{ width: '520px' }" [draggable]="false">
   <div class="dialog-form">
     <div class="dialog-form__field">
-      <label for="roleCode">Código *</label>
+      <label for="roleCode">Código <span class="field-required">*</span></label>
       <input pInputText id="roleCode" [(ngModel)]="newRoleCode" placeholder="COD_ROL" class="w-full" />
     </div>
     <div class="dialog-form__field">
-      <label for="roleName">Nombre *</label>
+      <label for="roleName">Nombre <span class="field-required">*</span></label>
       <input pInputText id="roleName" [(ngModel)]="newRoleName" placeholder="Nombre del perfil" class="w-full" />
     </div>
     <div class="dialog-form__field">
@@ -689,7 +687,7 @@
       <input pInputText [value]="editingRole?.codigo" [disabled]="true" class="w-full" />
     </div>
     <div class="dialog-form__field">
-      <label>Nombre *</label>
+      <label>Nombre <span class="field-required">*</span></label>
       <input pInputText [(ngModel)]="editRoleName" placeholder="Nombre del perfil" class="w-full" />
     </div>
     <div class="dialog-form__field">

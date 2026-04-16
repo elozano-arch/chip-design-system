@@ -362,7 +362,8 @@ p-breadcrumb .p-breadcrumb {
   }
 }
 
-.chip-filters__required {
+.chip-filters__required,
+.field-required {
   color: var(--chip-danger);
   font-weight: 700;
 }

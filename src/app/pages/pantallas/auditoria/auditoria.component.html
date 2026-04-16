@@ -2,10 +2,8 @@
   <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
   <div class="aud-header">
-    <div>
-      <h1 class="aud-header__title">Auditoría</h1>
-      <p class="aud-header__desc">Registro de las acciones realizadas en el módulo de seguridad.</p>
-    </div>
+    <h1 class="aud-header__title">Auditoría</h1>
+    <p class="aud-header__desc">Registro de las acciones realizadas en el módulo de seguridad.</p>
   </div>
 
   <!-- Filtros colapsables con chips -->
@@ -74,8 +72,8 @@
     <ng-template #emptymessage>
       <tr>
         <td colspan="6" class="aud-empty">
-          <i class="pi pi-search"></i>
-          <p>No se encontraron registros con los filtros seleccionados.</p>
+          <i class="pi pi-inbox"></i>
+          <p>No se encontraron resultados para los filtros aplicados.</p>
         </td>
       </tr>
     </ng-template>

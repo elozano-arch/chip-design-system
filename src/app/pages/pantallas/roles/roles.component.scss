@@ -223,28 +223,7 @@
   }
 }
 
-/* --- Header --- */
-.roles-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 28px;
-
-  &__title {
-    font-family: var(--font-heading);
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--chip-cobalt-700);
-    margin: 0 0 4px;
-  }
-
-  &__desc {
-    font-size: 15px;
-    color: var(--chip-grey-500);
-    margin: 0;
-  }
-}
+/* Header usa estilos globales de styles.scss (.roles-header, __title, __row, __desc) */
 
 
 /* --- Toolbar --- */

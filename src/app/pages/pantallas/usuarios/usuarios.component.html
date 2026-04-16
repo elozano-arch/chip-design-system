@@ -79,9 +79,9 @@
         <td class="usr-entity">{{ u.entidad }}</td>
         <td style="text-align: center">
           @if (u.activo) {
-            <i class="pi pi-check-circle usr-status--active"></i>
+            <p-tag value="Activo" severity="success" />
           } @else {
-            <i class="pi pi-times-circle usr-status--inactive"></i>
+            <p-tag value="Inactivo" severity="danger" />
           }
         </td>
         <td class="usr-date">{{ u.ultimoAcceso }}</td>
@@ -97,8 +97,8 @@
     <ng-template #emptymessage>
       <tr>
         <td colspan="8" class="usr-empty">
-          <i class="pi pi-search"></i>
-          <p>No se encontraron usuarios con los filtros seleccionados.</p>
+          <i class="pi pi-inbox"></i>
+          <p>No se encontraron resultados para los filtros aplicados.</p>
         </td>
       </tr>
     </ng-template>
@@ -111,11 +111,11 @@
 <p-dialog header="Nuevo Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
   <div class="usr-dialog">
     <div class="usr-dialog__field">
-      <label>Nombre completo *</label>
+      <label>Nombre completo <span class="field-required">*</span></label>
       <input pInputText [(ngModel)]="nuevoNombre" placeholder="Nombre del usuario" class="w-full" />
     </div>
     <div class="usr-dialog__field">
-      <label>Correo electrónico *</label>
+      <label>Correo electrónico <span class="field-required">*</span></label>
       <input pInputText [(ngModel)]="nuevoCorreo" placeholder="correo@entidad.gov.co" class="w-full" />
     </div>
     <div class="usr-dialog__field">
@@ -137,11 +137,11 @@
       <input pInputText [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
     </div>
     <div class="usr-dialog__field">
-      <label>Nombre completo *</label>
+      <label>Nombre completo <span class="field-required">*</span></label>
       <input pInputText [(ngModel)]="editNombre" placeholder="Nombre del usuario" class="w-full" />
     </div>
     <div class="usr-dialog__field">
-      <label>Correo electrónico *</label>
+      <label>Correo electrónico <span class="field-required">*</span></label>
       <input pInputText [(ngModel)]="editCorreo" placeholder="correo@entidad.gov.co" class="w-full" />
     </div>
     <div class="usr-dialog__field">
