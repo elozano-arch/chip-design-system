@@ -36,4 +36,29 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/responsive/responsive.component').then(m => m.ResponsiveComponent),
   },
+  {
+    path: 'pantallas/roles',
+    loadComponent: () =>
+      import('./pages/pantallas/roles/roles.component').then(m => m.RolesComponent),
+  },
+  {
+    path: 'pantallas/seguridad/usuarios',
+    loadComponent: () =>
+      import('./pages/pantallas/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+  },
+  {
+    path: 'pantallas/seguridad/auditoria',
+    loadComponent: () =>
+      import('./pages/pantallas/auditoria/auditoria.component').then(m => m.AuditoriaComponent),
+  },
+  {
+    path: 'pantallas/formularios',
+    loadComponent: () =>
+      import('./pages/pantallas/formularios/formularios.component').then(m => m.FormulariosComponent),
+  },
+  {
+    path: 'pantallas/filtros',
+    loadComponent: () =>
+      import('./pages/pantallas/filtros/filtros.component').then(m => m.FiltrosComponent),
+  },
 ];

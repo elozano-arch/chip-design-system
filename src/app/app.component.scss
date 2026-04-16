@@ -277,6 +277,127 @@ $sidebar-width: 220px;
     }
   }
 
+  &__divider {
+    height: 1px;
+    background: var(--chip-grey-200);
+    margin: 8px 14px;
+  }
+
+  &__toggle-sub {
+    width: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    justify-content: flex-start;
+  }
+
+  &__chevron {
+    margin-left: auto;
+    font-size: 12px !important;
+    width: auto !important;
+  }
+
+  &__submenu {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 20px;
+  }
+
+  &__sublink {
+    font-size: 12px !important;
+    padding: 8px 14px !important;
+    color: var(--chip-grey-500) !important;
+
+    &:hover {
+      color: var(--chip-cobalt-700) !important;
+    }
+  }
+
+  &__section-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--chip-grey-400);
+    padding: 12px 14px 4px;
+  }
+
+  &__sub-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--chip-grey-600);
+    transition: all 0.15s;
+    text-align: left;
+
+    > i:first-child {
+      font-size: 14px;
+      color: var(--chip-grey-400);
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    > span { flex: 1; line-height: 1.4; }
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+      color: var(--chip-cobalt-700);
+      > i:first-child { color: var(--chip-cobalt-500); }
+    }
+
+    &--active {
+      color: var(--chip-cobalt-700);
+      > i:first-child { color: var(--chip-cobalt-600); }
+    }
+  }
+
+  &__sub-chevron {
+    font-size: 10px !important;
+    color: var(--chip-grey-300) !important;
+    width: auto !important;
+  }
+
+  &__sub-children {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 16px;
+    margin-bottom: 4px;
+  }
+
+  &__sub-item {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    color: var(--chip-grey-500) !important;
+    gap: 6px !important;
+    white-space: normal !important;
+    line-height: 1.4 !important;
+
+    i {
+      font-size: 12px !important;
+      width: 14px !important;
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 1px;
+    }
+
+    &:hover {
+      color: var(--chip-cobalt-700) !important;
+    }
+  }
+
   &__overlay {
     display: none;
   }

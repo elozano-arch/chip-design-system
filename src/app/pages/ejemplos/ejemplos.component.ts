@@ -85,12 +85,12 @@ export class EjemplosComponent {
 
   // Module cards
   modules = [
-    { title: 'Seguridad', desc: 'Gestión de usuarios y roles del sistema', icon: 'pi pi-shield', bg: '#EBF0FA' },
-    { title: 'Entidades', desc: 'Gestión de entidades, información complementaria y analistas', icon: 'pi pi-building', bg: '#F5F5F5' },
-    { title: 'Formularios', desc: 'Gestión y carga de formularios de reportes', icon: 'pi pi-file-edit', bg: '#FFF8E1' },
-    { title: 'Parametrización', desc: 'Configuración general del sistema', icon: 'pi pi-cog', bg: '#EBF0FA' },
-    { title: 'Operaciones', desc: 'Gestión de procesos operacionales', icon: 'pi pi-bolt', bg: '#F5F5F5' },
-    { title: 'Reportes', desc: 'Generación de reportes y análisis', icon: 'pi pi-chart-bar', bg: '#FFF8E1' },
+    { title: 'Trámites', desc: 'Radicación y seguimiento de solicitudes ciudadanas', icon: 'pi pi-inbox', bg: '#EBF0FA' },
+    { title: 'Correspondencia', desc: 'Gestión de documentos entrantes y salientes', icon: 'pi pi-envelope', bg: '#F5F5F5' },
+    { title: 'Contratación', desc: 'Procesos contractuales y supervisión de contratos', icon: 'pi pi-briefcase', bg: '#FFF8E1' },
+    { title: 'Inventarios', desc: 'Control de activos y bienes de la entidad', icon: 'pi pi-box', bg: '#EBF0FA' },
+    { title: 'Nómina', desc: 'Liquidación y gestión de nómina del personal', icon: 'pi pi-users', bg: '#F5F5F5' },
+    { title: 'Indicadores', desc: 'Tableros de seguimiento y metas institucionales', icon: 'pi pi-chart-bar', bg: '#FFF8E1' },
   ];
 
   // Table - Entidades
@@ -181,14 +181,14 @@ export class EjemplosComponent {
   // Code snippets
   codeModuleCards = `<div class="module-grid">
   <div class="module-card" style="background-color: #EBF0FA;">
-    <i class="pi pi-shield module-card__icon"></i>
-    <h3 class="module-card__title">Seguridad</h3>
-    <p class="module-card__desc">Gestión de usuarios y roles</p>
+    <i class="pi pi-inbox module-card__icon"></i>
+    <h3 class="module-card__title">Trámites</h3>
+    <p class="module-card__desc">Radicación y seguimiento</p>
   </div>
   <div class="module-card" style="background-color: #F5F5F5;">
-    <i class="pi pi-building module-card__icon"></i>
-    <h3 class="module-card__title">Entidades</h3>
-    <p class="module-card__desc">Gestión de entidades</p>
+    <i class="pi pi-envelope module-card__icon"></i>
+    <h3 class="module-card__title">Correspondencia</h3>
+    <p class="module-card__desc">Documentos entrantes y salientes</p>
   </div>
 </div>`;
 

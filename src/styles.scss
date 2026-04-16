@@ -151,6 +151,264 @@ a {
 }
 
 /* ==========================================================================
+   PrimeNG Overlay z-index fix (Kit UI v9.2)
+   Garantiza que los desplegables y menús flotantes se muestren por encima
+   de cualquier otro elemento (cards, headers, tablas, etc.)
+   ========================================================================== */
+
+.p-select-overlay,
+.p-datepicker-panel,
+.p-multiselect-overlay,
+.p-autocomplete-overlay,
+.p-tooltip,
+.p-dialog-mask,
+.p-overlay-panel,
+.p-menu-overlay,
+.p-popover,
+.p-menubar-submenu,
+[class*='p-overlay'] {
+  z-index: 10000 !important;
+  pointer-events: auto !important;
+}
+
+body > .p-select-overlay,
+body > .p-menu-overlay,
+body > [class*='p-overlay'],
+body > [class*='p-popover'] {
+  z-index: 10000 !important;
+  pointer-events: auto !important;
+}
+
+/* ==========================================================================
+   Kit UI v9.2 — Tipografía en Menús y Desplegables
+   PDF spec: Menú items = 14px Verdana, Dropdown options = 15px Verdana
+   ========================================================================== */
+
+/* --- Menú de navegación (p-menubar): 14px Verdana --- */
+.p-menubar .p-menubar-item-link,
+.p-menubar .p-menubar-item-label,
+.p-menubar .p-menubar-submenu .p-menubar-item-link,
+.p-menubar .p-menubar-submenu .p-menubar-item-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* Encabezados de sección dentro de submenús: 14px Verdana Bold */
+.p-menubar .p-menubar-submenu-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* --- Menú popup (p-menu): 14px Verdana --- */
+.p-menu .p-menu-item-link,
+.p-menu .p-menu-item-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* --- Desplegables (p-select): 15px Verdana --- */
+.p-select-label,
+.p-select-option,
+.p-select-overlay .p-select-option-label,
+.p-select-overlay .p-select-filter {
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+/* --- Breadcrumb card (Kit UI v9.2 — Miga de pan) --- */
+p-breadcrumb {
+  display: block;
+  margin-bottom: 20px;
+  padding: 12px 20px;
+  background: #ffffff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* Resetear nav interno de PrimeNG para no duplicar borde/fondo */
+p-breadcrumb .p-breadcrumb {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Pantallas — page container compartido */
+.usr-page,
+.form-page,
+.aud-page,
+.roles-page,
+.flt-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Pantallas — header compartido */
+.usr-header,
+.form-header,
+.aud-header,
+.roles-header,
+.flt-header {
+  margin-bottom: 28px;
+}
+
+.usr-header__title,
+.form-header__title,
+.aud-header__title,
+.roles-header__title,
+.flt-header__title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--chip-cobalt-700);
+  margin: 0 0 4px;
+}
+
+.usr-header__row,
+.form-header__row,
+.aud-header__row,
+.roles-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.usr-header__desc,
+.form-header__desc,
+.aud-header__desc,
+.roles-header__desc,
+.flt-header__desc {
+  font-size: 15px;
+  color: var(--chip-grey-500);
+  margin: 0;
+}
+
+/* Pantallas — filtros colapsables con chips (patrón unificado) */
+.chip-filters {
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.chip-filters__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--chip-grey-50);
+  border-bottom: 1px solid var(--chip-grey-100);
+  min-height: 44px;
+}
+
+.chip-filters__header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.chip-filters__header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip-filters__chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip-filters__body {
+  padding: 16px 20px;
+}
+
+.chip-filters__fields {
+  display: grid;
+  gap: 12px 16px;
+}
+
+.chip-filters__fields--2col {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.chip-filters__fields--3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.chip-filters__fields--4col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.chip-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--chip-grey-600);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+}
+
+.chip-filters__required {
+  color: var(--chip-danger);
+  font-weight: 700;
+}
+
+/* Pantallas — responsive compartido */
+@media (max-width: 768px) {
+  .usr-page,
+  .form-page,
+  .aud-page,
+  .roles-page,
+  .flt-page {
+    padding: 16px;
+  }
+
+  .usr-header,
+  .form-header,
+  .roles-header {
+    flex-direction: column;
+  }
+
+  .usr-header__title,
+  .form-header__title,
+  .aud-header__title,
+  .roles-header__title,
+  .flt-header__title {
+    font-size: 24px;
+  }
+
+  .chip-filters__body {
+    padding: 12px 16px;
+  }
+
+  .chip-filters__fields--2col,
+  .chip-filters__fields--3col,
+  .chip-filters__fields--4col {
+    grid-template-columns: 1fr;
+  }
+
+  .chip-filters__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* ==========================================================================
    Utility Classes
    ========================================================================== */
 

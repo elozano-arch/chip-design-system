@@ -1,0 +1,104 @@
+/* --- Table cells --- */
+.usr-code {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chip-cobalt-700);
+  background: var(--chip-cobalt-50);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.usr-status--active {
+  color: var(--chip-success);
+  font-size: 16px;
+}
+
+.usr-status--inactive {
+  color: var(--chip-danger);
+  font-size: 16px;
+}
+
+.usr-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--chip-grey-800);
+}
+
+.usr-email {
+  font-size: 13px;
+  color: var(--chip-grey-500);
+}
+
+.usr-entity {
+  font-size: 13px;
+  color: var(--chip-grey-500);
+}
+
+.usr-date {
+  font-size: 13px;
+  color: var(--chip-grey-500);
+}
+
+.usr-actions {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* --- Empty State --- */
+.usr-empty {
+  text-align: center;
+  padding: 40px 24px !important;
+  color: var(--chip-grey-400);
+
+  i {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+  }
+}
+
+/* --- Confirm Dialog --- */
+.usr-dialog-confirm {
+  text-align: center;
+  padding: 8px 0;
+
+  &__icon {
+    font-size: 40px;
+    color: var(--chip-warning);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  p {
+    font-size: 15px;
+    color: var(--chip-grey-700);
+    line-height: 1.6;
+    margin: 0;
+  }
+}
+
+/* --- Dialog --- */
+.usr-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--chip-grey-700);
+    }
+  }
+}

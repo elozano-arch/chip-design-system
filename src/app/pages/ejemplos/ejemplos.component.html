@@ -132,6 +132,7 @@
             [options]="tipoOptions"
             [(ngModel)]="formData.tipo"
             placeholder="Todos"
+            appendTo="body"
             class="w-full"
           />
         </div>
@@ -141,6 +142,7 @@
             id="ej-muni"
             [options]="[]"
             placeholder="Seleccione departamento"
+            appendTo="body"
             class="w-full"
             [disabled]="true"
           />
@@ -328,11 +330,11 @@
                 </div>
                 <div class="ej-form__group">
                   <label>Tipo de Entidad *</label>
-                  <p-select [options]="tipoOptions" placeholder="Seleccione" class="w-full" />
+                  <p-select [options]="tipoOptions" placeholder="Seleccione" appendTo="body" class="w-full" />
                 </div>
                 <div class="ej-form__group">
                   <label>Departamento</label>
-                  <p-select [options]="tipoOptions" placeholder="Seleccione" class="w-full" />
+                  <p-select [options]="tipoOptions" placeholder="Seleccione" appendTo="body" class="w-full" />
                 </div>
               </div>
               <div class="stepper-actions">
@@ -436,7 +438,7 @@
         </div>
         <div class="ej-form__group">
           <label for="reg-tipo">Tipo de Entidad *</label>
-          <p-select id="reg-tipo" [options]="tipoOptions" [(ngModel)]="formData.tipo" placeholder="Seleccione un tipo" class="w-full" />
+          <p-select id="reg-tipo" [options]="tipoOptions" [(ngModel)]="formData.tipo" placeholder="Seleccione un tipo" appendTo="body" class="w-full" />
         </div>
         <div class="ej-form__group">
           <label for="reg-fecha">Fecha de Registro</label>

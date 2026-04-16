@@ -71,6 +71,39 @@
       <a routerLink="/responsive" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
         <i class="pi pi-mobile"></i> Responsive
       </a>
+
+      <div class="app-sidebar__divider"></div>
+      <span class="app-sidebar__section-label">Pantallas</span>
+
+      <!-- ══ SEGURIDAD ══ -->
+      <button class="app-sidebar__link app-sidebar__toggle-sub" (click)="seguridadOpen = !seguridadOpen"
+        [attr.aria-expanded]="seguridadOpen">
+        <i class="pi pi-shield"></i> Seguridad
+        <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!seguridadOpen" [class.pi-chevron-up]="seguridadOpen"></i>
+      </button>
+      @if (seguridadOpen) {
+        <div class="app-sidebar__submenu">
+          <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-users"></i> Usuarios
+          </a>
+          <a routerLink="/pantallas/roles" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-id-card"></i> Roles
+          </a>
+          <a routerLink="/pantallas/seguridad/auditoria" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-history"></i> Auditoría
+          </a>
+        </div>
+      }
+
+      <!-- ══ FORMULARIOS ══ -->
+      <a routerLink="/pantallas/formularios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
+        <i class="pi pi-file-edit"></i> Formularios
+      </a>
+
+      <!-- ══ PROPUESTA FILTROS ══ -->
+      <a routerLink="/pantallas/filtros" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
+        <i class="pi pi-filter"></i> Propuesta Filtros
+      </a>
     </nav>
   </aside>
 

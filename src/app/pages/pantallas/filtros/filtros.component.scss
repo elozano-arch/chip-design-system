@@ -1,0 +1,38 @@
+/* --- Table cell styles --- */
+.flt-code {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chip-cobalt-700);
+  background: var(--chip-cobalt-50);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.flt-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--chip-grey-800);
+}
+
+.flt-email {
+  font-size: 13px;
+  color: var(--chip-grey-500);
+}
+
+.flt-status--active {
+  color: var(--chip-success);
+  font-size: 16px;
+}
+
+.flt-status--inactive {
+  color: var(--chip-danger);
+  font-size: 16px;
+}
+
+.flt-empty {
+  text-align: center;
+  padding: 24px !important;
+  color: var(--chip-grey-400);
+  font-size: 13px;
+}

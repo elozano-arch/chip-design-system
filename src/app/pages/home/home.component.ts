@@ -184,11 +184,11 @@ export class HomeComponent {
   ];
 
   tableData = [
-    { id: '4598', nombre: 'Modulo de consolidacion', estado: 'Activo', tipo: 'Financiero' },
-    { id: '4599', nombre: 'Modulo de reportes', estado: 'Activo', tipo: 'Operativo' },
-    { id: '4600', nombre: 'Modulo de auditoria', estado: 'Inactivo', tipo: 'Control' },
-    { id: '4601', nombre: 'Modulo de parametros', estado: 'Activo', tipo: 'Configuracion' },
-    { id: '4602', nombre: 'Modulo de usuarios', estado: 'Pendiente', tipo: 'Administrativo' },
+    { id: '4598', nombre: 'Módulo de Consolidación', estado: 'Activo', tipo: 'Financiero' },
+    { id: '4599', nombre: 'Módulo de Reportes', estado: 'Activo', tipo: 'Operativo' },
+    { id: '4600', nombre: 'Módulo de Auditoría', estado: 'Inactivo', tipo: 'Control' },
+    { id: '4601', nombre: 'Módulo de Parámetros', estado: 'Activo', tipo: 'Configuración' },
+    { id: '4602', nombre: 'Módulo de Usuarios', estado: 'Pendiente', tipo: 'Administrativo' },
   ];
 
   showDialog = false;

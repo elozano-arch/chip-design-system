@@ -1,0 +1,189 @@
+<p-toast />
+
+<div class="usr-page">
+  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+
+  <div class="usr-header">
+    <h1 class="usr-header__title">Gestión de Usuarios</h1>
+    <div class="usr-header__row">
+      <p class="usr-header__desc">Consulte y administre los usuarios registrados en el sistema CHIP.</p>
+      <p-button label="Nuevo Usuario" icon="pi pi-user-plus" (onClick)="showNewDialog = true" />
+    </div>
+  </div>
+
+  <!-- Filtros colapsables con chips -->
+  <div class="chip-filters">
+    <div class="chip-filters__header">
+      <div class="chip-filters__header-left">
+        <p-button
+          [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+          [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
+          [outlined]="true" severity="secondary" size="small"
+          (onClick)="filtersCollapsed = !filtersCollapsed" />
+        @if (filtersCollapsed && activeFilters.length > 0) {
+          <div class="chip-filters__chips">
+            @for (f of activeFilters; track f.field) {
+              <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
+            }
+          </div>
+        }
+      </div>
+      @if (activeFilterCount > 0) {
+        <p-button label="Limpiar todo" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="clearFilters()" />
+      }
+    </div>
+
+    @if (!filtersCollapsed) {
+      <div class="chip-filters__body">
+        <div class="chip-filters__fields chip-filters__fields--3col">
+          <div class="chip-filters__field">
+            <label>Nombre o Código</label>
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search" />
+              <input pInputText placeholder="Buscar..." [(ngModel)]="searchUsuarios" class="w-full" />
+            </p-iconField>
+          </div>
+          <div class="chip-filters__field">
+            <label>Perfil</label>
+            <p-select [options]="perfilOptions" [(ngModel)]="filterPerfil" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+          </div>
+          <div class="chip-filters__field">
+            <label>Estado</label>
+            <p-select [options]="estadoOptions" [(ngModel)]="filterEstado" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Tabla -->
+  <p-table [value]="filteredUsuarios" [stripedRows]="true" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]" [rowHover]="true" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros">
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="codigo" style="width: 120px">Código <p-sortIcon field="codigo" /></th>
+        <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+        <th>Correo</th>
+        <th pSortableColumn="perfil">Perfil <p-sortIcon field="perfil" /></th>
+        <th pSortableColumn="entidad">Entidad <p-sortIcon field="entidad" /></th>
+        <th style="width: 80px; text-align: center">Estado</th>
+        <th style="width: 100px">Último Acceso</th>
+        <th style="width: 90px; text-align: center">Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-u>
+      <tr>
+        <td><span class="usr-code">{{ u.codigo }}</span></td>
+        <td class="usr-name">{{ u.nombre }}</td>
+        <td class="usr-email">{{ u.correo }}</td>
+        <td><p-tag [value]="u.perfil" severity="info" /></td>
+        <td class="usr-entity">{{ u.entidad }}</td>
+        <td style="text-align: center">
+          @if (u.activo) {
+            <i class="pi pi-check-circle usr-status--active"></i>
+          } @else {
+            <i class="pi pi-times-circle usr-status--inactive"></i>
+          }
+        </td>
+        <td class="usr-date">{{ u.ultimoAcceso }}</td>
+        <td>
+          <div class="usr-actions">
+            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+              severity="secondary" size="small"
+              (onClick)="abrirMenuAcciones($event, u)" />
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="8" class="usr-empty">
+          <i class="pi pi-search"></i>
+          <p>No se encontraron usuarios con los filtros seleccionados.</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <p-menu #menuAcciones [model]="menuAccionesItems" [popup]="true" appendTo="body" />
+</div>
+
+<!-- Diálogo Nuevo Usuario -->
+<p-dialog header="Nuevo Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
+  <div class="usr-dialog">
+    <div class="usr-dialog__field">
+      <label>Nombre completo *</label>
+      <input pInputText [(ngModel)]="nuevoNombre" placeholder="Nombre del usuario" class="w-full" />
+    </div>
+    <div class="usr-dialog__field">
+      <label>Correo electrónico *</label>
+      <input pInputText [(ngModel)]="nuevoCorreo" placeholder="correo@entidad.gov.co" class="w-full" />
+    </div>
+    <div class="usr-dialog__field">
+      <label>Perfil de Seguridad</label>
+      <p-select [options]="perfilOptions" [(ngModel)]="nuevoPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showNewDialog = false" />
+    <p-button label="Crear usuario" icon="pi pi-check" (onClick)="createUsuario()" [disabled]="!nuevoNombre.trim() || !nuevoCorreo.trim()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo Editar Usuario -->
+<p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
+  <div class="usr-dialog">
+    <div class="usr-dialog__field">
+      <label>Código</label>
+      <input pInputText [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
+    </div>
+    <div class="usr-dialog__field">
+      <label>Nombre completo *</label>
+      <input pInputText [(ngModel)]="editNombre" placeholder="Nombre del usuario" class="w-full" />
+    </div>
+    <div class="usr-dialog__field">
+      <label>Correo electrónico *</label>
+      <input pInputText [(ngModel)]="editCorreo" placeholder="correo@entidad.gov.co" class="w-full" />
+    </div>
+    <div class="usr-dialog__field">
+      <label>Perfil de Seguridad</label>
+      <p-select [options]="perfilOptions" [(ngModel)]="editPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showEditDialog = false" />
+    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditUsuario()" [disabled]="!editNombre.trim()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo Confirmar Activar/Desactivar -->
+<p-dialog header="Confirmar Cambio de Estado" [(visible)]="showToggleDialog" [modal]="true" [style]="{ width: '420px' }" [draggable]="false">
+  <div class="usr-dialog-confirm">
+    <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon"></i>
+    <p>
+      ¿Está seguro de <strong>{{ selectedUsuario?.activo ? 'desactivar' : 'activar' }}</strong>
+      al usuario <strong>"{{ selectedUsuario?.nombre }}"</strong>?
+    </p>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showToggleDialog = false" />
+    <p-button [label]="selectedUsuario?.activo ? 'Desactivar' : 'Activar'"
+      [icon]="selectedUsuario?.activo ? 'pi pi-ban' : 'pi pi-check'"
+      [severity]="selectedUsuario?.activo ? 'warn' : 'success'"
+      (onClick)="confirmToggleEstado()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo Confirmar Eliminación -->
+<p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteDialog" [modal]="true" [style]="{ width: '420px' }" [draggable]="false">
+  <div class="usr-dialog-confirm">
+    <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon"></i>
+    <p>
+      ¿Está seguro de eliminar al usuario <strong>"{{ selectedUsuario?.nombre }}"</strong>?
+      Esta acción no se puede revertir.
+    </p>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showDeleteDialog = false" />
+    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="confirmDeleteUsuario()" />
+  </ng-template>
+</p-dialog>

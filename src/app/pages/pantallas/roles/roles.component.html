@@ -1,0 +1,557 @@
+<p-toast />
+
+<!-- ============================================================
+     VISTA 1: PARÁMETROS DE SEGURIDAD (con sidebar interno)
+     ============================================================ -->
+@if (currentView === 'list') {
+  <div class="roles-page">
+    <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+
+    <div class="roles-header">
+      <div>
+        <h1 class="roles-header__title">Perfiles de Seguridad</h1>
+        <p class="roles-header__desc">Administre los perfiles del sistema CHIP y configure los permisos de acceso para cada uno.</p>
+      </div>
+    </div>
+
+    <!-- Filtros colapsables con chips -->
+    <div class="chip-filters">
+      <div class="chip-filters__header">
+        <div class="chip-filters__header-left">
+          <p-button
+            [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+            [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
+            [outlined]="true" severity="secondary" size="small"
+            (onClick)="filtersCollapsed = !filtersCollapsed" />
+          @if (filtersCollapsed && activeFilters.length > 0) {
+            <div class="chip-filters__chips">
+              @for (f of activeFilters; track f.field) {
+                <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
+              }
+            </div>
+          }
+        </div>
+        <div class="chip-filters__header-right">
+          @if (activeFilterCount > 0) {
+            <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="clearFilters()" />
+          }
+          <p-button label="Nuevo rol" icon="pi pi-plus" size="small" (onClick)="showNewRoleDialog = true" />
+        </div>
+      </div>
+
+      @if (!filtersCollapsed) {
+        <div class="chip-filters__body">
+          <div class="chip-filters__fields chip-filters__fields--2col">
+            <div class="chip-filters__field">
+              <label>Nombre o Descripción</label>
+              <p-iconField>
+                <p-inputIcon styleClass="pi pi-search" />
+                <input pInputText placeholder="Buscar rol..." [(ngModel)]="searchRoles" class="w-full" />
+              </p-iconField>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+          <!-- Tabla de roles -->
+          <p-table [value]="filteredRoles" [stripedRows]="true" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+            [rowHover]="true" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros" styleClass="roles-table">
+            <ng-template #header>
+              <tr>
+                <th pSortableColumn="nombre">Rol <p-sortIcon field="nombre" /></th>
+                <th>Descripción</th>
+                <th pSortableColumn="usuarios" style="width: 100px; text-align: center">Usuarios <p-sortIcon field="usuarios" /></th>
+                <th pSortableColumn="estado" style="width: 100px">Estado <p-sortIcon field="estado" /></th>
+                <th style="width: 100px; text-align: center">Acciones</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-role>
+              <tr>
+                <td>
+                  <span class="roles-table__name">
+                    <i class="pi pi-shield"></i>
+                    {{ role.nombre }}
+                  </span>
+                </td>
+                <td class="roles-table__desc">{{ role.descripcion }}</td>
+                <td style="text-align: center">
+                  <p-tag [value]="role.usuarios + ''" severity="info" [rounded]="true" />
+                </td>
+                <td>
+                  <p-tag [value]="role.estado" [severity]="getRoleSeverity(role.estado)" />
+                </td>
+                <td>
+                  <div class="roles-table__actions">
+                    <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                      severity="secondary" size="small"
+                      (onClick)="abrirMenuRol($event, role)" />
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+              <tr>
+                <td colspan="5" class="roles-table__empty">
+                  <i class="pi pi-search"></i>
+                  <p>No se encontraron roles que coincidan con la búsqueda.</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <p-menu #menuRol [model]="menuRolItems" [popup]="true" appendTo="body" />
+  </div>
+}
+
+<!-- ============================================================
+     VISTA 2: EDITOR DE PERMISOS
+     ============================================================ -->
+@if (currentView === 'edit' && selectedRole) {
+  <div class="roles-page">
+    <!-- Header con breadcrumb y back -->
+    <div class="perm-header">
+      <div class="perm-header__top">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="backToList()"
+          pTooltip="Volver al listado" />
+        <p-breadcrumb [model]="[
+          { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
+          { label: 'Roles', routerLink: '/pantallas/roles' },
+          { label: selectedRole.nombre }
+        ]" [home]="breadcrumbHome" />
+      </div>
+      <div class="perm-header__info">
+        <div>
+          <p class="perm-header__subtitle">Configurar permisos del perfil:</p>
+          <h1 class="perm-header__title">
+            <i class="pi pi-shield"></i>
+            {{ selectedRole.nombre }}
+          </h1>
+          <p class="perm-header__desc">{{ selectedRole.descripcion }}</p>
+        </div>
+        <div class="perm-header__actions">
+          <p-button label="Descartar" icon="pi pi-times" severity="secondary" [outlined]="true"
+            (onClick)="backToList()" />
+          <p-button label="Guardar permisos" icon="pi pi-check" (onClick)="savePermissions()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen de permisos -->
+    <div class="perm-summary">
+      <div class="perm-summary__card">
+        <i class="pi pi-sitemap"></i>
+        <div>
+          <span class="perm-summary__value">{{ menuCount }}/{{ menuTotal }}</span>
+          <span class="perm-summary__label">Menús habilitados</span>
+        </div>
+      </div>
+      <div class="perm-summary__card">
+        <i class="pi pi-bolt"></i>
+        <div>
+          <span class="perm-summary__value">{{ actionCount }}/{{ actionPermissions.length }}</span>
+          <span class="perm-summary__label">Acciones habilitadas</span>
+        </div>
+      </div>
+      <div class="perm-summary__card">
+        <i class="pi pi-database"></i>
+        <div>
+          <span class="perm-summary__value">{{ categoryCount }}/{{ categoryTotal }}</span>
+          <span class="perm-summary__label">Categorías habilitadas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs de permisos -->
+    <p-tabs [(value)]="activePermissionTab">
+      <p-tablist>
+        <p-tab value="0">
+          <i class="pi pi-sitemap"></i> Menú de Aplicación
+        </p-tab>
+        <p-tab value="1">
+          <i class="pi pi-bolt"></i> Acciones
+        </p-tab>
+        <p-tab value="2">
+          <i class="pi pi-database"></i> Categorías
+        </p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- ──────────────────────────────────────────
+             TAB 1: MENÚ DE APLICACIÓN
+             ────────────────────────────────────────── -->
+        <p-tabpanel value="0">
+          <div class="perm-panel">
+            <!-- Breadcrumb de navegación -->
+            <div class="drill-breadcrumb">
+              @for (crumb of menuBreadcrumb; track crumb.label; let i = $index; let last = $last) {
+                @if (!last) {
+                  <button class="drill-breadcrumb__item" (click)="drillTo(i)">{{ crumb.label }}</button>
+                  <i class="pi pi-chevron-right drill-breadcrumb__sep"></i>
+                } @else {
+                  <span class="drill-breadcrumb__current">{{ crumb.label }}</span>
+                }
+              }
+            </div>
+
+            <!-- Toolbar -->
+            <div class="perm-panel__toolbar">
+              <div class="perm-panel__toolbar-left">
+                @if (menuBreadcrumb.length > 1) {
+                  <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true"
+                    pTooltip="Volver" (onClick)="drillBack()" />
+                }
+                <p-iconfield>
+                  <p-inputicon styleClass="pi pi-search" />
+                  <input pInputText placeholder="Buscar en este nivel..." [(ngModel)]="searchMenu" />
+                </p-iconfield>
+              </div>
+              <div class="perm-panel__toolbar-actions">
+                <p-button label="Seleccionar todo" icon="pi pi-check-square" [text]="true"
+                  size="small" (onClick)="selectAllCurrent(true)" />
+                <p-button label="Deseleccionar" icon="pi pi-stop" [text]="true"
+                  size="small" (onClick)="selectAllCurrent(false)" />
+              </div>
+            </div>
+
+            <!-- Lista de nodos del nivel actual -->
+            <div class="drill-list">
+              @for (node of filteredCurrentNodes; track node.id) {
+                <div class="drill-item" [class.drill-item--has-children]="node.children?.length">
+                  <div class="drill-item__left">
+                    <p-checkbox [(ngModel)]="node.checked" [binary]="true"
+                      (onChange)="toggleCheck(node, menuCurrentParent || undefined)" />
+                    <i [class]="node.icon || 'pi pi-file'" class="drill-item__icon"
+                      [class.drill-item__icon--folder]="node.children?.length"></i>
+                    <div class="drill-item__info">
+                      <span class="drill-item__label">{{ node.label }}</span>
+                      @if (node.children?.length) {
+                        <span class="drill-item__meta">
+                          {{ getCheckedCount(node) }}/{{ getTotalCount(node) }} permisos activos
+                        </span>
+                      }
+                    </div>
+                  </div>
+                  @if (node.children?.length) {
+                    <button class="drill-item__enter" (click)="drillInto(node)"
+                      pTooltip="Ver sub-opciones" tooltipPosition="left">
+                      <span class="drill-item__count">{{ node.children!.length }}</span>
+                      <i class="pi pi-chevron-right"></i>
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (filteredCurrentNodes.length === 0) {
+                <div class="drill-empty">
+                  <i class="pi pi-search"></i>
+                  <p>No se encontraron opciones que coincidan con la búsqueda.</p>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- ──────────────────────────────────────────
+             TAB 2: ACCIONES
+             ────────────────────────────────────────── -->
+        <p-tabpanel value="1">
+          <div class="perm-panel">
+            <div class="perm-panel__toolbar">
+              <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText placeholder="Filtrar acciones..." [(ngModel)]="searchActions" />
+              </p-iconfield>
+            </div>
+
+            <p-message severity="info" class="perm-panel__info">
+              Las acciones definen qué operaciones puede realizar el usuario sobre los registros de los módulos habilitados.
+            </p-message>
+
+            <div class="action-grid">
+              @for (action of actionPermissions; track action.id) {
+                @if (!searchActions || action.label.toLowerCase().includes(searchActions.toLowerCase())) {
+                  <div class="action-card" [class.action-card--enabled]="action.enabled">
+                    <div class="action-card__header">
+                      <div class="action-card__icon">
+                        <i [class]="action.icon"></i>
+                      </div>
+                      <p-toggleSwitch [(ngModel)]="action.enabled" (onChange)="onActionToggle()" />
+                    </div>
+                    <h4 class="action-card__title">{{ action.label }}</h4>
+                    <p class="action-card__desc">{{ action.description }}</p>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <!-- ──────────────────────────────────────────
+             TAB 3: CATEGORÍAS
+             ────────────────────────────────────────── -->
+        <p-tabpanel value="2">
+          <div class="perm-panel">
+            <!-- Breadcrumb de navegación -->
+            <div class="drill-breadcrumb">
+              @for (crumb of catBreadcrumb; track crumb.label; let i = $index; let last = $last) {
+                @if (!last) {
+                  <button class="drill-breadcrumb__item" (click)="catDrillTo(i)">{{ crumb.label }}</button>
+                  <i class="pi pi-chevron-right drill-breadcrumb__sep"></i>
+                } @else {
+                  <span class="drill-breadcrumb__current">{{ crumb.label }}</span>
+                }
+              }
+            </div>
+
+            <!-- Toolbar -->
+            <div class="perm-panel__toolbar">
+              <div class="perm-panel__toolbar-left">
+                @if (catBreadcrumb.length > 1) {
+                  <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true"
+                    pTooltip="Volver" (onClick)="catDrillBack()" />
+                }
+                <p-iconfield>
+                  <p-inputicon styleClass="pi pi-search" />
+                  <input pInputText placeholder="Buscar categoría..." [(ngModel)]="searchCategories" />
+                </p-iconfield>
+              </div>
+              <div class="perm-panel__toolbar-actions">
+                <p-button label="Seleccionar todo" icon="pi pi-check-square" [text]="true"
+                  size="small" (onClick)="selectAllCatCurrent(true)" />
+                <p-button label="Deseleccionar" icon="pi pi-stop" [text]="true"
+                  size="small" (onClick)="selectAllCatCurrent(false)" />
+              </div>
+            </div>
+
+            <!-- Lista de nodos del nivel actual -->
+            <div class="drill-list">
+              @for (node of filteredCatNodes; track node.id) {
+                <div class="drill-item" [class.drill-item--has-children]="node.children?.length">
+                  <div class="drill-item__left">
+                    <p-checkbox [(ngModel)]="node.checked" [binary]="true"
+                      (onChange)="toggleCheck(node, catCurrentParent || undefined)" />
+                    <i [class]="node.icon || 'pi pi-file'" class="drill-item__icon"
+                      [class.drill-item__icon--folder]="node.children?.length"></i>
+                    <div class="drill-item__info">
+                      <span class="drill-item__label">{{ node.label }}</span>
+                      @if (node.children?.length) {
+                        <span class="drill-item__meta">
+                          {{ getCheckedCount(node) }}/{{ getTotalCount(node) }} categorías activas
+                        </span>
+                      }
+                    </div>
+                  </div>
+                  @if (node.children?.length) {
+                    <button class="drill-item__enter" (click)="catDrillInto(node)"
+                      pTooltip="Ver sub-categorías" tooltipPosition="left">
+                      <span class="drill-item__count">{{ node.children!.length }}</span>
+                      <i class="pi pi-chevron-right"></i>
+                    </button>
+                  }
+                </div>
+              }
+
+              @if (filteredCatNodes.length === 0) {
+                <div class="drill-empty">
+                  <i class="pi pi-search"></i>
+                  <p>No se encontraron categorías que coincidan con la búsqueda.</p>
+                </div>
+              }
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+
+    <!-- ============================================================
+         RESUMEN DE CAMBIOS
+         ============================================================ -->
+    <div class="changes-panel">
+      <div class="changes-panel__header">
+        <h3 class="changes-panel__title">
+          <i class="pi pi-list-check"></i> Resumen de Cambios
+        </h3>
+        <p-tag [value]="totalChanges + ' cambio(s)'" [severity]="totalChanges > 0 ? 'warn' : 'success'" />
+      </div>
+
+      @if (totalChanges === 0) {
+        <div class="changes-panel__empty">
+          <i class="pi pi-check-circle"></i>
+          <p>No se han realizado cambios en los permisos.</p>
+        </div>
+      } @else {
+        <!-- Cambios en Menú -->
+        @if (menuChanges.added.length > 0 || menuChanges.removed.length > 0) {
+          <div class="changes-section">
+            <h4 class="changes-section__title">
+              <i class="pi pi-sitemap"></i> Menú de Aplicación
+              <span class="changes-section__count">{{ menuChanges.added.length + menuChanges.removed.length }}</span>
+            </h4>
+            @for (item of menuChanges.added; track item) {
+              <div class="changes-item changes-item--added">
+                <i class="pi pi-plus-circle"></i>
+                <span>{{ item }}</span>
+                <p-tag value="Habilitado" severity="success" />
+              </div>
+            }
+            @for (item of menuChanges.removed; track item) {
+              <div class="changes-item changes-item--removed">
+                <i class="pi pi-minus-circle"></i>
+                <span>{{ item }}</span>
+                <p-tag value="Deshabilitado" severity="danger" />
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Cambios en Acciones -->
+        @if (actionChanges.added.length > 0 || actionChanges.removed.length > 0) {
+          <div class="changes-section">
+            <h4 class="changes-section__title">
+              <i class="pi pi-bolt"></i> Acciones
+              <span class="changes-section__count">{{ actionChanges.added.length + actionChanges.removed.length }}</span>
+            </h4>
+            @for (item of actionChanges.added; track item) {
+              <div class="changes-item changes-item--added">
+                <i class="pi pi-plus-circle"></i>
+                <span>{{ item }}</span>
+                <p-tag value="Habilitada" severity="success" />
+              </div>
+            }
+            @for (item of actionChanges.removed; track item) {
+              <div class="changes-item changes-item--removed">
+                <i class="pi pi-minus-circle"></i>
+                <span>{{ item }}</span>
+                <p-tag value="Deshabilitada" severity="danger" />
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Cambios en Categorías -->
+        @if (catChanges.added.length > 0 || catChanges.removed.length > 0) {
+          <div class="changes-section">
+            <h4 class="changes-section__title">
+              <i class="pi pi-database"></i> Categorías
+              <span class="changes-section__count">{{ catChanges.added.length + catChanges.removed.length }}</span>
+            </h4>
+            @for (item of catChanges.added; track item) {
+              <div class="changes-item changes-item--added">
+                <i class="pi pi-plus-circle"></i>
+                <span>{{ item }}</span>
+                <p-tag value="Habilitada" severity="success" />
+              </div>
+            }
+            @for (item of catChanges.removed; track item) {
+              <div class="changes-item changes-item--removed">
+                <i class="pi pi-minus-circle"></i>
+                <span>{{ item }}</span>
+                <p-tag value="Deshabilitada" severity="danger" />
+              </div>
+            }
+          </div>
+        }
+      }
+
+      <!-- Acciones finales -->
+      <div class="changes-panel__footer">
+        <p-button label="Descartar cambios" icon="pi pi-times" severity="secondary" [outlined]="true"
+          (onClick)="discardChanges()" [disabled]="totalChanges === 0" />
+        <p-button label="Guardar permisos" icon="pi pi-check" (onClick)="savePermissions()"
+          [disabled]="totalChanges === 0" />
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================================================
+     DIÁLOGO: NUEVO ROL
+     ============================================================ -->
+<p-dialog header="Nuevo Perfil" [(visible)]="showNewRoleDialog" [modal]="true"
+  [style]="{ width: '520px' }" [draggable]="false">
+  <div class="dialog-form">
+    <div class="dialog-form__field">
+      <label for="roleCode">Código *</label>
+      <input pInputText id="roleCode" [(ngModel)]="newRoleCode" placeholder="COD_ROL" class="w-full" />
+    </div>
+    <div class="dialog-form__field">
+      <label for="roleName">Nombre *</label>
+      <input pInputText id="roleName" [(ngModel)]="newRoleName" placeholder="Nombre del perfil" class="w-full" />
+    </div>
+    <div class="dialog-form__field">
+      <label for="roleDesc">Descripción</label>
+      <textarea pInputText id="roleDesc" [(ngModel)]="newRoleDesc" placeholder="Descripción del perfil"
+        class="w-full" rows="3" style="resize: vertical"></textarea>
+    </div>
+
+    <p-divider />
+
+    <h4 class="dialog-form__section">Política de Contraseña</h4>
+
+    <div class="dialog-form__row">
+      <div class="dialog-form__field">
+        <label for="vigencia">Periodo de Vigencia (Días)</label>
+        <input pInputText id="vigencia" [(ngModel)]="newRoleVigencia" type="number" placeholder="90" min="0" style="width: 140px" />
+      </div>
+      <div class="dialog-form__field">
+        <label for="intentos">Intentos Fallidos</label>
+        <input pInputText id="intentos" [(ngModel)]="newRoleIntentos" type="number" placeholder="3" min="0" style="width: 140px" />
+      </div>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showNewRoleDialog = false" />
+    <p-button label="Crear perfil" icon="pi pi-check" (onClick)="createRole()" [disabled]="!newRoleName.trim() || !newRoleCode.trim()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ============================================================
+     DIÁLOGO: EDITAR ROL
+     ============================================================ -->
+<p-dialog header="Editar Perfil" [(visible)]="showEditRoleDialog" [modal]="true"
+  [style]="{ width: '520px' }" [draggable]="false">
+  <div class="dialog-form">
+    <div class="dialog-form__field">
+      <label>Código</label>
+      <input pInputText [value]="editingRole?.codigo" [disabled]="true" class="w-full" />
+    </div>
+    <div class="dialog-form__field">
+      <label>Nombre *</label>
+      <input pInputText [(ngModel)]="editRoleName" placeholder="Nombre del perfil" class="w-full" />
+    </div>
+    <div class="dialog-form__field">
+      <label>Descripción</label>
+      <textarea pInputText [(ngModel)]="editRoleDesc" placeholder="Descripción del perfil"
+        class="w-full" rows="3" style="resize: vertical"></textarea>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showEditRoleDialog = false" />
+    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditRole()" [disabled]="!editRoleName.trim()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ============================================================
+     DIÁLOGO: CONFIRMAR ELIMINACIÓN
+     ============================================================ -->
+<p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteDialog" [modal]="true"
+  [style]="{ width: '420px' }" [draggable]="false">
+  <div class="dialog-confirm">
+    <i class="pi pi-exclamation-triangle dialog-confirm__icon"></i>
+    <p>
+      ¿Está seguro de eliminar el rol <strong>"{{ roleToDelete?.nombre }}"</strong>?
+      Esta acción no se puede deshacer.
+    </p>
+    @if (roleToDelete && roleToDelete.usuarios > 0) {
+      <p-message severity="warn">
+        Este rol tiene {{ roleToDelete.usuarios }} usuario(s) asignado(s). Se les retirará el acceso.
+      </p-message>
+    }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" (onClick)="showDeleteDialog = false" />
+    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="deleteRole()" />
+  </ng-template>
+</p-dialog>
+

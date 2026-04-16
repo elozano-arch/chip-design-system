@@ -24,6 +24,7 @@ export class AppComponent {
   showServicePanel = false;
   mobileMenuOpen = false;
   darkMode = false;
+  seguridadOpen = true;
 
   @HostListener('window:scroll')
   onScroll() {

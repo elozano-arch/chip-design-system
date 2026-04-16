@@ -1,0 +1,263 @@
+<p-toast />
+
+<div class="form-page">
+  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+
+  <div class="form-header">
+    <div>
+      <h1 class="form-header__title">Gestión de Formularios</h1>
+      <p class="form-header__desc">Seleccione los filtros de búsqueda para visualizar los formularios disponibles.</p>
+    </div>
+  </div>
+
+  <!-- Filtros colapsables con chips -->
+  <div class="chip-filters">
+    <div class="chip-filters__header">
+      <div class="chip-filters__header-left">
+        <p-button
+          [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+          [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
+          [outlined]="true" severity="secondary" size="small"
+          (onClick)="filtersCollapsed = !filtersCollapsed" />
+        @if (filtersCollapsed && activeFilters.length > 0) {
+          <div class="chip-filters__chips">
+            @for (f of activeFilters; track f.field) {
+              <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
+            }
+          </div>
+        }
+      </div>
+      <div class="chip-filters__header-right">
+        @if (activeFilterCount > 0) {
+          <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="clearFilters()" />
+        }
+        <p-button label="Aplicar Filtros" icon="pi pi-search" size="small" (onClick)="applyFilters()" [disabled]="!canApplyFilters" />
+      </div>
+    </div>
+
+    @if (!filtersCollapsed) {
+      <div class="chip-filters__body">
+        <div class="chip-filters__fields chip-filters__fields--4col">
+          <div class="chip-filters__field">
+            <label>Entidad</label>
+            <input pInputText [value]="entidad" [disabled]="true" class="w-full" />
+          </div>
+          <div class="chip-filters__field">
+            <label>Categoría <span class="chip-filters__required">*</span></label>
+            <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" [showClear]="true" class="w-full" />
+          </div>
+          <div class="chip-filters__field">
+            <label>Año <span class="chip-filters__required">*</span></label>
+            <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" [showClear]="true" class="w-full" />
+          </div>
+          <div class="chip-filters__field">
+            <label>Periodo</label>
+            <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" [showClear]="true" class="w-full" />
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Estado vacío -->
+  @if (!filtersApplied) {
+    <div class="form-empty">
+      <i class="pi pi-filter"></i>
+      <h3>Seleccione los filtros de búsqueda</h3>
+      <p>Para visualizar los formularios disponibles, debe seleccionar Categoría, Año y Periodo.</p>
+    </div>
+  }
+
+  <!-- Resultados -->
+  @if (filtersApplied) {
+    <!-- Barra de acciones -->
+    <div class="form-actions-bar">
+      @for (accion of acciones; track accion.key) {
+        <p-button [label]="accion.label" [icon]="accion.icon" size="small"
+          [outlined]="activePanel !== accion.key"
+          [severity]="accion.enabled ? 'primary' : 'secondary'"
+          [pTooltip]="accion.enabled ? '' : 'Sin permisos — contacte al administrador'"
+          tooltipPosition="top"
+          (onClick)="executeAction(accion.key)" />
+      }
+      <div class="form-actions-bar__spacer"></div>
+      <p-iconfield>
+        <p-inputicon styleClass="pi pi-search" />
+        <input pInputText placeholder="Buscar código o nombre..." [(ngModel)]="searchFormulario" />
+      </p-iconfield>
+    </div>
+
+    <!-- Indicador de selección -->
+    @if (selectedFormularios.length > 0) {
+      <div class="form-selection-bar">
+        <i class="pi pi-check-square"></i>
+        <span>{{ selectedFormularios.length }} formulario(s) seleccionado(s)</span>
+        <p-button label="Limpiar selección" [text]="true" size="small" (onClick)="selectedFormularios = []" />
+      </div>
+    }
+
+    <!-- ── PANEL: Importar ── -->
+    @if (activePanel === 'importar') {
+      <div class="form-context-panel">
+        <div class="form-context-panel__header">
+          <i class="pi pi-upload"></i>
+          <span>Importar Formularios</span>
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+        </div>
+        <div class="form-context-panel__body">
+          <p>Seleccione el archivo con los datos del formulario para importar. Formatos aceptados: .xlsx, .csv</p>
+          <div class="form-context-panel__upload">
+            <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true" (onClick)="importInput.click()" />
+            <span class="form-context-panel__filename">{{ importFileName || 'Ningún archivo seleccionado' }}</span>
+            <input #importInput type="file" accept=".xlsx,.csv" hidden (change)="importFileName = $any($event.target).files[0]?.name || ''" />
+          </div>
+          <div class="form-context-panel__footer">
+            <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closePanel()" />
+            <p-button label="Importar" icon="pi pi-upload" (onClick)="confirmImport()" [disabled]="!importFileName" />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── PANEL: Exportar ── -->
+    @if (activePanel === 'exportar') {
+      <div class="form-context-panel">
+        <div class="form-context-panel__header">
+          <i class="pi pi-download"></i>
+          <span>Exportar Formularios</span>
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+        </div>
+        <div class="form-context-panel__body">
+          <p>Se exportarán {{ filteredFormularios.length }} formulario(s) del listado actual.</p>
+          <div class="form-context-panel__row">
+            <label>Formato de exportación</label>
+            <p-select [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat" appendTo="body" />
+          </div>
+          <div class="form-context-panel__footer">
+            <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closePanel()" />
+            <p-button label="Exportar" icon="pi pi-download" (onClick)="confirmExport()" />
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── PANEL: Consultar Envíos ── -->
+    @if (activePanel === 'consultarEnvios') {
+      <div class="form-context-panel">
+        <div class="form-context-panel__header">
+          <i class="pi pi-inbox"></i>
+          <span>Historial de Envíos</span>
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+        </div>
+        <div class="form-context-panel__body">
+          <div class="form-envio">
+            <div class="form-envio__item">
+              <div class="form-envio__info">
+                <strong>Envío #2024-1105</strong>
+                <span>05/11/2024 — 4 formularios</span>
+              </div>
+              <p-tag value="Recibido" severity="success" />
+            </div>
+            <div class="form-envio__item">
+              <div class="form-envio__info">
+                <strong>Envío #2024-1028</strong>
+                <span>28/10/2024 — 6 formularios</span>
+              </div>
+              <p-tag value="Rechazado" severity="danger" />
+            </div>
+            <div class="form-envio__item">
+              <div class="form-envio__info">
+                <strong>Envío #2024-0915</strong>
+                <span>15/09/2024 — 5 formularios</span>
+              </div>
+              <p-tag value="Recibido" severity="success" />
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── PANEL: Validar ── -->
+    @if (activePanel === 'validar') {
+      <div class="form-context-panel">
+        <div class="form-context-panel__header">
+          <i class="pi pi-check-circle"></i>
+          <span>Validar Formularios</span>
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+        </div>
+        <div class="form-context-panel__body">
+          @if (selectedFormularios.length === 0) {
+            <p-message severity="warn">
+              Seleccione los formularios que desea validar usando los checkboxes en la tabla.
+            </p-message>
+          } @else {
+            <p>Se validarán los siguientes {{ selectedFormularios.length }} formulario(s):</p>
+            <ul class="form-context-panel__list">
+              @for (f of selectedFormularios; track f.id) {
+                <li><strong>{{ f.codigo }}</strong> — {{ f.nombre }}</li>
+              }
+            </ul>
+            <div class="form-context-panel__footer">
+              <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closePanel()" />
+              <p-button label="Confirmar Validación" icon="pi pi-check-circle" (onClick)="confirmValidation()" />
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Tabla -->
+    <p-table [value]="filteredFormularios" [stripedRows]="true" [rowHover]="true"
+      [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+      [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+      [(selection)]="selectedFormularios" dataKey="id">
+      <ng-template #header>
+        <tr>
+          <th style="width: 40px">
+            <p-tableHeaderCheckbox />
+          </th>
+          <th pSortableColumn="codigo" style="width: 130px">Código <p-sortIcon field="codigo" /></th>
+          <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
+          <th style="width: 90px">Tipo</th>
+          <th pSortableColumn="estadoValidacion" style="width: 200px">Estado de Validación <p-sortIcon field="estadoValidacion" /></th>
+          <th pSortableColumn="ultimaModificacion" style="width: 140px">Última Modificación <p-sortIcon field="ultimaModificacion" /></th>
+          <th style="width: 80px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-form>
+        <tr>
+          <td>
+            <p-tableCheckbox [value]="form" />
+          </td>
+          <td><span class="form-table__code">{{ form.codigo }}</span></td>
+          <td><span class="form-table__name">{{ form.nombre }}</span></td>
+          <td class="form-table__tipo">{{ form.tipo }}</td>
+          <td><p-tag [value]="form.estadoValidacion" [severity]="getEstadoSeverity(form.estadoValidacion)" /></td>
+          <td class="form-table__date">{{ form.ultimaModificacion }}</td>
+          <td>
+            <div class="form-table__actions">
+              <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                severity="secondary" size="small"
+                (onClick)="abrirMenuFormulario($event, form)" />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="form-table__empty">
+            <i class="pi pi-inbox"></i>
+            <p>No se encontraron formularios para los filtros seleccionados.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-menu #menuFormulario [model]="menuFormularioItems" [popup]="true" appendTo="body" />
+
+    <!-- Nota de permisos -->
+    <p-message severity="info" class="form-permisos-note">
+      Las acciones disponibles dependen de los permisos asignados a su perfil. Los botones sin permisos mostrarán una alerta al hacer clic.
+    </p-message>
+  }
+</div>

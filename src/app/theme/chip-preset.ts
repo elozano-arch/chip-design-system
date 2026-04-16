@@ -118,17 +118,17 @@ export const ChipPreset = definePreset(Aura, {
       950: '{cobalt.950}',
     },
     formField: {
-      paddingX: '0.75rem',
-      paddingY: '0.625rem',
+      paddingX: '0.625rem',
+      paddingY: '0.375rem',
       sm: {
         fontSize: '0.875rem',
-        paddingX: '0.625rem',
-        paddingY: '0.5rem',
+        paddingX: '0.5rem',
+        paddingY: '0.25rem',
       },
       lg: {
         fontSize: '1.125rem',
-        paddingX: '1rem',
-        paddingY: '0.75rem',
+        paddingX: '0.875rem',
+        paddingY: '0.5rem',
       },
       borderRadius: '{borderRadius.md}',
       focusRing: {
@@ -149,10 +149,12 @@ export const ChipPreset = definePreset(Aura, {
       option: {
         padding: '0.625rem 0.75rem',
         borderRadius: '{borderRadius.sm}',
+        fontSize: '15px',
       },
       optionGroup: {
         padding: '0.625rem 1rem',
         fontWeight: '600',
+        fontSize: '15px',
       },
     },
     content: {
@@ -170,10 +172,12 @@ export const ChipPreset = definePreset(Aura, {
         padding: '0.625rem 0.75rem',
         borderRadius: '{borderRadius.sm}',
         gap: '0.5rem',
+        fontSize: '14px',
       },
       submenuLabel: {
         padding: '0.625rem 1rem',
-        fontWeight: '600',
+        fontWeight: '700',
+        fontSize: '14px',
       },
       submenuIcon: {
         size: '0.875rem',
