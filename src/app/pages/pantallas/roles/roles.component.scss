@@ -286,103 +286,63 @@
    PERMISSION EDITOR
    ============================================================ */
 
-/* --- Header --- */
+/* --- Permission Editor Header --- */
 .perm-header {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 
-  &__top {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 12px;
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--chip-cobalt-700);
+    margin: 0 0 4px;
   }
 
-  &__info {
+  &__row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
   }
 
-  &__title {
-    font-family: var(--font-heading);
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--chip-cobalt-700);
-    margin: 0 0 4px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    i {
-      font-size: 24px;
-      color: var(--chip-cobalt-400);
-    }
-  }
-
-  &__subtitle {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--chip-grey-400);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 0 0 2px;
-  }
-
   &__desc {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--chip-grey-500);
     margin: 0;
+    flex: 1;
+  }
+
+  &__meta {
+    flex-shrink: 0;
+  }
+
+  &__counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--chip-cobalt-700);
+    background: var(--chip-bg-solitude);
+    border: 1px solid var(--chip-cobalt-100);
+    border-radius: var(--radius-md);
+    padding: 6px 12px;
+
+    i {
+      font-size: 14px;
+      color: var(--chip-cobalt-500);
+    }
+
+    strong {
+      font-family: var(--font-heading);
+      font-weight: 800;
+    }
   }
 
   &__actions {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
-  }
-}
-
-/* --- Summary Cards --- */
-.perm-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-
-  &__card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 20px;
-    background: var(--chip-bg-solitude);
-    border: 1px solid var(--chip-cobalt-100);
-    border-radius: var(--radius-lg);
-
-    > i {
-      font-size: 24px;
-      color: var(--chip-cobalt-500);
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--chip-cobalt-100);
-      border-radius: var(--radius-md);
-    }
-  }
-
-  &__value {
-    display: block;
-    font-family: var(--font-heading);
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--chip-cobalt-700);
-  }
-
-  &__label {
-    font-size: 12px;
-    color: var(--chip-grey-500);
   }
 }
 
@@ -784,6 +744,14 @@
     background: var(--chip-cobalt-50);
     color: var(--chip-cobalt-600);
   }
+}
+
+/* --- Search bar inside master panel --- */
+.master-detail__search {
+  padding: 8px 14px;
+  background: #fff;
+  border-left: 1px solid var(--chip-grey-200);
+  border-right: 1px solid var(--chip-grey-200);
 }
 
 /* --- Mini breadcrumb path inside panel --- */

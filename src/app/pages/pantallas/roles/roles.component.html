@@ -110,30 +110,26 @@
      ============================================================ -->
 @if (currentView === 'edit' && selectedRole) {
   <div class="roles-page" role="main">
-    <!-- Header con breadcrumb y back -->
+    <p-breadcrumb [model]="[
+      { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
+      { label: 'Roles', routerLink: '/pantallas/roles' },
+      { label: selectedRole.nombre }
+    ]" [home]="breadcrumbHome" />
+
     <div class="perm-header">
-      <div class="perm-header__top">
-        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="backToList()"
-          pTooltip="Volver al listado" />
-        <p-breadcrumb [model]="[
-          { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
-          { label: 'Roles', routerLink: '/pantallas/roles' },
-          { label: selectedRole.nombre }
-        ]" [home]="breadcrumbHome" />
-      </div>
-      <div class="perm-header__info">
-        <div>
-          <p class="perm-header__subtitle">Configurar permisos del perfil:</p>
-          <h1 class="perm-header__title">
-            <i class="pi pi-shield" aria-hidden="true"></i>
-            {{ selectedRole.nombre }}
-          </h1>
-          <p class="perm-header__desc">{{ selectedRole.descripcion }}</p>
+      <h1 class="perm-header__title">{{ selectedRole.nombre }}</h1>
+      <div class="perm-header__row">
+        <p class="perm-header__desc">{{ selectedRole.descripcion }}</p>
+        <div class="perm-header__meta">
+          <span class="perm-header__counter">
+            <i class="pi pi-sitemap" aria-hidden="true"></i>
+            <strong>{{ menuCount }}/{{ menuTotal }}</strong> menús habilitados
+          </span>
         </div>
         <div class="perm-header__actions">
           <p-button label="Descartar" icon="pi pi-times" severity="secondary" [outlined]="true"
             (onClick)="backToList()" />
-          <p-button [label]="'Guardar permisos' + (totalChanges > 0 ? ' (' + totalChanges + ')' : '')"
+          <p-button [label]="'Guardar permisos'"
             icon="pi pi-check" (onClick)="savePermissions()"
             [badge]="totalChanges > 0 ? totalChanges + '' : ''"
             badgeSeverity="warn" />
@@ -141,431 +137,150 @@
       </div>
     </div>
 
-    <!-- Resumen de permisos -->
-    <div class="perm-summary">
-      <div class="perm-summary__card">
-        <i class="pi pi-sitemap" aria-hidden="true"></i>
-        <div>
-          <span class="perm-summary__value">{{ menuCount }}/{{ menuTotal }}</span>
-          <span class="perm-summary__label">Menús habilitados</span>
-        </div>
-      </div>
-      <div class="perm-summary__card">
-        <i class="pi pi-bolt" aria-hidden="true"></i>
-        <div>
-          <span class="perm-summary__value">{{ actionCount }}/{{ actionPermissions.length }}</span>
-          <span class="perm-summary__label">Acciones habilitadas</span>
-        </div>
-      </div>
-      <div class="perm-summary__card">
-        <i class="pi pi-database" aria-hidden="true"></i>
-        <div>
-          <span class="perm-summary__value">{{ categoryCount }}/{{ categoryTotal }}</span>
-          <span class="perm-summary__label">Categorías habilitadas</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tabs de permisos -->
-    <p-tabs [(value)]="activePermissionTab">
-      <p-tablist>
-        <p-tab value="0">
-          <i class="pi pi-sitemap"></i> Menú de Aplicación
-        </p-tab>
-        <p-tab value="1">
-          <i class="pi pi-bolt"></i> Acciones
-        </p-tab>
-        <p-tab value="2">
-          <i class="pi pi-database"></i> Categorías
-        </p-tab>
-      </p-tablist>
-
-      <p-tabpanels>
-        <!-- ──────────────────────────────────────────
-             TAB 1: MENÚ DE APLICACIÓN (master-detail)
-             ────────────────────────────────────────── -->
-        <p-tabpanel value="0">
-          <div class="perm-panel">
-            <!-- Toolbar: solo búsqueda -->
-            <div class="perm-panel__toolbar">
-              <div class="perm-panel__toolbar-left">
-                <p-iconfield>
-                  <p-inputicon styleClass="pi pi-search" />
-                  <input pInputText placeholder="Buscar en este nivel..." [(ngModel)]="searchMenu" />
-                </p-iconfield>
-              </div>
+    <!-- Menú de Aplicación (master-detail) -->
+      <div class="master-detail">
+        <!-- Columna izquierda: opciones padre -->
+        <div class="master-detail__master">
+          <div class="master-detail__title">
+            @if (menuBreadcrumb.length > 1) {
+              <button class="master-detail__back" (click)="drillBack()" pTooltip="Volver al nivel anterior" aria-label="Volver al nivel anterior">
+                <i class="pi pi-arrow-left"></i>
+              </button>
+            }
+            <i class="pi pi-folder-open"></i>
+            <span>{{ menuBreadcrumb[menuBreadcrumb.length - 1]?.label || 'Opciones' }}</span>
+            <div class="master-detail__title-actions">
+              <button class="master-detail__action-btn" (click)="selectAllCurrent(true)" pTooltip="Seleccionar todo" aria-label="Seleccionar todo">
+                <i class="pi pi-check-square" aria-hidden="true"></i>
+              </button>
+              <button class="master-detail__action-btn" (click)="selectAllCurrent(false)" pTooltip="Deseleccionar todo" aria-label="Deseleccionar todo">
+                <i class="pi pi-stop" aria-hidden="true"></i>
+              </button>
             </div>
-
-            <!-- Master-detail layout -->
-            <div class="master-detail">
-              <!-- Columna izquierda: opciones padre -->
-              <div class="master-detail__master">
-                <div class="master-detail__title">
-                  @if (menuBreadcrumb.length > 1) {
-                    <button class="master-detail__back" (click)="drillBack()" pTooltip="Volver al nivel anterior" aria-label="Volver al nivel anterior">
-                      <i class="pi pi-arrow-left"></i>
-                    </button>
-                  }
-                  <i class="pi pi-folder-open"></i>
-                  <span>{{ menuBreadcrumb[menuBreadcrumb.length - 1]?.label || 'Opciones' }}</span>
-                  <div class="master-detail__title-actions">
-                    <button class="master-detail__action-btn" (click)="selectAllCurrent(true)" pTooltip="Seleccionar todo" aria-label="Seleccionar todo">
-                      <i class="pi pi-check-square" aria-hidden="true"></i>
-                    </button>
-                    <button class="master-detail__action-btn" (click)="selectAllCurrent(false)" pTooltip="Deseleccionar todo" aria-label="Deseleccionar todo">
-                      <i class="pi pi-stop" aria-hidden="true"></i>
-                    </button>
-                  </div>
-                </div>
-                <!-- Mini breadcrumb dentro del panel -->
-                @if (menuBreadcrumb.length > 1) {
-                  <div class="master-detail__path">
-                    @for (crumb of menuBreadcrumb; track crumb.label; let i = $index; let last = $last) {
-                      @if (!last) {
-                        <button class="master-detail__path-item" (click)="drillTo(i)">{{ crumb.label }}</button>
-                        <i class="pi pi-chevron-right master-detail__path-sep"></i>
-                      } @else {
-                        <span class="master-detail__path-current">{{ crumb.label }}</span>
-                      }
-                    }
-                  </div>
-                }
-                <div class="drill-list">
-                  @for (node of menuFolders; track node.id) {
-                    <div class="drill-item drill-item--folder"
-                      [class.drill-item--selected]="selectedMenuNode === node"
-                      (click)="selectMenuNode(node)"
-                      role="button" tabindex="0"
-                      (keydown.enter)="selectMenuNode(node)"
-                      (keydown.space)="selectMenuNode(node); $event.preventDefault()">
-                      <div class="drill-item__left">
-                        <p-checkbox [(ngModel)]="node.checked" [binary]="true"
-                          (onChange)="toggleCheck(node, menuCurrentParent || undefined)"
-                          (click)="$event.stopPropagation()" />
-                        <i [class]="node.icon || 'pi pi-folder'" class="drill-item__icon drill-item__icon--folder"></i>
-                        <div class="drill-item__info">
-                          <span class="drill-item__label">{{ node.label }}</span>
-                          <span class="drill-item__meta">
-                            {{ getCheckedCount(node) }}/{{ getTotalCount(node) }} permisos activos
-                          </span>
-                        </div>
-                      </div>
-                      <i class="pi pi-chevron-right drill-item__arrow"></i>
-                    </div>
-                  }
-
-                  @if (menuFolders.length === 0 && menuLeaves.length === 0) {
-                    <div class="drill-empty">
-                      <i class="pi pi-search" aria-hidden="true"></i>
-                      <p>No se encontraron opciones.</p>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <!-- Columna derecha -->
-              <div class="master-detail__detail">
-                @if (selectedMenuNode && selectedMenuNode.children?.length) {
-                  <!-- Sub-opciones del nodo carpeta seleccionado -->
-                  <div class="master-detail__title">
-                    <i [class]="selectedMenuNode.icon || 'pi pi-folder'"></i>
-                    <span>{{ selectedMenuNode.label }}</span>
-                    <span class="master-detail__count">{{ selectedMenuNode.children!.length }}</span>
-                  </div>
-                  <div class="drill-list">
-                    @for (child of selectedMenuChildren; track child.id) {
-                      <div class="drill-item"
-                        [class.drill-item--folder]="child.children?.length"
-                        [class.drill-item--leaf]="!child.children?.length">
-                        <div class="drill-item__left">
-                          <p-checkbox [(ngModel)]="child.checked" [binary]="true"
-                            (onChange)="toggleCheck(child, selectedMenuNode || undefined)" />
-                          <i [class]="child.children?.length ? (child.icon || 'pi pi-folder') : 'pi pi-file'"
-                            class="drill-item__icon"
-                            [class.drill-item__icon--folder]="child.children?.length"
-                            [class.drill-item__icon--leaf]="!child.children?.length"></i>
-                          <div class="drill-item__info">
-                            <span class="drill-item__label">{{ child.label }}</span>
-                            @if (child.children?.length) {
-                              <span class="drill-item__meta">
-                                {{ getCheckedCount(child) }}/{{ getTotalCount(child) }} permisos
-                              </span>
-                            }
-                          </div>
-                        </div>
-                        @if (child.children?.length) {
-                          <button class="drill-item__enter" (click)="drillInto(child)"
-                            pTooltip="Navegar a este nivel" tooltipPosition="left"
-                            [attr.aria-label]="'Navegar a ' + child.label">
-                            <span class="drill-item__count">{{ child.children!.length }}</span>
-                            <i class="pi pi-chevron-right"></i>
-                          </button>
-                        }
-                      </div>
-                    }
-                  </div>
-                } @else if (menuLeaves.length > 0) {
-                  <!-- Opciones individuales (hojas sueltas del nivel actual) -->
-                  <div class="master-detail__title master-detail__title--muted">
-                    <i class="pi pi-file"></i>
-                    <span>Opciones individuales</span>
-                    <span class="master-detail__count">{{ menuLeaves.length }}</span>
-                  </div>
-                  <div class="drill-list">
-                    @for (leaf of menuLeaves; track leaf.id) {
-                      <div class="drill-item drill-item--leaf">
-                        <div class="drill-item__left">
-                          <p-checkbox [(ngModel)]="leaf.checked" [binary]="true"
-                            (onChange)="toggleCheck(leaf, menuCurrentParent || undefined)" />
-                          <i class="pi pi-file drill-item__icon drill-item__icon--leaf"></i>
-                          <div class="drill-item__info">
-                            <span class="drill-item__label">{{ leaf.label }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  </div>
+          </div>
+          <!-- Búsqueda integrada -->
+          <div class="master-detail__search">
+            <p-iconfield>
+              <p-inputicon styleClass="pi pi-search" />
+              <input pInputText placeholder="Buscar..." [(ngModel)]="searchMenu" class="w-full" />
+            </p-iconfield>
+          </div>
+          <!-- Mini breadcrumb dentro del panel -->
+          @if (menuBreadcrumb.length > 1) {
+            <div class="master-detail__path">
+              @for (crumb of menuBreadcrumb; track crumb.label; let i = $index; let last = $last) {
+                @if (!last) {
+                  <button class="master-detail__path-item" (click)="drillTo(i)">{{ crumb.label }}</button>
+                  <i class="pi pi-chevron-right master-detail__path-sep"></i>
                 } @else {
-                  <div class="master-detail__empty">
-                    <i class="pi pi-check-circle" aria-hidden="true"></i>
-                    <p>No hay sub-opciones en este nivel</p>
-                  </div>
+                  <span class="master-detail__path-current">{{ crumb.label }}</span>
                 }
-              </div>
+              }
             </div>
-          </div>
-        </p-tabpanel>
-
-        <!-- ──────────────────────────────────────────
-             TAB 2: ACCIONES (master-detail: habilitadas vs deshabilitadas)
-             ────────────────────────────────────────── -->
-        <p-tabpanel value="1">
-          <div class="perm-panel">
-            <div class="perm-panel__toolbar">
-              <p-iconfield>
-                <p-inputicon styleClass="pi pi-search" />
-                <input pInputText placeholder="Filtrar acciones..." [(ngModel)]="searchActions" />
-              </p-iconfield>
-            </div>
-
-            <div class="master-detail">
-              <!-- Columna izquierda: acciones habilitadas -->
-              <div class="master-detail__master">
-                <div class="master-detail__title master-detail__title--success">
-                  <i class="pi pi-check-circle"></i>
-                  <span>Habilitadas</span>
-                  <span class="master-detail__count master-detail__count--success">{{ enabledActions.length }}</span>
-                </div>
-                <div class="action-list">
-                  @for (action of enabledActions; track action.id) {
-                    <div class="action-row action-row--enabled">
-                      <div class="action-row__left">
-                        <div class="action-row__icon">
-                          <i [class]="action.icon"></i>
-                        </div>
-                        <div class="action-row__info">
-                          <span class="action-row__title">{{ action.label }}</span>
-                          <span class="action-row__desc">{{ action.description }}</span>
-                        </div>
-                      </div>
-                      <p-toggleSwitch [(ngModel)]="action.enabled" (onChange)="onActionToggle()" />
-                    </div>
-                  }
-                  @if (enabledActions.length === 0) {
-                    <div class="drill-empty">
-                      <p>No hay acciones habilitadas</p>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <!-- Columna derecha: acciones deshabilitadas -->
-              <div class="master-detail__detail">
-                <div class="master-detail__title master-detail__title--muted">
-                  <i class="pi pi-ban"></i>
-                  <span>Deshabilitadas</span>
-                  <span class="master-detail__count">{{ disabledActions.length }}</span>
-                </div>
-                <div class="action-list">
-                  @for (action of disabledActions; track action.id) {
-                    <div class="action-row action-row--disabled">
-                      <div class="action-row__left">
-                        <div class="action-row__icon action-row__icon--disabled">
-                          <i [class]="action.icon"></i>
-                        </div>
-                        <div class="action-row__info">
-                          <span class="action-row__title">{{ action.label }}</span>
-                          <span class="action-row__desc">{{ action.description }}</span>
-                        </div>
-                      </div>
-                      <p-toggleSwitch [(ngModel)]="action.enabled" (onChange)="onActionToggle()" />
-                    </div>
-                  }
-                  @if (disabledActions.length === 0) {
-                    <div class="drill-empty">
-                      <p>Todas las acciones están habilitadas</p>
-                    </div>
-                  }
-                </div>
-              </div>
-            </div>
-          </div>
-        </p-tabpanel>
-
-        <!-- ──────────────────────────────────────────
-             TAB 3: CATEGORÍAS (master-detail)
-             ────────────────────────────────────────── -->
-        <p-tabpanel value="2">
-          <div class="perm-panel">
-            <!-- Toolbar: solo búsqueda -->
-            <div class="perm-panel__toolbar">
-              <div class="perm-panel__toolbar-left">
-                <p-iconfield>
-                  <p-inputicon styleClass="pi pi-search" />
-                  <input pInputText placeholder="Buscar categoría..." [(ngModel)]="searchCategories" />
-                </p-iconfield>
-              </div>
-            </div>
-
-            <!-- Master-detail layout -->
-            <div class="master-detail">
-              <!-- Columna izquierda: categorías padre -->
-              <div class="master-detail__master">
-                <div class="master-detail__title">
-                  @if (catBreadcrumb.length > 1) {
-                    <button class="master-detail__back" (click)="catDrillBack()" pTooltip="Volver al nivel anterior" aria-label="Volver al nivel anterior">
-                      <i class="pi pi-arrow-left"></i>
-                    </button>
-                  }
-                  <i class="pi pi-folder-open"></i>
-                  <span>{{ catBreadcrumb[catBreadcrumb.length - 1]?.label || 'Categorías' }}</span>
-                  <div class="master-detail__title-actions">
-                    <button class="master-detail__action-btn" (click)="selectAllCatCurrent(true)" pTooltip="Seleccionar todo" aria-label="Seleccionar todo">
-                      <i class="pi pi-check-square" aria-hidden="true"></i>
-                    </button>
-                    <button class="master-detail__action-btn" (click)="selectAllCatCurrent(false)" pTooltip="Deseleccionar todo" aria-label="Deseleccionar todo">
-                      <i class="pi pi-stop" aria-hidden="true"></i>
-                    </button>
+          }
+          <div class="drill-list">
+            @for (node of menuFolders; track node.id) {
+              <div class="drill-item drill-item--folder"
+                [class.drill-item--selected]="selectedMenuNode === node"
+                (click)="selectMenuNode(node)"
+                role="button" tabindex="0"
+                (keydown.enter)="selectMenuNode(node)"
+                (keydown.space)="selectMenuNode(node); $event.preventDefault()">
+                <div class="drill-item__left">
+                  <p-checkbox [(ngModel)]="node.checked" [binary]="true"
+                    (onChange)="toggleCheck(node, menuCurrentParent || undefined)"
+                    (click)="$event.stopPropagation()" />
+                  <i [class]="node.icon || 'pi pi-folder'" class="drill-item__icon drill-item__icon--folder"></i>
+                  <div class="drill-item__info">
+                    <span class="drill-item__label">{{ node.label }}</span>
+                    <span class="drill-item__meta">
+                      {{ getCheckedCount(node) }}/{{ getTotalCount(node) }} permisos activos
+                    </span>
                   </div>
                 </div>
-                <!-- Mini breadcrumb dentro del panel -->
-                @if (catBreadcrumb.length > 1) {
-                  <div class="master-detail__path">
-                    @for (crumb of catBreadcrumb; track crumb.label; let i = $index; let last = $last) {
-                      @if (!last) {
-                        <button class="master-detail__path-item" (click)="catDrillTo(i)">{{ crumb.label }}</button>
-                        <i class="pi pi-chevron-right master-detail__path-sep"></i>
-                      } @else {
-                        <span class="master-detail__path-current">{{ crumb.label }}</span>
+                <i class="pi pi-chevron-right drill-item__arrow"></i>
+              </div>
+            }
+
+            @if (menuFolders.length === 0 && menuLeaves.length === 0) {
+              <div class="drill-empty">
+                <i class="pi pi-search" aria-hidden="true"></i>
+                <p>No se encontraron opciones.</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="master-detail__detail">
+          @if (selectedMenuNode && selectedMenuNode.children?.length) {
+            <!-- Sub-opciones del nodo carpeta seleccionado -->
+            <div class="master-detail__title">
+              <i [class]="selectedMenuNode.icon || 'pi pi-folder'"></i>
+              <span>{{ selectedMenuNode.label }}</span>
+              <span class="master-detail__count">{{ selectedMenuNode.children!.length }}</span>
+            </div>
+            <div class="drill-list">
+              @for (child of selectedMenuChildren; track child.id) {
+                <div class="drill-item"
+                  [class.drill-item--folder]="child.children?.length"
+                  [class.drill-item--leaf]="!child.children?.length">
+                  <div class="drill-item__left">
+                    <p-checkbox [(ngModel)]="child.checked" [binary]="true"
+                      (onChange)="toggleCheck(child, selectedMenuNode || undefined)" />
+                    <i [class]="child.children?.length ? (child.icon || 'pi pi-folder') : 'pi pi-file'"
+                      class="drill-item__icon"
+                      [class.drill-item__icon--folder]="child.children?.length"
+                      [class.drill-item__icon--leaf]="!child.children?.length"></i>
+                    <div class="drill-item__info">
+                      <span class="drill-item__label">{{ child.label }}</span>
+                      @if (child.children?.length) {
+                        <span class="drill-item__meta">
+                          {{ getCheckedCount(child) }}/{{ getTotalCount(child) }} permisos
+                        </span>
                       }
-                    }
+                    </div>
                   </div>
-                }
-                <div class="drill-list">
-                  @for (node of catFolders; track node.id) {
-                    <div class="drill-item drill-item--folder"
-                      [class.drill-item--selected]="selectedCatNode === node"
-                      (click)="selectCatNode(node)"
-                      role="button" tabindex="0"
-                      (keydown.enter)="selectCatNode(node)"
-                      (keydown.space)="selectCatNode(node); $event.preventDefault()">
-                      <div class="drill-item__left">
-                        <p-checkbox [(ngModel)]="node.checked" [binary]="true"
-                          (onChange)="toggleCheck(node, catCurrentParent || undefined)"
-                          (click)="$event.stopPropagation()" />
-                        <i [class]="node.icon || 'pi pi-folder'" class="drill-item__icon drill-item__icon--folder"></i>
-                        <div class="drill-item__info">
-                          <span class="drill-item__label">{{ node.label }}</span>
-                          <span class="drill-item__meta">
-                            {{ getCheckedCount(node) }}/{{ getTotalCount(node) }} categorías activas
-                          </span>
-                        </div>
-                      </div>
-                      <i class="pi pi-chevron-right drill-item__arrow"></i>
-                    </div>
-                  }
-
-                  @if (catFolders.length === 0 && catLeaves.length === 0) {
-                    <div class="drill-empty">
-                      <i class="pi pi-search" aria-hidden="true"></i>
-                      <p>No se encontraron categorías.</p>
-                    </div>
+                  @if (child.children?.length) {
+                    <button class="drill-item__enter" (click)="drillInto(child)"
+                      pTooltip="Navegar a este nivel" tooltipPosition="left"
+                      [attr.aria-label]="'Navegar a ' + child.label">
+                      <span class="drill-item__count">{{ child.children!.length }}</span>
+                      <i class="pi pi-chevron-right"></i>
+                    </button>
                   }
                 </div>
-              </div>
-
-              <!-- Columna derecha -->
-              <div class="master-detail__detail">
-                @if (selectedCatNode && selectedCatNode.children?.length) {
-                  <div class="master-detail__title">
-                    <i [class]="selectedCatNode.icon || 'pi pi-folder'"></i>
-                    <span>{{ selectedCatNode.label }}</span>
-                    <span class="master-detail__count">{{ selectedCatNode.children!.length }}</span>
-                  </div>
-                  <div class="drill-list">
-                    @for (child of selectedCatChildren; track child.id) {
-                      <div class="drill-item"
-                        [class.drill-item--folder]="child.children?.length"
-                        [class.drill-item--leaf]="!child.children?.length">
-                        <div class="drill-item__left">
-                          <p-checkbox [(ngModel)]="child.checked" [binary]="true"
-                            (onChange)="toggleCheck(child, selectedCatNode || undefined)" />
-                          <i [class]="child.children?.length ? (child.icon || 'pi pi-folder') : 'pi pi-file'"
-                            class="drill-item__icon"
-                            [class.drill-item__icon--folder]="child.children?.length"
-                            [class.drill-item__icon--leaf]="!child.children?.length"></i>
-                          <div class="drill-item__info">
-                            <span class="drill-item__label">{{ child.label }}</span>
-                            @if (child.children?.length) {
-                              <span class="drill-item__meta">
-                                {{ getCheckedCount(child) }}/{{ getTotalCount(child) }} categorías
-                              </span>
-                            }
-                          </div>
-                        </div>
-                        @if (child.children?.length) {
-                          <button class="drill-item__enter" (click)="catDrillInto(child)"
-                            pTooltip="Navegar a este nivel" tooltipPosition="left"
-                            [attr.aria-label]="'Navegar a ' + child.label">
-                            <span class="drill-item__count">{{ child.children!.length }}</span>
-                            <i class="pi pi-chevron-right"></i>
-                          </button>
-                        }
-                      </div>
-                    }
-                  </div>
-                } @else if (catLeaves.length > 0) {
-                  <div class="master-detail__title master-detail__title--muted">
-                    <i class="pi pi-file"></i>
-                    <span>Opciones individuales</span>
-                    <span class="master-detail__count">{{ catLeaves.length }}</span>
-                  </div>
-                  <div class="drill-list">
-                    @for (leaf of catLeaves; track leaf.id) {
-                      <div class="drill-item drill-item--leaf">
-                        <div class="drill-item__left">
-                          <p-checkbox [(ngModel)]="leaf.checked" [binary]="true"
-                            (onChange)="toggleCheck(leaf, catCurrentParent || undefined)" />
-                          <i class="pi pi-file drill-item__icon drill-item__icon--leaf"></i>
-                          <div class="drill-item__info">
-                            <span class="drill-item__label">{{ leaf.label }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    }
-                  </div>
-                } @else {
-                  <div class="master-detail__empty">
-                    <i class="pi pi-check-circle" aria-hidden="true"></i>
-                    <p>No hay sub-opciones en este nivel</p>
-                  </div>
-                }
-              </div>
+              }
             </div>
-          </div>
-        </p-tabpanel>
-      </p-tabpanels>
-    </p-tabs>
+          } @else if (menuLeaves.length > 0) {
+            <!-- Opciones individuales (hojas sueltas del nivel actual) -->
+            <div class="master-detail__title master-detail__title--muted">
+              <i class="pi pi-file"></i>
+              <span>Opciones individuales</span>
+              <span class="master-detail__count">{{ menuLeaves.length }}</span>
+            </div>
+            <div class="drill-list">
+              @for (leaf of menuLeaves; track leaf.id) {
+                <div class="drill-item drill-item--leaf">
+                  <div class="drill-item__left">
+                    <p-checkbox [(ngModel)]="leaf.checked" [binary]="true"
+                      (onChange)="toggleCheck(leaf, menuCurrentParent || undefined)" />
+                    <i class="pi pi-file drill-item__icon drill-item__icon--leaf"></i>
+                    <div class="drill-item__info">
+                      <span class="drill-item__label">{{ leaf.label }}</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="master-detail__empty">
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              <p>No hay sub-opciones en este nivel</p>
+            </div>
+          }
+        </div>
+      </div>
 
     <!-- ============================================================
          RESUMEN DE CAMBIOS (sticky bottom bar)
