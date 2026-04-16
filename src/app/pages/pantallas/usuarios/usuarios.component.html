@@ -1,6 +1,6 @@
 <p-toast />
 
-<div class="usr-page">
+<div class="usr-page" role="main">
   <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
   <div class="usr-header">
@@ -12,16 +12,18 @@
   </div>
 
   <!-- Filtros colapsables con chips -->
-  <div class="chip-filters">
+  <div class="chip-filters" role="region" aria-label="Filtros de búsqueda">
     <div class="chip-filters__header">
       <div class="chip-filters__header-left">
         <p-button
           [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
           [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
           [outlined]="true" severity="secondary" size="small"
+          [attr.aria-expanded]="!filtersCollapsed"
+          aria-controls="usr-filters-body"
           (onClick)="filtersCollapsed = !filtersCollapsed" />
         @if (filtersCollapsed && activeFilters.length > 0) {
-          <div class="chip-filters__chips">
+          <div class="chip-filters__chips" aria-live="polite">
             @for (f of activeFilters; track f.field) {
               <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
             }
@@ -34,22 +36,22 @@
     </div>
 
     @if (!filtersCollapsed) {
-      <div class="chip-filters__body">
+      <div class="chip-filters__body" id="usr-filters-body">
         <div class="chip-filters__fields chip-filters__fields--3col">
           <div class="chip-filters__field">
-            <label>Nombre o Código</label>
+            <label for="usr-search">Nombre o Código</label>
             <p-iconField>
               <p-inputIcon styleClass="pi pi-search" />
-              <input pInputText placeholder="Buscar..." [(ngModel)]="searchUsuarios" class="w-full" />
+              <input pInputText id="usr-search" placeholder="Buscar..." [(ngModel)]="searchUsuarios" class="w-full" />
             </p-iconField>
           </div>
           <div class="chip-filters__field">
-            <label>Perfil</label>
-            <p-select [options]="perfilOptions" [(ngModel)]="filterPerfil" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="usr-perfil">Perfil</label>
+            <p-select inputId="usr-perfil" [options]="perfilOptions" [(ngModel)]="filterPerfil" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Estado</label>
-            <p-select [options]="estadoOptions" [(ngModel)]="filterEstado" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="usr-estado">Estado</label>
+            <p-select inputId="usr-estado" [options]="estadoOptions" [(ngModel)]="filterEstado" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
         </div>
       </div>
@@ -58,6 +60,9 @@
 
   <!-- Tabla -->
   <p-table [value]="filteredUsuarios" [stripedRows]="true" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]" [rowHover]="true" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros">
+    <ng-template #caption>
+      <span class="sr-only">Tabla de usuarios registrados en el sistema</span>
+    </ng-template>
     <ng-template #header>
       <tr>
         <th pSortableColumn="codigo" style="width: 120px">Código <p-sortIcon field="codigo" /></th>
@@ -89,6 +94,7 @@
           <div class="usr-actions">
             <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
               severity="secondary" size="small"
+              [attr.aria-label]="'Acciones para ' + u.nombre"
               (onClick)="abrirMenuAcciones($event, u)" />
           </div>
         </td>
@@ -97,7 +103,7 @@
     <ng-template #emptymessage>
       <tr>
         <td colspan="8" class="usr-empty">
-          <i class="pi pi-inbox"></i>
+          <i class="pi pi-inbox" aria-hidden="true"></i>
           <p>No se encontraron resultados para los filtros aplicados.</p>
         </td>
       </tr>
@@ -111,16 +117,16 @@
 <p-dialog header="Nuevo Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
   <div class="usr-dialog">
     <div class="usr-dialog__field">
-      <label>Nombre completo <span class="field-required">*</span></label>
-      <input pInputText [(ngModel)]="nuevoNombre" placeholder="Nombre del usuario" class="w-full" />
+      <label for="nuevo-nombre">Nombre completo <span class="field-required">*</span></label>
+      <input pInputText id="nuevo-nombre" [(ngModel)]="nuevoNombre" placeholder="Nombre del usuario" class="w-full" aria-required="true" />
     </div>
     <div class="usr-dialog__field">
-      <label>Correo electrónico <span class="field-required">*</span></label>
-      <input pInputText [(ngModel)]="nuevoCorreo" placeholder="correo@entidad.gov.co" class="w-full" />
+      <label for="nuevo-correo">Correo electrónico <span class="field-required">*</span></label>
+      <input pInputText id="nuevo-correo" [(ngModel)]="nuevoCorreo" placeholder="correo@entidad.gov.co" class="w-full" aria-required="true" />
     </div>
     <div class="usr-dialog__field">
-      <label>Perfil de Seguridad</label>
-      <p-select [options]="perfilOptions" [(ngModel)]="nuevoPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
+      <label for="nuevo-perfil">Perfil de Seguridad</label>
+      <p-select inputId="nuevo-perfil" [options]="perfilOptions" [(ngModel)]="nuevoPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
     </div>
   </div>
   <ng-template #footer>
@@ -133,20 +139,20 @@
 <p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
   <div class="usr-dialog">
     <div class="usr-dialog__field">
-      <label>Código</label>
-      <input pInputText [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
+      <label for="edit-codigo">Código</label>
+      <input pInputText id="edit-codigo" [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
     </div>
     <div class="usr-dialog__field">
-      <label>Nombre completo <span class="field-required">*</span></label>
-      <input pInputText [(ngModel)]="editNombre" placeholder="Nombre del usuario" class="w-full" />
+      <label for="edit-nombre">Nombre completo <span class="field-required">*</span></label>
+      <input pInputText id="edit-nombre" [(ngModel)]="editNombre" placeholder="Nombre del usuario" class="w-full" aria-required="true" />
     </div>
     <div class="usr-dialog__field">
-      <label>Correo electrónico <span class="field-required">*</span></label>
-      <input pInputText [(ngModel)]="editCorreo" placeholder="correo@entidad.gov.co" class="w-full" />
+      <label for="edit-correo">Correo electrónico <span class="field-required">*</span></label>
+      <input pInputText id="edit-correo" [(ngModel)]="editCorreo" placeholder="correo@entidad.gov.co" class="w-full" aria-required="true" />
     </div>
     <div class="usr-dialog__field">
-      <label>Perfil de Seguridad</label>
-      <p-select [options]="perfilOptions" [(ngModel)]="editPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
+      <label for="edit-perfil">Perfil de Seguridad</label>
+      <p-select inputId="edit-perfil" [options]="perfilOptions" [(ngModel)]="editPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
     </div>
   </div>
   <ng-template #footer>
@@ -158,7 +164,7 @@
 <!-- Diálogo Confirmar Activar/Desactivar -->
 <p-dialog header="Confirmar Cambio de Estado" [(visible)]="showToggleDialog" [modal]="true" [style]="{ width: '420px' }" [draggable]="false">
   <div class="usr-dialog-confirm">
-    <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon"></i>
+    <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon" aria-hidden="true"></i>
     <p>
       ¿Está seguro de <strong>{{ selectedUsuario?.activo ? 'desactivar' : 'activar' }}</strong>
       al usuario <strong>"{{ selectedUsuario?.nombre }}"</strong>?
@@ -176,7 +182,7 @@
 <!-- Diálogo Confirmar Eliminación -->
 <p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteDialog" [modal]="true" [style]="{ width: '420px' }" [draggable]="false">
   <div class="usr-dialog-confirm">
-    <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon"></i>
+    <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon" aria-hidden="true"></i>
     <p>
       ¿Está seguro de eliminar al usuario <strong>"{{ selectedUsuario?.nombre }}"</strong>?
       Esta acción no se puede revertir.

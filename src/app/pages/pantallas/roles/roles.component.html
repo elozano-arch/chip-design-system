@@ -4,7 +4,7 @@
      VISTA 1: PARÁMETROS DE SEGURIDAD (con sidebar interno)
      ============================================================ -->
 @if (currentView === 'list') {
-  <div class="roles-page">
+  <div class="roles-page" role="main">
     <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
     <div class="roles-header">
@@ -23,9 +23,10 @@
             [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
             [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
             [outlined]="true" severity="secondary" size="small"
+            [attr.aria-expanded]="!filtersCollapsed" aria-controls="roles-filters-body"
             (onClick)="filtersCollapsed = !filtersCollapsed" />
           @if (filtersCollapsed && activeFilters.length > 0) {
-            <div class="chip-filters__chips">
+            <div class="chip-filters__chips" aria-live="polite">
               @for (f of activeFilters; track f.field) {
                 <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
               }
@@ -38,13 +39,13 @@
       </div>
 
       @if (!filtersCollapsed) {
-        <div class="chip-filters__body">
+        <div class="chip-filters__body" id="roles-filters-body">
           <div class="chip-filters__fields chip-filters__fields--2col">
             <div class="chip-filters__field">
-              <label>Nombre o Descripción</label>
+              <label for="roles-search">Nombre o Descripción</label>
               <p-iconField>
                 <p-inputIcon styleClass="pi pi-search" />
-                <input pInputText placeholder="Buscar rol..." [(ngModel)]="searchRoles" class="w-full" />
+                <input pInputText placeholder="Buscar rol..." [(ngModel)]="searchRoles" id="roles-search" class="w-full" />
               </p-iconField>
             </div>
           </div>
@@ -55,6 +56,7 @@
           <!-- Tabla de roles -->
           <p-table [value]="filteredRoles" [stripedRows]="true" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
             [rowHover]="true" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros" styleClass="roles-table">
+            <ng-template #caption><span class="sr-only">Listado de perfiles de seguridad</span></ng-template>
             <ng-template #header>
               <tr>
                 <th pSortableColumn="nombre">Rol <p-sortIcon field="nombre" /></th>
@@ -83,6 +85,7 @@
                   <div class="roles-table__actions">
                     <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
                       severity="secondary" size="small"
+                      [attr.aria-label]="'Acciones para ' + role.nombre"
                       (onClick)="abrirMenuRol($event, role)" />
                   </div>
                 </td>
@@ -91,7 +94,7 @@
             <ng-template #emptymessage>
               <tr>
                 <td colspan="5" class="roles-table__empty">
-                  <i class="pi pi-inbox"></i>
+                  <i class="pi pi-inbox" aria-hidden="true"></i>
                   <p>No se encontraron resultados para los filtros aplicados.</p>
                 </td>
               </tr>
@@ -106,7 +109,7 @@
      VISTA 2: EDITOR DE PERMISOS
      ============================================================ -->
 @if (currentView === 'edit' && selectedRole) {
-  <div class="roles-page">
+  <div class="roles-page" role="main">
     <!-- Header con breadcrumb y back -->
     <div class="perm-header">
       <div class="perm-header__top">
@@ -122,7 +125,7 @@
         <div>
           <p class="perm-header__subtitle">Configurar permisos del perfil:</p>
           <h1 class="perm-header__title">
-            <i class="pi pi-shield"></i>
+            <i class="pi pi-shield" aria-hidden="true"></i>
             {{ selectedRole.nombre }}
           </h1>
           <p class="perm-header__desc">{{ selectedRole.descripcion }}</p>
@@ -141,21 +144,21 @@
     <!-- Resumen de permisos -->
     <div class="perm-summary">
       <div class="perm-summary__card">
-        <i class="pi pi-sitemap"></i>
+        <i class="pi pi-sitemap" aria-hidden="true"></i>
         <div>
           <span class="perm-summary__value">{{ menuCount }}/{{ menuTotal }}</span>
           <span class="perm-summary__label">Menús habilitados</span>
         </div>
       </div>
       <div class="perm-summary__card">
-        <i class="pi pi-bolt"></i>
+        <i class="pi pi-bolt" aria-hidden="true"></i>
         <div>
           <span class="perm-summary__value">{{ actionCount }}/{{ actionPermissions.length }}</span>
           <span class="perm-summary__label">Acciones habilitadas</span>
         </div>
       </div>
       <div class="perm-summary__card">
-        <i class="pi pi-database"></i>
+        <i class="pi pi-database" aria-hidden="true"></i>
         <div>
           <span class="perm-summary__value">{{ categoryCount }}/{{ categoryTotal }}</span>
           <span class="perm-summary__label">Categorías habilitadas</span>
@@ -199,18 +202,18 @@
               <div class="master-detail__master">
                 <div class="master-detail__title">
                   @if (menuBreadcrumb.length > 1) {
-                    <button class="master-detail__back" (click)="drillBack()" pTooltip="Volver al nivel anterior">
+                    <button class="master-detail__back" (click)="drillBack()" pTooltip="Volver al nivel anterior" aria-label="Volver al nivel anterior">
                       <i class="pi pi-arrow-left"></i>
                     </button>
                   }
                   <i class="pi pi-folder-open"></i>
                   <span>{{ menuBreadcrumb[menuBreadcrumb.length - 1]?.label || 'Opciones' }}</span>
                   <div class="master-detail__title-actions">
-                    <button class="master-detail__action-btn" (click)="selectAllCurrent(true)" pTooltip="Seleccionar todo">
-                      <i class="pi pi-check-square"></i>
+                    <button class="master-detail__action-btn" (click)="selectAllCurrent(true)" pTooltip="Seleccionar todo" aria-label="Seleccionar todo">
+                      <i class="pi pi-check-square" aria-hidden="true"></i>
                     </button>
-                    <button class="master-detail__action-btn" (click)="selectAllCurrent(false)" pTooltip="Deseleccionar todo">
-                      <i class="pi pi-stop"></i>
+                    <button class="master-detail__action-btn" (click)="selectAllCurrent(false)" pTooltip="Deseleccionar todo" aria-label="Deseleccionar todo">
+                      <i class="pi pi-stop" aria-hidden="true"></i>
                     </button>
                   </div>
                 </div>
@@ -231,7 +234,10 @@
                   @for (node of menuFolders; track node.id) {
                     <div class="drill-item drill-item--folder"
                       [class.drill-item--selected]="selectedMenuNode === node"
-                      (click)="selectMenuNode(node)">
+                      (click)="selectMenuNode(node)"
+                      role="button" tabindex="0"
+                      (keydown.enter)="selectMenuNode(node)"
+                      (keydown.space)="selectMenuNode(node); $event.preventDefault()">
                       <div class="drill-item__left">
                         <p-checkbox [(ngModel)]="node.checked" [binary]="true"
                           (onChange)="toggleCheck(node, menuCurrentParent || undefined)"
@@ -250,7 +256,7 @@
 
                   @if (menuFolders.length === 0 && menuLeaves.length === 0) {
                     <div class="drill-empty">
-                      <i class="pi pi-search"></i>
+                      <i class="pi pi-search" aria-hidden="true"></i>
                       <p>No se encontraron opciones.</p>
                     </div>
                   }
@@ -289,7 +295,8 @@
                         </div>
                         @if (child.children?.length) {
                           <button class="drill-item__enter" (click)="drillInto(child)"
-                            pTooltip="Navegar a este nivel" tooltipPosition="left">
+                            pTooltip="Navegar a este nivel" tooltipPosition="left"
+                            [attr.aria-label]="'Navegar a ' + child.label">
                             <span class="drill-item__count">{{ child.children!.length }}</span>
                             <i class="pi pi-chevron-right"></i>
                           </button>
@@ -320,7 +327,7 @@
                   </div>
                 } @else {
                   <div class="master-detail__empty">
-                    <i class="pi pi-check-circle"></i>
+                    <i class="pi pi-check-circle" aria-hidden="true"></i>
                     <p>No hay sub-opciones en este nivel</p>
                   </div>
                 }
@@ -426,18 +433,18 @@
               <div class="master-detail__master">
                 <div class="master-detail__title">
                   @if (catBreadcrumb.length > 1) {
-                    <button class="master-detail__back" (click)="catDrillBack()" pTooltip="Volver al nivel anterior">
+                    <button class="master-detail__back" (click)="catDrillBack()" pTooltip="Volver al nivel anterior" aria-label="Volver al nivel anterior">
                       <i class="pi pi-arrow-left"></i>
                     </button>
                   }
                   <i class="pi pi-folder-open"></i>
                   <span>{{ catBreadcrumb[catBreadcrumb.length - 1]?.label || 'Categorías' }}</span>
                   <div class="master-detail__title-actions">
-                    <button class="master-detail__action-btn" (click)="selectAllCatCurrent(true)" pTooltip="Seleccionar todo">
-                      <i class="pi pi-check-square"></i>
+                    <button class="master-detail__action-btn" (click)="selectAllCatCurrent(true)" pTooltip="Seleccionar todo" aria-label="Seleccionar todo">
+                      <i class="pi pi-check-square" aria-hidden="true"></i>
                     </button>
-                    <button class="master-detail__action-btn" (click)="selectAllCatCurrent(false)" pTooltip="Deseleccionar todo">
-                      <i class="pi pi-stop"></i>
+                    <button class="master-detail__action-btn" (click)="selectAllCatCurrent(false)" pTooltip="Deseleccionar todo" aria-label="Deseleccionar todo">
+                      <i class="pi pi-stop" aria-hidden="true"></i>
                     </button>
                   </div>
                 </div>
@@ -458,7 +465,10 @@
                   @for (node of catFolders; track node.id) {
                     <div class="drill-item drill-item--folder"
                       [class.drill-item--selected]="selectedCatNode === node"
-                      (click)="selectCatNode(node)">
+                      (click)="selectCatNode(node)"
+                      role="button" tabindex="0"
+                      (keydown.enter)="selectCatNode(node)"
+                      (keydown.space)="selectCatNode(node); $event.preventDefault()">
                       <div class="drill-item__left">
                         <p-checkbox [(ngModel)]="node.checked" [binary]="true"
                           (onChange)="toggleCheck(node, catCurrentParent || undefined)"
@@ -477,7 +487,7 @@
 
                   @if (catFolders.length === 0 && catLeaves.length === 0) {
                     <div class="drill-empty">
-                      <i class="pi pi-search"></i>
+                      <i class="pi pi-search" aria-hidden="true"></i>
                       <p>No se encontraron categorías.</p>
                     </div>
                   }
@@ -515,7 +525,8 @@
                         </div>
                         @if (child.children?.length) {
                           <button class="drill-item__enter" (click)="catDrillInto(child)"
-                            pTooltip="Navegar a este nivel" tooltipPosition="left">
+                            pTooltip="Navegar a este nivel" tooltipPosition="left"
+                            [attr.aria-label]="'Navegar a ' + child.label">
                             <span class="drill-item__count">{{ child.children!.length }}</span>
                             <i class="pi pi-chevron-right"></i>
                           </button>
@@ -545,7 +556,7 @@
                   </div>
                 } @else {
                   <div class="master-detail__empty">
-                    <i class="pi pi-check-circle"></i>
+                    <i class="pi pi-check-circle" aria-hidden="true"></i>
                     <p>No hay sub-opciones en este nivel</p>
                   </div>
                 }
@@ -560,7 +571,10 @@
          RESUMEN DE CAMBIOS (sticky bottom bar)
          ============================================================ -->
     <div class="changes-bar" [class.changes-bar--has-changes]="totalChanges > 0">
-      <div class="changes-bar__header" (click)="totalChanges > 0 ? changesExpanded = !changesExpanded : null">
+      <div class="changes-bar__header" (click)="totalChanges > 0 ? changesExpanded = !changesExpanded : null"
+        role="button" tabindex="0" [attr.aria-expanded]="changesExpanded"
+        (keydown.enter)="totalChanges > 0 ? changesExpanded = !changesExpanded : null"
+        (keydown.space)="totalChanges > 0 ? changesExpanded = !changesExpanded : null; $event.preventDefault()">
         <div class="changes-bar__header-left">
           @if (totalChanges > 0) {
             <i class="pi" [class.pi-chevron-up]="!changesExpanded" [class.pi-chevron-down]="changesExpanded"></i>
@@ -580,22 +594,22 @@
       </div>
 
       @if (changesExpanded && totalChanges > 0) {
-        <div class="changes-bar__body">
+        <div class="changes-bar__body" aria-live="polite">
           @if (menuChanges.added.length > 0 || menuChanges.removed.length > 0) {
             <div class="changes-section">
               <h4 class="changes-section__title">
-                <i class="pi pi-sitemap"></i> Menú
+                <i class="pi pi-sitemap" aria-hidden="true"></i> Menú
                 <span class="changes-section__count">{{ menuChanges.added.length + menuChanges.removed.length }}</span>
               </h4>
               @for (item of menuChanges.added; track item) {
                 <div class="changes-item changes-item--added">
-                  <i class="pi pi-plus-circle"></i>
+                  <i class="pi pi-plus-circle" aria-hidden="true"></i>
                   <span>{{ item }}</span>
                 </div>
               }
               @for (item of menuChanges.removed; track item) {
                 <div class="changes-item changes-item--removed">
-                  <i class="pi pi-minus-circle"></i>
+                  <i class="pi pi-minus-circle" aria-hidden="true"></i>
                   <span>{{ item }}</span>
                 </div>
               }
@@ -604,28 +618,28 @@
           @if (actionChanges.added.length > 0 || actionChanges.removed.length > 0) {
             <div class="changes-section">
               <h4 class="changes-section__title">
-                <i class="pi pi-bolt"></i> Acciones
+                <i class="pi pi-bolt" aria-hidden="true"></i> Acciones
                 <span class="changes-section__count">{{ actionChanges.added.length + actionChanges.removed.length }}</span>
               </h4>
               @for (item of actionChanges.added; track item) {
-                <div class="changes-item changes-item--added"><i class="pi pi-plus-circle"></i><span>{{ item }}</span></div>
+                <div class="changes-item changes-item--added"><i class="pi pi-plus-circle" aria-hidden="true"></i><span>{{ item }}</span></div>
               }
               @for (item of actionChanges.removed; track item) {
-                <div class="changes-item changes-item--removed"><i class="pi pi-minus-circle"></i><span>{{ item }}</span></div>
+                <div class="changes-item changes-item--removed"><i class="pi pi-minus-circle" aria-hidden="true"></i><span>{{ item }}</span></div>
               }
             </div>
           }
           @if (catChanges.added.length > 0 || catChanges.removed.length > 0) {
             <div class="changes-section">
               <h4 class="changes-section__title">
-                <i class="pi pi-database"></i> Categorías
+                <i class="pi pi-database" aria-hidden="true"></i> Categorías
                 <span class="changes-section__count">{{ catChanges.added.length + catChanges.removed.length }}</span>
               </h4>
               @for (item of catChanges.added; track item) {
-                <div class="changes-item changes-item--added"><i class="pi pi-plus-circle"></i><span>{{ item }}</span></div>
+                <div class="changes-item changes-item--added"><i class="pi pi-plus-circle" aria-hidden="true"></i><span>{{ item }}</span></div>
               }
               @for (item of catChanges.removed; track item) {
-                <div class="changes-item changes-item--removed"><i class="pi pi-minus-circle"></i><span>{{ item }}</span></div>
+                <div class="changes-item changes-item--removed"><i class="pi pi-minus-circle" aria-hidden="true"></i><span>{{ item }}</span></div>
               }
             </div>
           }
@@ -643,11 +657,11 @@
   <div class="dialog-form">
     <div class="dialog-form__field">
       <label for="roleCode">Código <span class="field-required">*</span></label>
-      <input pInputText id="roleCode" [(ngModel)]="newRoleCode" placeholder="COD_ROL" class="w-full" />
+      <input pInputText id="roleCode" [(ngModel)]="newRoleCode" placeholder="COD_ROL" class="w-full" aria-required="true" />
     </div>
     <div class="dialog-form__field">
       <label for="roleName">Nombre <span class="field-required">*</span></label>
-      <input pInputText id="roleName" [(ngModel)]="newRoleName" placeholder="Nombre del perfil" class="w-full" />
+      <input pInputText id="roleName" [(ngModel)]="newRoleName" placeholder="Nombre del perfil" class="w-full" aria-required="true" />
     </div>
     <div class="dialog-form__field">
       <label for="roleDesc">Descripción</label>
@@ -683,16 +697,16 @@
   [style]="{ width: '520px' }" [draggable]="false">
   <div class="dialog-form">
     <div class="dialog-form__field">
-      <label>Código</label>
-      <input pInputText [value]="editingRole?.codigo" [disabled]="true" class="w-full" />
+      <label for="edit-role-codigo">Código</label>
+      <input pInputText id="edit-role-codigo" [value]="editingRole?.codigo" [disabled]="true" class="w-full" />
     </div>
     <div class="dialog-form__field">
-      <label>Nombre <span class="field-required">*</span></label>
-      <input pInputText [(ngModel)]="editRoleName" placeholder="Nombre del perfil" class="w-full" />
+      <label for="edit-role-nombre">Nombre <span class="field-required">*</span></label>
+      <input pInputText id="edit-role-nombre" [(ngModel)]="editRoleName" placeholder="Nombre del perfil" class="w-full" aria-required="true" />
     </div>
     <div class="dialog-form__field">
-      <label>Descripción</label>
-      <textarea pInputText [(ngModel)]="editRoleDesc" placeholder="Descripción del perfil"
+      <label for="edit-role-desc">Descripción</label>
+      <textarea pInputText id="edit-role-desc" [(ngModel)]="editRoleDesc" placeholder="Descripción del perfil"
         class="w-full" rows="3" style="resize: vertical"></textarea>
     </div>
   </div>
@@ -708,7 +722,7 @@
 <p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteDialog" [modal]="true"
   [style]="{ width: '420px' }" [draggable]="false">
   <div class="dialog-confirm">
-    <i class="pi pi-exclamation-triangle dialog-confirm__icon"></i>
+    <i class="pi pi-exclamation-triangle dialog-confirm__icon" aria-hidden="true"></i>
     <p>
       ¿Está seguro de eliminar el rol <strong>"{{ roleToDelete?.nombre }}"</strong>?
       Esta acción no se puede deshacer.

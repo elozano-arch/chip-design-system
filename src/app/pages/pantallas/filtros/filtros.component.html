@@ -1,4 +1,4 @@
-<div class="flt-page">
+<div class="flt-page" role="main">
   <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
   <div class="flt-header">
@@ -10,16 +10,18 @@
   </div>
 
   <!-- Filtros colapsables con chips -->
-  <div class="chip-filters">
+  <div class="chip-filters" role="region" aria-label="Filtros de búsqueda">
     <div class="chip-filters__header">
       <div class="chip-filters__header-left">
         <p-button
           [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
           [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
           [outlined]="true" severity="secondary" size="small"
+          [attr.aria-expanded]="!filtersCollapsed"
+          aria-controls="flt-filters-body"
           (onClick)="filtersCollapsed = !filtersCollapsed" />
         @if (filtersCollapsed && activeFilters.length > 0) {
-          <div class="chip-filters__chips">
+          <div class="chip-filters__chips" aria-live="polite">
             @for (f of activeFilters; track f.field) {
               <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
             }
@@ -32,42 +34,42 @@
     </div>
 
     @if (!filtersCollapsed) {
-      <div class="chip-filters__body">
+      <div class="chip-filters__body" id="flt-filters-body">
         <div class="chip-filters__fields chip-filters__fields--4col">
           <div class="chip-filters__field">
-            <label>Nombre o Código</label>
+            <label for="flt-search">Nombre o Código</label>
             <p-iconField>
               <p-inputIcon styleClass="pi pi-search" />
-              <input pInputText placeholder="Buscar..." [(ngModel)]="searchText" class="w-full" />
+              <input pInputText id="flt-search" placeholder="Buscar..." [(ngModel)]="searchText" class="w-full" />
             </p-iconField>
           </div>
           <div class="chip-filters__field">
-            <label>Perfil</label>
-            <p-select [options]="perfilOptions" [(ngModel)]="filterPerfil" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="flt-perfil">Perfil</label>
+            <p-select inputId="flt-perfil" [options]="perfilOptions" [(ngModel)]="filterPerfil" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Estado</label>
-            <p-select [options]="estadoOptions" [(ngModel)]="filterEstado" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="flt-estado">Estado</label>
+            <p-select inputId="flt-estado" [options]="estadoOptions" [(ngModel)]="filterEstado" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Entidad</label>
-            <p-select [options]="entidadOptions" [(ngModel)]="filterEntidad" placeholder="Todas" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="flt-entidad">Entidad</label>
+            <p-select inputId="flt-entidad" [options]="entidadOptions" [(ngModel)]="filterEntidad" placeholder="Todas" appendTo="body" [showClear]="true" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Departamento</label>
-            <p-select [options]="departamentoOptions" [(ngModel)]="filterDepartamento" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="flt-depto">Departamento</label>
+            <p-select inputId="flt-depto" [options]="departamentoOptions" [(ngModel)]="filterDepartamento" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Tipo documento</label>
-            <p-select [options]="tipoDocOptions" [(ngModel)]="filterTipoDoc" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="flt-tipodoc">Tipo documento</label>
+            <p-select inputId="flt-tipodoc" [options]="tipoDocOptions" [(ngModel)]="filterTipoDoc" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Fecha desde</label>
-            <p-datepicker [(ngModel)]="filterFechaDesde" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showIcon]="true" appendTo="body" class="w-full" />
+            <label for="flt-desde">Fecha desde</label>
+            <p-datepicker inputId="flt-desde" [(ngModel)]="filterFechaDesde" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showIcon]="true" appendTo="body" class="w-full" />
           </div>
           <div class="chip-filters__field">
-            <label>Fecha hasta</label>
-            <p-datepicker [(ngModel)]="filterFechaHasta" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showIcon]="true" appendTo="body" class="w-full" />
+            <label for="flt-hasta">Fecha hasta</label>
+            <p-datepicker inputId="flt-hasta" [(ngModel)]="filterFechaHasta" dateFormat="dd/mm/yy" placeholder="dd/mm/aaaa" [showIcon]="true" appendTo="body" class="w-full" />
           </div>
         </div>
       </div>
@@ -79,6 +81,9 @@
     [paginator]="true" [rowsPerPageOptions]="[5, 7, 10]"
     [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
     [tableStyle]="{ 'min-width': '60rem' }">
+    <ng-template #caption>
+      <span class="sr-only">Demostración del patrón de filtros con datos de ejemplo</span>
+    </ng-template>
     <ng-template #header>
       <tr>
         <th style="width: 90px">Código</th>
@@ -98,15 +103,20 @@
         <td class="flt-email">{{ u.departamento }}</td>
         <td style="text-align: center">
           @if (u.activo) {
-            <i class="pi pi-check-circle flt-status--active"></i>
+            <p-tag value="Activo" severity="success" />
           } @else {
-            <i class="pi pi-times-circle flt-status--inactive"></i>
+            <p-tag value="Inactivo" severity="danger" />
           }
         </td>
       </tr>
     </ng-template>
     <ng-template #emptymessage>
-      <tr><td colspan="6" class="flt-empty">Sin resultados</td></tr>
+      <tr>
+        <td colspan="6" class="flt-empty">
+          <i class="pi pi-inbox" aria-hidden="true"></i>
+          No se encontraron resultados para los filtros aplicados.
+        </td>
+      </tr>
     </ng-template>
   </p-table>
 </div>

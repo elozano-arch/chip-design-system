@@ -1,4 +1,4 @@
-<div class="aud-page">
+<div class="aud-page" role="main">
   <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
   <div class="aud-header">
@@ -7,16 +7,18 @@
   </div>
 
   <!-- Filtros colapsables con chips -->
-  <div class="chip-filters">
+  <div class="chip-filters" role="region" aria-label="Filtros de búsqueda">
     <div class="chip-filters__header">
       <div class="chip-filters__header-left">
         <p-button
           [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
           [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
           [outlined]="true" severity="secondary" size="small"
+          [attr.aria-expanded]="!filtersCollapsed"
+          aria-controls="aud-filters-body"
           (onClick)="filtersCollapsed = !filtersCollapsed" />
         @if (filtersCollapsed && activeFilters.length > 0) {
-          <div class="chip-filters__chips">
+          <div class="chip-filters__chips" aria-live="polite">
             @for (f of activeFilters; track f.field) {
               <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
             }
@@ -29,18 +31,18 @@
     </div>
 
     @if (!filtersCollapsed) {
-      <div class="chip-filters__body">
+      <div class="chip-filters__body" id="aud-filters-body">
         <div class="chip-filters__fields chip-filters__fields--2col">
           <div class="chip-filters__field">
-            <label>Buscar</label>
+            <label for="aud-search">Buscar</label>
             <p-iconfield>
               <p-inputicon styleClass="pi pi-search" />
-              <input pInputText placeholder="Buscar por usuario, acción o detalle..." [(ngModel)]="searchLog" class="w-full" />
+              <input pInputText id="aud-search" placeholder="Buscar por usuario, acción o detalle..." [(ngModel)]="searchLog" class="w-full" />
             </p-iconfield>
           </div>
           <div class="chip-filters__field">
-            <label>Tipo</label>
-            <p-select [options]="tipoOptions" [(ngModel)]="filterTipo" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="aud-tipo">Tipo</label>
+            <p-select inputId="aud-tipo" [options]="tipoOptions" [(ngModel)]="filterTipo" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
           </div>
         </div>
       </div>
@@ -49,6 +51,9 @@
 
   <!-- Tabla -->
   <p-table [value]="filteredLogs" [stripedRows]="true" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]" [rowHover]="true" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros">
+    <ng-template #caption>
+      <span class="sr-only">Registro de auditoría del módulo de seguridad</span>
+    </ng-template>
     <ng-template #header>
       <tr>
         <th pSortableColumn="fecha" style="width: 100px">Fecha <p-sortIcon field="fecha" /></th>
@@ -72,7 +77,7 @@
     <ng-template #emptymessage>
       <tr>
         <td colspan="6" class="aud-empty">
-          <i class="pi pi-inbox"></i>
+          <i class="pi pi-inbox" aria-hidden="true"></i>
           <p>No se encontraron resultados para los filtros aplicados.</p>
         </td>
       </tr>

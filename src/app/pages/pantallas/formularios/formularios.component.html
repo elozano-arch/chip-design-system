@@ -1,6 +1,6 @@
 <p-toast />
 
-<div class="form-page">
+<div class="form-page" role="main">
   <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
 
   <div class="form-header">
@@ -11,16 +11,17 @@
   </div>
 
   <!-- Filtros colapsables con chips -->
-  <div class="chip-filters">
+  <div class="chip-filters" role="region" aria-label="Filtros de búsqueda">
     <div class="chip-filters__header">
       <div class="chip-filters__header-left">
         <p-button
           [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
           [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
           [outlined]="true" severity="secondary" size="small"
+          [attr.aria-expanded]="!filtersCollapsed" aria-controls="form-filters-body"
           (onClick)="filtersCollapsed = !filtersCollapsed" />
         @if (filtersCollapsed && activeFilters.length > 0) {
-          <div class="chip-filters__chips">
+          <div class="chip-filters__chips" aria-live="polite">
             @for (f of activeFilters; track f.field) {
               <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
             }
@@ -36,23 +37,23 @@
     </div>
 
     @if (!filtersCollapsed) {
-      <div class="chip-filters__body">
+      <div class="chip-filters__body" id="form-filters-body">
         <div class="chip-filters__fields chip-filters__fields--4col">
           <div class="chip-filters__field">
-            <label>Entidad</label>
-            <input pInputText [value]="entidad" [disabled]="true" class="w-full" />
+            <label for="form-entidad">Entidad</label>
+            <input pInputText [value]="entidad" [disabled]="true" class="w-full" id="form-entidad" />
           </div>
           <div class="chip-filters__field">
-            <label>Categoría <span class="chip-filters__required">*</span></label>
-            <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="form-categoria">Categoría <span class="chip-filters__required">*</span></label>
+            <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" [showClear]="true" class="w-full" inputId="form-categoria" aria-required="true" />
           </div>
           <div class="chip-filters__field">
-            <label>Año <span class="chip-filters__required">*</span></label>
-            <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="form-anio">Año <span class="chip-filters__required">*</span></label>
+            <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" [showClear]="true" class="w-full" inputId="form-anio" aria-required="true" />
           </div>
           <div class="chip-filters__field">
-            <label>Periodo</label>
-            <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="form-periodo">Periodo</label>
+            <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" [showClear]="true" class="w-full" inputId="form-periodo" />
           </div>
         </div>
       </div>
@@ -62,7 +63,7 @@
   <!-- Estado vacío -->
   @if (!filtersApplied) {
     <div class="form-empty">
-      <i class="pi pi-filter"></i>
+      <i class="pi pi-filter" aria-hidden="true"></i>
       <h3>Seleccione los filtros de búsqueda</h3>
       <p>Para visualizar los formularios disponibles, debe seleccionar Categoría, Año y Periodo.</p>
     </div>
@@ -89,8 +90,8 @@
 
     <!-- Indicador de selección -->
     @if (selectedFormularios.length > 0) {
-      <div class="form-selection-bar">
-        <i class="pi pi-check-square"></i>
+      <div class="form-selection-bar" aria-live="polite">
+        <i class="pi pi-check-square" aria-hidden="true"></i>
         <span>{{ selectedFormularios.length }} formulario(s) seleccionado(s)</span>
         <p-button label="Limpiar selección" [text]="true" size="small" (onClick)="selectedFormularios = []" />
       </div>
@@ -100,9 +101,9 @@
     @if (activePanel === 'importar') {
       <div class="form-context-panel">
         <div class="form-context-panel__header">
-          <i class="pi pi-upload"></i>
+          <i class="pi pi-upload" aria-hidden="true"></i>
           <span>Importar Formularios</span>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
         </div>
         <div class="form-context-panel__body">
           <p>Seleccione el archivo con los datos del formulario para importar. Formatos aceptados: .xlsx, .csv</p>
@@ -123,9 +124,9 @@
     @if (activePanel === 'exportar') {
       <div class="form-context-panel">
         <div class="form-context-panel__header">
-          <i class="pi pi-download"></i>
+          <i class="pi pi-download" aria-hidden="true"></i>
           <span>Exportar Formularios</span>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
         </div>
         <div class="form-context-panel__body">
           <p>Se exportarán {{ filteredFormularios.length }} formulario(s) del listado actual.</p>
@@ -145,9 +146,9 @@
     @if (activePanel === 'consultarEnvios') {
       <div class="form-context-panel">
         <div class="form-context-panel__header">
-          <i class="pi pi-inbox"></i>
+          <i class="pi pi-inbox" aria-hidden="true"></i>
           <span>Historial de Envíos</span>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
         </div>
         <div class="form-context-panel__body">
           <div class="form-envio">
@@ -181,9 +182,9 @@
     @if (activePanel === 'validar') {
       <div class="form-context-panel">
         <div class="form-context-panel__header">
-          <i class="pi pi-check-circle"></i>
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
           <span>Validar Formularios</span>
-          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" (onClick)="closePanel()" />
+          <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
         </div>
         <div class="form-context-panel__body">
           @if (selectedFormularios.length === 0) {
@@ -211,6 +212,7 @@
       [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
       [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
       [(selection)]="selectedFormularios" dataKey="id">
+      <ng-template #caption><span class="sr-only">Listado de formularios</span></ng-template>
       <ng-template #header>
         <tr>
           <th style="width: 40px">
@@ -238,6 +240,7 @@
             <div class="form-table__actions">
               <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
                 severity="secondary" size="small"
+                [attr.aria-label]="'Acciones para ' + form.nombre"
                 (onClick)="abrirMenuFormulario($event, form)" />
             </div>
           </td>
@@ -246,7 +249,7 @@
       <ng-template #emptymessage>
         <tr>
           <td colspan="7" class="form-table__empty">
-            <i class="pi pi-inbox"></i>
+            <i class="pi pi-inbox" aria-hidden="true"></i>
             <p>No se encontraron resultados para los filtros aplicados.</p>
           </td>
         </tr>

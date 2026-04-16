@@ -27,8 +27,8 @@
   --chip-grey-50: #F5F5F5;
   --chip-grey-100: #EBEBEB;
   --chip-grey-200: #D6D6D6;
-  --chip-grey-300: #BDBDBD;
-  --chip-grey-400: #9E9E9E;
+  --chip-grey-300: #A0A0A0;
+  --chip-grey-400: #757575;
   --chip-grey-500: #7A7A7A;
   --chip-grey-600: #616161;
   --chip-grey-700: #4C4C4C;
@@ -148,6 +148,18 @@ a {
     outline-offset: 2px;
     border-radius: 2px;
   }
+}
+
+/* Global focus-visible for all interactive elements */
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--chip-cobalt-500);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ==========================================================================
