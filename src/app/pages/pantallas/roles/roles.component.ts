@@ -118,6 +118,7 @@ export class RolesComponent {
   searchMenu = '';
   searchActions = '';
   searchCategories = '';
+  changesExpanded = false;
 
   // ── Diálogos ──
   showNewRoleDialog = false;
@@ -149,6 +150,10 @@ export class RolesComponent {
   menuBreadcrumb: { label: string; nodes: PermissionNode[] }[] = [];
   menuCurrentNodes: PermissionNode[] = [];
   menuCurrentParent: PermissionNode | null = null;
+
+  // ── Master-detail: nodo seleccionado para ver hijos en columna derecha ──
+  selectedMenuNode: PermissionNode | null = null;
+  selectedCatNode: PermissionNode | null = null;
 
   // ── Snapshot del estado inicial para detectar cambios ──
   private initialMenuState: Map<number, boolean> = new Map();
@@ -519,6 +524,18 @@ export class RolesComponent {
     this.menuCurrentNodes = this.menuPermissions;
     this.menuBreadcrumb = [{ label: 'Opciones del Sistema', nodes: this.menuPermissions }];
     this.menuCurrentParent = null;
+    this.autoSelectFirstFolder('menu');
+  }
+
+  /** Auto-selecciona el primer nodo con hijos para que la columna derecha nunca esté vacía */
+  private autoSelectFirstFolder(type: 'menu' | 'cat') {
+    const nodes = type === 'menu' ? this.menuCurrentNodes : this.catCurrentNodes;
+    const first = nodes.find(n => n.children && n.children.length > 0);
+    if (type === 'menu') {
+      this.selectedMenuNode = first || null;
+    } else {
+      this.selectedCatNode = first || null;
+    }
   }
 
   drillInto(node: PermissionNode) {
@@ -527,6 +544,7 @@ export class RolesComponent {
     this.menuCurrentNodes = node.children;
     this.menuCurrentParent = node;
     this.searchMenu = '';
+    this.autoSelectFirstFolder('menu');
   }
 
   drillTo(index: number) {
@@ -535,6 +553,7 @@ export class RolesComponent {
     this.menuCurrentNodes = target.nodes;
     this.menuCurrentParent = index === 0 ? null : this.findParent(target.nodes);
     this.searchMenu = '';
+    this.autoSelectFirstFolder('menu');
   }
 
   drillBack() {
@@ -570,6 +589,65 @@ export class RolesComponent {
     return this.menuCurrentNodes.filter(n => n.label.toLowerCase().includes(q));
   }
 
+  /** Solo carpetas (con hijos) para la columna izquierda */
+  get menuFolders(): PermissionNode[] {
+    return this.filteredCurrentNodes.filter(n => n.children && n.children.length > 0);
+  }
+
+  /** Solo hojas (sin hijos) para mostrar en la derecha cuando no hay selección */
+  get menuLeaves(): PermissionNode[] {
+    return this.filteredCurrentNodes.filter(n => !n.children || n.children.length === 0);
+  }
+
+  get catFolders(): PermissionNode[] {
+    return this.filteredCatNodes.filter(n => n.children && n.children.length > 0);
+  }
+
+  get catLeaves(): PermissionNode[] {
+    return this.filteredCatNodes.filter(n => !n.children || n.children.length === 0);
+  }
+
+  /** Acciones agrupadas: habilitadas vs deshabilitadas */
+  get enabledActions(): typeof this.actionPermissions {
+    let actions = this.actionPermissions.filter(a => a.enabled);
+    if (this.searchActions) {
+      const q = this.searchActions.toLowerCase();
+      actions = actions.filter(a => a.label.toLowerCase().includes(q));
+    }
+    return actions;
+  }
+
+  get disabledActions(): typeof this.actionPermissions {
+    let actions = this.actionPermissions.filter(a => !a.enabled);
+    if (this.searchActions) {
+      const q = this.searchActions.toLowerCase();
+      actions = actions.filter(a => a.label.toLowerCase().includes(q));
+    }
+    return actions;
+  }
+
+  selectMenuNode(node: PermissionNode) {
+    this.selectedMenuNode = this.selectedMenuNode === node ? null : node;
+  }
+
+  get selectedMenuChildren(): PermissionNode[] {
+    if (!this.selectedMenuNode?.children) return [];
+    if (!this.searchMenu) return this.selectedMenuNode.children;
+    const q = this.searchMenu.toLowerCase();
+    return this.selectedMenuNode.children.filter(n => n.label.toLowerCase().includes(q));
+  }
+
+  selectCatNode(node: PermissionNode) {
+    this.selectedCatNode = this.selectedCatNode === node ? null : node;
+  }
+
+  get selectedCatChildren(): PermissionNode[] {
+    if (!this.selectedCatNode?.children) return [];
+    if (!this.searchCategories) return this.selectedCatNode.children;
+    const q = this.searchCategories.toLowerCase();
+    return this.selectedCatNode.children.filter(n => n.label.toLowerCase().includes(q));
+  }
+
   selectAllCurrent(checked: boolean) {
     for (const node of this.menuCurrentNodes) {
       node.checked = checked;
@@ -589,6 +667,7 @@ export class RolesComponent {
     this.catCurrentNodes = this.categoryPermissions;
     this.catBreadcrumb = [{ label: 'Categorías', nodes: this.categoryPermissions }];
     this.catCurrentParent = null;
+    this.autoSelectFirstFolder('cat');
   }
 
   catDrillInto(node: PermissionNode) {
@@ -597,6 +676,7 @@ export class RolesComponent {
     this.catCurrentNodes = node.children;
     this.catCurrentParent = node;
     this.searchCategories = '';
+    this.autoSelectFirstFolder('cat');
   }
 
   catDrillTo(index: number) {
@@ -605,6 +685,7 @@ export class RolesComponent {
     this.catCurrentNodes = target.nodes;
     this.catCurrentParent = index === 0 ? null : this.findCatParent(target.nodes);
     this.searchCategories = '';
+    this.autoSelectFirstFolder('cat');
   }
 
   catDrillBack() {
