@@ -51,12 +51,6 @@
   <aside class="app-sidebar"
     [class.app-sidebar--open]="mobileMenuOpen"
     [class.app-sidebar--collapsed]="sidebarCollapsed">
-    <button class="app-sidebar__collapse-btn" (click)="toggleSidebar()"
-      [attr.aria-expanded]="!sidebarCollapsed" aria-controls="sidebar-nav"
-      [pTooltip]="sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'" tooltipPosition="right"
-      [attr.aria-label]="sidebarCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'">
-      <i class="pi" [class.pi-angle-double-left]="!sidebarCollapsed" [class.pi-angle-double-right]="sidebarCollapsed"></i>
-    </button>
     <nav id="sidebar-nav" class="app-sidebar__nav" aria-label="Menú principal">
       <a routerLink="/" routerLinkActive="app-sidebar__link--active" [routerLinkActiveOptions]="{ exact: true }" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Inicio' : ''" tooltipPosition="right">
         <i class="pi pi-home"></i> <span class="app-sidebar__label">Inicio</span>
@@ -130,6 +124,16 @@
       </a>
     </nav>
   </aside>
+
+  <!-- Botón flotante en el borde derecho del sidebar (estilo VS Code) -->
+  <button class="sidebar-edge-toggle"
+    [class.sidebar-edge-toggle--collapsed]="sidebarCollapsed"
+    (click)="toggleSidebar()"
+    [attr.aria-expanded]="!sidebarCollapsed" aria-controls="sidebar-nav"
+    [pTooltip]="sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'" tooltipPosition="right"
+    [attr.aria-label]="sidebarCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'">
+    <i class="pi" [class.pi-chevron-left]="!sidebarCollapsed" [class.pi-chevron-right]="sidebarCollapsed"></i>
+  </button>
 
   <!-- Overlay para cerrar sidebar en móvil -->
   @if (mobileMenuOpen) {
