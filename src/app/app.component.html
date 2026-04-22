@@ -46,63 +46,87 @@
 <!-- ============================================================
      LAYOUT: SIDEBAR + CONTENT
      ============================================================ -->
-<div class="app-layout">
+<div class="app-layout" [class.app-layout--collapsed]="sidebarCollapsed">
   <!-- Sidebar -->
-  <aside class="app-sidebar" [class.app-sidebar--open]="mobileMenuOpen">
-    <nav class="app-sidebar__nav" aria-label="Menú principal">
-      <a routerLink="/" routerLinkActive="app-sidebar__link--active" [routerLinkActiveOptions]="{ exact: true }" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-home"></i> Inicio
+  <aside class="app-sidebar"
+    [class.app-sidebar--open]="mobileMenuOpen"
+    [class.app-sidebar--collapsed]="sidebarCollapsed">
+    <button class="app-sidebar__collapse-btn" (click)="toggleSidebar()"
+      [attr.aria-expanded]="!sidebarCollapsed" aria-controls="sidebar-nav"
+      [pTooltip]="sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'" tooltipPosition="right"
+      [attr.aria-label]="sidebarCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'">
+      <i class="pi" [class.pi-angle-double-left]="!sidebarCollapsed" [class.pi-angle-double-right]="sidebarCollapsed"></i>
+    </button>
+    <nav id="sidebar-nav" class="app-sidebar__nav" aria-label="Menú principal">
+      <a routerLink="/" routerLinkActive="app-sidebar__link--active" [routerLinkActiveOptions]="{ exact: true }" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Inicio' : ''" tooltipPosition="right">
+        <i class="pi pi-home"></i> <span class="app-sidebar__label">Inicio</span>
       </a>
-      <a routerLink="/comenzar" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-play"></i> Comenzar
+      <a routerLink="/comenzar" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Comenzar' : ''" tooltipPosition="right">
+        <i class="pi pi-play"></i> <span class="app-sidebar__label">Comenzar</span>
       </a>
-      <a routerLink="/ejemplos" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-th-large"></i> Ejemplos de Uso
+      <a routerLink="/ejemplos" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Ejemplos de Uso' : ''" tooltipPosition="right">
+        <i class="pi pi-th-large"></i> <span class="app-sidebar__label">Ejemplos de Uso</span>
       </a>
-      <a routerLink="/autenticacion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-image"></i> Iconografía
+      <a routerLink="/autenticacion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Iconografía' : ''" tooltipPosition="right">
+        <i class="pi pi-image"></i> <span class="app-sidebar__label">Iconografía</span>
       </a>
-      <a routerLink="/tokens" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-palette"></i> Tokens
+      <a routerLink="/tokens" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Tokens' : ''" tooltipPosition="right">
+        <i class="pi pi-palette"></i> <span class="app-sidebar__label">Tokens</span>
       </a>
-      <a routerLink="/accesibilidad" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-eye"></i> Accesibilidad
+      <a routerLink="/accesibilidad" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Accesibilidad' : ''" tooltipPosition="right">
+        <i class="pi pi-eye"></i> <span class="app-sidebar__label">Accesibilidad</span>
       </a>
-      <a routerLink="/responsive" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-mobile"></i> Responsive
+      <a routerLink="/responsive" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Responsive' : ''" tooltipPosition="right">
+        <i class="pi pi-mobile"></i> <span class="app-sidebar__label">Responsive</span>
       </a>
 
       <div class="app-sidebar__divider"></div>
-      <span class="app-sidebar__section-label">Pantallas</span>
+      @if (!sidebarCollapsed) {
+        <span class="app-sidebar__section-label">Pantallas</span>
+      }
 
       <!-- ══ SEGURIDAD ══ -->
       <button class="app-sidebar__link app-sidebar__toggle-sub" (click)="seguridadOpen = !seguridadOpen"
-        [attr.aria-expanded]="seguridadOpen">
-        <i class="pi pi-shield"></i> Seguridad
-        <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!seguridadOpen" [class.pi-chevron-up]="seguridadOpen"></i>
+        [attr.aria-expanded]="seguridadOpen"
+        [pTooltip]="sidebarCollapsed ? 'Seguridad' : ''" tooltipPosition="right">
+        <i class="pi pi-shield"></i> <span class="app-sidebar__label">Seguridad</span>
+        @if (!sidebarCollapsed) {
+          <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!seguridadOpen" [class.pi-chevron-up]="seguridadOpen"></i>
+        }
       </button>
-      @if (seguridadOpen) {
+      @if (seguridadOpen && !sidebarCollapsed) {
         <div class="app-sidebar__submenu">
           <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
-            <i class="pi pi-users"></i> Usuarios
+            <i class="pi pi-users"></i> <span class="app-sidebar__label">Usuarios</span>
           </a>
           <a routerLink="/pantallas/roles" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
-            <i class="pi pi-id-card"></i> Roles
+            <i class="pi pi-id-card"></i> <span class="app-sidebar__label">Roles</span>
           </a>
           <a routerLink="/pantallas/seguridad/auditoria" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
-            <i class="pi pi-history"></i> Auditoría
+            <i class="pi pi-history"></i> <span class="app-sidebar__label">Auditoría</span>
           </a>
         </div>
       }
+      @if (sidebarCollapsed) {
+        <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Usuarios" tooltipPosition="right">
+          <i class="pi pi-users"></i> <span class="app-sidebar__label">Usuarios</span>
+        </a>
+        <a routerLink="/pantallas/roles" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Roles" tooltipPosition="right">
+          <i class="pi pi-id-card"></i> <span class="app-sidebar__label">Roles</span>
+        </a>
+        <a routerLink="/pantallas/seguridad/auditoria" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Auditoría" tooltipPosition="right">
+          <i class="pi pi-history"></i> <span class="app-sidebar__label">Auditoría</span>
+        </a>
+      }
 
       <!-- ══ FORMULARIOS ══ -->
-      <a routerLink="/pantallas/formularios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-file-edit"></i> Formularios
+      <a routerLink="/pantallas/formularios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Formularios' : ''" tooltipPosition="right">
+        <i class="pi pi-file-edit"></i> <span class="app-sidebar__label">Formularios</span>
       </a>
 
       <!-- ══ PROPUESTA FILTROS ══ -->
-      <a routerLink="/pantallas/filtros" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false">
-        <i class="pi pi-filter"></i> Propuesta Filtros
+      <a routerLink="/pantallas/filtros" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Propuesta Filtros' : ''" tooltipPosition="right">
+        <i class="pi pi-filter"></i> <span class="app-sidebar__label">Propuesta Filtros</span>
       </a>
     </nav>
   </aside>

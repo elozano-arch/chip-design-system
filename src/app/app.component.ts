@@ -23,8 +23,19 @@ export class AppComponent {
   showBackToTop = false;
   showServicePanel = false;
   mobileMenuOpen = false;
+  sidebarCollapsed = false;
   darkMode = false;
   seguridadOpen = true;
+
+  constructor() {
+    const saved = localStorage.getItem('chip-sidebar-collapsed');
+    this.sidebarCollapsed = saved === 'true';
+  }
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    localStorage.setItem('chip-sidebar-collapsed', String(this.sidebarCollapsed));
+  }
 
   @HostListener('window:scroll')
   onScroll() {

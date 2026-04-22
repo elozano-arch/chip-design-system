@@ -3,6 +3,7 @@
    ========================================================================== */
 
 $sidebar-width: 220px;
+$sidebar-width-collapsed: 60px;
 
 /* --- Floating Panel (Accesibilidad + Servicios) --- */
 .floating-panel {
@@ -232,6 +233,74 @@ $sidebar-width: 220px;
   top: 0;
   height: calc(100vh - 120px);
   overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.25s ease;
+
+  &--collapsed {
+    width: $sidebar-width-collapsed;
+  }
+
+  /* Botón colapsar/expandir */
+  &__collapse-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin: 8px 8px 0 auto;
+    background: var(--chip-grey-50);
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--chip-grey-600);
+    transition: all 0.15s;
+    flex-shrink: 0;
+
+    i { font-size: 12px; }
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+      border-color: var(--chip-cobalt-300);
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  &--collapsed &__collapse-btn {
+    margin: 8px auto 0 auto;
+  }
+
+  /* Estado colapsado: solo iconos */
+  &--collapsed &__nav {
+    padding: 8px 6px;
+  }
+
+  &--collapsed &__link {
+    justify-content: center;
+    padding: 10px 0;
+    gap: 0;
+
+    i {
+      width: auto;
+      font-size: 18px;
+    }
+  }
+
+  &--collapsed &__label {
+    display: none;
+  }
+
+  &--collapsed &__chevron {
+    display: none;
+  }
+
+  &--collapsed &__divider {
+    margin: 8px 8px;
+  }
+
+  &--collapsed &__link--active {
+    border-left-width: 0;
+    border-right: 3px solid var(--chip-cobalt-700);
+  }
 
   &__nav {
     display: flex;
