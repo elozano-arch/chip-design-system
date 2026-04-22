@@ -106,6 +106,9 @@ $sidebar-width-collapsed: 60px;
   color: #ffffff;
   font-family: var(--font-body);
   font-size: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 
   &__logo { height: 24px; width: auto; }
 
@@ -136,6 +139,9 @@ $sidebar-width-collapsed: 60px;
   padding: 10px 24px;
   background-color: #ffffff;
   border-bottom: 1px solid var(--chip-grey-200);
+  position: sticky;
+  top: 48px;
+  z-index: 49;
 
   &__logos {
     display: flex;
@@ -226,11 +232,11 @@ $sidebar-width-collapsed: 60px;
 
 /* --- Edge Toggle Button (estilo VS Code) --- */
 .sidebar-edge-toggle {
-  position: absolute;
-  top: 20px;
+  position: fixed;
+  top: 144px;
   left: $sidebar-width;
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: 48;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,8 +275,8 @@ $sidebar-width-collapsed: 60px;
   background: #ffffff;
   border-right: 1px solid var(--chip-grey-200);
   position: sticky;
-  top: 0;
-  height: calc(100vh - 120px);
+  top: 124px;
+  height: calc(100vh - 124px);
   overflow-y: auto;
   overflow-x: hidden;
   transition: width 0.25s ease;
