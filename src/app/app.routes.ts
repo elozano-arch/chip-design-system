@@ -42,6 +42,11 @@ export const routes: Routes = [
       import('./pages/pantallas/roles/roles.component').then(m => m.RolesComponent),
   },
   {
+    path: 'pantallas/seguridad/login',
+    loadComponent: () =>
+      import('./pages/pantallas/login/login.component').then(m => m.LoginComponent),
+  },
+  {
     path: 'pantallas/seguridad/usuarios',
     loadComponent: () =>
       import('./pages/pantallas/usuarios/usuarios.component').then(m => m.UsuariosComponent),

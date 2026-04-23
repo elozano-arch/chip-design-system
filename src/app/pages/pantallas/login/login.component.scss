@@ -1,0 +1,226 @@
+/* ============================================================
+   LOGIN PAGE
+   ============================================================ */
+
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: 32px 16px;
+  background: linear-gradient(180deg, var(--chip-grey-50) 0%, var(--chip-bg-solitude) 100%);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--chip-grey-100);
+  padding: 36px 36px 24px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  &__logo {
+    height: 120px;
+    width: auto;
+    margin-bottom: 12px;
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--chip-grey-900);
+    margin: 0 0 4px;
+  }
+
+  &__subtitle {
+    font-size: 13px;
+    color: var(--chip-grey-500);
+    margin: 0;
+  }
+
+  &__footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--chip-grey-100);
+    text-align: center;
+  }
+
+  &__legal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--chip-grey-400);
+    margin-bottom: 6px;
+  }
+
+  &__legal-link {
+    color: var(--chip-cobalt-700);
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__version {
+    font-size: 11px;
+    color: var(--chip-grey-400);
+    margin: 0;
+    font-family: 'Courier New', monospace;
+  }
+}
+
+/* --- Form --- */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  &__error {
+    font-size: 12px;
+    color: var(--chip-danger);
+    margin-top: 2px;
+  }
+
+  &__warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--chip-warning);
+    margin-top: 2px;
+
+    i {
+      font-size: 12px;
+    }
+  }
+
+  &__password {
+    position: relative;
+    width: 100%;
+
+    input {
+      padding-right: 40px;
+      width: 100%;
+    }
+  }
+
+  &__password-toggle {
+    cursor: pointer;
+    color: var(--chip-grey-500);
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  &__recaptcha {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #F1F8E9;
+    border: 1px solid #C5E1A5;
+    border-radius: var(--radius-sm);
+    color: #558B2F;
+    font-size: 13px;
+    font-weight: 600;
+
+    i {
+      font-size: 18px;
+      color: #689F38;
+    }
+  }
+
+  &__remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    label {
+      font-size: 13px;
+      color: var(--chip-grey-700);
+      cursor: pointer;
+      font-weight: 400;
+    }
+  }
+
+  &__submit {
+    display: flex;
+    justify-content: center;
+    margin-top: 4px;
+
+    ::ng-deep .p-button {
+      min-width: 180px;
+      justify-content: center;
+      padding: 12px 28px;
+      font-weight: 700;
+    }
+  }
+
+  &__link {
+    text-align: center;
+    color: var(--chip-cobalt-700);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 4px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+      text-decoration: underline;
+    }
+
+    &--disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+  }
+}
+
+/* --- Responsive --- */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 28px 20px 20px;
+  }
+
+  .login-card__logo {
+    height: 96px;
+  }
+
+  .login-card__title {
+    font-size: 22px;
+  }
+}

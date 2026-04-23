@@ -1,0 +1,122 @@
+<p-toast />
+
+<div class="login-page" role="main">
+  <div class="login-card">
+    <!-- Header con branding -->
+    <div class="login-card__header">
+      <img src="assets/logos/chip-logo-2018.svg" alt="CHIP" class="login-card__logo" />
+      <h1 class="login-card__title">Iniciar sesión</h1>
+      <p class="login-card__subtitle">Sistema de Gestión Administrativa</p>
+    </div>
+
+    <!-- Formulario -->
+    <form class="login-form" (ngSubmit)="onSubmit()" novalidate>
+      <!-- Entidad -->
+      <div class="login-form__field">
+        <label for="login-entidad">Entidad <span class="field-required">*</span></label>
+        <p-select inputId="login-entidad"
+          [options]="entidadOptions" [(ngModel)]="entidad" name="entidad"
+          placeholder="Seleccione su entidad" appendTo="body" [filter]="true"
+          aria-required="true" class="w-full" [disabled]="bloqueado" />
+      </div>
+
+      <!-- Usuario -->
+      <div class="login-form__field">
+        <label for="login-usuario">Usuario <span class="field-required">*</span></label>
+        <input pInputText id="login-usuario"
+          [(ngModel)]="usuario" name="usuario"
+          (blur)="usuarioTouched = true"
+          [disabled]="bloqueado"
+          [class.ng-invalid]="usuarioInvalid"
+          [class.ng-dirty]="usuarioTouched"
+          placeholder="Ingrese su usuario"
+          autocomplete="username"
+          aria-required="true"
+          [attr.aria-invalid]="usuarioInvalid"
+          aria-describedby="usuario-error"
+          class="w-full" />
+        @if (usuarioInvalid) {
+          <small id="usuario-error" class="login-form__error">El usuario es obligatorio.</small>
+        }
+      </div>
+
+      <!-- Contraseña con toggle de visibilidad -->
+      <div class="login-form__field">
+        <label for="login-contrasena">Contraseña <span class="field-required">*</span></label>
+        <p-iconfield class="login-form__password">
+          <input pInputText id="login-contrasena"
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="contrasena" name="contrasena"
+            (blur)="contrasenaTouched = true"
+            (keyup)="onPasswordKey($event)"
+            (keydown)="onPasswordKey($event)"
+            [disabled]="bloqueado"
+            [class.ng-invalid]="contrasenaInvalid"
+            [class.ng-dirty]="contrasenaTouched"
+            placeholder="Ingrese su contraseña"
+            autocomplete="current-password"
+            aria-required="true"
+            [attr.aria-invalid]="contrasenaInvalid"
+            aria-describedby="contrasena-error caps-warning"
+            class="w-full" />
+          <p-inputicon class="login-form__password-toggle"
+            (click)="togglePassword()"
+            role="button" tabindex="0"
+            (keydown.enter)="togglePassword()"
+            (keydown.space)="togglePassword(); $event.preventDefault()"
+            [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            [styleClass]="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+        </p-iconfield>
+        @if (capsLockOn) {
+          <small id="caps-warning" class="login-form__warning">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+            Mayúsculas activadas (Caps Lock)
+          </small>
+        }
+        @if (contrasenaInvalid) {
+          <small id="contrasena-error" class="login-form__error">La contraseña es obligatoria.</small>
+        }
+      </div>
+
+      <!-- reCAPTCHA placeholder -->
+      <div class="login-form__recaptcha" role="img" aria-label="Validación reCAPTCHA">
+        <i class="pi pi-shield" aria-hidden="true"></i>
+        <span>reCAPTCHA v3 (placeholder)</span>
+      </div>
+
+      <!-- Recordarme -->
+      <div class="login-form__remember">
+        <p-checkbox [(ngModel)]="recordar" name="recordar" [binary]="true" inputId="login-recordar" [disabled]="bloqueado" />
+        <label for="login-recordar">Recordar mi usuario</label>
+      </div>
+
+      <!-- Mensaje de error / bloqueo -->
+      @if (errorMsg) {
+        <p-message [severity]="bloqueado ? 'error' : 'warn'" [text]="errorMsg" styleClass="w-full" />
+      }
+
+      <!-- Botón principal -->
+      <div class="login-form__submit">
+        <p-button type="submit" label="Ingresar" icon="pi pi-sign-in"
+          [loading]="loading" [disabled]="loading || bloqueado" />
+      </div>
+
+      <!-- Link recuperación -->
+      <a routerLink="/pantallas/seguridad/olvide-clave" class="login-form__link"
+        [class.login-form__link--disabled]="bloqueado"
+        [attr.tabindex]="bloqueado ? -1 : 0">
+        ¿Olvidó su contraseña?
+      </a>
+    </form>
+
+    <!-- Footer del card -->
+    <div class="login-card__footer">
+      <div class="login-card__legal">
+        <a href="#" class="login-card__legal-link">Términos y condiciones</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" class="login-card__legal-link">Política de privacidad</a>
+      </div>
+      <p class="login-card__version">CHIP {{ versionSistema }}</p>
+    </div>
+  </div>
+</div>
