@@ -47,6 +47,11 @@ export const routes: Routes = [
       import('./pages/pantallas/login/login.component').then(m => m.LoginComponent),
   },
   {
+    path: 'pantallas/seguridad/olvide-clave',
+    loadComponent: () =>
+      import('./pages/pantallas/olvide-clave/olvide-clave.component').then(m => m.OlvideClaveComponent),
+  },
+  {
     path: 'pantallas/seguridad/usuarios',
     loadComponent: () =>
       import('./pages/pantallas/usuarios/usuarios.component').then(m => m.UsuariosComponent),

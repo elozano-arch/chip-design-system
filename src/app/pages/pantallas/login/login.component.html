@@ -92,19 +92,39 @@
 
       <!-- Mensaje de error / bloqueo -->
       @if (errorMsg) {
-        <p-message [severity]="bloqueado ? 'error' : 'warn'" [text]="errorMsg" styleClass="w-full" />
+        <div role="alert" aria-live="assertive">
+          <p-message [severity]="bloqueado ? 'error' : 'warn'" [text]="errorMsg" styleClass="w-full" />
+        </div>
       }
 
-      <!-- Botón principal -->
-      <div class="login-form__submit">
-        <p-button type="submit" label="Ingresar" icon="pi pi-sign-in"
-          [loading]="loading" [disabled]="loading || bloqueado" />
-      </div>
+      <!-- Botón principal: solo visible cuando no está bloqueado -->
+      @if (!bloqueado) {
+        <div class="login-form__submit">
+          <p-button type="submit" label="Ingresar" icon="pi pi-sign-in"
+            [loading]="loading" [disabled]="loading" />
+        </div>
+      }
 
-      <!-- Link recuperación -->
-      <a routerLink="/pantallas/seguridad/olvide-clave" class="login-form__link"
-        [class.login-form__link--disabled]="bloqueado"
-        [attr.tabindex]="bloqueado ? -1 : 0">
+      <!-- Bloque de soporte (visible solo cuando bloqueado) -->
+      @if (bloqueado) {
+        <div class="login-form__support">
+          <p class="login-form__support-text">¿Necesita ayuda para recuperar el acceso?</p>
+          <div class="login-form__support-actions">
+            <a href="mailto:soporte@contaduria.gov.co" class="login-form__support-link">
+              <i class="pi pi-envelope" aria-hidden="true"></i>
+              Contactar soporte
+            </a>
+            <span class="login-form__support-sep" aria-hidden="true">·</span>
+            <a href="tel:+576014926400" class="login-form__support-link">
+              <i class="pi pi-phone" aria-hidden="true"></i>
+              (601) 492 6400
+            </a>
+          </div>
+        </div>
+      }
+
+      <!-- Link recuperación: siempre visible -->
+      <a routerLink="/pantallas/seguridad/olvide-clave" class="login-form__link">
         ¿Olvidó su contraseña?
       </a>
     </form>

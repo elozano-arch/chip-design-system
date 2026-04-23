@@ -93,6 +93,9 @@
           <a routerLink="/pantallas/seguridad/login" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-sign-in"></i> <span class="app-sidebar__label">Login</span>
           </a>
+          <a routerLink="/pantallas/seguridad/olvide-clave" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-key"></i> <span class="app-sidebar__label">Olvidé mi clave</span>
+          </a>
           <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-users"></i> <span class="app-sidebar__label">Usuarios</span>
           </a>
@@ -107,6 +110,9 @@
       @if (sidebarCollapsed) {
         <a routerLink="/pantallas/seguridad/login" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Login" tooltipPosition="right">
           <i class="pi pi-sign-in"></i> <span class="app-sidebar__label">Login</span>
+        </a>
+        <a routerLink="/pantallas/seguridad/olvide-clave" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Olvidé mi clave" tooltipPosition="right">
+          <i class="pi pi-key"></i> <span class="app-sidebar__label">Olvidé mi clave</span>
         </a>
         <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Usuarios" tooltipPosition="right">
           <i class="pi pi-users"></i> <span class="app-sidebar__label">Usuarios</span>

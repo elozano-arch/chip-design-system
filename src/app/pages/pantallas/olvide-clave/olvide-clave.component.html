@@ -1,0 +1,96 @@
+<p-toast />
+
+<div class="olv-page" role="main">
+  <div class="olv-card">
+    <!-- Header con branding -->
+    <div class="olv-card__header">
+      <img src="assets/logos/chip-logo-2018.svg" alt="CHIP" class="olv-card__logo" />
+      <h1 class="olv-card__title">{{ enviado ? 'Solicitud recibida' : 'Recuperar contraseña' }}</h1>
+      <p class="olv-card__subtitle">
+        {{ enviado
+          ? 'Si el correo está registrado en el sistema, recibirá las instrucciones para restablecer su contraseña.'
+          : 'Ingrese su correo y le enviaremos un enlace para restablecer su contraseña.' }}
+      </p>
+    </div>
+
+    <!-- Estado: formulario -->
+    @if (!enviado) {
+      <form class="olv-form" (ngSubmit)="onSubmit()" novalidate>
+        <div class="olv-form__field">
+          <label for="olv-correo">Correo electrónico <span class="field-required">*</span></label>
+          <p-iconfield class="olv-form__correo">
+            <p-inputicon styleClass="pi pi-envelope" />
+            <input pInputText id="olv-correo"
+              [(ngModel)]="correo" name="correo"
+              (blur)="correoTouched = true"
+              [class.ng-invalid]="correoInvalid"
+              [class.ng-dirty]="correoTouched"
+              placeholder="correo@entidad.gov.co"
+              autocomplete="email"
+              type="email"
+              aria-required="true"
+              [attr.aria-invalid]="correoInvalid"
+              aria-describedby="correo-error"
+              class="w-full" />
+          </p-iconfield>
+          @if (correoVacio) {
+            <small id="correo-error" class="olv-form__error">El correo es obligatorio.</small>
+          } @else if (correoFormatoInvalido) {
+            <small id="correo-error" class="olv-form__error">Ingrese un correo válido.</small>
+          }
+        </div>
+
+        @if (errorMsg) {
+          <p-message severity="error" [text]="errorMsg" styleClass="w-full" />
+        }
+
+        <div class="olv-form__actions">
+          <p-button type="submit" label="Enviar enlace" icon="pi pi-send"
+            [loading]="loading" [disabled]="loading" />
+        </div>
+
+        <a routerLink="/pantallas/seguridad/login" class="olv-form__link">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i>
+          Volver al inicio de sesión
+        </a>
+      </form>
+    }
+
+    <!-- Estado: enviado -->
+    @if (enviado) {
+      <div class="olv-success" role="status" aria-live="polite">
+        <div class="olv-success__icon">
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+        </div>
+        <p class="olv-success__email">
+          Si el correo <strong>{{ correoNormalizado }}</strong> está registrado,
+          recibirá las instrucciones en su bandeja de entrada.
+        </p>
+        <p class="olv-success__hint">
+          El enlace caduca en <strong>24 horas</strong>. Si no lo recibe en unos minutos,
+          revise la carpeta de spam o vuelva a intentar.
+        </p>
+
+        <div class="olv-form__actions">
+          <p-button label="Volver al inicio de sesión" icon="pi pi-sign-in"
+            routerLink="/pantallas/seguridad/login" />
+        </div>
+
+        <button type="button" class="olv-form__link olv-form__link--button" (click)="reintentar()">
+          <i class="pi pi-refresh" aria-hidden="true"></i>
+          Reenviar a otro correo
+        </button>
+      </div>
+    }
+
+    <!-- Footer del card -->
+    <div class="olv-card__footer">
+      <div class="olv-card__legal">
+        <a href="#" class="olv-card__legal-link">Términos y condiciones</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" class="olv-card__legal-link">Política de privacidad</a>
+      </div>
+      <p class="olv-card__version">CHIP v2.0.0</p>
+    </div>
+  </div>
+</div>

@@ -1,8 +1,8 @@
 /* ============================================================
-   LOGIN PAGE
+   OLVIDÉ MI CLAVE PAGE
    ============================================================ */
 
-.login-page {
+.olv-page {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11,7 +11,7 @@
   background: linear-gradient(180deg, var(--chip-grey-50) 0%, var(--chip-bg-solitude) 100%);
 }
 
-.login-card {
+.olv-card {
   width: 100%;
   max-width: 440px;
   background: #fff;
@@ -39,13 +39,14 @@
     font-size: 22px;
     font-weight: 800;
     color: var(--chip-grey-900);
-    margin: 0 0 4px;
+    margin: 0 0 6px;
   }
 
   &__subtitle {
     font-size: 13px;
     color: var(--chip-grey-500);
     margin: 0;
+    line-height: 1.5;
   }
 
   &__footer {
@@ -71,9 +72,7 @@
     text-decoration: none;
     font-weight: 600;
 
-    &:hover {
-      text-decoration: underline;
-    }
+    &:hover { text-decoration: underline; }
   }
 
   &__version {
@@ -85,7 +84,7 @@
 }
 
 /* --- Form --- */
-.login-form {
+.olv-form {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -109,91 +108,41 @@
     margin-top: 2px;
   }
 
-  &__warning {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: var(--chip-warning);
-    margin-top: 2px;
-
-    i {
-      font-size: 12px;
-    }
-  }
-
-  &__password {
-    position: relative;
+  /* Iconfield del correo: ocupa todo el ancho */
+  &__correo {
     width: 100%;
+    display: block;
 
-    input {
-      padding-right: 40px;
+    ::ng-deep input {
       width: 100%;
+      padding-left: 36px;
     }
   }
 
-  &__password-toggle {
-    cursor: pointer;
-    color: var(--chip-grey-500);
-    transition: color 0.15s;
-
-    &:hover {
-      color: var(--chip-cobalt-700);
-    }
-  }
-
-  &__recaptcha {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: #F1F8E9;
-    border: 1px solid #C5E1A5;
-    border-radius: var(--radius-sm);
-    color: #558B2F;
-    font-size: 13px;
-    font-weight: 600;
-
-    i {
-      font-size: 18px;
-      color: #689F38;
-    }
-  }
-
-  &__remember {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    label {
-      font-size: 13px;
-      color: var(--chip-grey-700);
-      cursor: pointer;
-      font-weight: 400;
-    }
-  }
-
-  &__submit {
+  &__actions {
     display: flex;
     justify-content: center;
     margin-top: 4px;
 
     ::ng-deep .p-button {
-      min-width: 180px;
+      min-width: 200px;
       justify-content: center;
-      padding: 12px 28px;
+      padding: 12px 24px;
       font-weight: 700;
     }
   }
 
   &__link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     text-align: center;
     color: var(--chip-cobalt-700);
     text-decoration: none;
     font-size: 13px;
     font-weight: 600;
-    margin-top: 4px;
+    margin-top: 8px;
     padding: 6px;
     border-radius: var(--radius-sm);
     transition: all 0.15s;
@@ -202,65 +151,76 @@
       background: var(--chip-cobalt-50);
       text-decoration: underline;
     }
+
+    &--button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      font-family: var(--font-body);
+    }
+
+    i { font-size: 12px; }
+  }
+}
+
+/* --- Success state --- */
+.olv-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #E8F5E9;
+    border-radius: 50%;
+
+    i {
+      font-size: 40px;
+      color: var(--chip-success);
+    }
   }
 
-  /* Bloque de soporte (visible cuando cuenta bloqueada) */
-  &__support {
-    margin-top: 4px;
-    padding: 14px 16px;
-    background: var(--chip-grey-50);
-    border: 1px solid var(--chip-grey-200);
-    border-radius: var(--radius-sm);
-    text-align: center;
+  &__email {
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    margin: 0;
+    line-height: 1.6;
 
-    &-text {
-      font-size: 13px;
-      color: var(--chip-grey-700);
-      margin: 0 0 8px;
-      font-weight: 600;
-    }
-
-    &-actions {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    &-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    strong {
       color: var(--chip-cobalt-700);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-
-      i { font-size: 12px; }
-
-      &:hover {
-        text-decoration: underline;
-      }
+      word-break: break-all;
     }
+  }
 
-    &-sep {
-      color: var(--chip-grey-300);
+  &__hint {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+    margin: 0;
+    line-height: 1.5;
+    padding: 10px 14px;
+    background: var(--chip-grey-50);
+    border-radius: var(--radius-sm);
+
+    strong {
+      color: var(--chip-grey-700);
     }
   }
 }
 
 /* --- Responsive --- */
 @media (max-width: 480px) {
-  .login-card {
+  .olv-card {
     padding: 28px 20px 20px;
   }
 
-  .login-card__logo {
-    height: 96px;
-  }
-
-  .login-card__title {
-    font-size: 22px;
+  .olv-card__logo {
+    height: 80px;
   }
 }
