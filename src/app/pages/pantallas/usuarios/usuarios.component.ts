@@ -28,6 +28,9 @@ interface Usuario {
   entidad: string;
   activo: boolean;
   ultimoAcceso: string;
+  /** Override a la política del rol (null = hereda del rol asignado). */
+  vigencia: number | null;
+  intentos: number | null;
 }
 
 @Component({
@@ -115,6 +118,8 @@ export class UsuariosComponent {
   editNombre = '';
   editCorreo = '';
   editPerfil = '';
+  editVigencia: number | null = null;
+  editIntentos: number | null = null;
   editNombreTouched = false;
   editCorreoTouched = false;
 
@@ -134,14 +139,14 @@ export class UsuariosComponent {
   ];
 
   usuarios: Usuario[] = [
-    { id: 1, codigo: 'DILA710990', nombre: 'Omaira Lozada Ladino', correo: 'olozada@cgn.gov.co', perfil: 'Administrador Categorización', entidad: 'PROYECTO CHIP 2.0', activo: true, ultimoAcceso: '14/04/2024' },
-    { id: 2, codigo: 'JMGA850312', nombre: 'Juan Manuel García Arévalo', correo: 'jgarcia@minhacienda.gov.co', perfil: 'Operador de Entidad', entidad: 'MINISTERIO DE HACIENDA', activo: true, ultimoAcceso: '20/03/2024' },
-    { id: 3, codigo: 'MCRP920115', nombre: 'María Cristina Rodríguez', correo: 'mrodriguez@cgn.gov.co', perfil: 'Consulta', entidad: 'CGN - CONTADURÍA GENERAL', activo: true, ultimoAcceso: '10/04/2024' },
-    { id: 4, codigo: 'CPLS880704', nombre: 'Carlos Pérez López', correo: 'cperez@cgn.gov.co', perfil: 'Administrador General', entidad: 'CGN - CONTADURÍA GENERAL', activo: true, ultimoAcceso: '28/02/2024' },
-    { id: 5, codigo: 'AMVR760521', nombre: 'Ana María Vargas Restrepo', correo: 'avargas@contraloria.gov.co', perfil: 'Auditor', entidad: 'CONTRALORÍA GENERAL', activo: true, ultimoAcceso: '05/04/2024' },
-    { id: 6, codigo: 'LFHM900830', nombre: 'Luis Fernando Hernández', correo: 'lhernandez@bogota.gov.co', perfil: 'Operador de Entidad', entidad: 'ALCALDÍA DE BOGOTÁ', activo: false, ultimoAcceso: '15/01/2024' },
-    { id: 7, codigo: 'SMPG950210', nombre: 'Sandra Milena Pinzón', correo: 'spinzon@antioquia.gov.co', perfil: 'Operador de Entidad', entidad: 'GOBERNACIÓN DE ANTIOQUIA', activo: true, ultimoAcceso: '12/04/2024' },
-    { id: 8, codigo: 'RDTM830619', nombre: 'Ricardo Daniel Torres', correo: 'rtorres@dane.gov.co', perfil: 'Consulta', entidad: 'DANE', activo: true, ultimoAcceso: '30/03/2024' },
+    { id: 1, codigo: 'DILA710990', nombre: 'Omaira Lozada Ladino', correo: 'olozada@cgn.gov.co', perfil: 'Administrador Categorización', entidad: 'PROYECTO CHIP 2.0', activo: true, ultimoAcceso: '14/04/2024', vigencia: 90, intentos: 3 },
+    { id: 2, codigo: 'JMGA850312', nombre: 'Juan Manuel García Arévalo', correo: 'jgarcia@minhacienda.gov.co', perfil: 'Operador de Entidad', entidad: 'MINISTERIO DE HACIENDA', activo: true, ultimoAcceso: '20/03/2024', vigencia: 60, intentos: 5 },
+    { id: 3, codigo: 'MCRP920115', nombre: 'María Cristina Rodríguez', correo: 'mrodriguez@cgn.gov.co', perfil: 'Consulta', entidad: 'CGN - CONTADURÍA GENERAL', activo: true, ultimoAcceso: '10/04/2024', vigencia: null, intentos: null },
+    { id: 4, codigo: 'CPLS880704', nombre: 'Carlos Pérez López', correo: 'cperez@cgn.gov.co', perfil: 'Administrador General', entidad: 'CGN - CONTADURÍA GENERAL', activo: true, ultimoAcceso: '28/02/2024', vigencia: 90, intentos: 3 },
+    { id: 5, codigo: 'AMVR760521', nombre: 'Ana María Vargas Restrepo', correo: 'avargas@contraloria.gov.co', perfil: 'Auditor', entidad: 'CONTRALORÍA GENERAL', activo: true, ultimoAcceso: '05/04/2024', vigencia: 90, intentos: 3 },
+    { id: 6, codigo: 'LFHM900830', nombre: 'Luis Fernando Hernández', correo: 'lhernandez@bogota.gov.co', perfil: 'Operador de Entidad', entidad: 'ALCALDÍA DE BOGOTÁ', activo: false, ultimoAcceso: '15/01/2024', vigencia: 60, intentos: 5 },
+    { id: 7, codigo: 'SMPG950210', nombre: 'Sandra Milena Pinzón', correo: 'spinzon@antioquia.gov.co', perfil: 'Operador de Entidad', entidad: 'GOBERNACIÓN DE ANTIOQUIA', activo: true, ultimoAcceso: '12/04/2024', vigencia: null, intentos: null },
+    { id: 8, codigo: 'RDTM830619', nombre: 'Ricardo Daniel Torres', correo: 'rtorres@dane.gov.co', perfil: 'Consulta', entidad: 'DANE', activo: true, ultimoAcceso: '30/03/2024', vigencia: null, intentos: null },
   ];
 
   get filteredUsuarios(): Usuario[] {
@@ -262,6 +267,8 @@ export class UsuariosComponent {
       entidad: 'PROYECTO CHIP 2.0',
       activo: true,
       ultimoAcceso: '—',
+      vigencia: null,
+      intentos: null,
     };
     this.usuarios = [nuevo, ...this.usuarios];
 
@@ -320,6 +327,8 @@ export class UsuariosComponent {
     this.editNombre = u.nombre;
     this.editCorreo = u.correo;
     this.editPerfil = u.perfil;
+    this.editVigencia = u.vigencia;
+    this.editIntentos = u.intentos;
     this.editNombreTouched = false;
     this.editCorreoTouched = false;
     this.showEditDialog = true;
@@ -339,6 +348,8 @@ export class UsuariosComponent {
     this.selectedUsuario.nombre = this.editNombre.trim();
     this.selectedUsuario.correo = this.editCorreo.trim().toLowerCase();
     this.selectedUsuario.perfil = this.editPerfil;
+    this.selectedUsuario.vigencia = this.editVigencia;
+    this.selectedUsuario.intentos = this.editIntentos;
     this.messageService.add({
       severity: 'success',
       summary: 'Usuario actualizado',

@@ -265,6 +265,23 @@
       <label for="edit-perfil">Perfil de seguridad</label>
       <p-select inputId="edit-perfil" [options]="perfilOptions" [(ngModel)]="editPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
     </div>
+
+    <p-divider />
+
+    <h4 class="usr-dialog__section">Política de Contraseña</h4>
+    <p class="usr-dialog__section-hint">
+      Sobrescriba la política del rol para este usuario. Deje vacío para heredar del rol asignado.
+    </p>
+    <div class="usr-dialog__row">
+      <div class="usr-dialog__field">
+        <label for="edit-usr-vigencia">Periodo de Vigencia (Días)</label>
+        <input pInputText id="edit-usr-vigencia" [(ngModel)]="editVigencia" type="number" placeholder="Hereda del rol" min="0" style="width: 160px" />
+      </div>
+      <div class="usr-dialog__field">
+        <label for="edit-usr-intentos">Intentos Fallidos</label>
+        <input pInputText id="edit-usr-intentos" [(ngModel)]="editIntentos" type="number" placeholder="Hereda del rol" min="0" style="width: 160px" />
+      </div>
+    </div>
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showEditDialog = false" />
