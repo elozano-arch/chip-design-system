@@ -114,50 +114,154 @@
 </div>
 
 <!-- Diálogo Nuevo Usuario -->
-<p-dialog header="Nuevo Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
+<p-dialog header="Nuevo Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '500px' }" [draggable]="false">
   <div class="usr-dialog">
+    <p class="usr-dialog__hint">
+      Los campos marcados con <span class="field-required">*</span> son obligatorios.
+    </p>
+
+    <!-- Código -->
+    <div class="usr-dialog__field">
+      <label for="nuevo-codigo">Código de usuario <span class="field-required">*</span></label>
+      <input pInputText id="nuevo-codigo"
+        [(ngModel)]="nuevoCodigo"
+        (blur)="nuevoCodigoTouched = true"
+        [class.ng-invalid]="nuevoCodigoInvalid"
+        [class.ng-dirty]="nuevoCodigoTouched"
+        placeholder="Ej: ABCD123456"
+        maxlength="10"
+        class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="nuevoCodigoInvalid"
+        aria-describedby="nuevo-codigo-help nuevo-codigo-error" />
+      <small id="nuevo-codigo-help" class="usr-dialog__help">Formato: 4 letras + 6 números (ej: JLMU880704)</small>
+      @if (nuevoCodigoVacio) {
+        <small id="nuevo-codigo-error" class="usr-dialog__error">El código es obligatorio.</small>
+      } @else if (nuevoCodigoFormatoInvalido) {
+        <small id="nuevo-codigo-error" class="usr-dialog__error">El código debe tener 4 letras seguidas de 6 números.</small>
+      } @else if (nuevoCodigoDuplicado) {
+        <small id="nuevo-codigo-error" class="usr-dialog__error">Este código ya está registrado. Use uno diferente.</small>
+      }
+    </div>
+
+    <!-- Nombre -->
     <div class="usr-dialog__field">
       <label for="nuevo-nombre">Nombre completo <span class="field-required">*</span></label>
-      <input pInputText id="nuevo-nombre" [(ngModel)]="nuevoNombre" placeholder="Nombre del usuario" class="w-full" aria-required="true" />
+      <input pInputText id="nuevo-nombre"
+        [(ngModel)]="nuevoNombre"
+        (blur)="nuevoNombreTouched = true"
+        [class.ng-invalid]="nuevoNombreInvalid"
+        [class.ng-dirty]="nuevoNombreTouched"
+        placeholder="Ej: María Fernanda García"
+        class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="nuevoNombreInvalid"
+        aria-describedby="nuevo-nombre-error" />
+      @if (nuevoNombreInvalid) {
+        <small id="nuevo-nombre-error" class="usr-dialog__error">El nombre completo es obligatorio.</small>
+      }
     </div>
+
+    <!-- Correo -->
     <div class="usr-dialog__field">
       <label for="nuevo-correo">Correo electrónico <span class="field-required">*</span></label>
-      <input pInputText id="nuevo-correo" [(ngModel)]="nuevoCorreo" placeholder="correo@entidad.gov.co" class="w-full" aria-required="true" />
+      <input pInputText id="nuevo-correo"
+        [(ngModel)]="nuevoCorreo"
+        (blur)="nuevoCorreoTouched = true"
+        [class.ng-invalid]="nuevoCorreoInvalid"
+        [class.ng-dirty]="nuevoCorreoTouched"
+        type="email"
+        placeholder="correo@entidad.gov.co"
+        class="w-full"
+        autocomplete="email"
+        aria-required="true"
+        [attr.aria-invalid]="nuevoCorreoInvalid"
+        aria-describedby="nuevo-correo-error" />
+      @if (nuevoCorreoVacio) {
+        <small id="nuevo-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
+      } @else if (nuevoCorreoFormatoInvalido) {
+        <small id="nuevo-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido (ej: nombre&#64;entidad.gov.co).</small>
+      } @else if (nuevoCorreoDuplicado) {
+        <small id="nuevo-correo-error" class="usr-dialog__error">Este correo ya está registrado. Use uno diferente.</small>
+      }
     </div>
+
+    <!-- Perfil -->
     <div class="usr-dialog__field">
-      <label for="nuevo-perfil">Perfil de Seguridad</label>
-      <p-select inputId="nuevo-perfil" [options]="perfilOptions" [(ngModel)]="nuevoPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
+      <label for="nuevo-perfil">Perfil de seguridad <span class="field-required">*</span></label>
+      <p-select inputId="nuevo-perfil"
+        [options]="perfilOptions" [(ngModel)]="nuevoPerfil"
+        (onBlur)="nuevoPerfilTouched = true"
+        [class.ng-invalid]="nuevoPerfilInvalid"
+        [class.ng-dirty]="nuevoPerfilTouched"
+        placeholder="Seleccione perfil"
+        appendTo="body" class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="nuevoPerfilInvalid"
+        aria-describedby="nuevo-perfil-error" />
+      @if (nuevoPerfilInvalid) {
+        <small id="nuevo-perfil-error" class="usr-dialog__error">Debe seleccionar un perfil de seguridad.</small>
+      }
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" (onClick)="showNewDialog = false" />
-    <p-button label="Crear usuario" icon="pi pi-check" (onClick)="createUsuario()" [disabled]="!nuevoNombre.trim() || !nuevoCorreo.trim()" />
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showNewDialog = false" />
+    <p-button label="Crear usuario" icon="pi pi-check" (onClick)="createUsuario()" />
   </ng-template>
 </p-dialog>
 
 <!-- Diálogo Editar Usuario -->
-<p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '480px' }" [draggable]="false">
+<p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '500px' }" [draggable]="false">
   <div class="usr-dialog">
     <div class="usr-dialog__field">
       <label for="edit-codigo">Código</label>
       <input pInputText id="edit-codigo" [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
+      <small class="usr-dialog__help">El código de usuario no se puede modificar.</small>
     </div>
     <div class="usr-dialog__field">
       <label for="edit-nombre">Nombre completo <span class="field-required">*</span></label>
-      <input pInputText id="edit-nombre" [(ngModel)]="editNombre" placeholder="Nombre del usuario" class="w-full" aria-required="true" />
+      <input pInputText id="edit-nombre"
+        [(ngModel)]="editNombre"
+        (blur)="editNombreTouched = true"
+        [class.ng-invalid]="editNombreInvalid"
+        [class.ng-dirty]="editNombreTouched"
+        placeholder="Nombre del usuario"
+        class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="editNombreInvalid"
+        aria-describedby="edit-nombre-error" />
+      @if (editNombreInvalid) {
+        <small id="edit-nombre-error" class="usr-dialog__error">El nombre completo es obligatorio.</small>
+      }
     </div>
     <div class="usr-dialog__field">
       <label for="edit-correo">Correo electrónico <span class="field-required">*</span></label>
-      <input pInputText id="edit-correo" [(ngModel)]="editCorreo" placeholder="correo@entidad.gov.co" class="w-full" aria-required="true" />
+      <input pInputText id="edit-correo"
+        [(ngModel)]="editCorreo"
+        (blur)="editCorreoTouched = true"
+        [class.ng-invalid]="editCorreoInvalid"
+        [class.ng-dirty]="editCorreoTouched"
+        type="email"
+        placeholder="correo@entidad.gov.co"
+        class="w-full"
+        autocomplete="email"
+        aria-required="true"
+        [attr.aria-invalid]="editCorreoInvalid"
+        aria-describedby="edit-correo-error" />
+      @if (editCorreoVacio) {
+        <small id="edit-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
+      } @else if (editCorreoFormatoInvalido) {
+        <small id="edit-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido.</small>
+      }
     </div>
     <div class="usr-dialog__field">
-      <label for="edit-perfil">Perfil de Seguridad</label>
+      <label for="edit-perfil">Perfil de seguridad</label>
       <p-select inputId="edit-perfil" [options]="perfilOptions" [(ngModel)]="editPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" (onClick)="showEditDialog = false" />
-    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditUsuario()" [disabled]="!editNombre.trim()" />
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showEditDialog = false" />
+    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditUsuario()" />
   </ng-template>
 </p-dialog>
 
@@ -180,16 +284,38 @@
 </p-dialog>
 
 <!-- Diálogo Confirmar Eliminación -->
-<p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteDialog" [modal]="true" [style]="{ width: '420px' }" [draggable]="false">
+<p-dialog header="Eliminar usuario" [(visible)]="showDeleteDialog" [modal]="true"
+  [style]="{ width: '460px' }" [draggable]="false" (onHide)="deleteConfirmText = ''">
   <div class="usr-dialog-confirm">
     <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon" aria-hidden="true"></i>
     <p>
-      ¿Está seguro de eliminar al usuario <strong>"{{ selectedUsuario?.nombre }}"</strong>?
-      Esta acción no se puede revertir.
+      Está a punto de eliminar al usuario <strong>"{{ selectedUsuario?.nombre }}"</strong>
+      ({{ selectedUsuario?.codigo }}).
     </p>
+    <p class="usr-dialog-confirm__warning">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Esta acción <strong>no se puede revertir</strong>. Se eliminarán también sus permisos y bitácora asociada.
+    </p>
+
+    <div class="usr-dialog-confirm__field">
+      <label for="delete-confirm">
+        Para confirmar, escriba <code>ELIMINAR</code> en el campo:
+      </label>
+      <input pInputText id="delete-confirm"
+        [(ngModel)]="deleteConfirmText"
+        placeholder="Escriba ELIMINAR"
+        autocomplete="off"
+        class="w-full"
+        aria-required="true"
+        aria-describedby="delete-confirm-help" />
+      <small id="delete-confirm-help" class="usr-dialog__help">
+        Esta confirmación previene eliminaciones accidentales.
+      </small>
+    </div>
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" (onClick)="showDeleteDialog = false" />
-    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="confirmDeleteUsuario()" />
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closeDeleteDialog()" />
+    <p-button label="Eliminar definitivamente" icon="pi pi-trash" severity="danger"
+      (onClick)="confirmDeleteUsuario()" [disabled]="!deleteConfirmValid" />
   </ng-template>
 </p-dialog>

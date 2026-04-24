@@ -125,14 +125,24 @@ export class RolesComponent {
   showEditRoleDialog = false;
   showDeleteDialog = false;
   roleToDelete: Role | null = null;
+  // CH-1373: confirmación por escrito para eliminar rol
+  deleteRoleConfirmText = '';
+  readonly DELETE_ROLE_CONFIRM_WORD = 'ELIMINAR';
+  get deleteRoleConfirmValid(): boolean {
+    return this.deleteRoleConfirmText.trim().toUpperCase() === this.DELETE_ROLE_CONFIRM_WORD;
+  }
   editingRole: Role | null = null;
   editRoleName = '';
   editRoleDesc = '';
+  editRoleNameTouched = false;
   newRoleCode = '';
   newRoleName = '';
   newRoleDesc = '';
   newRoleVigencia: number | null = null;
   newRoleIntentos: number | null = null;
+  newRoleCodeTouched = false;
+  newRoleNameTouched = false;
+  private readonly ROLE_CODE_REGEX = /^ROL[0-9]{3,4}$/;
 
 
   // ── Roles (perfiles reales del sistema CHIP) ──
@@ -817,10 +827,23 @@ export class RolesComponent {
   }
 
   saveEditRole() {
-    if (!this.editingRole || !this.editRoleName.trim()) return;
-    this.editingRole.nombre = this.editRoleName;
-    this.editingRole.descripcion = this.editRoleDesc;
-    this.messageService.add({ severity: 'success', summary: 'Rol actualizado', detail: `El perfil "${this.editRoleName}" fue actualizado.` });
+    this.editRoleNameTouched = true;
+    if (!this.editingRole || !this.editRoleName.trim()) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos incompletos',
+        detail: 'El nombre del perfil es obligatorio.',
+      });
+      return;
+    }
+    this.editingRole.nombre = this.editRoleName.trim();
+    this.editingRole.descripcion = this.editRoleDesc.trim();
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Rol actualizado',
+      detail: `El perfil "${this.editRoleName}" fue actualizado exitosamente.`,
+    });
+    this.editRoleNameTouched = false;
     this.showEditRoleDialog = false;
     this.editingRole = null;
   }
@@ -831,19 +854,85 @@ export class RolesComponent {
   }
 
   deleteRole() {
+    if (!this.deleteRoleConfirmValid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Confirmación incorrecta',
+        detail: 'Debe escribir "ELIMINAR" para confirmar la acción.',
+      });
+      return;
+    }
     if (this.roleToDelete) {
+      const nombre = this.roleToDelete.nombre;
+      const usuariosAfectados = this.roleToDelete.usuarios;
       this.roles = this.roles.filter(r => r.id !== this.roleToDelete!.id);
       this.messageService.add({
         severity: 'success',
         summary: 'Rol eliminado',
-        detail: `El rol "${this.roleToDelete.nombre}" fue eliminado correctamente.`
+        detail: usuariosAfectados > 0
+          ? `El rol "${nombre}" fue eliminado. ${usuariosAfectados} usuario(s) quedaron sin rol asignado.`
+          : `El rol "${nombre}" fue eliminado correctamente.`,
+        life: 5000,
       });
       this.roleToDelete = null;
+      this.deleteRoleConfirmText = '';
       this.showDeleteDialog = false;
     }
   }
 
+  closeDeleteRoleDialog() {
+    this.deleteRoleConfirmText = '';
+    this.roleToDelete = null;
+    this.showDeleteDialog = false;
+  }
+
+  // ── Validaciones CH-1369 (Crear rol) ──
+  get newRoleCodeVacio(): boolean {
+    return this.newRoleCodeTouched && !this.newRoleCode.trim();
+  }
+  get newRoleCodeFormatoInvalido(): boolean {
+    if (!this.newRoleCodeTouched || !this.newRoleCode.trim()) return false;
+    return !this.ROLE_CODE_REGEX.test(this.newRoleCode.trim().toUpperCase());
+  }
+  get newRoleCodeDuplicado(): boolean {
+    if (!this.newRoleCodeTouched || !this.newRoleCode.trim()) return false;
+    return this.roles.some(r => r.codigo.toUpperCase() === this.newRoleCode.trim().toUpperCase());
+  }
+  get newRoleCodeInvalid(): boolean {
+    return this.newRoleCodeVacio || this.newRoleCodeFormatoInvalido || this.newRoleCodeDuplicado;
+  }
+  get newRoleNameInvalid(): boolean {
+    return this.newRoleNameTouched && !this.newRoleName.trim();
+  }
+  get newRoleNameDuplicado(): boolean {
+    if (!this.newRoleNameTouched || !this.newRoleName.trim()) return false;
+    return this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase());
+  }
+  get newRoleFormValido(): boolean {
+    return !!this.newRoleCode.trim()
+      && this.ROLE_CODE_REGEX.test(this.newRoleCode.trim().toUpperCase())
+      && !this.roles.some(r => r.codigo.toUpperCase() === this.newRoleCode.trim().toUpperCase())
+      && !!this.newRoleName.trim()
+      && !this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase());
+  }
+
+  get editRoleNameInvalid(): boolean {
+    return this.editRoleNameTouched && !this.editRoleName.trim();
+  }
+
   createRole() {
+    this.newRoleCodeTouched = true;
+    this.newRoleNameTouched = true;
+
+    if (!this.newRoleFormValido) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos incompletos',
+        detail: 'Revise los campos marcados en rojo y corrija los errores.',
+      });
+      return;
+    }
+
     if (!this.newRoleName.trim()) return;
     const nextId = Math.max(...this.roles.map(r => r.id)) + 1;
     const newRole: Role = {
@@ -866,6 +955,8 @@ export class RolesComponent {
     this.newRoleDesc = '';
     this.newRoleVigencia = null;
     this.newRoleIntentos = null;
+    this.newRoleCodeTouched = false;
+    this.newRoleNameTouched = false;
     this.showNewRoleDialog = false;
   }
 

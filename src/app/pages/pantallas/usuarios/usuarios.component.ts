@@ -76,16 +76,31 @@ export class UsuariosComponent {
   showEditDialog = false;
   showToggleDialog = false;
   showDeleteDialog = false;
+  // CH-1371: confirmación por escrito para eliminar
+  deleteConfirmText = '';
+  readonly DELETE_CONFIRM_WORD = 'ELIMINAR';
+  get deleteConfirmValid(): boolean {
+    return this.deleteConfirmText.trim().toUpperCase() === this.DELETE_CONFIRM_WORD;
+  }
 
   // Nuevo usuario
+  nuevoCodigo = '';
   nuevoNombre = '';
   nuevoCorreo = '';
   nuevoPerfil = '';
+
+  // Touched flags (validación visual)
+  nuevoCodigoTouched = false;
+  nuevoNombreTouched = false;
+  nuevoCorreoTouched = false;
+  nuevoPerfilTouched = false;
 
   // Editar usuario
   editNombre = '';
   editCorreo = '';
   editPerfil = '';
+  editNombreTouched = false;
+  editCorreoTouched = false;
 
   perfilOptions = [
     { label: 'Todos', value: '' },
@@ -151,13 +166,124 @@ export class UsuariosComponent {
     this.filterEstado = '';
   }
 
+  // ── Validaciones CH-1368 (Crear usuario) ──
+  private readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  private readonly CODIGO_REGEX = /^[A-Z]{4}[0-9]{6}$/;
+
+  get nuevoCodigoVacio(): boolean {
+    return this.nuevoCodigoTouched && !this.nuevoCodigo.trim();
+  }
+  get nuevoCodigoFormatoInvalido(): boolean {
+    if (!this.nuevoCodigoTouched || !this.nuevoCodigo.trim()) return false;
+    return !this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase());
+  }
+  get nuevoCodigoDuplicado(): boolean {
+    if (!this.nuevoCodigoTouched || !this.nuevoCodigo.trim()) return false;
+    return this.usuarios.some(u => u.codigo.toUpperCase() === this.nuevoCodigo.trim().toUpperCase());
+  }
+  get nuevoCodigoInvalid(): boolean {
+    return this.nuevoCodigoVacio || this.nuevoCodigoFormatoInvalido || this.nuevoCodigoDuplicado;
+  }
+
+  get nuevoNombreInvalid(): boolean {
+    return this.nuevoNombreTouched && !this.nuevoNombre.trim();
+  }
+
+  get nuevoCorreoVacio(): boolean {
+    return this.nuevoCorreoTouched && !this.nuevoCorreo.trim();
+  }
+  get nuevoCorreoFormatoInvalido(): boolean {
+    if (!this.nuevoCorreoTouched || !this.nuevoCorreo.trim()) return false;
+    return !this.EMAIL_REGEX.test(this.nuevoCorreo.trim());
+  }
+  get nuevoCorreoDuplicado(): boolean {
+    if (!this.nuevoCorreoTouched || !this.nuevoCorreo.trim()) return false;
+    return this.usuarios.some(u => u.correo.toLowerCase() === this.nuevoCorreo.trim().toLowerCase());
+  }
+  get nuevoCorreoInvalid(): boolean {
+    return this.nuevoCorreoVacio || this.nuevoCorreoFormatoInvalido || this.nuevoCorreoDuplicado;
+  }
+
+  get nuevoPerfilInvalid(): boolean {
+    return this.nuevoPerfilTouched && !this.nuevoPerfil;
+  }
+
+  get nuevoFormValido(): boolean {
+    return !!this.nuevoCodigo.trim()
+      && this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase())
+      && !this.usuarios.some(u => u.codigo.toUpperCase() === this.nuevoCodigo.trim().toUpperCase())
+      && !!this.nuevoNombre.trim()
+      && !!this.nuevoCorreo.trim()
+      && this.EMAIL_REGEX.test(this.nuevoCorreo.trim())
+      && !this.usuarios.some(u => u.correo.toLowerCase() === this.nuevoCorreo.trim().toLowerCase())
+      && !!this.nuevoPerfil;
+  }
+
   createUsuario() {
-    if (!this.nuevoNombre.trim() || !this.nuevoCorreo.trim()) return;
-    this.messageService.add({ severity: 'success', summary: 'Usuario creado', detail: `El usuario "${this.nuevoNombre}" fue registrado.` });
+    this.nuevoCodigoTouched = true;
+    this.nuevoNombreTouched = true;
+    this.nuevoCorreoTouched = true;
+    this.nuevoPerfilTouched = true;
+
+    if (!this.nuevoFormValido) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos incompletos',
+        detail: 'Revise los campos marcados en rojo y corrija los errores indicados.',
+      });
+      return;
+    }
+
+    const nuevo: Usuario = {
+      id: Math.max(...this.usuarios.map(u => u.id)) + 1,
+      codigo: this.nuevoCodigo.trim().toUpperCase(),
+      nombre: this.nuevoNombre.trim(),
+      correo: this.nuevoCorreo.trim().toLowerCase(),
+      perfil: this.nuevoPerfil,
+      entidad: 'PROYECTO CHIP 2.0',
+      activo: true,
+      ultimoAcceso: '—',
+    };
+    this.usuarios = [nuevo, ...this.usuarios];
+
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Usuario creado',
+      detail: `El usuario "${nuevo.nombre}" (${nuevo.codigo}) fue registrado exitosamente.`,
+    });
+    this.resetNuevoForm();
+    this.showNewDialog = false;
+  }
+
+  private resetNuevoForm() {
+    this.nuevoCodigo = '';
     this.nuevoNombre = '';
     this.nuevoCorreo = '';
     this.nuevoPerfil = '';
-    this.showNewDialog = false;
+    this.nuevoCodigoTouched = false;
+    this.nuevoNombreTouched = false;
+    this.nuevoCorreoTouched = false;
+    this.nuevoPerfilTouched = false;
+  }
+
+  // ── Validaciones edición ──
+  get editNombreInvalid(): boolean {
+    return this.editNombreTouched && !this.editNombre.trim();
+  }
+  get editCorreoVacio(): boolean {
+    return this.editCorreoTouched && !this.editCorreo.trim();
+  }
+  get editCorreoFormatoInvalido(): boolean {
+    if (!this.editCorreoTouched || !this.editCorreo.trim()) return false;
+    return !this.EMAIL_REGEX.test(this.editCorreo.trim());
+  }
+  get editCorreoInvalid(): boolean {
+    return this.editCorreoVacio || this.editCorreoFormatoInvalido;
+  }
+  get editFormValido(): boolean {
+    return !!this.editNombre.trim()
+      && !!this.editCorreo.trim()
+      && this.EMAIL_REGEX.test(this.editCorreo.trim());
   }
 
   toggleEstado(u: Usuario) {
@@ -173,11 +299,26 @@ export class UsuariosComponent {
   }
 
   saveEditUsuario() {
-    if (!this.selectedUsuario || !this.editNombre.trim()) return;
-    this.selectedUsuario.nombre = this.editNombre;
-    this.selectedUsuario.correo = this.editCorreo;
+    this.editNombreTouched = true;
+    this.editCorreoTouched = true;
+    if (!this.selectedUsuario || !this.editFormValido) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Datos incompletos',
+        detail: 'Revise los campos marcados en rojo y corrija los errores.',
+      });
+      return;
+    }
+    this.selectedUsuario.nombre = this.editNombre.trim();
+    this.selectedUsuario.correo = this.editCorreo.trim().toLowerCase();
     this.selectedUsuario.perfil = this.editPerfil;
-    this.messageService.add({ severity: 'success', summary: 'Usuario actualizado', detail: `El usuario "${this.editNombre}" fue actualizado.` });
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Usuario actualizado',
+      detail: `El usuario "${this.editNombre}" fue actualizado exitosamente.`,
+    });
+    this.editNombreTouched = false;
+    this.editCorreoTouched = false;
     this.showEditDialog = false;
   }
 
@@ -189,10 +330,28 @@ export class UsuariosComponent {
   }
 
   confirmDeleteUsuario() {
+    if (!this.deleteConfirmValid) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Confirmación incorrecta',
+        detail: 'Debe escribir "ELIMINAR" para confirmar la acción.',
+      });
+      return;
+    }
     if (this.selectedUsuario) {
       this.usuarios = this.usuarios.filter(u => u.id !== this.selectedUsuario!.id);
-      this.messageService.add({ severity: 'success', summary: 'Usuario eliminado', detail: `El usuario "${this.selectedUsuario.nombre}" fue eliminado.` });
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Usuario eliminado',
+        detail: `El usuario "${this.selectedUsuario.nombre}" fue eliminado del sistema.`,
+      });
     }
+    this.deleteConfirmText = '';
+    this.showDeleteDialog = false;
+  }
+
+  closeDeleteDialog() {
+    this.deleteConfirmText = '';
     this.showDeleteDialog = false;
   }
 }

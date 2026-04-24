@@ -1102,6 +1102,15 @@
   flex-direction: column;
   gap: 16px;
 
+  &__hint {
+    margin: 0 0 4px;
+    padding: 8px 12px;
+    background: var(--chip-bg-solitude);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--chip-grey-600);
+  }
+
   &__field {
     display: flex;
     flex-direction: column;
@@ -1112,6 +1121,17 @@
       font-weight: 600;
       color: var(--chip-grey-700);
     }
+  }
+
+  &__help {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+  }
+
+  &__error {
+    font-size: 12px;
+    color: var(--chip-danger);
+    font-weight: 500;
   }
 
   &__section {
@@ -1130,6 +1150,72 @@
 
 .dialog-confirm {
   text-align: center;
+
+  &__warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    padding: 12px 14px;
+    background: #FFEBEE;
+    border-left: 3px solid var(--chip-danger);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: #7F0000;
+    margin: 12px 0 16px;
+    line-height: 1.5;
+
+    i {
+      font-size: 16px;
+      color: var(--chip-danger);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    strong { color: #C62828; }
+  }
+
+  &__hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--chip-bg-corn-silk);
+    border-radius: var(--radius-sm);
+    font-size: 13px !important;
+    color: var(--chip-grey-700) !important;
+    margin: 12px 0 16px !important;
+
+    i { color: var(--chip-warning); flex-shrink: 0; }
+  }
+
+  &__field {
+    text-align: left;
+    margin-top: 12px;
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--chip-grey-700);
+      margin-bottom: 6px;
+
+      code {
+        background: var(--chip-grey-100);
+        padding: 1px 6px;
+        border-radius: 3px;
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: var(--chip-danger);
+        font-weight: 700;
+      }
+    }
+  }
+
+  &--inner {
+    text-align: center;
+  }
   padding: 8px 0;
 
   &__icon {

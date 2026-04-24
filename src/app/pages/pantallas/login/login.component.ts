@@ -59,12 +59,33 @@ export class LoginComponent {
 
   constructor(private router: Router, private messageService: MessageService) {}
 
-  get usuarioInvalid(): boolean {
+  // ── Validaciones CH-1370 ──
+  private readonly USUARIO_REGEX = /^[A-Za-z0-9]{4,20}$/;
+
+  get usuarioVacio(): boolean {
     return this.usuarioTouched && !this.usuario.trim();
   }
+  get usuarioFormatoInvalido(): boolean {
+    if (!this.usuarioTouched || !this.usuario.trim()) return false;
+    return !this.USUARIO_REGEX.test(this.usuario.trim());
+  }
+  get usuarioInvalid(): boolean {
+    return this.usuarioVacio || this.usuarioFormatoInvalido;
+  }
 
-  get contrasenaInvalid(): boolean {
+  get contrasenaVacia(): boolean {
     return this.contrasenaTouched && !this.contrasena.trim();
+  }
+  get contrasenaCorta(): boolean {
+    if (!this.contrasenaTouched || !this.contrasena.trim()) return false;
+    return this.contrasena.length < 8;
+  }
+  get contrasenaInvalid(): boolean {
+    return this.contrasenaVacia || this.contrasenaCorta;
+  }
+
+  get entidadInvalid(): boolean {
+    return this.contrasenaTouched && !this.entidad;
   }
 
   get formInvalid(): boolean {
@@ -93,12 +114,34 @@ export class LoginComponent {
       this.loading = false;
       if (this.usuario.toUpperCase() === 'JLMUNOZ' && this.contrasena === 'demo123') {
         this.intentosFallidos = 0;
+        // CH-1374: validar contraseña vencida (mock con usuario VENCIDO)
+        const contrasenaVencida = false; // En producción consultar al backend
+        if (contrasenaVencida) {
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Contraseña vencida',
+            detail: 'Debe cambiar su contraseña antes de continuar.',
+            life: 4000,
+          });
+          setTimeout(() => this.router.navigate(['/pantallas/seguridad/cambiar-contrasena']), 1500);
+          return;
+        }
         this.messageService.add({
           severity: 'success',
           summary: 'Bienvenido',
           detail: `Sesión iniciada como ${this.usuario.toUpperCase()}`,
         });
         setTimeout(() => this.router.navigate(['/']), 1000);
+      } else if (this.usuario.toUpperCase() === 'VENCIDO' && this.contrasena === 'demo123') {
+        // Demo del flujo: usuario "VENCIDO" tiene contraseña vencida
+        this.intentosFallidos = 0;
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Contraseña vencida',
+          detail: 'Su contraseña expiró. Debe cambiarla antes de continuar.',
+          life: 4000,
+        });
+        setTimeout(() => this.router.navigate(['/pantallas/seguridad/cambiar-contrasena']), 1500);
       } else {
         this.intentosFallidos++;
         const restantes = this.MAX_INTENTOS - this.intentosFallidos;

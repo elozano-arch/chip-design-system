@@ -35,8 +35,10 @@
           [attr.aria-invalid]="usuarioInvalid"
           aria-describedby="usuario-error"
           class="w-full" />
-        @if (usuarioInvalid) {
+        @if (usuarioVacio) {
           <small id="usuario-error" class="login-form__error">El usuario es obligatorio.</small>
+        } @else if (usuarioFormatoInvalido) {
+          <small id="usuario-error" class="login-form__error">El usuario debe tener entre 4 y 20 caracteres alfanuméricos.</small>
         }
       </div>
 
@@ -73,8 +75,10 @@
             Mayúsculas activadas (Caps Lock)
           </small>
         }
-        @if (contrasenaInvalid) {
+        @if (contrasenaVacia) {
           <small id="contrasena-error" class="login-form__error">La contraseña es obligatoria.</small>
+        } @else if (contrasenaCorta) {
+          <small id="contrasena-error" class="login-form__error">La contraseña debe tener mínimo 8 caracteres.</small>
         }
       </div>
 

@@ -370,18 +370,54 @@
 <p-dialog header="Nuevo Perfil" [(visible)]="showNewRoleDialog" [modal]="true"
   [style]="{ width: '520px' }" [draggable]="false">
   <div class="dialog-form">
+    <p class="dialog-form__hint">
+      Los campos marcados con <span class="field-required">*</span> son obligatorios.
+    </p>
     <div class="dialog-form__field">
       <label for="roleCode">Código <span class="field-required">*</span></label>
-      <input pInputText id="roleCode" [(ngModel)]="newRoleCode" placeholder="COD_ROL" class="w-full" aria-required="true" />
+      <input pInputText id="roleCode"
+        [(ngModel)]="newRoleCode"
+        (blur)="newRoleCodeTouched = true"
+        [class.ng-invalid]="newRoleCodeInvalid"
+        [class.ng-dirty]="newRoleCodeTouched"
+        placeholder="Ej: ROL008"
+        maxlength="10"
+        class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="newRoleCodeInvalid"
+        aria-describedby="roleCode-help roleCode-error" />
+      <small id="roleCode-help" class="dialog-form__help">Formato: ROL seguido de 3 o 4 números (ej: ROL010)</small>
+      @if (newRoleCodeVacio) {
+        <small id="roleCode-error" class="dialog-form__error">El código del rol es obligatorio.</small>
+      } @else if (newRoleCodeFormatoInvalido) {
+        <small id="roleCode-error" class="dialog-form__error">El código debe tener formato ROL seguido de 3 o 4 números.</small>
+      } @else if (newRoleCodeDuplicado) {
+        <small id="roleCode-error" class="dialog-form__error">Este código ya existe. Use uno diferente.</small>
+      }
     </div>
     <div class="dialog-form__field">
       <label for="roleName">Nombre <span class="field-required">*</span></label>
-      <input pInputText id="roleName" [(ngModel)]="newRoleName" placeholder="Nombre del perfil" class="w-full" aria-required="true" />
+      <input pInputText id="roleName"
+        [(ngModel)]="newRoleName"
+        (blur)="newRoleNameTouched = true"
+        [class.ng-invalid]="newRoleNameInvalid || newRoleNameDuplicado"
+        [class.ng-dirty]="newRoleNameTouched"
+        placeholder="Nombre del perfil"
+        class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="newRoleNameInvalid || newRoleNameDuplicado"
+        aria-describedby="roleName-error" />
+      @if (newRoleNameInvalid) {
+        <small id="roleName-error" class="dialog-form__error">El nombre del perfil es obligatorio.</small>
+      } @else if (newRoleNameDuplicado) {
+        <small id="roleName-error" class="dialog-form__error">Ya existe un perfil con este nombre.</small>
+      }
     </div>
     <div class="dialog-form__field">
       <label for="roleDesc">Descripción</label>
       <textarea pInputText id="roleDesc" [(ngModel)]="newRoleDesc" placeholder="Descripción del perfil"
-        class="w-full" rows="3" style="resize: vertical"></textarea>
+        class="w-full" rows="3" maxlength="200" style="resize: vertical"></textarea>
+      <small class="dialog-form__help">Máximo 200 caracteres. ({{ (newRoleDesc || '').length }}/200)</small>
     </div>
 
     <p-divider />
@@ -417,40 +453,76 @@
     </div>
     <div class="dialog-form__field">
       <label for="edit-role-nombre">Nombre <span class="field-required">*</span></label>
-      <input pInputText id="edit-role-nombre" [(ngModel)]="editRoleName" placeholder="Nombre del perfil" class="w-full" aria-required="true" />
+      <input pInputText id="edit-role-nombre"
+        [(ngModel)]="editRoleName"
+        (blur)="editRoleNameTouched = true"
+        [class.ng-invalid]="editRoleNameInvalid"
+        [class.ng-dirty]="editRoleNameTouched"
+        placeholder="Nombre del perfil"
+        class="w-full"
+        aria-required="true"
+        [attr.aria-invalid]="editRoleNameInvalid"
+        aria-describedby="edit-role-nombre-error" />
+      @if (editRoleNameInvalid) {
+        <small id="edit-role-nombre-error" class="dialog-form__error">El nombre del perfil es obligatorio.</small>
+      }
     </div>
     <div class="dialog-form__field">
       <label for="edit-role-desc">Descripción</label>
       <textarea pInputText id="edit-role-desc" [(ngModel)]="editRoleDesc" placeholder="Descripción del perfil"
-        class="w-full" rows="3" style="resize: vertical"></textarea>
+        class="w-full" rows="3" maxlength="200" style="resize: vertical"></textarea>
+      <small class="dialog-form__help">Máximo 200 caracteres. ({{ (editRoleDesc || '').length }}/200)</small>
     </div>
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" (onClick)="showEditRoleDialog = false" />
-    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditRole()" [disabled]="!editRoleName.trim()" />
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showEditRoleDialog = false" />
+    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditRole()" />
   </ng-template>
 </p-dialog>
 
 <!-- ============================================================
      DIÁLOGO: CONFIRMAR ELIMINACIÓN
      ============================================================ -->
-<p-dialog header="Confirmar Eliminación" [(visible)]="showDeleteDialog" [modal]="true"
-  [style]="{ width: '420px' }" [draggable]="false">
+<p-dialog header="Eliminar perfil" [(visible)]="showDeleteDialog" [modal]="true"
+  [style]="{ width: '460px' }" [draggable]="false" (onHide)="deleteRoleConfirmText = ''">
   <div class="dialog-confirm">
     <i class="pi pi-exclamation-triangle dialog-confirm__icon" aria-hidden="true"></i>
     <p>
-      ¿Está seguro de eliminar el rol <strong>"{{ roleToDelete?.nombre }}"</strong>?
-      Esta acción no se puede deshacer.
+      Está a punto de eliminar el perfil <strong>"{{ roleToDelete?.nombre }}"</strong>
+      ({{ roleToDelete?.codigo }}).
     </p>
+
     @if (roleToDelete && roleToDelete.usuarios > 0) {
-      <p-message severity="warn">
-        Este rol tiene {{ roleToDelete.usuarios }} usuario(s) asignado(s). Se les retirará el acceso.
-      </p-message>
+      <div class="dialog-confirm__warning">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+        <span>
+          Este perfil tiene <strong>{{ roleToDelete.usuarios }} usuario{{ roleToDelete.usuarios === 1 ? '' : 's' }} asignado{{ roleToDelete.usuarios === 1 ? '' : 's' }}</strong>.
+          Al eliminarlo, perderán todos sus permisos y no podrán acceder al sistema hasta que se les asigne un nuevo perfil.
+        </span>
+      </div>
+    } @else {
+      <p class="dialog-confirm__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Esta acción <strong>no se puede deshacer</strong>.
+      </p>
     }
+
+    <div class="dialog-confirm__field">
+      <label for="delete-role-confirm">
+        Para confirmar, escriba <code>ELIMINAR</code> en el campo:
+      </label>
+      <input pInputText id="delete-role-confirm"
+        [(ngModel)]="deleteRoleConfirmText"
+        placeholder="Escriba ELIMINAR"
+        autocomplete="off"
+        class="w-full"
+        aria-required="true" />
+    </div>
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" (onClick)="showDeleteDialog = false" />
-    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="deleteRole()" />
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closeDeleteRoleDialog()" />
+    <p-button label="Eliminar definitivamente" icon="pi pi-trash" severity="danger"
+      (onClick)="deleteRole()" [disabled]="!deleteRoleConfirmValid" />
   </ng-template>
 </p-dialog>
 
