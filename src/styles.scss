@@ -253,7 +253,9 @@ p-breadcrumb .p-breadcrumb {
 .form-page,
 .aud-page,
 .roles-page,
-.flt-page {
+.flt-page,
+.cpw-page,
+.cor-page {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
@@ -264,7 +266,9 @@ p-breadcrumb .p-breadcrumb {
 .form-header,
 .aud-header,
 .roles-header,
-.flt-header {
+.flt-header,
+.cpw-header,
+.cor-header {
   margin-bottom: 28px;
 }
 
@@ -272,7 +276,9 @@ p-breadcrumb .p-breadcrumb {
 .form-header__title,
 .aud-header__title,
 .roles-header__title,
-.flt-header__title {
+.flt-header__title,
+.cpw-header__title,
+.cor-header__title {
   font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 800;
@@ -283,7 +289,8 @@ p-breadcrumb .p-breadcrumb {
 .usr-header__row,
 .form-header__row,
 .aud-header__row,
-.roles-header__row {
+.roles-header__row,
+.cpw-header__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -294,7 +301,9 @@ p-breadcrumb .p-breadcrumb {
 .form-header__desc,
 .aud-header__desc,
 .roles-header__desc,
-.flt-header__desc {
+.flt-header__desc,
+.cpw-header__desc,
+.cor-header__desc {
   font-size: 15px;
   color: var(--chip-grey-500);
   margin: 0;

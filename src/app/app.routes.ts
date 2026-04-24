@@ -52,6 +52,16 @@ export const routes: Routes = [
       import('./pages/pantallas/olvide-clave/olvide-clave.component').then(m => m.OlvideClaveComponent),
   },
   {
+    path: 'pantallas/seguridad/cambiar-contrasena',
+    loadComponent: () =>
+      import('./pages/pantallas/cambiar-contrasena/cambiar-contrasena.component').then(m => m.CambiarContrasenaComponent),
+  },
+  {
+    path: 'pantallas/correos',
+    loadComponent: () =>
+      import('./pages/pantallas/correos/correos.component').then(m => m.CorreosComponent),
+  },
+  {
     path: 'pantallas/seguridad/usuarios',
     loadComponent: () =>
       import('./pages/pantallas/usuarios/usuarios.component').then(m => m.UsuariosComponent),

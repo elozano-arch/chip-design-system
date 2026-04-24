@@ -96,6 +96,9 @@
           <a routerLink="/pantallas/seguridad/olvide-clave" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-key"></i> <span class="app-sidebar__label">Olvidé mi clave</span>
           </a>
+          <a routerLink="/pantallas/seguridad/cambiar-contrasena" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-lock"></i> <span class="app-sidebar__label">Cambiar contraseña</span>
+          </a>
           <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-users"></i> <span class="app-sidebar__label">Usuarios</span>
           </a>
@@ -114,6 +117,9 @@
         <a routerLink="/pantallas/seguridad/olvide-clave" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Olvidé mi clave" tooltipPosition="right">
           <i class="pi pi-key"></i> <span class="app-sidebar__label">Olvidé mi clave</span>
         </a>
+        <a routerLink="/pantallas/seguridad/cambiar-contrasena" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Cambiar contraseña" tooltipPosition="right">
+          <i class="pi pi-lock"></i> <span class="app-sidebar__label">Cambiar contraseña</span>
+        </a>
         <a routerLink="/pantallas/seguridad/usuarios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Usuarios" tooltipPosition="right">
           <i class="pi pi-users"></i> <span class="app-sidebar__label">Usuarios</span>
         </a>
@@ -128,6 +134,11 @@
       <!-- ══ FORMULARIOS ══ -->
       <a routerLink="/pantallas/formularios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Formularios' : ''" tooltipPosition="right">
         <i class="pi pi-file-edit"></i> <span class="app-sidebar__label">Formularios</span>
+      </a>
+
+      <!-- ══ PLANTILLAS DE CORREO ══ -->
+      <a routerLink="/pantallas/correos" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Plantillas de correo' : ''" tooltipPosition="right">
+        <i class="pi pi-envelope"></i> <span class="app-sidebar__label">Plantillas de correo</span>
       </a>
 
       <!-- ══ PROPUESTA FILTROS ══ -->

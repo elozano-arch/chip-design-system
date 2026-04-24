@@ -1,0 +1,320 @@
+/* ============================================================
+   CAMBIAR CONTRASEÑA PAGE
+   Header usa estilos globales (.cpw-header, __title, __row, __desc)
+   ============================================================ */
+
+/* --- Grid de cards de estado --- */
+.cpw-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cpw-status-card {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  transition: border-color 0.15s;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+
+  &--warn {
+    border-color: var(--chip-warning);
+    background: #FFF8E1;
+  }
+
+  &--danger {
+    border-color: var(--chip-danger);
+    background: #FFEBEE;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-grey-600);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 12px;
+
+    i {
+      font-size: 14px;
+      color: var(--chip-cobalt-500);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    align-items: flex-start;
+  }
+
+  &__value {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    margin: 0;
+  }
+
+  &__msg {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+    margin: 0;
+  }
+
+  &__action {
+    margin-top: auto;
+  }
+}
+
+/* Título de sección */
+.cpw-section-title {
+  margin-bottom: 12px;
+  margin-top: 8px;
+
+  h2 {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    margin: 0 0 4px;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--chip-grey-500);
+    margin: 0;
+  }
+}
+
+/* --- Dispositivos activos --- */
+.cpw-devices {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--chip-grey-50);
+    border-bottom: 1px solid var(--chip-grey-200);
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    margin: 0;
+
+    i {
+      color: var(--chip-cobalt-600);
+      font-size: 16px;
+    }
+  }
+
+  &__count {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+    font-weight: 600;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.cpw-device {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--chip-grey-100);
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--chip-grey-50); }
+
+  &--current {
+    background: var(--chip-bg-solitude);
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--chip-cobalt-100);
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    i {
+      font-size: 18px;
+      color: var(--chip-cobalt-600);
+    }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--chip-grey-800);
+    flex-wrap: wrap;
+  }
+
+  &__separator {
+    color: var(--chip-grey-300);
+    font-weight: 400;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 14px;
+    font-size: 12px;
+    color: var(--chip-grey-500);
+    flex-wrap: wrap;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+
+      i { font-size: 11px; }
+    }
+  }
+}
+
+/* ============================================================
+   MODAL - Cambiar contraseña
+   ============================================================ */
+.cpw-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  &__password {
+    width: 100%;
+    display: block;
+
+    ::ng-deep input {
+      width: 100%;
+      padding-right: 40px;
+    }
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--chip-danger);
+    margin-top: 2px;
+  }
+
+  &__success {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--chip-success);
+    margin-top: 2px;
+
+    i { font-size: 13px; }
+  }
+}
+
+/* --- Lista de reglas --- */
+.cpw-rules {
+  background: var(--chip-grey-50);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--chip-grey-100);
+  padding: 12px 14px;
+
+  &__title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-grey-700);
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--chip-grey-600);
+    padding: 3px 0;
+    transition: color 0.2s;
+
+    i {
+      font-size: 13px;
+      color: var(--chip-grey-300);
+    }
+
+    &--ok {
+      color: var(--chip-success);
+
+      i { color: var(--chip-success); }
+    }
+  }
+}

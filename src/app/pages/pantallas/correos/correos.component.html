@@ -1,0 +1,87 @@
+<p-toast />
+
+<div class="cor-page" role="main">
+  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+
+  <div class="cor-header">
+    <h1 class="cor-header__title">Plantillas de Correo</h1>
+    <p class="cor-header__desc">
+      Plantillas HTML transaccionales del sistema CHIP. Compatibles con Gmail, Outlook y clientes
+      principales. El backend reemplaza las variables <code>{{ '{{variable}}' }}</code> al enviar el correo.
+    </p>
+  </div>
+
+  <!-- Selector de plantilla -->
+  <div class="cor-tabs">
+    @for (plantilla of plantillas; track plantilla.key; let i = $index) {
+      <button class="cor-tab"
+        [class.cor-tab--active]="activeIndex() === i"
+        (click)="cambiarTab(i)"
+        [attr.aria-pressed]="activeIndex() === i">
+        <span class="cor-tab__jira">{{ plantilla.jira }}</span>
+        <span class="cor-tab__name">{{ plantilla.nombre }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Vista de la plantilla activa -->
+  <div class="cor-content">
+    <!-- Información -->
+    <div class="cor-info">
+      <div class="cor-info__row">
+        <span class="cor-info__label">Asunto:</span>
+        <strong class="cor-info__value">{{ plantillaActiva.asunto }}</strong>
+      </div>
+      <div class="cor-info__row">
+        <span class="cor-info__label">Cuándo se envía:</span>
+        <span class="cor-info__value">{{ plantillaActiva.descripcion }}</span>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="cor-actions">
+      <p-button label="Copiar HTML" icon="pi pi-copy" [outlined]="true"
+        (onClick)="copiarHtml()" [disabled]="copiando()" />
+      <p-button label="Descargar .html" icon="pi pi-download" [outlined]="true"
+        severity="secondary" (onClick)="descargarHtml()" />
+      <a [href]="safeUrl" target="_blank" class="cor-actions__link">
+        <i class="pi pi-external-link" aria-hidden="true"></i>
+        Abrir en nueva pestaña
+      </a>
+    </div>
+
+    <!-- Grid: preview + variables -->
+    <div class="cor-grid">
+      <!-- Preview del correo en iframe -->
+      <div class="cor-preview">
+        <div class="cor-preview__header">
+          <i class="pi pi-eye" aria-hidden="true"></i>
+          <span>Vista previa del correo</span>
+        </div>
+        <iframe [src]="safeUrl" class="cor-preview__frame"
+          [title]="'Preview de ' + plantillaActiva.nombre"></iframe>
+      </div>
+
+      <!-- Variables -->
+      <div class="cor-variables">
+        <div class="cor-variables__header">
+          <i class="pi pi-code" aria-hidden="true"></i>
+          <span>Variables disponibles</span>
+          <p-tag [value]="plantillaActiva.variables.length + ''" severity="info" [rounded]="true" />
+        </div>
+        <ul class="cor-variables__list">
+          @for (v of plantillaActiva.variables; track v.name) {
+            <li class="cor-variable">
+              <code class="cor-variable__name">{{ v.name }}</code>
+              <span class="cor-variable__desc">{{ v.descripcion }}</span>
+            </li>
+          }
+        </ul>
+        <div class="cor-variables__note">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <span>El backend debe reemplazar estas variables antes de enviar el correo.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

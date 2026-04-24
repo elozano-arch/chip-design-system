@@ -1,0 +1,229 @@
+<p-toast />
+
+<div class="cpw-page" role="main">
+  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+
+  <div class="cpw-header">
+    <h1 class="cpw-header__title">Cambiar contraseña</h1>
+    <div class="cpw-header__row">
+      <p class="cpw-header__desc">Mantenga su cuenta segura actualizando su contraseña periódicamente.</p>
+      <p-button label="Cambiar contraseña" icon="pi pi-key" (onClick)="abrirDialog()" />
+    </div>
+  </div>
+
+  <!-- Estado de la contraseña actual -->
+  <div class="cpw-status-grid">
+    <!-- Card: Estado de la contraseña -->
+    <div class="cpw-status-card"
+      [class.cpw-status-card--warn]="porVencer"
+      [class.cpw-status-card--danger]="vencida">
+      <div class="cpw-status-card__header">
+        <i class="pi pi-key" aria-hidden="true"></i>
+        <span>Estado de la contraseña</span>
+      </div>
+      <div class="cpw-status-card__body">
+        @if (vencida) {
+          <p-tag value="Vencida" severity="danger" icon="pi pi-exclamation-triangle" />
+          <p class="cpw-status-card__msg">
+            {{ vencidaMensaje }}
+          </p>
+          <p-button label="Cambiar ahora" icon="pi pi-refresh" severity="danger" size="small"
+            styleClass="cpw-status-card__action" (onClick)="abrirDialog()" />
+        } @else if (porVencer) {
+          <p-tag [value]="'Vence en ' + seguridadInfo.diasParaVencer + ' día' + (seguridadInfo.diasParaVencer === 1 ? '' : 's')" severity="warn" />
+          <p class="cpw-status-card__msg">Le recomendamos cambiarla pronto.</p>
+        } @else {
+          <p-tag [value]="'Vigente'" severity="success" />
+          <p class="cpw-status-card__hint">{{ seguridadInfo.diasParaVencer }} días restantes</p>
+        }
+      </div>
+    </div>
+
+    <!-- Card: Último cambio -->
+    <div class="cpw-status-card">
+      <div class="cpw-status-card__header">
+        <i class="pi pi-history" aria-hidden="true"></i>
+        <span>Último cambio</span>
+      </div>
+      <div class="cpw-status-card__body">
+        <p class="cpw-status-card__value">{{ seguridadInfo.ultimoCambio }}</p>
+        <p class="cpw-status-card__hint">Hace {{ seguridadInfo.diasDesdeUltimoCambio }} días</p>
+      </div>
+    </div>
+
+    <!-- Card: Intentos fallidos -->
+    <div class="cpw-status-card">
+      <div class="cpw-status-card__header">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+        <span>Intentos fallidos (24h)</span>
+      </div>
+      <div class="cpw-status-card__body">
+        <p class="cpw-status-card__value">{{ seguridadInfo.intentosFallidos24h }} intento{{ seguridadInfo.intentosFallidos24h === 1 ? '' : 's' }}</p>
+        <p class="cpw-status-card__hint">
+          {{ seguridadInfo.intentosFallidos24h === 0 ? 'Sin intentos sospechosos' : 'Revise sus accesos' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección: Dispositivos -->
+  <div class="cpw-section-title">
+    <h2>Sesiones activas</h2>
+    <p>Revise los dispositivos donde su cuenta tiene sesión iniciada y cierre las que no reconozca.</p>
+  </div>
+
+  <!-- Dispositivos activos -->
+  <div class="cpw-devices">
+    <div class="cpw-devices__header">
+      <h3 class="cpw-devices__title">
+        <i class="pi pi-desktop" aria-hidden="true"></i>
+        Dispositivos con sesión activa
+      </h3>
+      <span class="cpw-devices__count">{{ dispositivos.length }} dispositivo{{ dispositivos.length === 1 ? '' : 's' }}</span>
+    </div>
+    <ul class="cpw-devices__list">
+      @for (d of dispositivos; track d.navegador + d.sistema) {
+        <li class="cpw-device" [class.cpw-device--current]="d.esActual">
+          <div class="cpw-device__icon">
+            <i class="pi" [class.pi-desktop]="d.sistema.includes('mac') || d.sistema.includes('Windows')"
+              [class.pi-mobile]="d.sistema.includes('iOS') || d.sistema.includes('Android')" aria-hidden="true"></i>
+          </div>
+          <div class="cpw-device__info">
+            <div class="cpw-device__name">
+              {{ d.navegador }} <span class="cpw-device__separator">·</span> {{ d.sistema }}
+              @if (d.esActual) {
+                <p-tag value="Este dispositivo" severity="success" />
+              }
+            </div>
+            <div class="cpw-device__meta">
+              <span><i class="pi pi-map-marker" aria-hidden="true"></i> {{ d.ubicacion }}</span>
+              <span><i class="pi pi-clock" aria-hidden="true"></i> {{ d.ultimoAcceso }}</span>
+            </div>
+          </div>
+          @if (!d.esActual) {
+            <p-button label="Cerrar sesión" icon="pi pi-sign-out" [text]="true" severity="danger" size="small"
+              (onClick)="cerrarSesionDispositivo(d)" />
+          }
+        </li>
+      }
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================
+     MODAL: CAMBIAR CONTRASEÑA
+     ============================================================ -->
+<p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false"
+  [closable]="!loading" [closeOnEscape]="!loading"
+  [style]="{ width: '480px' }" header="Cambiar contraseña">
+
+  <div class="cpw-modal">
+    <!-- Contraseña actual -->
+    <div class="cpw-modal__field">
+      <label for="cpw-actual">Contraseña actual <span class="field-required">*</span></label>
+      <p-iconfield class="cpw-modal__password">
+        <input pInputText id="cpw-actual"
+          [type]="showActual ? 'text' : 'password'"
+          [(ngModel)]="actual" name="actual"
+          (blur)="actualTouched = true"
+          placeholder="Ingrese su contraseña actual"
+          autocomplete="current-password"
+          aria-required="true"
+          class="w-full" />
+        <p-inputicon
+          (click)="showActual = !showActual"
+          role="button" tabindex="0"
+          (keydown.enter)="showActual = !showActual"
+          (keydown.space)="showActual = !showActual; $event.preventDefault()"
+          [attr.aria-label]="showActual ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          [styleClass]="showActual ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+      </p-iconfield>
+      @if (actualTouched && !actual.trim()) {
+        <small class="cpw-modal__error">La contraseña actual es obligatoria.</small>
+      }
+    </div>
+
+    <!-- Contraseña nueva -->
+    <div class="cpw-modal__field">
+      <label for="cpw-nueva">Contraseña nueva <span class="field-required">*</span></label>
+      <p-iconfield class="cpw-modal__password">
+        <input pInputText id="cpw-nueva"
+          [type]="showNueva ? 'text' : 'password'"
+          [(ngModel)]="nueva" name="nueva"
+          (blur)="nuevaTouched = true"
+          placeholder="Ingrese su nueva contraseña"
+          autocomplete="new-password"
+          aria-required="true"
+          aria-describedby="cpw-rules"
+          class="w-full" />
+        <p-inputicon
+          (click)="showNueva = !showNueva"
+          role="button" tabindex="0"
+          (keydown.enter)="showNueva = !showNueva"
+          (keydown.space)="showNueva = !showNueva; $event.preventDefault()"
+          [attr.aria-label]="showNueva ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          [styleClass]="showNueva ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+      </p-iconfield>
+      @if (nuevaIgualActual) {
+        <small class="cpw-modal__error">La nueva contraseña debe ser diferente a la actual.</small>
+      }
+    </div>
+
+    <!-- Lista de reglas (única forma de feedback de fortaleza) -->
+    <div id="cpw-rules" class="cpw-rules" aria-live="polite">
+      <p class="cpw-rules__title">Su contraseña debe cumplir:</p>
+      <ul class="cpw-rules__list">
+        @for (rule of rules; track rule.key) {
+          <li class="cpw-rules__item" [class.cpw-rules__item--ok]="ruleMet(rule)">
+            <i class="pi" [class.pi-check-circle]="ruleMet(rule)" [class.pi-circle]="!ruleMet(rule)" aria-hidden="true"></i>
+            <span>{{ rule.label }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Confirmar contraseña -->
+    <div class="cpw-modal__field">
+      <label for="cpw-confirmar">Confirmar nueva contraseña <span class="field-required">*</span></label>
+      <p-iconfield class="cpw-modal__password">
+        <input pInputText id="cpw-confirmar"
+          [type]="showConfirmar ? 'text' : 'password'"
+          [(ngModel)]="confirmar" name="confirmar"
+          (blur)="confirmarTouched = true"
+          placeholder="Repita su nueva contraseña"
+          autocomplete="new-password"
+          aria-required="true"
+          class="w-full" />
+        <p-inputicon
+          (click)="showConfirmar = !showConfirmar"
+          role="button" tabindex="0"
+          (keydown.enter)="showConfirmar = !showConfirmar"
+          (keydown.space)="showConfirmar = !showConfirmar; $event.preventDefault()"
+          [attr.aria-label]="showConfirmar ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          [styleClass]="showConfirmar ? 'pi pi-eye-slash' : 'pi pi-eye'" />
+      </p-iconfield>
+      @if (confirmarTouched && confirmar.length > 0 && !coincide) {
+        <small class="cpw-modal__error">Las contraseñas no coinciden.</small>
+      } @else if (coincide) {
+        <small class="cpw-modal__success">
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+          Las contraseñas coinciden
+        </small>
+      }
+    </div>
+
+    <!-- Mensaje de error -->
+    @if (errorMsg) {
+      <div role="alert" aria-live="assertive">
+        <p-message severity="error" [text]="errorMsg" styleClass="w-full" />
+      </div>
+    }
+  </div>
+
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary"
+      (onClick)="cerrarDialog()" [disabled]="loading" />
+    <p-button label="Guardar cambios" icon="pi pi-check"
+      (onClick)="guardar()" [loading]="loading" [disabled]="!formValido || loading" />
+  </ng-template>
+</p-dialog>
