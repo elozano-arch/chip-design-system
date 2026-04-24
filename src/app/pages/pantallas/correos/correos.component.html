@@ -44,7 +44,7 @@
         (onClick)="copiarHtml()" [disabled]="copiando()" />
       <p-button label="Descargar .html" icon="pi pi-download" [outlined]="true"
         severity="secondary" (onClick)="descargarHtml()" />
-      <a [href]="safeUrl" target="_blank" class="cor-actions__link">
+      <a [href]="archivoUrl" target="_blank" rel="noopener" class="cor-actions__link">
         <i class="pi pi-external-link" aria-hidden="true"></i>
         Abrir en nueva pestaña
       </a>
@@ -58,8 +58,9 @@
           <i class="pi pi-eye" aria-hidden="true"></i>
           <span>Vista previa del correo</span>
         </div>
-        <iframe [src]="safeUrl" class="cor-preview__frame"
-          [title]="'Preview de ' + plantillaActiva.nombre"></iframe>
+        <iframe [src]="iframeSafeUrl" class="cor-preview__frame"
+          [title]="'Preview de ' + plantillaActiva.nombre"
+          sandbox="allow-same-origin"></iframe>
       </div>
 
       <!-- Variables -->

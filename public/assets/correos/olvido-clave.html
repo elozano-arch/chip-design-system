@@ -13,16 +13,16 @@
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5F5F5;">
     <tr>
-      <td align="center" style="padding: 24px 16px;">
+      <td align="center" style="padding: 32px 16px;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; background-color:#FFFFFF; border-radius:8px; overflow:hidden; border:1px solid #EBEBEB;">
 
           <!-- HEADER -->
           <tr>
-            <td style="background-color:#0943B5; padding:24px 32px; text-align:center;">
-              <h1 style="margin:0; color:#FFFFFF; font-family:'Nunito Sans', Arial, sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.3px;">
+            <td style="background-color:#0943B5; padding:32px; text-align:center;">
+              <h1 style="margin:0; color:#FFFFFF; font-family:'Nunito Sans', Arial, sans-serif; font-size:28px; font-weight:800; letter-spacing:2px;">
                 CHIP
               </h1>
-              <p style="margin:4px 0 0; color:#C5D2EE; font-family:Verdana, sans-serif; font-size:12px;">
+              <p style="margin:6px 0 0; color:#C5D2EE; font-family:Verdana, sans-serif; font-size:13px;">
                 Sistema de Gestión Administrativa
               </p>
             </td>
@@ -30,42 +30,27 @@
 
           <!-- BODY -->
           <tr>
-            <td style="padding: 32px 32px 24px;">
-              <!-- Icono llave azul -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
-                <tr>
-                  <td align="center">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td style="background-color:#EBF0FA; border-radius:50%; width:56px; height:56px; text-align:center; vertical-align:middle;">
-                          <span style="font-size:28px; line-height:1;">🔑</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <h2 style="margin:0 0 12px; font-family:'Nunito Sans', Arial, sans-serif; font-size:22px; font-weight:800; color:#3B3B3B; text-align:center;">
+            <td style="padding: 32px;">
+              <h2 style="margin:0 0 12px; font-family:'Nunito Sans', Arial, sans-serif; font-size:22px; font-weight:800; color:#3B3B3B;">
                 Restablecer su contraseña
               </h2>
               <p style="margin:0 0 16px; font-family:Verdana, sans-serif; font-size:14px; color:#4C4C4C; line-height:1.6;">
                 Hola <strong>{{nombre_usuario}}</strong>,
               </p>
-              <p style="margin:0 0 24px; font-family:Verdana, sans-serif; font-size:14px; color:#4C4C4C; line-height:1.6;">
+              <p style="margin:0 0 28px; font-family:Verdana, sans-serif; font-size:14px; color:#4C4C4C; line-height:1.6;">
                 Recibimos una solicitud para restablecer la contraseña de su cuenta en el sistema CHIP.
-                Si fue usted quien lo solicitó, haga clic en el siguiente botón para crear una nueva contraseña:
+                Si fue usted, haga clic en el siguiente botón para crear una nueva contraseña:
               </p>
 
-              <!-- Botón principal -->
+              <!-- Botón principal centrado -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
                 <tr>
                   <td align="center">
                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td align="center" style="background-color:#0943B5; border-radius:6px;">
-                          <a href="{{url_recuperacion}}" target="_blank"
-                             style="display:inline-block; padding:14px 36px; font-family:'Nunito Sans', Arial, sans-serif; font-size:14px; font-weight:700; color:#FFFFFF; text-decoration:none;">
+                          <a href="{{url_recuperacion}}" target="_blank" rel="noopener"
+                             style="display:inline-block; padding:14px 36px; font-family:'Nunito Sans', Arial, sans-serif; font-size:15px; font-weight:700; color:#FFFFFF; text-decoration:none; min-width:220px; text-align:center;">
                             Restablecer contraseña
                           </a>
                         </td>
@@ -78,24 +63,32 @@
               <!-- Aviso de expiración -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#FFF8E1; border-left:4px solid #FBC02D; border-radius:4px;">
                 <tr>
-                  <td style="padding:14px 16px; font-family:Verdana, sans-serif; font-size:13px; color:#5D4F00; line-height:1.5;">
-                    <strong style="color:#8B6914;">⏱ Este enlace caduca en 24 horas</strong> y solo puede usarse una vez.
-                    Si caduca, deberá solicitar un nuevo enlace desde la pantalla de recuperación.
+                  <td style="padding:14px 16px;">
+                    <p style="margin:0; font-family:Verdana, sans-serif; font-size:13px; color:#5D4F00; line-height:1.5;">
+                      <strong style="color:#8B6914;">Este enlace caduca en 24 horas</strong>
+                      y solo puede usarse una vez. Si caduca, deberá solicitar un nuevo enlace
+                      desde la pantalla de recuperación.
+                    </p>
                   </td>
                 </tr>
               </table>
 
               <!-- Enlace alternativo -->
-              <p style="margin:24px 0 16px; font-family:Verdana, sans-serif; font-size:12px; color:#7A7A7A; line-height:1.5; text-align:center;">
-                Si el botón no funciona, copie y pegue este enlace en su navegador:<br />
+              <p style="margin:24px 0 0; font-family:Verdana, sans-serif; font-size:12px; color:#7A7A7A; line-height:1.5; text-align:center;">
+                Si el botón no funciona, copie este enlace en su navegador:
+              </p>
+              <p style="margin:6px 0 16px; text-align:center;">
                 <a href="{{url_recuperacion}}" style="color:#0943B5; word-break:break-all; font-size:11px;">{{url_recuperacion}}</a>
               </p>
 
               <!-- Aviso si no solicitó el cambio -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px; background-color:#F5F5F5; border-radius:4px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5F5F5; border-radius:4px;">
                 <tr>
-                  <td style="padding:14px 16px; font-family:Verdana, sans-serif; font-size:12px; color:#616161; line-height:1.5;">
-                    <strong>¿No solicitó este cambio?</strong> Puede ignorar este correo. Su contraseña actual seguirá funcionando.
+                  <td style="padding:14px 16px;">
+                    <p style="margin:0; font-family:Verdana, sans-serif; font-size:12px; color:#616161; line-height:1.5;">
+                      <strong style="color:#3B3B3B;">¿No solicitó este cambio?</strong>
+                      Puede ignorar este correo. Su contraseña actual seguirá funcionando.
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -104,23 +97,25 @@
 
           <!-- FOOTER -->
           <tr>
-            <td style="background-color:#F5F5F5; padding:20px 32px; border-top:1px solid #EBEBEB;">
-              <p style="margin:0 0 8px; font-family:Verdana, sans-serif; font-size:12px; color:#616161; line-height:1.5;">
-                Este es un correo automático, por favor no responda a este mensaje.
+            <td style="background-color:#F5F5F5; padding:24px 32px; border-top:1px solid #EBEBEB;">
+              <p style="margin:0 0 10px; font-family:Verdana, sans-serif; font-size:12px; color:#616161; line-height:1.5; text-align:center;">
+                Este es un correo automático. <strong>Por favor no responda a este mensaje.</strong>
               </p>
-              <p style="margin:0 0 4px; font-family:Verdana, sans-serif; font-size:11px; color:#7A7A7A;">
-                Si necesita ayuda, contacte al soporte:
-                <a href="mailto:soporte@contaduria.gov.co" style="color:#0943B5; text-decoration:none;">soporte@contaduria.gov.co</a>
+              <p style="margin:0 0 4px; font-family:Verdana, sans-serif; font-size:11px; color:#7A7A7A; text-align:center;">
+                Si necesita ayuda, contacte a soporte:
+                <a href="mailto:soporte@contaduria.gov.co" style="color:#0943B5; text-decoration:none; font-weight:600;">soporte@contaduria.gov.co</a>
               </p>
-              <p style="margin:12px 0 0; font-family:Verdana, sans-serif; font-size:11px; color:#7A7A7A; text-align:center;">
-                © Contaduría General de la Nación · Cuentas Claras, Estado Transparente
+              <hr style="border:none; border-top:1px solid #EBEBEB; margin:14px 0;" />
+              <p style="margin:0; font-family:Verdana, sans-serif; font-size:11px; color:#9E9E9E; text-align:center; line-height:1.5;">
+                © Contaduría General de la Nación<br />
+                Cuentas Claras, Estado Transparente
               </p>
             </td>
           </tr>
         </table>
 
-        <p style="margin:16px 0 0; font-family:Verdana, sans-serif; font-size:10px; color:#9E9E9E; text-align:center;">
-          Portal del Estado Colombiano · GOV.CO
+        <p style="margin:16px 0 0; font-family:Verdana, sans-serif; font-size:10px; color:#9E9E9E; text-align:center; letter-spacing:0.5px;">
+          PORTAL DEL ESTADO COLOMBIANO · GOV.CO
         </p>
       </td>
     </tr>

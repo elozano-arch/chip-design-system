@@ -8,68 +8,64 @@
 </head>
 <body style="margin:0; padding:0; background-color:#F5F5F5; font-family: Verdana, Geneva, Tahoma, sans-serif; -webkit-text-size-adjust:100%;">
   <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:transparent;">
-    Su contraseña en CHIP fue cambiada el {{fecha_cambio}}. Si no fue usted, contacte a soporte de inmediato.
+    Su contraseña en CHIP fue cambiada el {{fecha_cambio}}. Si no fue usted, contacte a soporte.
   </div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5F5F5;">
     <tr>
-      <td align="center" style="padding: 24px 16px;">
+      <td align="center" style="padding: 32px 16px;">
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; background-color:#FFFFFF; border-radius:8px; overflow:hidden; border:1px solid #EBEBEB;">
 
           <!-- HEADER -->
           <tr>
-            <td style="background-color:#0943B5; padding:24px 32px; text-align:center;">
-              <h1 style="margin:0; color:#FFFFFF; font-family:'Nunito Sans', Arial, sans-serif; font-size:22px; font-weight:800; letter-spacing:-0.3px;">
+            <td style="background-color:#0943B5; padding:32px; text-align:center;">
+              <h1 style="margin:0; color:#FFFFFF; font-family:'Nunito Sans', Arial, sans-serif; font-size:28px; font-weight:800; letter-spacing:2px;">
                 CHIP
               </h1>
-              <p style="margin:4px 0 0; color:#C5D2EE; font-family:Verdana, sans-serif; font-size:12px;">
+              <p style="margin:6px 0 0; color:#C5D2EE; font-family:Verdana, sans-serif; font-size:13px;">
                 Sistema de Gestión Administrativa
+              </p>
+            </td>
+          </tr>
+
+          <!-- Banner verde de confirmación -->
+          <tr>
+            <td style="background-color:#E8F5E9; padding:14px 32px; border-bottom:3px solid #4CAF50; text-align:center;">
+              <p style="margin:0; font-family:'Nunito Sans', Arial, sans-serif; font-size:13px; font-weight:700; color:#1B5E20; text-transform:uppercase; letter-spacing:0.6px;">
+                Contraseña actualizada
               </p>
             </td>
           </tr>
 
           <!-- BODY -->
           <tr>
-            <td style="padding: 32px 32px 24px;">
-              <!-- Icono check verde -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
-                <tr>
-                  <td align="center">
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td style="background-color:#E8F5E9; border-radius:50%; width:56px; height:56px; text-align:center; vertical-align:middle;">
-                          <span style="font-size:32px; color:#2E7D32; line-height:1;">✓</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
+            <td style="padding: 32px;">
               <h2 style="margin:0 0 12px; font-family:'Nunito Sans', Arial, sans-serif; font-size:22px; font-weight:800; color:#3B3B3B; text-align:center;">
-                Contraseña actualizada
+                Hola {{nombre_usuario}}
               </h2>
-              <p style="margin:0 0 24px; font-family:Verdana, sans-serif; font-size:14px; color:#4C4C4C; line-height:1.6; text-align:center;">
-                Hola <strong>{{nombre_usuario}}</strong>,<br />
+              <p style="margin:0 0 28px; font-family:Verdana, sans-serif; font-size:14px; color:#4C4C4C; line-height:1.6; text-align:center;">
                 Su contraseña del sistema CHIP fue cambiada exitosamente.
               </p>
 
               <!-- Detalles del cambio -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5F5F5; border-radius:6px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#F5F5F5; border-radius:8px;">
                 <tr>
-                  <td style="padding:18px 20px;">
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 14px; font-family:'Nunito Sans', Arial, sans-serif; font-size:12px; font-weight:700; color:#616161; text-transform:uppercase; letter-spacing:0.6px;">
+                      Detalles de la operación
+                    </p>
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
-                        <td width="40%" style="padding:6px 0; font-family:Verdana, sans-serif; font-size:13px; color:#616161;">Fecha y hora</td>
-                        <td style="padding:6px 0; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600;">{{fecha_cambio}}</td>
+                        <td width="40%" style="padding:8px 0; font-family:Verdana, sans-serif; font-size:13px; color:#616161;">Fecha y hora</td>
+                        <td style="padding:8px 0; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600;">{{fecha_cambio}}</td>
                       </tr>
                       <tr>
-                        <td style="padding:6px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#616161;">Dirección IP</td>
-                        <td style="padding:6px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600;">{{ip_origen}}</td>
+                        <td style="padding:8px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#616161;">Dirección IP</td>
+                        <td style="padding:8px 0; border-top:1px solid #EBEBEB; font-family:'Courier New', monospace; font-size:13px; color:#3B3B3B; font-weight:600;">{{ip_origen}}</td>
                       </tr>
                       <tr>
-                        <td style="padding:6px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#616161;">Dispositivo</td>
-                        <td style="padding:6px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600;">{{dispositivo}}</td>
+                        <td style="padding:8px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#616161;">Dispositivo</td>
+                        <td style="padding:8px 0; border-top:1px solid #EBEBEB; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600;">{{dispositivo}}</td>
                       </tr>
                     </table>
                   </td>
@@ -79,11 +75,15 @@
               <!-- Aviso si no fue el usuario -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px; background-color:#FFEBEE; border-left:4px solid #F44336; border-radius:4px;">
                 <tr>
-                  <td style="padding:14px 16px; font-family:Verdana, sans-serif; font-size:13px; color:#7F0000; line-height:1.5;">
-                    <strong style="color:#C62828;">¿No reconoce este cambio?</strong><br />
-                    Si usted no realizó esta acción, su cuenta puede estar comprometida.
-                    Contacte de inmediato a soporte:
-                    <a href="mailto:soporte@contaduria.gov.co" style="color:#C62828; font-weight:700;">soporte@contaduria.gov.co</a>
+                  <td style="padding:16px 18px;">
+                    <p style="margin:0 0 8px; font-family:'Nunito Sans', Arial, sans-serif; font-size:13px; font-weight:700; color:#C62828;">
+                      ¿No reconoce este cambio?
+                    </p>
+                    <p style="margin:0; font-family:Verdana, sans-serif; font-size:13px; color:#7F0000; line-height:1.5;">
+                      Si usted no realizó esta acción, su cuenta puede estar comprometida.
+                      Contacte de inmediato a soporte:
+                      <a href="mailto:soporte@contaduria.gov.co" style="color:#C62828; font-weight:700; text-decoration:underline;">soporte@contaduria.gov.co</a>
+                    </p>
                   </td>
                 </tr>
               </table>
@@ -92,19 +92,21 @@
 
           <!-- FOOTER -->
           <tr>
-            <td style="background-color:#F5F5F5; padding:20px 32px; border-top:1px solid #EBEBEB;">
-              <p style="margin:0 0 8px; font-family:Verdana, sans-serif; font-size:12px; color:#616161; line-height:1.5;">
-                Este es un correo automático, por favor no responda a este mensaje.
+            <td style="background-color:#F5F5F5; padding:24px 32px; border-top:1px solid #EBEBEB;">
+              <p style="margin:0 0 10px; font-family:Verdana, sans-serif; font-size:12px; color:#616161; line-height:1.5; text-align:center;">
+                Este es un correo automático. <strong>Por favor no responda a este mensaje.</strong>
               </p>
-              <p style="margin:12px 0 0; font-family:Verdana, sans-serif; font-size:11px; color:#7A7A7A; text-align:center;">
-                © Contaduría General de la Nación · Cuentas Claras, Estado Transparente
+              <hr style="border:none; border-top:1px solid #EBEBEB; margin:14px 0;" />
+              <p style="margin:0; font-family:Verdana, sans-serif; font-size:11px; color:#9E9E9E; text-align:center; line-height:1.5;">
+                © Contaduría General de la Nación<br />
+                Cuentas Claras, Estado Transparente
               </p>
             </td>
           </tr>
         </table>
 
-        <p style="margin:16px 0 0; font-family:Verdana, sans-serif; font-size:10px; color:#9E9E9E; text-align:center;">
-          Portal del Estado Colombiano · GOV.CO
+        <p style="margin:16px 0 0; font-family:Verdana, sans-serif; font-size:10px; color:#9E9E9E; text-align:center; letter-spacing:0.5px;">
+          PORTAL DEL ESTADO COLOMBIANO · GOV.CO
         </p>
       </td>
     </tr>

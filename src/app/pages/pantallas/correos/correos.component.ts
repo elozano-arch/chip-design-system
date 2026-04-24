@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { ButtonModule } from 'primeng/button';
 import { TabsModule } from 'primeng/tabs';
@@ -100,7 +101,11 @@ export class CorreosComponent {
   htmlContent = signal('');
   copiando = signal(false);
 
-  constructor(private http: HttpClient, private messageService: MessageService) {
+  constructor(
+    private http: HttpClient,
+    private messageService: MessageService,
+    private sanitizer: DomSanitizer,
+  ) {
     this.cargarPlantilla(0);
   }
 
@@ -108,8 +113,14 @@ export class CorreosComponent {
     return this.plantillas[this.activeIndex()];
   }
 
-  get safeUrl(): string {
+  /** URL relativa del archivo (para link externo y descarga) */
+  get archivoUrl(): string {
     return this.plantillaActiva.archivo;
+  }
+
+  /** URL sanitizada para usar en iframe */
+  get iframeSafeUrl(): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(this.plantillaActiva.archivo);
   }
 
   cambiarTab(index: number) {
