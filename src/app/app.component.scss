@@ -233,9 +233,10 @@ $sidebar-width-collapsed: 60px;
 /* --- Edge Toggle Button (estilo VS Code) --- */
 .sidebar-edge-toggle {
   position: fixed;
-  top: 144px;
+  /* Centrado verticalmente en el viewport visible (debajo de los headers sticky) */
+  top: calc(124px + (100vh - 124px) / 2);
   left: $sidebar-width;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 48;
   display: flex;
   align-items: center;
@@ -256,7 +257,7 @@ $sidebar-width-collapsed: 60px;
     background: var(--chip-cobalt-700);
     border-color: var(--chip-cobalt-700);
     color: #fff;
-    transform: translateX(-50%) scale(1.1);
+    transform: translate(-50%, -50%) scale(1.1);
   }
 
   &--collapsed {
