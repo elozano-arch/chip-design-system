@@ -12,6 +12,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
+import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
@@ -25,9 +26,6 @@ interface PermisoData {
   codigo: string;
   nombre: string;
 }
-
-type SelectionState = { checked: boolean; partialChecked: boolean };
-type SelectionMap = { [key: string]: SelectionState };
 
 interface Role {
   id: number;
@@ -57,6 +55,7 @@ interface Role {
     TooltipModule,
     DialogModule,
     DividerModule,
+    CheckboxModule,
     IconFieldModule,
     InputIconModule,
     BreadcrumbModule,
@@ -262,95 +261,57 @@ export class RolesComponent {
     { key: '7200', data: { codigo: '7200', nombre: 'Entidades' } },
   ];
 
-  /** Estado de selección en formato PrimeNG TreeTable (checkbox mode). */
-  selectedPermissions: SelectionMap = {};
+  /**
+   * Claves de permisos marcadas. Cada checkbox es independiente —
+   * marcar un padre NO propaga a sus hijos (replicando comportamiento Chip 2.0 real).
+   */
+  checkedKeys = new Set<string>();
 
-  /** Snapshot inicial de hojas marcadas al entrar a edición (para calcular el diff). */
-  private initialSelectedLeaves = new Set<string>();
+  /** Snapshot de claves marcadas al entrar a edición (para calcular el diff). */
+  private initialCheckedKeys = new Set<string>();
 
-  /** Índice key → nombre de cada hoja del árbol (precomputado). */
-  private leafNameByKey = new Map<string, string>();
-  private totalLeafCount = 0;
-
-  /** Set de claves inicialmente seleccionadas por demo (simula config previa del rol). */
-  private readonly DEMO_PRESELECTED = new Set<string>([
-    '11', '12', '13', '14', // Menú de Aplicación (parciales)
-    '22',                   // Tablas básicas
-    '311', '312', '314',    // Categorías parciales
-    '7114', '7115',         // Seguridad > Usuarios parciales
-    '7121', '7122',         // Seguridad > Roles parciales
-    '7200',                 // Entidades
-    '1902', '1903',         // Consultas > Archivo parciales
-  ]);
+  /** Índice key → nombre de cada nodo del árbol (precomputado). Incluye padres y hojas. */
+  private nameByKey = new Map<string, string>();
+  private totalNodeCount = 0;
 
   private initLeafIndex() {
-    this.leafNameByKey.clear();
-    this.totalLeafCount = 0;
+    this.nameByKey.clear();
+    this.totalNodeCount = 0;
     const walk = (nodes: TreeNode<PermisoData>[]) => {
       for (const n of nodes) {
-        if (!n.children || n.children.length === 0) {
-          this.totalLeafCount++;
-          if (n.key && n.data) this.leafNameByKey.set(n.key, n.data.nombre);
-        } else {
-          walk(n.children as TreeNode<PermisoData>[]);
-        }
+        this.totalNodeCount++;
+        if (n.key && n.data) this.nameByKey.set(n.key, n.data.nombre);
+        if (n.children) walk(n.children as TreeNode<PermisoData>[]);
       }
     };
     walk(this.permissionsTree);
   }
 
-  /** Construye el mapa de selección con estados parciales propagados hacia arriba. */
-  private buildSelectionFromLeaves(selectedLeaves: Set<string>): SelectionMap {
-    const map: SelectionMap = {};
-    const walk = (node: TreeNode<PermisoData>): 'all' | 'partial' | 'none' => {
-      if (!node.children || node.children.length === 0) {
-        if (node.key && selectedLeaves.has(node.key)) {
-          map[node.key] = { checked: true, partialChecked: false };
-          return 'all';
-        }
-        return 'none';
-      }
-      let allChecked = true;
-      let someChecked = false;
-      for (const child of node.children as TreeNode<PermisoData>[]) {
-        const s = walk(child);
-        if (s === 'all') someChecked = true;
-        else if (s === 'partial') { allChecked = false; someChecked = true; }
-        else allChecked = false;
-      }
-      if (allChecked && node.children.length > 0) {
-        if (node.key) map[node.key] = { checked: true, partialChecked: false };
-        return 'all';
-      }
-      if (someChecked) {
-        if (node.key) map[node.key] = { checked: false, partialChecked: true };
-        return 'partial';
-      }
-      return 'none';
-    };
-    for (const root of this.permissionsTree) walk(root);
-    return map;
+  // ── Checkbox API (independiente por nodo, sin cascada) ──
+  isChecked(key: string | undefined | null): boolean {
+    return !!key && this.checkedKeys.has(key);
+  }
+
+  toggleCheck(key: string | undefined | null) {
+    if (!key) return;
+    if (this.checkedKeys.has(key)) {
+      this.checkedKeys.delete(key);
+    } else {
+      this.checkedKeys.add(key);
+    }
   }
 
   // ── Contadores del árbol ──
-  get totalLeaves(): number { return this.totalLeafCount; }
+  get totalLeaves(): number { return this.totalNodeCount; }
 
-  get selectedLeafCount(): number {
-    let c = 0;
-    for (const k in this.selectedPermissions) {
-      if (this.selectedPermissions[k]?.checked && this.leafNameByKey.has(k)) c++;
-    }
-    return c;
-  }
+  get selectedLeafCount(): number { return this.checkedKeys.size; }
 
   // ── Diff de cambios (comparando contra snapshot inicial) ──
   get addedLeafNames(): string[] {
     const out: string[] = [];
-    for (const k in this.selectedPermissions) {
-      if (this.selectedPermissions[k]?.checked
-          && this.leafNameByKey.has(k)
-          && !this.initialSelectedLeaves.has(k)) {
-        out.push(this.leafNameByKey.get(k)!);
+    for (const k of this.checkedKeys) {
+      if (!this.initialCheckedKeys.has(k)) {
+        out.push(this.nameByKey.get(k) || k);
       }
     }
     return out;
@@ -358,9 +319,9 @@ export class RolesComponent {
 
   get removedLeafNames(): string[] {
     const out: string[] = [];
-    for (const k of this.initialSelectedLeaves) {
-      if (!this.selectedPermissions[k]?.checked) {
-        out.push(this.leafNameByKey.get(k)!);
+    for (const k of this.initialCheckedKeys) {
+      if (!this.checkedKeys.has(k)) {
+        out.push(this.nameByKey.get(k) || k);
       }
     }
     return out;
@@ -371,14 +332,12 @@ export class RolesComponent {
   }
 
   // ── Acciones del árbol ──
-  /** Toggle de selección de todas las hojas del árbol. */
+  /** Toggle de selección de todos los permisos (leaves + padres). */
   toggleSelectAll(checked: boolean) {
     if (checked) {
-      const all = new Set<string>();
-      for (const k of this.leafNameByKey.keys()) all.add(k);
-      this.selectedPermissions = this.buildSelectionFromLeaves(all);
+      this.checkedKeys = new Set(this.nameByKey.keys());
     } else {
-      this.selectedPermissions = {};
+      this.checkedKeys = new Set();
     }
     this.cdr.detectChanges();
     const action = checked ? 'seleccionados' : 'deseleccionados';
@@ -438,17 +397,10 @@ export class RolesComponent {
     this.searchPermisos = '';
     this.changesExpanded = false;
 
-    // Carga selección inicial simulada (en producción vendría del backend).
-    const initial = new Set<string>(this.DEMO_PRESELECTED);
-    this.selectedPermissions = this.buildSelectionFromLeaves(initial);
-
-    // Snapshot de hojas marcadas para calcular el diff al guardar/descartar.
-    this.initialSelectedLeaves = new Set<string>();
-    for (const k in this.selectedPermissions) {
-      if (this.selectedPermissions[k]?.checked && this.leafNameByKey.has(k)) {
-        this.initialSelectedLeaves.add(k);
-      }
-    }
+    // Estado inicial vacío — replica comportamiento Chip 2.0 real donde cada rol
+    // arranca sin permisos y el admin marca explícitamente cada uno.
+    this.checkedKeys = new Set<string>();
+    this.initialCheckedKeys = new Set<string>();
   }
 
   backToList() {
@@ -644,7 +596,7 @@ export class RolesComponent {
   }
 
   discardChanges() {
-    this.selectedPermissions = this.buildSelectionFromLeaves(new Set(this.initialSelectedLeaves));
+    this.checkedKeys = new Set(this.initialCheckedKeys);
     this.cdr.detectChanges();
     this.messageService.add({
       severity: 'info',

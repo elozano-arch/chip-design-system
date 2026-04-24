@@ -164,11 +164,9 @@
           </div>
         </div>
 
-        <!-- TreeTable de permisos -->
+        <!-- TreeTable de permisos: checkboxes independientes, sin cascada -->
         <p-treeTable #permTree
           [value]="permissionsTree"
-          selectionMode="checkbox"
-          [(selectionKeys)]="selectedPermissions"
           [paginator]="true"
           [rows]="5"
           [rowsPerPageOptions]="[5, 10, 25]"
@@ -187,7 +185,11 @@
             <tr [ttRow]="rowNode" class="perm-tt__row">
               <td>
                 <p-treeTableToggler [rowNode]="rowNode" />
-                <p-treeTableCheckbox [value]="rowNode" />
+                <p-checkbox [binary]="true"
+                  [ngModel]="isChecked(rowNode.node.key)"
+                  (onChange)="toggleCheck(rowNode.node.key)"
+                  [inputId]="'perm-' + rowNode.node.key"
+                  [attr.aria-label]="'Permiso ' + rowData.nombre" />
                 <span class="perm-tt__label">{{ rowData.nombre }}</span>
               </td>
               <td>

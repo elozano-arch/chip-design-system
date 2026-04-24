@@ -284,8 +284,9 @@
     }
   }
 
-  /* Checkbox — alineación inline con toggler y label */
-  .p-treetable-checkbox {
+  /* Checkbox independiente por fila (p-checkbox) — alineado inline con toggler y label */
+  p-checkbox {
+    display: inline-flex;
     vertical-align: middle;
     margin: 0 8px 0 2px;
   }
