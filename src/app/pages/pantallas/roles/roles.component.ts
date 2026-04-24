@@ -5,48 +5,39 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
+import { TreeTableModule } from 'primeng/treetable';
 import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
-import { TabsModule } from 'primeng/tabs';
 import { DividerModule } from 'primeng/divider';
-import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageModule } from 'primeng/message';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
-import { MessageService, MenuItem } from 'primeng/api';
+import { MessageService, MenuItem, TreeNode } from 'primeng/api';
 
-interface PermissionNode {
-  id: number;
-  label: string;
-  icon?: string;
-  checked: boolean;
-  indeterminate?: boolean;
-  expanded?: boolean;
-  children?: PermissionNode[];
+/** Nodo de permiso del árbol unificado: cada nodo tiene código y nombre. */
+interface PermisoData {
+  codigo: string;
+  nombre: string;
 }
 
-interface ActionPermission {
-  id: number;
-  label: string;
-  icon: string;
-  description: string;
-  enabled: boolean;
-}
+type SelectionState = { checked: boolean; partialChecked: boolean };
+type SelectionMap = { [key: string]: SelectionState };
 
 interface Role {
   id: number;
   codigo: string;
   nombre: string;
   descripcion: string;
-  estado: string;
   usuarios: number;
+  permisos: number;
+  vigencia: number | null;
+  intentos: number | null;
   fechaModificacion: string;
 }
 
@@ -59,18 +50,16 @@ interface Role {
     ButtonModule,
     CardModule,
     TableModule,
+    TreeTableModule,
     TagModule,
     InputTextModule,
     ToastModule,
     TooltipModule,
     DialogModule,
-    TabsModule,
     DividerModule,
-    CheckboxModule,
     IconFieldModule,
     InputIconModule,
     BreadcrumbModule,
-    ToggleSwitchModule,
     MenuModule,
     MessageModule,
     ChipModule,
@@ -81,10 +70,15 @@ interface Role {
 })
 export class RolesComponent {
   @ViewChild('menuRol') menuRol: any;
+  @ViewChild('permTree') permTree: any;
+
   selectedRoleForMenu: Role | null = null;
 
-  constructor(private messageService: MessageService, private cdr: ChangeDetectorRef) {}
+  constructor(private messageService: MessageService, private cdr: ChangeDetectorRef) {
+    this.initLeafIndex();
+  }
 
+  // ── Menú contextual de fila ──
   menuRolItems: MenuItem[] = [
     { label: 'Configurar permisos', icon: 'pi pi-cog', command: () => { if (this.selectedRoleForMenu) this.editRole(this.selectedRoleForMenu); } },
     { label: 'Editar', icon: 'pi pi-pencil', command: () => { if (this.selectedRoleForMenu) this.openEditDialog(this.selectedRoleForMenu); } },
@@ -99,25 +93,31 @@ export class RolesComponent {
 
   // ── Breadcrumb ──
   breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
-    { label: 'Roles' },
+    { label: 'Administración', icon: 'pi pi-cog', routerLink: '/pantallas/seguridad/usuarios' },
+    { label: 'Gestión de Roles' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 
+  /** Breadcrumb del editor de permisos: el último ítem clickable regresa al listado. */
+  get editBreadcrumbItems(): MenuItem[] {
+    return [
+      { label: 'Administración', icon: 'pi pi-cog' },
+      { label: 'Gestión de Roles', command: () => this.backToList() },
+      { label: 'Permisos' },
+    ];
+  }
 
   // ── Vista: 'list' = listado de roles, 'edit' = editar permisos ──
   currentView: 'list' | 'edit' = 'list';
   selectedRole: Role | null = null;
 
-  // ── Tab activo en editor de permisos ──
-  activePermissionTab: string = '0';
-
-  // ── Búsqueda ──
-  searchRoles = '';
+  // ── Búsqueda del listado de roles ──
+  searchRolesNombre = '';
+  searchRolesCodigo = '';
   filtersCollapsed = false;
-  searchMenu = '';
-  searchActions = '';
-  searchCategories = '';
+
+  // ── Búsqueda del árbol de permisos (TreeTable) ──
+  searchPermisos = '';
   changesExpanded = false;
 
   // ── Diálogos ──
@@ -134,6 +134,8 @@ export class RolesComponent {
   editingRole: Role | null = null;
   editRoleName = '';
   editRoleDesc = '';
+  editRoleVigencia: number | null = null;
+  editRoleIntentos: number | null = null;
   editRoleNameTouched = false;
   newRoleCode = '';
   newRoleName = '';
@@ -144,371 +146,268 @@ export class RolesComponent {
   newRoleNameTouched = false;
   private readonly ROLE_CODE_REGEX = /^ROL[0-9]{3,4}$/;
 
-
   // ── Roles (perfiles reales del sistema CHIP) ──
   roles: Role[] = [
-    { id: 1, codigo: 'ROL001', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', estado: 'Activo', usuarios: 3, fechaModificacion: '2026-04-12' },
-    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', estado: 'Activo', usuarios: 5, fechaModificacion: '2026-04-10' },
-    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', estado: 'Activo', usuarios: 48, fechaModificacion: '2026-04-08' },
-    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', estado: 'Activo', usuarios: 120, fechaModificacion: '2026-03-25' },
-    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', estado: 'Activo', usuarios: 8, fechaModificacion: '2026-04-01' },
-    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', estado: 'Activo', usuarios: 15, fechaModificacion: '2026-03-18' },
-    { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', descripcion: 'Acceso a parámetros del sistema y gestión de incidencias', estado: 'Inactivo', usuarios: 0, fechaModificacion: '2026-02-14' },
+    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-12' },
+    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-10' },
+    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, fechaModificacion: '2026-04-08' },
+    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, fechaModificacion: '2026-03-25' },
+    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-01' },
+    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, fechaModificacion: '2026-03-18' },
+    { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', descripcion: 'Rol recién creado, pendiente de configuración', usuarios: 0, permisos: 0, vigencia: null, intentos: null, fechaModificacion: '2026-02-14' },
   ];
 
-  // ── Drill-down state ──
-  menuBreadcrumb: { label: string; nodes: PermissionNode[] }[] = [];
-  menuCurrentNodes: PermissionNode[] = [];
-  menuCurrentParent: PermissionNode | null = null;
-
-  // ── Master-detail: nodo seleccionado para ver hijos en columna derecha ──
-  selectedMenuNode: PermissionNode | null = null;
-  selectedCatNode: PermissionNode | null = null;
-
-  // ── Snapshot del estado inicial para detectar cambios ──
-  private initialMenuState: Map<number, boolean> = new Map();
-  private initialActionState: Map<number, boolean> = new Map();
-  private initialCatState: Map<number, boolean> = new Map();
-
-  // ── Menú de aplicación — Opciones del Sistema (estructura real CHIP, 4-5 niveles) ──
-  menuPermissions: PermissionNode[] = [
+  // ============================================================
+  // ÁRBOL UNIFICADO DE PERMISOS (Chip 2.0 — TreeTable)
+  // ============================================================
+  /** Árbol único de permisos con código y nombre. Códigos replican los del sistema CHIP real. */
+  permissionsTree: TreeNode<PermisoData>[] = [
     {
-      id: 1, label: 'Opciones Menú de Aplicación', icon: 'pi pi-desktop', checked: true, expanded: false,
+      key: '1', data: { codigo: '1', nombre: 'Menú de Aplicación' },
       children: [
-        { id: 11, label: 'Ingresar Opción Operaciones Generales', checked: true },
-        {
-          id: 12, label: 'Ingresar Opción Seguridad', icon: 'pi pi-shield', checked: true, expanded: false,
-          children: [
-            { id: 121, label: 'Administrar Módulo Menú de Archivo', checked: true },
-          ]
-        },
-        {
-          id: 13, label: 'Ingresar Opción Menú de Usuarios', icon: 'pi pi-users', checked: true, expanded: false,
-          children: [
-            { id: 131, label: 'Ingresar Opción Nuevo Usuario', checked: true },
-            { id: 132, label: 'Ingresar Opción Buscar Usuario', checked: true },
-          ]
-        },
-        { id: 14, label: 'Ingresar Opción Importar listado de correos', checked: false },
-        { id: 15, label: 'Ingresar Opción Nuevo', checked: true },
-        { id: 16, label: 'Ingresar Opción Guardar', checked: true },
-        { id: 17, label: 'Ingresar Opción Imprimir', checked: true },
-        {
-          id: 18, label: 'Administrar Módulo Menú de Edición', icon: 'pi pi-pencil', checked: true, expanded: false,
-          children: [
-            { id: 181, label: 'Ingresar Opción Modo de Edición', checked: true },
-            { id: 182, label: 'Ingresar Opción Modo de Consulta', checked: true },
-          ]
-        },
-        { id: 19, label: 'Ingresar Opción Seleccionar Formularios', checked: true },
-        { id: 110, label: 'Ingresar Opción Grabación Variables Fragmentación', checked: false },
-        { id: 111, label: 'Ingresar Opción Exportar', checked: true },
-        { id: 112, label: 'Ingresar Opción Exitosas Protocolos de Importación', checked: false },
-        { id: 113, label: 'Ingresar Opción Importar Estado de correos', checked: false },
-        {
-          id: 114, label: 'Ingresar Opción Menú de Consulta', icon: 'pi pi-search', checked: true, expanded: false,
-          children: [
-            { id: 1141, label: 'Ingresar Opción Modo de Formularios', checked: true },
-            { id: 1142, label: 'Ingresar Opción En-Consistencia', checked: true },
-          ]
-        },
-        { id: 115, label: 'Ingresar Opción Entidades', checked: true },
-        { id: 116, label: 'Ingresar Opción Encabezados', checked: false },
-        {
-          id: 117, label: 'Ingresar Opción Categorías', icon: 'pi pi-tags', checked: true, expanded: false,
-          children: [
-            { id: 1171, label: 'Ingresar Opción Categoría Territorial', checked: true },
-            { id: 1172, label: 'Ingresar Opción Entidades Agregadas', checked: false },
-          ]
-        },
-        { id: 118, label: 'Ingresar Opción Encuestas', checked: false },
-        { id: 119, label: 'Ingresar Opción Eventos', checked: false },
-        { id: 120, label: 'Ingresar Opción Documentos y Términos', checked: false },
-        { id: 122, label: 'Ingresar Opción Requerimientos', checked: false },
-        { id: 123, label: 'Ingresar Opción Mensajes', checked: true },
-        { id: 124, label: 'Ingresar Opción Asistencia Técnica', checked: false },
-        { id: 125, label: 'Ingresar Opción Consultas', checked: true },
-        {
-          id: 126, label: 'Ingresar Opción Consolidación', icon: 'pi pi-objects-column', checked: false, expanded: false,
-          children: [
-            { id: 1261, label: 'Ingresar Menú de carga de datos a consolidación', checked: false },
-            { id: 1262, label: 'Ingresar Opción Autorización de periodo de reporte', checked: false },
-            {
-              id: 1263, label: 'Ingresar Opción Administrar', checked: false, expanded: false,
-              children: [
-                { id: 12631, label: 'Ingresar Opción Administrar II', checked: false },
-                { id: 12632, label: 'Ingresar Opción Analista de II', checked: false },
-                { id: 12633, label: 'Ingresar Entidad de II', checked: false },
-                { id: 12634, label: 'Ingresar Opción Consulta de II', checked: false },
-              ]
-            },
-          ]
-        },
-        {
-          id: 127, label: 'Ingresar Opción Menú de Referencia', icon: 'pi pi-bookmark', checked: false, expanded: false,
-          children: [
-            { id: 1271, label: 'Ingresar Opción Modo de Archivo', checked: false },
-          ]
-        },
-        { id: 128, label: 'Ingresar Opción Usuarios', checked: true },
-      ]
+        { key: '11', data: { codigo: '11', nombre: 'Nuevo' } },
+        { key: '12', data: { codigo: '12', nombre: 'Guardar' } },
+        { key: '13', data: { codigo: '13', nombre: 'Imprimir' } },
+        { key: '14', data: { codigo: '14', nombre: 'Seleccionar Formularios' } },
+        { key: '15', data: { codigo: '15', nombre: 'Exportar' } },
+        { key: '16', data: { codigo: '16', nombre: 'Importar listado de correos' } },
+      ],
     },
     {
-      id: 8, label: 'Opciones Tablas de Parámetros', icon: 'pi pi-sliders-h', checked: true, expanded: false,
+      key: '2', data: { codigo: '2', nombre: 'Tablas de Parámetros' },
       children: [
         {
-          id: 81, label: 'Administrar Módulo de Listas del Sistema', checked: false, expanded: false,
+          key: '21', data: { codigo: '21', nombre: 'Listas del Sistema' },
           children: [
-            {
-              id: 811, label: 'Administrar Grupo de Tablas GENERALES', checked: false, expanded: false,
-              children: [
-                { id: 8111, label: 'Ingresar Opción Regresar', checked: false },
-              ]
-            },
-          ]
+            { key: '211', data: { codigo: '211', nombre: 'Tablas Generales' } },
+            { key: '212', data: { codigo: '212', nombre: 'Tablas Específicas' } },
+          ],
         },
-        { id: 82, label: 'Administrar Tablas Básicas', checked: false },
-      ]
+        { key: '22', data: { codigo: '22', nombre: 'Tablas Básicas' } },
+      ],
     },
-  ];
-
-  // ── Acciones (botones) ──
-  actionPermissions: ActionPermission[] = [
-    { id: 1, label: 'Crear', icon: 'pi pi-plus', description: 'Permite crear nuevos registros, usuarios o formularios', enabled: true },
-    { id: 2, label: 'Editar', icon: 'pi pi-pencil', description: 'Permite modificar registros existentes y formularios en modo de edición', enabled: true },
-    { id: 3, label: 'Eliminar', icon: 'pi pi-trash', description: 'Permite eliminar registros del sistema', enabled: false },
-    { id: 4, label: 'Importar', icon: 'pi pi-upload', description: 'Permite importar información mediante protocolos y archivos externos', enabled: true },
-    { id: 5, label: 'Exportar', icon: 'pi pi-download', description: 'Permite exportar datos, reportes y formularios (Excel, PDF, CSV)', enabled: true },
-    { id: 6, label: 'Aprobar', icon: 'pi pi-check-circle', description: 'Permite aprobar la información cargada y dar visto bueno', enabled: false },
-    { id: 7, label: 'Rechazar', icon: 'pi pi-times-circle', description: 'Permite rechazar información y devolver para corrección', enabled: false },
-    { id: 8, label: 'Imprimir', icon: 'pi pi-print', description: 'Permite imprimir reportes, formularios y documentos del sistema', enabled: true },
-    { id: 9, label: 'Consultar', icon: 'pi pi-search', description: 'Permite consultar información en modo solo lectura', enabled: true },
-    { id: 10, label: 'Consolidar', icon: 'pi pi-objects-column', description: 'Permite ejecutar procesos de consolidación de información', enabled: false },
-  ];
-
-  // ── Drill-down state para categorías ──
-  catBreadcrumb: { label: string; nodes: PermissionNode[] }[] = [];
-  catCurrentNodes: PermissionNode[] = [];
-  catCurrentParent: PermissionNode | null = null;
-
-  // ── Categorías (datos reales CHIP — Opciones Categorías) ──
-  categoryPermissions: PermissionNode[] = [
     {
-      id: 1, label: 'Opciones Menú de Aplicación', icon: 'pi pi-desktop', checked: true, expanded: false,
+      key: '3', data: { codigo: '3', nombre: 'Categorías' },
       children: [
-        { id: 11, label: 'Opciones Tablas de Parámetros', checked: true },
         {
-          id: 12, label: 'Opciones Categorías', icon: 'pi pi-tags', checked: true, expanded: false,
+          key: '31', data: { codigo: '31', nombre: 'Categorías de Información' },
           children: [
-            {
-              id: 121, label: 'Administrar Módulo Categorías de Información', icon: 'pi pi-database', checked: true, expanded: false,
-              children: [
-                {
-                  id: 1210, label: 'CATEGORÍA-RAZ (K1)', icon: 'pi pi-folder', checked: true, expanded: false,
-                  children: [
-                    {
-                      id: 12101, label: 'INFORMACIÓN CONTABLE PUBLICA (Reportada)', icon: 'pi pi-book', checked: true, expanded: false,
-                      children: [
-                        { id: 121011, label: 'Administrar Artículo Rule', checked: true },
-                        { id: 121012, label: 'Consultar Grupo', checked: true },
-                        { id: 121013, label: 'Importar Publicación', checked: true },
-                      ]
-                    },
-                    {
-                      id: 12102, label: 'NOTAS GENERALES A LOS ESTADOS CONTABLES', icon: 'pi pi-book', checked: true, expanded: false,
-                      children: [
-                        { id: 121021, label: 'Administrar Artículo', checked: true },
-                        { id: 121022, label: 'Consultar Grupo', checked: true },
-                        { id: 121023, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12103, label: 'CGR_PRESUPUESTAL (Reportada hasta dic)', icon: 'pi pi-wallet', checked: true, expanded: false,
-                      children: [
-                        { id: 121031, label: 'Administrar Artículo Rule', checked: true },
-                        { id: 121032, label: 'Consultar Grupo', checked: true },
-                        { id: 121033, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12104, label: 'INGRESOS (K12)', icon: 'pi pi-wallet', checked: true, expanded: false,
-                      children: [
-                        { id: 121041, label: 'Administrar Artículo', checked: true },
-                        { id: 121042, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12105, label: 'FUT_GASTOS_FUNCIONAMIENTO (Reportada)', icon: 'pi pi-chart-line', checked: false, expanded: false,
-                      children: [
-                        { id: 121051, label: 'Administrar Artículo Rule', checked: false },
-                        { id: 121052, label: 'Consultar Grupo', checked: false },
-                        { id: 121053, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12106, label: 'FUT_GASTOS_DE_INVERSIÓN (Reportada)', icon: 'pi pi-chart-line', checked: false, expanded: false,
-                      children: [
-                        { id: 121061, label: 'Administrar Artículo Rule', checked: false },
-                        { id: 121062, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12107, label: 'REGALÍAS - 1 (Reportada hasta dic 2018)', icon: 'pi pi-money-bill', checked: false, expanded: false,
-                      children: [
-                        { id: 121071, label: 'Administrar Artículo', checked: false },
-                        { id: 121072, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12108, label: 'REGALÍAS - 2 (K23)', icon: 'pi pi-money-bill', checked: false, expanded: false,
-                      children: [
-                        { id: 121081, label: 'Administrar Artículo', checked: false },
-                        { id: 121082, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12109, label: 'REGALÍAS - 3 (K24)', icon: 'pi pi-money-bill', checked: false, expanded: false,
-                      children: [
-                        { id: 121091, label: 'Administrar Artículo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12110, label: 'CONTROL INTERNO CONTABLE (Reportada)', icon: 'pi pi-verified', checked: true, expanded: false,
-                      children: [
-                        { id: 121101, label: 'Administrar Artículo Rule', checked: true },
-                        { id: 121102, label: 'Consultar Grupo', checked: true },
-                        { id: 121103, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12111, label: 'FUT_INGRESOS (Reportada hasta dic 2021)', icon: 'pi pi-chart-line', checked: false, expanded: false,
-                      children: [
-                        { id: 121111, label: 'Administrar Artículo', checked: false },
-                        { id: 121112, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12112, label: 'CGR SISTEMA GENERAL DE REGALÍAS', icon: 'pi pi-money-bill', checked: false, expanded: false,
-                      children: [
-                        { id: 121121, label: 'Administrar Artículo Rule', checked: false },
-                        { id: 121122, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12113, label: 'FUT_SERVICIO_DEUDA (Reportada hasta dic)', icon: 'pi pi-chart-line', checked: false, expanded: false,
-                      children: [
-                        { id: 121131, label: 'Administrar Artículo', checked: false },
-                        { id: 121132, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12114, label: 'FUT_CIERRE_FISCAL (K29)', icon: 'pi pi-calendar', checked: true, expanded: false,
-                      children: [
-                        { id: 121141, label: 'Administrar Artículo Rule', checked: true },
-                        { id: 121142, label: 'Consultar Grupo', checked: true },
-                      ]
-                    },
-                    {
-                      id: 12115, label: 'FUT_RESERVAS (Reportada hasta dic 2021)', icon: 'pi pi-chart-line', checked: false, expanded: false,
-                      children: [
-                        { id: 121151, label: 'Administrar Artículo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12116, label: 'BOLETÍN DE DEUDORES MOROSOS DEL ESTADO', icon: 'pi pi-file', checked: false, expanded: false,
-                      children: [
-                        { id: 121161, label: 'Administrar Artículo', checked: false },
-                        { id: 121162, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12117, label: 'FUT_EXCEDENTES_LIQUIDEZ (Reportada)', icon: 'pi pi-chart-line', checked: false, expanded: false,
-                      children: [
-                        { id: 121171, label: 'Administrar Artículo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12118, label: 'SALDO_DEUDA (K33)', icon: 'pi pi-wallet', checked: false, expanded: false,
-                      children: [
-                        { id: 121181, label: 'Administrar Artículo', checked: false },
-                        { id: 121182, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12119, label: 'FUT_CUENTAS_POR_PAGAR (Reportada)', icon: 'pi pi-chart-line', checked: true, expanded: false,
-                      children: [
-                        { id: 121191, label: 'Administrar Artículo Rule', checked: true },
-                        { id: 121192, label: 'Consultar Grupo', checked: true },
-                        { id: 121193, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12120, label: 'FUT_VIGENCIAS_FUTURAS (K37)', icon: 'pi pi-calendar', checked: false, expanded: false,
-                      children: [
-                        { id: 121201, label: 'Administrar Artículo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12121, label: 'RESGUARDOS_1 (K40)', icon: 'pi pi-map', checked: false, expanded: false,
-                      children: [
-                        { id: 121211, label: 'Administrar Artículo', checked: false },
-                        { id: 121212, label: 'Consultar Grupo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12122, label: 'RESGUARDOS_2 (K41)', icon: 'pi pi-map', checked: false, expanded: false,
-                      children: [
-                        { id: 121221, label: 'Administrar Artículo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12123, label: 'RESGUARDOS_3 (K42)', icon: 'pi pi-map', checked: false, expanded: false,
-                      children: [
-                        { id: 121231, label: 'Administrar Artículo', checked: false },
-                      ]
-                    },
-                    {
-                      id: 12124, label: 'ICBF - CONTRATOS PAE (Reportada)', icon: 'pi pi-file', checked: false, expanded: false,
-                      children: [
-                        { id: 121241, label: 'Administrar Artículo Rule', checked: false },
-                        { id: 121242, label: 'Consultar Grupo', checked: false },
-                        { id: 121243, label: 'Importar Publicación', checked: false },
-                      ]
-                    },
-                  ]
-                },
-              ]
-            },
-          ]
+            { key: '311', data: { codigo: '311', nombre: 'INFORMACIÓN CONTABLE PÚBLICA (K1)' } },
+            { key: '312', data: { codigo: '312', nombre: 'NOTAS GENERALES A ESTADOS CONTABLES' } },
+            { key: '313', data: { codigo: '313', nombre: 'CGR_PRESUPUESTAL' } },
+            { key: '314', data: { codigo: '314', nombre: 'INGRESOS (K12)' } },
+            { key: '315', data: { codigo: '315', nombre: 'FUT_GASTOS_FUNCIONAMIENTO' } },
+            { key: '316', data: { codigo: '316', nombre: 'REGALÍAS (K23)' } },
+            { key: '317', data: { codigo: '317', nombre: 'CONTROL INTERNO CONTABLE' } },
+            { key: '318', data: { codigo: '318', nombre: 'FUT_CIERRE_FISCAL (K29)' } },
+          ],
         },
-      ]
+      ],
     },
+    { key: '700', data: { codigo: '700', nombre: 'Ordenamiento Territorial' } },
+    { key: '800', data: { codigo: '800', nombre: 'Requerimientos' } },
+    { key: '890', data: { codigo: '890', nombre: 'Mensajes' } },
+    { key: '900', data: { codigo: '900', nombre: 'Asistencia Técnica' } },
+    { key: '901', data: { codigo: '901', nombre: 'Encuestas' } },
+    { key: '902', data: { codigo: '902', nombre: 'Eventos' } },
+    { key: '1800', data: { codigo: '1800', nombre: 'Documentos y Términos' } },
+    {
+      key: '1900', data: { codigo: '1900', nombre: 'Consultas' },
+      children: [
+        {
+          key: '1901', data: { codigo: '1901', nombre: 'Menú de Archivo' },
+          children: [
+            { key: '1902', data: { codigo: '1902', nombre: 'Nuevo' } },
+            { key: '1903', data: { codigo: '1903', nombre: 'Guardar' } },
+            { key: '1904', data: { codigo: '1904', nombre: 'Imprimir' } },
+          ],
+        },
+      ],
+    },
+    {
+      key: '2100', data: { codigo: '2100', nombre: 'Consolidación' },
+      children: [
+        { key: '3639', data: { codigo: '3639', nombre: 'Menú de carga de datos a consolidación' } },
+        { key: '3642', data: { codigo: '3642', nombre: 'Autorización de periodo de reporte' } },
+        { key: '4892', data: { codigo: '4892', nombre: 'Administrar II' } },
+        { key: '4893', data: { codigo: '4893', nombre: 'Analista de II' } },
+        { key: '4894', data: { codigo: '4894', nombre: 'Entidad de II' } },
+        { key: '4895', data: { codigo: '4895', nombre: 'Consulta de II' } },
+      ],
+    },
+    {
+      key: '7100', data: { codigo: '7100', nombre: 'Seguridad' },
+      children: [
+        {
+          key: '7110', data: { codigo: '7110', nombre: 'Usuarios' },
+          children: [
+            { key: '7114', data: { codigo: '7114', nombre: 'Consultar Usuario' } },
+            { key: '7115', data: { codigo: '7115', nombre: 'Crear Usuario' } },
+            { key: '7116', data: { codigo: '7116', nombre: 'Modificar Usuario' } },
+            { key: '7117', data: { codigo: '7117', nombre: 'Eliminar Usuario' } },
+          ],
+        },
+        {
+          key: '7120', data: { codigo: '7120', nombre: 'Roles' },
+          children: [
+            { key: '7121', data: { codigo: '7121', nombre: 'Consultar Rol' } },
+            { key: '7122', data: { codigo: '7122', nombre: 'Crear Rol' } },
+            { key: '7123', data: { codigo: '7123', nombre: 'Modificar Rol' } },
+            { key: '7124', data: { codigo: '7124', nombre: 'Eliminar Rol' } },
+            { key: '7125', data: { codigo: '7125', nombre: 'Configurar Permisos' } },
+          ],
+        },
+      ],
+    },
+    { key: '7200', data: { codigo: '7200', nombre: 'Entidades' } },
   ];
 
-  // ── Resumen de permisos ──
-  get menuCount(): number {
-    return this.countChecked(this.menuPermissions);
-  }
-  get menuTotal(): number {
-    return this.countTotal(this.menuPermissions);
-  }
-  get actionCount(): number {
-    return this.actionPermissions.filter(a => a.enabled).length;
-  }
-  get categoryCount(): number {
-    return this.countChecked(this.categoryPermissions);
-  }
-  get categoryTotal(): number {
-    return this.countTotal(this.categoryPermissions);
+  /** Estado de selección en formato PrimeNG TreeTable (checkbox mode). */
+  selectedPermissions: SelectionMap = {};
+
+  /** Snapshot inicial de hojas marcadas al entrar a edición (para calcular el diff). */
+  private initialSelectedLeaves = new Set<string>();
+
+  /** Índice key → nombre de cada hoja del árbol (precomputado). */
+  private leafNameByKey = new Map<string, string>();
+  private totalLeafCount = 0;
+
+  /** Set de claves inicialmente seleccionadas por demo (simula config previa del rol). */
+  private readonly DEMO_PRESELECTED = new Set<string>([
+    '11', '12', '13', '14', // Menú de Aplicación (parciales)
+    '22',                   // Tablas básicas
+    '311', '312', '314',    // Categorías parciales
+    '7114', '7115',         // Seguridad > Usuarios parciales
+    '7121', '7122',         // Seguridad > Roles parciales
+    '7200',                 // Entidades
+    '1902', '1903',         // Consultas > Archivo parciales
+  ]);
+
+  private initLeafIndex() {
+    this.leafNameByKey.clear();
+    this.totalLeafCount = 0;
+    const walk = (nodes: TreeNode<PermisoData>[]) => {
+      for (const n of nodes) {
+        if (!n.children || n.children.length === 0) {
+          this.totalLeafCount++;
+          if (n.key && n.data) this.leafNameByKey.set(n.key, n.data.nombre);
+        } else {
+          walk(n.children as TreeNode<PermisoData>[]);
+        }
+      }
+    };
+    walk(this.permissionsTree);
   }
 
+  /** Construye el mapa de selección con estados parciales propagados hacia arriba. */
+  private buildSelectionFromLeaves(selectedLeaves: Set<string>): SelectionMap {
+    const map: SelectionMap = {};
+    const walk = (node: TreeNode<PermisoData>): 'all' | 'partial' | 'none' => {
+      if (!node.children || node.children.length === 0) {
+        if (node.key && selectedLeaves.has(node.key)) {
+          map[node.key] = { checked: true, partialChecked: false };
+          return 'all';
+        }
+        return 'none';
+      }
+      let allChecked = true;
+      let someChecked = false;
+      for (const child of node.children as TreeNode<PermisoData>[]) {
+        const s = walk(child);
+        if (s === 'all') someChecked = true;
+        else if (s === 'partial') { allChecked = false; someChecked = true; }
+        else allChecked = false;
+      }
+      if (allChecked && node.children.length > 0) {
+        if (node.key) map[node.key] = { checked: true, partialChecked: false };
+        return 'all';
+      }
+      if (someChecked) {
+        if (node.key) map[node.key] = { checked: false, partialChecked: true };
+        return 'partial';
+      }
+      return 'none';
+    };
+    for (const root of this.permissionsTree) walk(root);
+    return map;
+  }
+
+  // ── Contadores del árbol ──
+  get totalLeaves(): number { return this.totalLeafCount; }
+
+  get selectedLeafCount(): number {
+    let c = 0;
+    for (const k in this.selectedPermissions) {
+      if (this.selectedPermissions[k]?.checked && this.leafNameByKey.has(k)) c++;
+    }
+    return c;
+  }
+
+  // ── Diff de cambios (comparando contra snapshot inicial) ──
+  get addedLeafNames(): string[] {
+    const out: string[] = [];
+    for (const k in this.selectedPermissions) {
+      if (this.selectedPermissions[k]?.checked
+          && this.leafNameByKey.has(k)
+          && !this.initialSelectedLeaves.has(k)) {
+        out.push(this.leafNameByKey.get(k)!);
+      }
+    }
+    return out;
+  }
+
+  get removedLeafNames(): string[] {
+    const out: string[] = [];
+    for (const k of this.initialSelectedLeaves) {
+      if (!this.selectedPermissions[k]?.checked) {
+        out.push(this.leafNameByKey.get(k)!);
+      }
+    }
+    return out;
+  }
+
+  get totalChanges(): number {
+    return this.addedLeafNames.length + this.removedLeafNames.length;
+  }
+
+  // ── Acciones del árbol ──
+  /** Toggle de selección de todas las hojas del árbol. */
+  toggleSelectAll(checked: boolean) {
+    if (checked) {
+      const all = new Set<string>();
+      for (const k of this.leafNameByKey.keys()) all.add(k);
+      this.selectedPermissions = this.buildSelectionFromLeaves(all);
+    } else {
+      this.selectedPermissions = {};
+    }
+    this.cdr.detectChanges();
+    const action = checked ? 'seleccionados' : 'deseleccionados';
+    this.messageService.add({
+      severity: 'info',
+      summary: `Permisos ${action}`,
+      detail: `Todos los permisos fueron ${action}.`,
+    });
+  }
+
+  onGlobalFilter(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    if (this.permTree) {
+      this.permTree.filterGlobal(value, 'contains');
+    }
+  }
+
+  // ── Filtros del listado ──
   get activeFilterCount(): number {
-    return this.searchRoles ? 1 : 0;
+    let count = 0;
+    if (this.searchRolesNombre) count++;
+    if (this.searchRolesCodigo) count++;
+    return count;
   }
 
   get activeFilters(): { label: string; field: string }[] {
     const filters: { label: string; field: string }[] = [];
-    if (this.searchRoles) filters.push({ label: `Búsqueda: "${this.searchRoles}"`, field: 'searchRoles' });
+    if (this.searchRolesNombre) filters.push({ label: `Nombre: "${this.searchRolesNombre}"`, field: 'searchRolesNombre' });
+    if (this.searchRolesCodigo) filters.push({ label: `Código: "${this.searchRolesCodigo}"`, field: 'searchRolesCodigo' });
     return filters;
   }
 
@@ -517,301 +416,39 @@ export class RolesComponent {
   }
 
   clearFilters() {
-    this.searchRoles = '';
+    this.searchRolesNombre = '';
+    this.searchRolesCodigo = '';
   }
 
-  // ── Filtrado de roles ──
   get filteredRoles(): Role[] {
-    if (!this.searchRoles) return this.roles;
-    const q = this.searchRoles.toLowerCase();
-    return this.roles.filter(r =>
-      r.nombre.toLowerCase().includes(q) || r.descripcion.toLowerCase().includes(q)
-    );
-  }
-
-  // ── Drill-down del menú ──
-  initDrillDown() {
-    this.menuCurrentNodes = this.menuPermissions;
-    this.menuBreadcrumb = [{ label: 'Opciones del Sistema', nodes: this.menuPermissions }];
-    this.menuCurrentParent = null;
-    this.autoSelectFirstFolder('menu');
-  }
-
-  /** Auto-selecciona el primer nodo con hijos para que la columna derecha nunca esté vacía */
-  private autoSelectFirstFolder(type: 'menu' | 'cat') {
-    const nodes = type === 'menu' ? this.menuCurrentNodes : this.catCurrentNodes;
-    const first = nodes.find(n => n.children && n.children.length > 0);
-    if (type === 'menu') {
-      this.selectedMenuNode = first || null;
-    } else {
-      this.selectedCatNode = first || null;
-    }
-  }
-
-  drillInto(node: PermissionNode) {
-    if (!node.children?.length) return;
-    this.menuBreadcrumb.push({ label: node.label, nodes: node.children });
-    this.menuCurrentNodes = node.children;
-    this.menuCurrentParent = node;
-    this.searchMenu = '';
-    this.autoSelectFirstFolder('menu');
-  }
-
-  drillTo(index: number) {
-    this.menuBreadcrumb = this.menuBreadcrumb.slice(0, index + 1);
-    const target = this.menuBreadcrumb[this.menuBreadcrumb.length - 1];
-    this.menuCurrentNodes = target.nodes;
-    this.menuCurrentParent = index === 0 ? null : this.findParent(target.nodes);
-    this.searchMenu = '';
-    this.autoSelectFirstFolder('menu');
-  }
-
-  drillBack() {
-    if (this.menuBreadcrumb.length <= 1) return;
-    this.drillTo(this.menuBreadcrumb.length - 2);
-  }
-
-  private findParent(targetChildren: PermissionNode[]): PermissionNode | null {
-    const find = (nodes: PermissionNode[]): PermissionNode | null => {
-      for (const n of nodes) {
-        if (n.children === targetChildren) return n;
-        if (n.children) {
-          const found = find(n.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    return find(this.menuPermissions);
-  }
-
-  getCheckedCount(node: PermissionNode): number {
-    return this.countChecked([node]);
-  }
-
-  getTotalCount(node: PermissionNode): number {
-    return this.countTotal([node]);
-  }
-
-  get filteredCurrentNodes(): PermissionNode[] {
-    if (!this.searchMenu) return this.menuCurrentNodes;
-    const q = this.searchMenu.toLowerCase();
-    return this.menuCurrentNodes.filter(n => n.label.toLowerCase().includes(q));
-  }
-
-  /** Solo carpetas (con hijos) para la columna izquierda */
-  get menuFolders(): PermissionNode[] {
-    return this.filteredCurrentNodes.filter(n => n.children && n.children.length > 0);
-  }
-
-  /** Solo hojas (sin hijos) para mostrar en la derecha cuando no hay selección */
-  get menuLeaves(): PermissionNode[] {
-    return this.filteredCurrentNodes.filter(n => !n.children || n.children.length === 0);
-  }
-
-  get catFolders(): PermissionNode[] {
-    return this.filteredCatNodes.filter(n => n.children && n.children.length > 0);
-  }
-
-  get catLeaves(): PermissionNode[] {
-    return this.filteredCatNodes.filter(n => !n.children || n.children.length === 0);
-  }
-
-  /** Acciones agrupadas: habilitadas vs deshabilitadas */
-  get enabledActions(): typeof this.actionPermissions {
-    let actions = this.actionPermissions.filter(a => a.enabled);
-    if (this.searchActions) {
-      const q = this.searchActions.toLowerCase();
-      actions = actions.filter(a => a.label.toLowerCase().includes(q));
-    }
-    return actions;
-  }
-
-  get disabledActions(): typeof this.actionPermissions {
-    let actions = this.actionPermissions.filter(a => !a.enabled);
-    if (this.searchActions) {
-      const q = this.searchActions.toLowerCase();
-      actions = actions.filter(a => a.label.toLowerCase().includes(q));
-    }
-    return actions;
-  }
-
-  selectMenuNode(node: PermissionNode) {
-    this.selectedMenuNode = this.selectedMenuNode === node ? null : node;
-  }
-
-  get selectedMenuChildren(): PermissionNode[] {
-    if (!this.selectedMenuNode?.children) return [];
-    if (!this.searchMenu) return this.selectedMenuNode.children;
-    const q = this.searchMenu.toLowerCase();
-    return this.selectedMenuNode.children.filter(n => n.label.toLowerCase().includes(q));
-  }
-
-  selectCatNode(node: PermissionNode) {
-    this.selectedCatNode = this.selectedCatNode === node ? null : node;
-  }
-
-  get selectedCatChildren(): PermissionNode[] {
-    if (!this.selectedCatNode?.children) return [];
-    if (!this.searchCategories) return this.selectedCatNode.children;
-    const q = this.searchCategories.toLowerCase();
-    return this.selectedCatNode.children.filter(n => n.label.toLowerCase().includes(q));
-  }
-
-  selectAllCurrent(checked: boolean) {
-    for (const node of this.menuCurrentNodes) {
-      node.checked = checked;
-      node.indeterminate = false;
-      this.setAllChildren(node, checked);
-    }
-    if (this.menuCurrentParent) {
-      this.updateParentState(this.menuCurrentParent);
-    }
-    this.cdr.detectChanges();
-    const action = checked ? 'seleccionados' : 'deseleccionados';
-    this.messageService.add({ severity: 'info', summary: `Permisos ${action}`, detail: `Todos los permisos del nivel actual fueron ${action}.` });
-  }
-
-  // ── Drill-down categorías ──
-  initCatDrillDown() {
-    this.catCurrentNodes = this.categoryPermissions;
-    this.catBreadcrumb = [{ label: 'Categorías', nodes: this.categoryPermissions }];
-    this.catCurrentParent = null;
-    this.autoSelectFirstFolder('cat');
-  }
-
-  catDrillInto(node: PermissionNode) {
-    if (!node.children?.length) return;
-    this.catBreadcrumb.push({ label: node.label, nodes: node.children });
-    this.catCurrentNodes = node.children;
-    this.catCurrentParent = node;
-    this.searchCategories = '';
-    this.autoSelectFirstFolder('cat');
-  }
-
-  catDrillTo(index: number) {
-    this.catBreadcrumb = this.catBreadcrumb.slice(0, index + 1);
-    const target = this.catBreadcrumb[this.catBreadcrumb.length - 1];
-    this.catCurrentNodes = target.nodes;
-    this.catCurrentParent = index === 0 ? null : this.findCatParent(target.nodes);
-    this.searchCategories = '';
-    this.autoSelectFirstFolder('cat');
-  }
-
-  catDrillBack() {
-    if (this.catBreadcrumb.length <= 1) return;
-    this.catDrillTo(this.catBreadcrumb.length - 2);
-  }
-
-  private findCatParent(targetChildren: PermissionNode[]): PermissionNode | null {
-    const find = (nodes: PermissionNode[]): PermissionNode | null => {
-      for (const n of nodes) {
-        if (n.children === targetChildren) return n;
-        if (n.children) {
-          const found = find(n.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-    return find(this.categoryPermissions);
-  }
-
-  get filteredCatNodes(): PermissionNode[] {
-    if (!this.searchCategories) return this.catCurrentNodes;
-    const q = this.searchCategories.toLowerCase();
-    return this.catCurrentNodes.filter(n => n.label.toLowerCase().includes(q));
-  }
-
-  selectAllCatCurrent(checked: boolean) {
-    for (const node of this.catCurrentNodes) {
-      node.checked = checked;
-      node.indeterminate = false;
-      this.setAllChildren(node, checked);
-    }
-    if (this.catCurrentParent) {
-      this.updateParentState(this.catCurrentParent);
-    }
-    this.cdr.detectChanges();
-    const action = checked ? 'seleccionadas' : 'deseleccionadas';
-    this.messageService.add({ severity: 'info', summary: `Categorías ${action}`, detail: `Todas las categorías del nivel actual fueron ${action}.` });
-  }
-
-  // ── Snapshot y cambios ──
-  private snapshotTree(nodes: PermissionNode[], map: Map<number, boolean>) {
-    for (const n of nodes) {
-      if (!n.children) map.set(n.id, n.checked);
-      if (n.children) this.snapshotTree(n.children, map);
-    }
-  }
-
-  private diffTree(nodes: PermissionNode[], initial: Map<number, boolean>): { added: string[]; removed: string[] } {
-    const added: string[] = [];
-    const removed: string[] = [];
-    const walk = (list: PermissionNode[]) => {
-      for (const n of list) {
-        if (!n.children) {
-          const was = initial.get(n.id) ?? false;
-          if (n.checked && !was) added.push(n.label);
-          if (!n.checked && was) removed.push(n.label);
-        }
-        if (n.children) walk(n.children);
-      }
-    };
-    walk(nodes);
-    return { added, removed };
-  }
-
-  get menuChanges() { return this.diffTree(this.menuPermissions, this.initialMenuState); }
-  get actionChanges() {
-    const added: string[] = [];
-    const removed: string[] = [];
-    for (const a of this.actionPermissions) {
-      const was = this.initialActionState.get(a.id) ?? false;
-      if (a.enabled && !was) added.push(a.label);
-      if (!a.enabled && was) removed.push(a.label);
-    }
-    return { added, removed };
-  }
-  get catChanges() { return this.diffTree(this.categoryPermissions, this.initialCatState); }
-  get totalChanges() {
-    const m = this.menuChanges;
-    const a = this.actionChanges;
-    const c = this.catChanges;
-    return m.added.length + m.removed.length + a.added.length + a.removed.length + c.added.length + c.removed.length;
-  }
-
-  discardChanges() {
-    // Restaurar menú
-    const restoreTree = (nodes: PermissionNode[], initial: Map<number, boolean>) => {
-      for (const n of nodes) {
-        if (!n.children && initial.has(n.id)) n.checked = initial.get(n.id)!;
-        if (n.children) restoreTree(n.children, initial);
-      }
-    };
-    restoreTree(this.menuPermissions, this.initialMenuState);
-    restoreTree(this.categoryPermissions, this.initialCatState);
-    for (const a of this.actionPermissions) {
-      if (this.initialActionState.has(a.id)) a.enabled = this.initialActionState.get(a.id)!;
-    }
-    this.cdr.detectChanges();
-    this.messageService.add({ severity: 'info', summary: 'Cambios descartados', detail: 'Se restauraron los permisos al estado original.' });
+    const qn = this.searchRolesNombre.trim().toLowerCase();
+    const qc = this.searchRolesCodigo.trim().toLowerCase();
+    if (!qn && !qc) return this.roles;
+    return this.roles.filter(r => {
+      const matchNombre = !qn || r.nombre.toLowerCase().includes(qn);
+      const matchCodigo = !qc || r.codigo.toLowerCase().includes(qc);
+      return matchNombre && matchCodigo;
+    });
   }
 
   // ── Acciones de roles ──
   editRole(role: Role) {
     this.selectedRole = role;
     this.currentView = 'edit';
-    this.activePermissionTab = '0';
-    this.initDrillDown();
-    this.initCatDrillDown();
-    // Snapshot del estado inicial
-    this.initialMenuState.clear();
-    this.initialActionState.clear();
-    this.initialCatState.clear();
-    this.snapshotTree(this.menuPermissions, this.initialMenuState);
-    this.snapshotTree(this.categoryPermissions, this.initialCatState);
-    for (const a of this.actionPermissions) this.initialActionState.set(a.id, a.enabled);
+    this.searchPermisos = '';
+    this.changesExpanded = false;
+
+    // Carga selección inicial simulada (en producción vendría del backend).
+    const initial = new Set<string>(this.DEMO_PRESELECTED);
+    this.selectedPermissions = this.buildSelectionFromLeaves(initial);
+
+    // Snapshot de hojas marcadas para calcular el diff al guardar/descartar.
+    this.initialSelectedLeaves = new Set<string>();
+    for (const k in this.selectedPermissions) {
+      if (this.selectedPermissions[k]?.checked && this.leafNameByKey.has(k)) {
+        this.initialSelectedLeaves.add(k);
+      }
+    }
   }
 
   backToList() {
@@ -823,11 +460,12 @@ export class RolesComponent {
     this.editingRole = role;
     this.editRoleName = role.nombre;
     this.editRoleDesc = role.descripcion;
+    this.editRoleVigencia = role.vigencia;
+    this.editRoleIntentos = role.intentos;
     this.editRoleNameTouched = false;
     this.showEditRoleDialog = true;
   }
 
-  /** Abrir diálogo Nuevo Rol reseteando estado */
   openNewRoleDialog() {
     this.newRoleCode = '';
     this.newRoleName = '';
@@ -851,6 +489,8 @@ export class RolesComponent {
     }
     this.editingRole.nombre = this.editRoleName.trim();
     this.editingRole.descripcion = this.editRoleDesc.trim();
+    this.editingRole.vigencia = this.editRoleVigencia;
+    this.editingRole.intentos = this.editRoleIntentos;
     this.messageService.add({
       severity: 'success',
       summary: 'Rol actualizado',
@@ -867,7 +507,20 @@ export class RolesComponent {
     this.showDeleteDialog = true;
   }
 
+  /** Razón por la que no se puede eliminar el rol (usuarios asociados o permisos asociados). */
+  get deleteBlockReason(): 'users' | 'permissions' | null {
+    if (!this.roleToDelete) return null;
+    if (this.roleToDelete.usuarios > 0) return 'users';
+    if (this.roleToDelete.permisos > 0) return 'permissions';
+    return null;
+  }
+
+  get canDeleteRole(): boolean {
+    return this.deleteBlockReason === null;
+  }
+
   deleteRole() {
+    if (!this.canDeleteRole) return;
     if (!this.deleteRoleConfirmValid) {
       this.messageService.add({
         severity: 'warn',
@@ -878,14 +531,11 @@ export class RolesComponent {
     }
     if (this.roleToDelete) {
       const nombre = this.roleToDelete.nombre;
-      const usuariosAfectados = this.roleToDelete.usuarios;
       this.roles = this.roles.filter(r => r.id !== this.roleToDelete!.id);
       this.messageService.add({
         severity: 'success',
         summary: 'Rol eliminado',
-        detail: usuariosAfectados > 0
-          ? `El rol "${nombre}" fue eliminado. ${usuariosAfectados} usuario(s) quedaron sin rol asignado.`
-          : `El rol "${nombre}" fue eliminado correctamente.`,
+        detail: `El rol "${nombre}" fue eliminado correctamente.`,
         life: 5000,
       });
       this.roleToDelete = null;
@@ -954,15 +604,17 @@ export class RolesComponent {
       codigo: this.newRoleCode || `ROL${String(nextId).padStart(3, '0')}`,
       nombre: this.newRoleName,
       descripcion: this.newRoleDesc,
-      estado: 'Activo',
       usuarios: 0,
+      permisos: 0,
+      vigencia: this.newRoleVigencia,
+      intentos: this.newRoleIntentos,
       fechaModificacion: new Date().toLocaleDateString('es-CO'),
     };
     this.roles.unshift(newRole);
     this.messageService.add({
       severity: 'success',
       summary: 'Perfil creado',
-      detail: `El perfil "${newRole.nombre}" fue creado exitosamente.`
+      detail: `El perfil "${newRole.nombre}" fue creado exitosamente.`,
     });
     this.newRoleCode = '';
     this.newRoleName = '';
@@ -974,105 +626,30 @@ export class RolesComponent {
     this.showNewRoleDialog = false;
   }
 
+  // ── Guardar / descartar permisos ──
   savePermissions() {
+    if (this.selectedRole) {
+      this.selectedRole.permisos = this.selectedLeafCount;
+    }
+    const resumen = this.totalChanges > 0
+      ? `${this.addedLeafNames.length} agregado(s) · ${this.removedLeafNames.length} removido(s).`
+      : 'No hubo cambios por guardar.';
     this.messageService.add({
       severity: 'success',
       summary: 'Permisos guardados',
-      detail: `Los permisos del rol "${this.selectedRole?.nombre}" fueron actualizados.`
+      detail: `Rol "${this.selectedRole?.nombre}". ${resumen}`,
+      life: 4500,
     });
     this.backToList();
   }
 
-  // ── Árbol de permisos ──
-  toggleNode(node: PermissionNode) {
-    node.expanded = !node.expanded;
-  }
-
-  toggleCheck(node: PermissionNode, parent?: PermissionNode) {
-    // ngModel ya actualizó node.checked, solo propagamos
-    if (node.children) {
-      this.setAllChildren(node, node.checked);
-    }
-    if (parent) {
-      this.updateParentState(parent);
-    }
+  discardChanges() {
+    this.selectedPermissions = this.buildSelectionFromLeaves(new Set(this.initialSelectedLeaves));
     this.cdr.detectChanges();
-  }
-
-  private setAllChildren(node: PermissionNode, checked: boolean) {
-    if (node.children) {
-      for (const child of node.children) {
-        child.checked = checked;
-        this.setAllChildren(child, checked);
-      }
-    }
-  }
-
-  private updateParentState(parent: PermissionNode) {
-    if (!parent.children) return;
-    const allChecked = parent.children.every(c => c.checked);
-    const someChecked = parent.children.some(c => c.checked || c.indeterminate);
-    parent.checked = allChecked;
-    parent.indeterminate = !allChecked && someChecked;
-  }
-
-  onActionToggle() {
-    this.cdr.detectChanges();
-  }
-
-  selectAll(nodes: PermissionNode[], checked: boolean) {
-    for (const node of nodes) {
-      node.checked = checked;
-      node.indeterminate = false;
-      this.setAllChildren(node, checked);
-    }
-    const action = checked ? 'seleccionados' : 'deseleccionados';
     this.messageService.add({
       severity: 'info',
-      summary: `Permisos ${action}`,
-      detail: `Todos los permisos fueron ${action}.`
+      summary: 'Cambios descartados',
+      detail: 'Se restauraron los permisos al estado original.',
     });
-  }
-
-  expandAll(nodes: PermissionNode[], expanded: boolean) {
-    for (const node of nodes) {
-      node.expanded = expanded;
-      if (node.children) {
-        this.expandAll(node.children, expanded);
-      }
-    }
-  }
-
-  // Filtrado del árbol
-  filterTree(nodes: PermissionNode[], search: string): PermissionNode[] {
-    if (!search) return nodes;
-    const q = search.toLowerCase();
-    return nodes.filter(node => {
-      const matchesSelf = node.label.toLowerCase().includes(q);
-      const matchesChildren = node.children ? this.filterTree(node.children, search).length > 0 : false;
-      return matchesSelf || matchesChildren;
-    });
-  }
-
-  private countChecked(nodes: PermissionNode[]): number {
-    let count = 0;
-    for (const node of nodes) {
-      if (!node.children && node.checked) count++;
-      if (node.children) count += this.countChecked(node.children);
-    }
-    return count;
-  }
-
-  private countTotal(nodes: PermissionNode[]): number {
-    let count = 0;
-    for (const node of nodes) {
-      if (!node.children) count++;
-      if (node.children) count += this.countTotal(node.children);
-    }
-    return count;
-  }
-
-  getRoleSeverity(estado: string): 'success' | 'danger' {
-    return estado === 'Activo' ? 'success' : 'danger';
   }
 }

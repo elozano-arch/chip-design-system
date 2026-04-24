@@ -50,12 +50,27 @@ export class UsuariosComponent {
 
   constructor(private messageService: MessageService) {}
 
-  menuAccionesItems: MenuItem[] = [
-    { label: 'Editar', icon: 'pi pi-pencil', command: () => { if (this.selectedUsuario) this.openEditDialog(this.selectedUsuario); } },
-    { label: 'Activar / Desactivar', icon: 'pi pi-power-off', command: () => { if (this.selectedUsuario) this.showToggleDialog = true; } },
-    { separator: true },
-    { label: 'Eliminar', icon: 'pi pi-trash', command: () => { if (this.selectedUsuario) { this.deleteConfirmText = ''; this.showDeleteDialog = true; } } },
-  ];
+  /**
+   * Menú dinámico: un usuario inactivo solo permite Activar o Eliminar.
+   * Editar y Desactivar quedan bloqueados hasta que se active, siguiendo la regla
+   * "si no está activo no se puede hacer nada sobre él".
+   */
+  get menuAccionesItems(): MenuItem[] {
+    if (!this.selectedUsuario) return [];
+    if (this.selectedUsuario.activo) {
+      return [
+        { label: 'Editar', icon: 'pi pi-pencil', command: () => { if (this.selectedUsuario) this.openEditDialog(this.selectedUsuario); } },
+        { label: 'Desactivar', icon: 'pi pi-ban', command: () => { if (this.selectedUsuario) this.showToggleDialog = true; } },
+        { separator: true },
+        { label: 'Eliminar', icon: 'pi pi-trash', command: () => { if (this.selectedUsuario) { this.deleteConfirmText = ''; this.showDeleteDialog = true; } } },
+      ];
+    }
+    return [
+      { label: 'Activar', icon: 'pi pi-check', command: () => { if (this.selectedUsuario) this.showToggleDialog = true; } },
+      { separator: true },
+      { label: 'Eliminar', icon: 'pi pi-trash', command: () => { if (this.selectedUsuario) { this.deleteConfirmText = ''; this.showDeleteDialog = true; } } },
+    ];
+  }
 
   abrirMenuAcciones(event: Event, usuario: Usuario) {
     this.selectedUsuario = usuario;
@@ -68,7 +83,8 @@ export class UsuariosComponent {
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 
-  searchUsuarios = '';
+  searchUsuariosNombre = '';
+  searchUsuariosCodigo = '';
   filterPerfil = '';
   filterEstado = '';
   filtersCollapsed = false;
@@ -129,20 +145,21 @@ export class UsuariosComponent {
   ];
 
   get filteredUsuarios(): Usuario[] {
+    const qn = this.searchUsuariosNombre.trim().toLowerCase();
+    const qc = this.searchUsuariosCodigo.trim().toLowerCase();
     return this.usuarios.filter(u => {
-      const matchSearch = !this.searchUsuarios ||
-        u.nombre.toLowerCase().includes(this.searchUsuarios.toLowerCase()) ||
-        u.codigo.toLowerCase().includes(this.searchUsuarios.toLowerCase()) ||
-        u.entidad.toLowerCase().includes(this.searchUsuarios.toLowerCase());
+      const matchNombre = !qn || u.nombre.toLowerCase().includes(qn);
+      const matchCodigo = !qc || u.codigo.toLowerCase().includes(qc);
       const matchPerfil = !this.filterPerfil || u.perfil === this.filterPerfil;
       const matchEstado = !this.filterEstado || String(u.activo) === this.filterEstado;
-      return matchSearch && matchPerfil && matchEstado;
+      return matchNombre && matchCodigo && matchPerfil && matchEstado;
     });
   }
 
   get activeFilterCount(): number {
     let count = 0;
-    if (this.searchUsuarios) count++;
+    if (this.searchUsuariosNombre) count++;
+    if (this.searchUsuariosCodigo) count++;
     if (this.filterPerfil) count++;
     if (this.filterEstado) count++;
     return count;
@@ -150,7 +167,8 @@ export class UsuariosComponent {
 
   get activeFilters(): { label: string; field: string }[] {
     const filters: { label: string; field: string }[] = [];
-    if (this.searchUsuarios) filters.push({ label: `Búsqueda: "${this.searchUsuarios}"`, field: 'searchUsuarios' });
+    if (this.searchUsuariosNombre) filters.push({ label: `Nombre: "${this.searchUsuariosNombre}"`, field: 'searchUsuariosNombre' });
+    if (this.searchUsuariosCodigo) filters.push({ label: `Código: "${this.searchUsuariosCodigo}"`, field: 'searchUsuariosCodigo' });
     if (this.filterPerfil) filters.push({ label: `Perfil: ${this.filterPerfil}`, field: 'filterPerfil' });
     if (this.filterEstado) filters.push({ label: `Estado: ${this.filterEstado === 'true' ? 'Activo' : 'Inactivo'}`, field: 'filterEstado' });
     return filters;
@@ -161,7 +179,8 @@ export class UsuariosComponent {
   }
 
   clearFilters() {
-    this.searchUsuarios = '';
+    this.searchUsuariosNombre = '';
+    this.searchUsuariosCodigo = '';
     this.filterPerfil = '';
     this.filterEstado = '';
   }

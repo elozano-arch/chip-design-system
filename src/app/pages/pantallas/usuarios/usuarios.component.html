@@ -37,12 +37,19 @@
 
     @if (!filtersCollapsed) {
       <div class="chip-filters__body" id="usr-filters-body">
-        <div class="chip-filters__fields chip-filters__fields--3col">
+        <div class="chip-filters__fields chip-filters__fields--4col">
           <div class="chip-filters__field">
-            <label for="usr-search">Nombre o Código</label>
+            <label for="usr-search-nombre">Nombre</label>
             <p-iconField>
               <p-inputIcon styleClass="pi pi-search" />
-              <input pInputText id="usr-search" placeholder="Buscar..." [(ngModel)]="searchUsuarios" class="w-full" />
+              <input pInputText id="usr-search-nombre" placeholder="Buscar por nombre..." [(ngModel)]="searchUsuariosNombre" class="w-full" />
+            </p-iconField>
+          </div>
+          <div class="chip-filters__field">
+            <label for="usr-search-codigo">Código</label>
+            <p-iconField>
+              <p-inputIcon styleClass="pi pi-search" />
+              <input pInputText id="usr-search-codigo" placeholder="Buscar por código..." [(ngModel)]="searchUsuariosCodigo" class="w-full" />
             </p-iconField>
           </div>
           <div class="chip-filters__field">
