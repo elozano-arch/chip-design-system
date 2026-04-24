@@ -76,12 +76,8 @@ export class LoginComponent {
   get contrasenaVacia(): boolean {
     return this.contrasenaTouched && !this.contrasena.trim();
   }
-  get contrasenaCorta(): boolean {
-    if (!this.contrasenaTouched || !this.contrasena.trim()) return false;
-    return this.contrasena.length < 8;
-  }
   get contrasenaInvalid(): boolean {
-    return this.contrasenaVacia || this.contrasenaCorta;
+    return this.contrasenaVacia;
   }
 
   get entidadInvalid(): boolean {
@@ -89,7 +85,9 @@ export class LoginComponent {
   }
 
   get formInvalid(): boolean {
-    return !this.usuario.trim() || !this.contrasena.trim() || !this.entidad;
+    if (!this.usuario.trim() || !this.contrasena.trim() || !this.entidad) return true;
+    if (!this.USUARIO_REGEX.test(this.usuario.trim())) return true;
+    return false;
   }
 
   togglePassword() {

@@ -823,7 +823,20 @@ export class RolesComponent {
     this.editingRole = role;
     this.editRoleName = role.nombre;
     this.editRoleDesc = role.descripcion;
+    this.editRoleNameTouched = false;
     this.showEditRoleDialog = true;
+  }
+
+  /** Abrir diálogo Nuevo Rol reseteando estado */
+  openNewRoleDialog() {
+    this.newRoleCode = '';
+    this.newRoleName = '';
+    this.newRoleDesc = '';
+    this.newRoleVigencia = null;
+    this.newRoleIntentos = null;
+    this.newRoleCodeTouched = false;
+    this.newRoleNameTouched = false;
+    this.showNewRoleDialog = true;
   }
 
   saveEditRole() {
@@ -850,6 +863,7 @@ export class RolesComponent {
 
   confirmDelete(role: Role) {
     this.roleToDelete = role;
+    this.deleteRoleConfirmText = '';
     this.showDeleteDialog = true;
   }
 

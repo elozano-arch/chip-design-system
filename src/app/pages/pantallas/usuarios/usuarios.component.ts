@@ -54,7 +54,7 @@ export class UsuariosComponent {
     { label: 'Editar', icon: 'pi pi-pencil', command: () => { if (this.selectedUsuario) this.openEditDialog(this.selectedUsuario); } },
     { label: 'Activar / Desactivar', icon: 'pi pi-power-off', command: () => { if (this.selectedUsuario) this.showToggleDialog = true; } },
     { separator: true },
-    { label: 'Eliminar', icon: 'pi pi-trash', command: () => { if (this.selectedUsuario) this.showDeleteDialog = true; } },
+    { label: 'Eliminar', icon: 'pi pi-trash', command: () => { if (this.selectedUsuario) { this.deleteConfirmText = ''; this.showDeleteDialog = true; } } },
   ];
 
   abrirMenuAcciones(event: Event, usuario: Usuario) {
@@ -266,6 +266,12 @@ export class UsuariosComponent {
     this.nuevoPerfilTouched = false;
   }
 
+  /** Abrir diálogo Nuevo Usuario reseteando estado */
+  openNewDialog() {
+    this.resetNuevoForm();
+    this.showNewDialog = true;
+  }
+
   // ── Validaciones edición ──
   get editNombreInvalid(): boolean {
     return this.editNombreTouched && !this.editNombre.trim();
@@ -295,6 +301,8 @@ export class UsuariosComponent {
     this.editNombre = u.nombre;
     this.editCorreo = u.correo;
     this.editPerfil = u.perfil;
+    this.editNombreTouched = false;
+    this.editCorreoTouched = false;
     this.showEditDialog = true;
   }
 
