@@ -299,16 +299,19 @@
 
   &__item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     font-size: 12px;
     color: var(--chip-grey-600);
     padding: 3px 0;
+    line-height: 1.4;
     transition: color 0.2s;
 
     i {
       font-size: 13px;
       color: var(--chip-grey-300);
+      margin-top: 2px;
+      flex-shrink: 0;
     }
 
     &--ok {
@@ -316,5 +319,26 @@
 
       i { color: var(--chip-success); }
     }
+  }
+
+  &__note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding-top: 10px;
+    border-top: 1px dashed var(--chip-grey-200);
+    font-size: 11px;
+    color: var(--chip-grey-500);
+    line-height: 1.5;
+
+    i {
+      font-size: 12px;
+      color: var(--chip-cobalt-500);
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    strong { color: var(--chip-grey-700); }
   }
 }

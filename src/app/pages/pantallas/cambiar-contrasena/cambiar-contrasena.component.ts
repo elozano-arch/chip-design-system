@@ -65,13 +65,41 @@ export class CambiarContrasenaComponent {
   nuevaTouched = false;
   confirmarTouched = false;
 
-  // Política de contraseña
+  /** Valores prohibidos en la contraseña (case-insensitive donde aplica). */
+  private readonly FORBIDDEN_VALUES = ['Contaduría', 'contaduria', 'password', 'test', '&', '=', '¡', '¿', 'ñ', 'Ñ'];
+
+  /** Cuenta cuántos tipos de caracteres distintos contiene la contraseña. */
+  private countTypes(p: string): number {
+    let count = 0;
+    if (/[A-Z]/.test(p)) count++;
+    if (/[a-z]/.test(p)) count++;
+    if (/[0-9]/.test(p)) count++;
+    if (/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~';]/.test(p)) count++;
+    // Caracteres de otros idiomas (Unicode fuera de ASCII básico).
+    if (/[^\x00-\x7F]/.test(p)) count++;
+    return count;
+  }
+
+  /** Verifica si la contraseña contiene alguno de los valores prohibidos. */
+  private hasForbiddenValue(p: string): boolean {
+    if (!p) return false;
+    const lower = p.toLowerCase();
+    return this.FORBIDDEN_VALUES.some(v => {
+      // Para símbolos y caracteres únicos: comparación literal case-sensitive.
+      if (v.length === 1) return p.includes(v);
+      // Para palabras: case-insensitive.
+      return lower.includes(v.toLowerCase());
+    });
+  }
+
+  // Política de contraseña (CGN — vigente)
   rules: PasswordRule[] = [
-    { key: 'length', label: 'Mínimo 8 caracteres', validate: (p) => p.length >= 8 },
-    { key: 'upper', label: 'Al menos una mayúscula (A-Z)', validate: (p) => /[A-Z]/.test(p) },
-    { key: 'lower', label: 'Al menos una minúscula (a-z)', validate: (p) => /[a-z]/.test(p) },
-    { key: 'number', label: 'Al menos un número (0-9)', validate: (p) => /[0-9]/.test(p) },
-    { key: 'special', label: 'Al menos un carácter especial (!@#$%&...)', validate: (p) => /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/]/.test(p) },
+    { key: 'length', label: 'Entre 12 y 30 caracteres', validate: (p) => p.length >= 12 && p.length <= 30 },
+    { key: 'upper', label: 'Al menos 1 letra mayúscula (A-Z)', validate: (p) => /[A-Z]/.test(p) },
+    { key: 'lower', label: 'Al menos 1 letra minúscula (a-z)', validate: (p) => /[a-z]/.test(p) },
+    { key: 'number', label: 'Al menos 1 número (0-9)', validate: (p) => /[0-9]/.test(p) },
+    { key: 'three-types', label: 'Combina al menos 3 tipos: mayúscula, minúscula, número, símbolo u otros idiomas', validate: (p) => this.countTypes(p) >= 3 },
+    { key: 'forbidden', label: 'No contiene valores prohibidos (Contaduría, password, test, &, =, ñ, ¡, ¿…)', validate: (p) => p.length > 0 && !this.hasForbiddenValue(p) },
   ];
 
   // Información de seguridad (mock)
