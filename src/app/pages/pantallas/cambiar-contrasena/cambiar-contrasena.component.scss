@@ -3,6 +3,12 @@
    Header usa estilos globales (.cpw-header, __title, __row, __desc)
    ============================================================ */
 
+/* CH-1374: banner de bloqueo cuando se llega forzado tras login con contraseña vencida */
+.cpw-forzado-banner {
+  display: block;
+  margin-bottom: 16px;
+}
+
 /* --- Grid de cards de estado --- */
 .cpw-status-grid {
   display: grid;

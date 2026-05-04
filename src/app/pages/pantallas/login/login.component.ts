@@ -121,7 +121,10 @@ export class LoginComponent {
             detail: 'Debe cambiar su contraseña antes de continuar.',
             life: 4000,
           });
-          setTimeout(() => this.router.navigate(['/pantallas/seguridad/cambiar-contrasena']), 1500);
+          setTimeout(() => this.router.navigate(
+            ['/pantallas/seguridad/cambiar-contrasena'],
+            { queryParams: { forzado: 'true' } },
+          ), 1500);
           return;
         }
         this.messageService.add({
@@ -131,7 +134,7 @@ export class LoginComponent {
         });
         setTimeout(() => this.router.navigate(['/']), 1000);
       } else if (this.usuario.toUpperCase() === 'VENCIDO' && this.contrasena === 'demo123') {
-        // Demo del flujo: usuario "VENCIDO" tiene contraseña vencida
+        // Demo del flujo: usuario "VENCIDO" tiene contraseña vencida (CH-1374)
         this.intentosFallidos = 0;
         this.messageService.add({
           severity: 'warn',
@@ -139,7 +142,10 @@ export class LoginComponent {
           detail: 'Su contraseña expiró. Debe cambiarla antes de continuar.',
           life: 4000,
         });
-        setTimeout(() => this.router.navigate(['/pantallas/seguridad/cambiar-contrasena']), 1500);
+        setTimeout(() => this.router.navigate(
+          ['/pantallas/seguridad/cambiar-contrasena'],
+          { queryParams: { forzado: 'true' } },
+        ), 1500);
       } else {
         this.intentosFallidos++;
         const restantes = this.MAX_INTENTOS - this.intentosFallidos;

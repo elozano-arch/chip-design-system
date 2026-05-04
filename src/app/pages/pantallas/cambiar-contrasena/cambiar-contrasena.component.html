@@ -1,16 +1,36 @@
 <p-toast />
 
 <div class="cpw-page" role="main">
-  <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+  @if (!modoForzado) {
+    <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome" />
+  }
 
   <div class="cpw-header">
-    <h1 class="cpw-header__title">Cambiar contraseña</h1>
-    <div class="cpw-header__row">
-      <p class="cpw-header__desc">Mantenga su cuenta segura actualizando su contraseña periódicamente.</p>
-      <p-button label="Cambiar contraseña" icon="pi pi-key" (onClick)="abrirDialog()" />
-    </div>
+    @if (modoForzado) {
+      <p-message severity="warn" styleClass="w-full cpw-forzado-banner">
+        <ng-template #icon>
+          <i class="pi pi-lock"></i>
+        </ng-template>
+        <span>
+          <strong>Acceso bloqueado:</strong>
+          su contraseña ha vencido. Para continuar usando el sistema debe establecer una nueva.
+        </span>
+      </p-message>
+      <h1 class="cpw-header__title">Su contraseña ha vencido</h1>
+      <div class="cpw-header__row">
+        <p class="cpw-header__desc">Cree una nueva contraseña que cumpla con la política de seguridad para acceder al CHIP.</p>
+      </div>
+    } @else {
+      <h1 class="cpw-header__title">Cambiar contraseña</h1>
+      <div class="cpw-header__row">
+        <p class="cpw-header__desc">Mantenga su cuenta segura actualizando su contraseña periódicamente.</p>
+        <p-button label="Cambiar contraseña" icon="pi pi-key" (onClick)="abrirDialog()" />
+      </div>
+    }
   </div>
 
+  <!-- En modo forzado se oculta el detalle (estado, sesiones, dispositivos) -->
+  @if (!modoForzado) {
   <!-- Estado de la contraseña actual -->
   <div class="cpw-status-grid">
     <!-- Card: Estado de la contraseña -->
@@ -108,14 +128,16 @@
       }
     </ul>
   </div>
+  } <!-- @if !modoForzado -->
 </div>
 
 <!-- ============================================================
      MODAL: CAMBIAR CONTRASEÑA
      ============================================================ -->
 <p-dialog [(visible)]="showDialog" [modal]="true" [draggable]="false"
-  [closable]="!loading" [closeOnEscape]="!loading"
-  [style]="{ width: '480px' }" header="Cambiar contraseña">
+  [closable]="!loading && !modoForzado" [closeOnEscape]="!loading && !modoForzado"
+  [style]="{ width: '480px' }"
+  [header]="modoForzado ? 'Establecer nueva contraseña' : 'Cambiar contraseña'">
 
   <div class="cpw-modal">
     <!-- Contraseña actual -->
@@ -228,9 +250,12 @@
   </div>
 
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" severity="secondary"
-      (onClick)="cerrarDialog()" [disabled]="loading" />
-    <p-button label="Guardar cambios" icon="pi pi-check"
+    @if (!modoForzado) {
+      <p-button label="Cancelar" [text]="true" severity="secondary"
+        (onClick)="cerrarDialog()" [disabled]="loading" />
+    }
+    <p-button [label]="modoForzado ? 'Cambiar contraseña y continuar' : 'Guardar cambios'"
+      icon="pi pi-check"
       (onClick)="guardar()" [loading]="loading" [disabled]="!formValido || loading" />
   </ng-template>
 </p-dialog>

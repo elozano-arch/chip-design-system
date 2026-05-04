@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -39,12 +40,15 @@ interface DispositivoActivo {
   templateUrl: './cambiar-contrasena.component.html',
   styleUrl: './cambiar-contrasena.component.scss',
 })
-export class CambiarContrasenaComponent {
+export class CambiarContrasenaComponent implements OnInit {
   breadcrumbItems: MenuItem[] = [
     { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
     { label: 'Cambiar contraseña' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
+
+  // CH-1374: modo forzado tras login con contraseña vencida
+  modoForzado = false;
 
   showDialog = false;
   loading = false;
@@ -134,7 +138,22 @@ export class CambiarContrasenaComponent {
     },
   ];
 
-  constructor(private messageService: MessageService) {}
+  constructor(
+    private messageService: MessageService,
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
+
+  ngOnInit() {
+    // CH-1374: si se llega con ?forzado=true desde login, abrir modal y forzar estado vencida
+    this.route.queryParamMap.subscribe(params => {
+      if (params.get('forzado') === 'true') {
+        this.modoForzado = true;
+        this.seguridadInfo.diasParaVencer = 0;
+        this.abrirDialog();
+      }
+    });
+  }
 
   get vencida(): boolean {
     return this.seguridadInfo.diasParaVencer <= 0;
@@ -177,6 +196,8 @@ export class CambiarContrasenaComponent {
   }
 
   cerrarDialog() {
+    // CH-1374: en modo forzado el modal no se puede cerrar manualmente
+    if (this.modoForzado) return;
     this.showDialog = false;
     this.resetForm();
   }
@@ -222,13 +243,24 @@ export class CambiarContrasenaComponent {
       this.messageService.add({
         severity: 'success',
         summary: 'Contraseña actualizada',
-        detail: 'Su contraseña fue cambiada exitosamente.',
+        detail: this.modoForzado
+          ? 'Su contraseña fue cambiada. Ingresando al sistema…'
+          : 'Su contraseña fue cambiada exitosamente.',
         life: 4000,
       });
       // Actualizar info de seguridad
       this.seguridadInfo.ultimoCambio = 'Hoy';
       this.seguridadInfo.diasDesdeUltimoCambio = 0;
       this.seguridadInfo.diasParaVencer = 90;
+
+      // CH-1374: si fue cambio forzado, liberar el modo y redirigir al home
+      if (this.modoForzado) {
+        this.modoForzado = false;
+        this.showDialog = false;
+        this.resetForm();
+        setTimeout(() => this.router.navigate(['/']), 1500);
+        return;
+      }
       this.cerrarDialog();
     }, 800);
   }
