@@ -37,33 +37,139 @@
 
     @if (!filtersCollapsed) {
       <div class="chip-filters__body" id="usr-filters-body">
-        <div class="chip-filters__fields chip-filters__fields--4col">
+        <div class="chip-filters__fields chip-filters__fields--3col">
+          <!-- Usuario (alfanumérico 4-20) -->
           <div class="chip-filters__field">
-            <label for="usr-search-nombre">Nombre</label>
+            <label for="usr-f-usuario">Usuario</label>
             <p-iconField>
-              <p-inputIcon styleClass="pi pi-search" />
-              <input pInputText id="usr-search-nombre" placeholder="Buscar por nombre..." [(ngModel)]="searchUsuariosNombre" class="w-full" />
+              <p-inputIcon styleClass="pi pi-user" />
+              <input pInputText id="usr-f-usuario"
+                placeholder="Código del usuario"
+                [(ngModel)]="filterUsuario"
+                minlength="4" maxlength="20"
+                class="w-full" />
             </p-iconField>
           </div>
+
+          <!-- Documento (numérico 4-20) -->
           <div class="chip-filters__field">
-            <label for="usr-search-codigo">Código</label>
+            <label for="usr-f-doc">Documento</label>
             <p-iconField>
-              <p-inputIcon styleClass="pi pi-search" />
-              <input pInputText id="usr-search-codigo" placeholder="Buscar por código..." [(ngModel)]="searchUsuariosCodigo" class="w-full" />
+              <p-inputIcon styleClass="pi pi-id-card" />
+              <input pInputText id="usr-f-doc"
+                placeholder="Cédula, NIT…"
+                [(ngModel)]="filterDocumento"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                minlength="4" maxlength="20"
+                class="w-full" />
             </p-iconField>
           </div>
+
+          <!-- Entidad (autocomplete + botón modal) -->
           <div class="chip-filters__field">
-            <label for="usr-perfil">Perfil</label>
-            <p-select inputId="usr-perfil" [options]="perfilOptions" [(ngModel)]="filterPerfil" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="usr-f-entidad">Entidad asociada</label>
+            <div class="usr-entidad-field">
+              <p-autoComplete inputId="usr-f-entidad"
+                [(ngModel)]="filterEntidadInput"
+                [suggestions]="sugerenciasEntidad"
+                (completeMethod)="searchEntidades($event)"
+                (onSelect)="onSelectEntidadAutocomplete($event.value)"
+                (onClear)="limpiarEntidad()"
+                [forceSelection]="false"
+                [minLength]="3"
+                optionLabel="razonSocial"
+                placeholder="Escriba 3+ caracteres o use el directorio"
+                styleClass="w-full"
+                appendTo="body">
+                <ng-template let-e #item>
+                  <div class="usr-ac-item">
+                    <span class="usr-ac-item__code">{{ e.codigo }}</span>
+                    <span class="usr-ac-item__name">{{ e.razonSocial }}</span>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+              <p-button icon="pi pi-search" severity="secondary" [outlined]="true"
+                pTooltip="Abrir Directorio de Entidades" tooltipPosition="top"
+                aria-label="Abrir Directorio de Entidades"
+                (onClick)="abrirDirectorioEntidades()" />
+            </div>
+            @if (filterEntidad) {
+              <small class="usr-entidad-selected" aria-live="polite">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+                {{ filterEntidad.codigo }} · {{ filterEntidad.razonSocial }}
+              </small>
+            }
           </div>
+
+          <!-- Nombre completo (autocomplete 3+) -->
           <div class="chip-filters__field">
-            <label for="usr-estado">Estado</label>
-            <p-select inputId="usr-estado" [options]="estadoOptions" [(ngModel)]="filterEstado" placeholder="Todos" appendTo="body" [showClear]="true" class="w-full" />
+            <label for="usr-f-nombre">Nombre completo</label>
+            <p-autoComplete inputId="usr-f-nombre"
+              [(ngModel)]="filterNombre"
+              [suggestions]="sugerenciasNombre"
+              (completeMethod)="searchNombres($event)"
+              [minLength]="3"
+              placeholder="Escriba 3+ caracteres del nombre"
+              styleClass="w-full"
+              appendTo="body" />
           </div>
+
+          <!-- Rol/Perfil -->
+          <div class="chip-filters__field">
+            <label for="usr-f-perfil">Rol / Perfil</label>
+            <p-select inputId="usr-f-perfil" [options]="perfilOptions"
+              [(ngModel)]="filterPerfil"
+              placeholder="Todos" appendTo="body" [showClear]="true"
+              [filter]="true" filterBy="label"
+              class="w-full" />
+          </div>
+
+          <!-- Tipo usuario -->
+          <div class="chip-filters__field">
+            <label for="usr-f-tipo">Tipo usuario</label>
+            <p-select inputId="usr-f-tipo" [options]="tipoUsuarioOptions"
+              [(ngModel)]="filterTipoUsuario"
+              placeholder="Todos" appendTo="body" [showClear]="true"
+              class="w-full" />
+          </div>
+
+          <!-- Estado (radio: Activo default, Inactivo, Todos) -->
+          <div class="chip-filters__field chip-filters__field--full">
+            <label class="chip-filters__group-label">Estado</label>
+            <div class="usr-radio-row" role="radiogroup" aria-label="Filtrar por estado">
+              <div class="usr-radio">
+                <p-radioButton name="usr-f-estado" value="true" [(ngModel)]="filterEstado" inputId="usr-f-estado-act" />
+                <label for="usr-f-estado-act">Activo</label>
+              </div>
+              <div class="usr-radio">
+                <p-radioButton name="usr-f-estado" value="false" [(ngModel)]="filterEstado" inputId="usr-f-estado-ina" />
+                <label for="usr-f-estado-ina">Inactivo</label>
+              </div>
+              <div class="usr-radio">
+                <p-radioButton name="usr-f-estado" value="todos" [(ngModel)]="filterEstado" inputId="usr-f-estado-tod" />
+                <label for="usr-f-estado-tod">Todos</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones de búsqueda -->
+        <div class="chip-filters__actions">
+          <p-button label="Limpiar" icon="pi pi-filter-slash"
+            [text]="true" severity="secondary"
+            (onClick)="clearFilters()" />
+          <p-button label="Buscar" icon="pi pi-search"
+            (onClick)="onBuscar()" />
         </div>
       </div>
     }
   </div>
+
+  <!-- Modal Directorio de Entidades (reutilizable) -->
+  <app-directorio-entidades
+    [(visible)]="mostrarDirectorioEntidades"
+    (seleccionar)="onEntidadSeleccionada($event)" />
 
   <!-- Tabla -->
   <p-table [value]="filteredUsuarios" [stripedRows]="true" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]" [rowHover]="true" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros">
@@ -76,7 +182,7 @@
         <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
         <th>Correo</th>
         <th pSortableColumn="perfil">Perfil <p-sortIcon field="perfil" /></th>
-        <th pSortableColumn="entidad">Entidad <p-sortIcon field="entidad" /></th>
+        <th pSortableColumn="entidad.nombre">Entidad <p-sortIcon field="entidad.nombre" /></th>
         <th style="width: 80px; text-align: center">Estado</th>
         <th style="width: 100px">Último Acceso</th>
         <th style="width: 90px; text-align: center">Acciones</th>
@@ -88,7 +194,10 @@
         <td class="usr-name">{{ u.nombre }}</td>
         <td class="usr-email">{{ u.correo }}</td>
         <td><p-tag [value]="u.perfil" severity="info" /></td>
-        <td class="usr-entity">{{ u.entidad }}</td>
+        <td class="usr-entity">
+          <span class="usr-entity__code">{{ u.entidad.codigo }}</span>
+          <span class="usr-entity__name">{{ u.entidad.nombre }}</span>
+        </td>
         <td style="text-align: center">
           @if (u.activo) {
             <p-tag value="Activo" severity="success" />
@@ -110,9 +219,9 @@
     <ng-template #emptymessage>
       <tr>
         <td colspan="8" class="usr-empty">
-          @if (activeFilterCount === 0) {
+          @if (!busquedaRealizada) {
             <i class="pi pi-search" aria-hidden="true"></i>
-            <p>Use los filtros de búsqueda para listar usuarios.</p>
+            <p>Use los filtros y presione <strong>Buscar</strong> para listar usuarios.</p>
           } @else {
             <i class="pi pi-inbox" aria-hidden="true"></i>
             <p>No se encontraron resultados para los filtros aplicados.</p>

@@ -17,15 +17,21 @@ import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
+import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageService, MenuItem } from 'primeng/api';
+
+import { DirectorioEntidadesComponent, Entidad } from '../../../components/directorio-entidades/directorio-entidades.component';
 
 interface Usuario {
   id: number;
   codigo: string;
+  documento: string;
   nombre: string;
   correo: string;
   perfil: string;
-  entidad: string;
+  tipoUsuario: 'LOCAL' | 'CENTRAL' | 'ESTRATÉGICO';
+  entidad: { codigo: string; nombre: string };
   activo: boolean;
   ultimoAcceso: string;
   /** Override a la política del rol (null = hereda del rol asignado). */
@@ -42,6 +48,8 @@ interface Usuario {
     ToastModule, TooltipModule, BreadcrumbModule,
     IconFieldModule, InputIconModule, SelectModule,
     DialogModule, DividerModule, MenuModule, ChipModule,
+    AutoCompleteModule, RadioButtonModule,
+    DirectorioEntidadesComponent,
   ],
   providers: [MessageService],
   templateUrl: './usuarios.component.html',
@@ -86,11 +94,34 @@ export class UsuariosComponent {
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 
-  searchUsuariosNombre = '';
-  searchUsuariosCodigo = '';
-  filterPerfil = '';
-  filterEstado = '';
+  // ── Filtros (CH-1360 spec) ──
+  filterUsuario = '';                                  // Alfanumérico 4-20
+  filterDocumento = '';                                // Numérico 4-20
+  filterEntidad: Entidad | null = null;                // Selección via modal o autocomplete
+  filterEntidadInput: string | Entidad = '';           // Texto libre / autocomplete (acepta objeto al seleccionar)
+  filterNombre = '';                                   // Texto autocomplete 3-100
+  filterPerfil = '';                                   // Selección
+  filterTipoUsuario = '';                              // LOCAL/CENTRAL/ESTRATÉGICO
+  filterEstado: 'true' | 'false' | 'todos' = 'true';   // Default Activo
   filtersCollapsed = false;
+
+  // Estado de búsqueda — la tabla muestra resultados solo tras presionar "Buscar"
+  busquedaRealizada = false;
+  // Snapshot de los filtros aplicados al momento de buscar (para mostrar resultados estables)
+  private filtrosAplicados: {
+    usuario: string; documento: string;
+    entidadCodigo: string;
+    nombre: string; perfil: string;
+    tipoUsuario: string; estado: string;
+  } | null = null;
+
+  // Modal Directorio de Entidades
+  mostrarDirectorioEntidades = false;
+
+  // Sugerencias autocomplete
+  sugerenciasNombre: string[] = [];
+  sugerenciasEntidad: Entidad[] = [];
+
   showNewDialog = false;
   showEditDialog = false;
   showToggleDialog = false;
@@ -132,64 +163,171 @@ export class UsuariosComponent {
     { label: 'Auditor', value: 'Auditor' },
   ];
 
-  estadoOptions = [
+  tipoUsuarioOptions = [
     { label: 'Todos', value: '' },
-    { label: 'Activo', value: 'true' },
-    { label: 'Inactivo', value: 'false' },
+    { label: 'Local', value: 'LOCAL' },
+    { label: 'Central', value: 'CENTRAL' },
+    { label: 'Estratégico', value: 'ESTRATÉGICO' },
   ];
 
   usuarios: Usuario[] = [
-    { id: 1, codigo: 'DILA710990', nombre: 'Omaira Lozada Ladino', correo: 'olozada@cgn.gov.co', perfil: 'Administrador Categorización', entidad: 'PROYECTO CHIP 2.0', activo: true, ultimoAcceso: '14/04/2024', vigencia: 90, intentos: 3 },
-    { id: 2, codigo: 'JMGA850312', nombre: 'Juan Manuel García Arévalo', correo: 'jgarcia@minhacienda.gov.co', perfil: 'Operador de Entidad', entidad: 'MINISTERIO DE HACIENDA', activo: true, ultimoAcceso: '20/03/2024', vigencia: 60, intentos: 5 },
-    { id: 3, codigo: 'MCRP920115', nombre: 'María Cristina Rodríguez', correo: 'mrodriguez@cgn.gov.co', perfil: 'Consulta', entidad: 'CGN - CONTADURÍA GENERAL', activo: true, ultimoAcceso: '10/04/2024', vigencia: null, intentos: null },
-    { id: 4, codigo: 'CPLS880704', nombre: 'Carlos Pérez López', correo: 'cperez@cgn.gov.co', perfil: 'Administrador General', entidad: 'CGN - CONTADURÍA GENERAL', activo: true, ultimoAcceso: '28/02/2024', vigencia: 90, intentos: 3 },
-    { id: 5, codigo: 'AMVR760521', nombre: 'Ana María Vargas Restrepo', correo: 'avargas@contraloria.gov.co', perfil: 'Auditor', entidad: 'CONTRALORÍA GENERAL', activo: true, ultimoAcceso: '05/04/2024', vigencia: 90, intentos: 3 },
-    { id: 6, codigo: 'LFHM900830', nombre: 'Luis Fernando Hernández', correo: 'lhernandez@bogota.gov.co', perfil: 'Operador de Entidad', entidad: 'ALCALDÍA DE BOGOTÁ', activo: false, ultimoAcceso: '15/01/2024', vigencia: 60, intentos: 5 },
-    { id: 7, codigo: 'SMPG950210', nombre: 'Sandra Milena Pinzón', correo: 'spinzon@antioquia.gov.co', perfil: 'Operador de Entidad', entidad: 'GOBERNACIÓN DE ANTIOQUIA', activo: true, ultimoAcceso: '12/04/2024', vigencia: null, intentos: null },
-    { id: 8, codigo: 'RDTM830619', nombre: 'Ricardo Daniel Torres', correo: 'rtorres@dane.gov.co', perfil: 'Consulta', entidad: 'DANE', activo: true, ultimoAcceso: '30/03/2024', vigencia: null, intentos: null },
+    { id: 1, codigo: 'DILA710990', documento: '52789012', nombre: 'Omaira Lozada Ladino', correo: 'olozada@cgn.gov.co', perfil: 'Administrador Categorización', tipoUsuario: 'CENTRAL', entidad: { codigo: '210105001', nombre: 'PROYECTO CHIP 2.0' }, activo: true, ultimoAcceso: '14/04/2024', vigencia: 90, intentos: 3 },
+    { id: 2, codigo: 'JMGA850312', documento: '79456123', nombre: 'Juan Manuel García Arévalo', correo: 'jgarcia@minhacienda.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'CENTRAL', entidad: { codigo: '211511001', nombre: 'MINISTERIO DE HACIENDA' }, activo: true, ultimoAcceso: '20/03/2024', vigencia: 60, intentos: 5 },
+    { id: 3, codigo: 'MCRP920115', documento: '52123456', nombre: 'María Cristina Rodríguez', correo: 'mrodriguez@cgn.gov.co', perfil: 'Consulta', tipoUsuario: 'CENTRAL', entidad: { codigo: '210111001', nombre: 'CGN - CONTADURÍA GENERAL' }, activo: true, ultimoAcceso: '10/04/2024', vigencia: null, intentos: null },
+    { id: 4, codigo: 'CPLS880704', documento: '79987654', nombre: 'Carlos Pérez López', correo: 'cperez@cgn.gov.co', perfil: 'Administrador General', tipoUsuario: 'ESTRATÉGICO', entidad: { codigo: '210111001', nombre: 'CGN - CONTADURÍA GENERAL' }, activo: true, ultimoAcceso: '28/02/2024', vigencia: 90, intentos: 3 },
+    { id: 5, codigo: 'AMVR760521', documento: '43654321', nombre: 'Ana María Vargas Restrepo', correo: 'avargas@contraloria.gov.co', perfil: 'Auditor', tipoUsuario: 'CENTRAL', entidad: { codigo: '210168001', nombre: 'CONTRALORÍA GENERAL' }, activo: true, ultimoAcceso: '05/04/2024', vigencia: 90, intentos: 3 },
+    { id: 6, codigo: 'LFHM900830', documento: '80345678', nombre: 'Luis Fernando Hernández', correo: 'lhernandez@bogota.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'LOCAL', entidad: { codigo: '211511001', nombre: 'ALCALDÍA DE BOGOTÁ' }, activo: false, ultimoAcceso: '15/01/2024', vigencia: 60, intentos: 5 },
+    { id: 7, codigo: 'SMPG950210', documento: '32678910', nombre: 'Sandra Milena Pinzón', correo: 'spinzon@antioquia.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'LOCAL', entidad: { codigo: '210105001', nombre: 'GOBERNACIÓN DE ANTIOQUIA' }, activo: true, ultimoAcceso: '12/04/2024', vigencia: null, intentos: null },
+    { id: 8, codigo: 'RDTM830619', documento: '79234567', nombre: 'Ricardo Daniel Torres', correo: 'rtorres@dane.gov.co', perfil: 'Consulta', tipoUsuario: 'CENTRAL', entidad: { codigo: '211511001', nombre: 'DANE' }, activo: true, ultimoAcceso: '30/03/2024', vigencia: null, intentos: null },
   ];
 
+  /** Resultados de la búsqueda — solo se calculan tras presionar "Buscar". */
   get filteredUsuarios(): Usuario[] {
-    // Mostrar resultados solo cuando haya al menos un filtro activo
-    if (this.activeFilterCount === 0) return [];
-    const qn = this.searchUsuariosNombre.trim().toLowerCase();
-    const qc = this.searchUsuariosCodigo.trim().toLowerCase();
+    if (!this.busquedaRealizada || !this.filtrosAplicados) return [];
+    const f = this.filtrosAplicados;
     return this.usuarios.filter(u => {
-      const matchNombre = !qn || u.nombre.toLowerCase().includes(qn);
-      const matchCodigo = !qc || u.codigo.toLowerCase().includes(qc);
-      const matchPerfil = !this.filterPerfil || u.perfil === this.filterPerfil;
-      const matchEstado = !this.filterEstado || String(u.activo) === this.filterEstado;
-      return matchNombre && matchCodigo && matchPerfil && matchEstado;
+      const matchUsuario = !f.usuario || u.codigo.toLowerCase().includes(f.usuario);
+      const matchDocumento = !f.documento || u.documento.includes(f.documento);
+      const matchEntidad = !f.entidadCodigo || u.entidad.codigo === f.entidadCodigo;
+      const matchNombre = !f.nombre || this.normaliza(u.nombre).includes(this.normaliza(f.nombre));
+      const matchPerfil = !f.perfil || u.perfil === f.perfil;
+      const matchTipo = !f.tipoUsuario || u.tipoUsuario === f.tipoUsuario;
+      const matchEstado = f.estado === 'todos' || String(u.activo) === f.estado;
+      return matchUsuario && matchDocumento && matchEntidad && matchNombre
+          && matchPerfil && matchTipo && matchEstado;
     });
   }
 
+  /** Cuenta de filtros con valor (para mostrar badge en header del bloque). */
   get activeFilterCount(): number {
     let count = 0;
-    if (this.searchUsuariosNombre) count++;
-    if (this.searchUsuariosCodigo) count++;
+    if (this.filterUsuario) count++;
+    if (this.filterDocumento) count++;
+    if (this.filterEntidad) count++;
+    if (this.filterNombre) count++;
     if (this.filterPerfil) count++;
-    if (this.filterEstado) count++;
+    if (this.filterTipoUsuario) count++;
+    if (this.filterEstado !== 'true') count++;  // Activo es default, no cuenta
     return count;
   }
 
   get activeFilters(): { label: string; field: string }[] {
     const filters: { label: string; field: string }[] = [];
-    if (this.searchUsuariosNombre) filters.push({ label: `Nombre: "${this.searchUsuariosNombre}"`, field: 'searchUsuariosNombre' });
-    if (this.searchUsuariosCodigo) filters.push({ label: `Código: "${this.searchUsuariosCodigo}"`, field: 'searchUsuariosCodigo' });
+    if (this.filterUsuario) filters.push({ label: `Usuario: "${this.filterUsuario}"`, field: 'filterUsuario' });
+    if (this.filterDocumento) filters.push({ label: `Documento: "${this.filterDocumento}"`, field: 'filterDocumento' });
+    if (this.filterEntidad) filters.push({ label: `Entidad: ${this.filterEntidad.codigo} · ${this.filterEntidad.razonSocial}`, field: 'filterEntidad' });
+    if (this.filterNombre) filters.push({ label: `Nombre: "${this.filterNombre}"`, field: 'filterNombre' });
     if (this.filterPerfil) filters.push({ label: `Perfil: ${this.filterPerfil}`, field: 'filterPerfil' });
-    if (this.filterEstado) filters.push({ label: `Estado: ${this.filterEstado === 'true' ? 'Activo' : 'Inactivo'}`, field: 'filterEstado' });
+    if (this.filterTipoUsuario) filters.push({ label: `Tipo: ${this.filterTipoUsuario}`, field: 'filterTipoUsuario' });
+    if (this.filterEstado !== 'true') {
+      const lbl = this.filterEstado === 'todos' ? 'Todos' : (this.filterEstado === 'false' ? 'Inactivo' : 'Activo');
+      filters.push({ label: `Estado: ${lbl}`, field: 'filterEstado' });
+    }
     return filters;
   }
 
   removeFilter(field: string) {
-    (this as any)[field] = '';
+    if (field === 'filterEstado') {
+      this.filterEstado = 'true'; // vuelve al default
+    } else if (field === 'filterEntidad') {
+      this.filterEntidad = null;
+      this.filterEntidadInput = '';
+    } else {
+      (this as any)[field] = '';
+    }
   }
 
   clearFilters() {
-    this.searchUsuariosNombre = '';
-    this.searchUsuariosCodigo = '';
+    this.filterUsuario = '';
+    this.filterDocumento = '';
+    this.filterEntidad = null;
+    this.filterEntidadInput = '';
+    this.filterNombre = '';
     this.filterPerfil = '';
-    this.filterEstado = '';
+    this.filterTipoUsuario = '';
+    this.filterEstado = 'true';
+    this.busquedaRealizada = false;
+    this.filtrosAplicados = null;
+  }
+
+  /** Acción del botón "Buscar": congela los filtros actuales y dispara los resultados. */
+  onBuscar() {
+    this.filtrosAplicados = {
+      usuario: this.filterUsuario.trim().toLowerCase(),
+      documento: this.filterDocumento.trim(),
+      entidadCodigo: this.filterEntidad?.codigo ?? '',
+      nombre: this.filterNombre.trim(),
+      perfil: this.filterPerfil,
+      tipoUsuario: this.filterTipoUsuario,
+      estado: this.filterEstado,
+    };
+    this.busquedaRealizada = true;
+  }
+
+  /** Autocomplete por nombre — sugerencias de los nombres existentes. */
+  searchNombres(event: AutoCompleteCompleteEvent) {
+    const q = event.query.trim();
+    if (q.length < 3) {
+      this.sugerenciasNombre = [];
+      return;
+    }
+    const qn = this.normaliza(q);
+    this.sugerenciasNombre = Array.from(
+      new Set(this.usuarios.map(u => u.nombre).filter(n => this.normaliza(n).includes(qn))),
+    ).slice(0, 8);
+  }
+
+  /** Autocomplete por entidad — sugerencias de razón social/código. */
+  searchEntidades(event: AutoCompleteCompleteEvent) {
+    const q = event.query.trim();
+    if (q.length < 3) {
+      this.sugerenciasEntidad = [];
+      return;
+    }
+    const qn = this.normaliza(q);
+    // Reutiliza las entidades únicas que ya están asociadas a usuarios
+    const mapa = new Map<string, Entidad>();
+    this.usuarios.forEach(u => {
+      if (!mapa.has(u.entidad.codigo)) {
+        mapa.set(u.entidad.codigo, {
+          codigo: u.entidad.codigo,
+          nit: '',
+          razonSocial: u.entidad.nombre,
+          departamento: '',
+          municipio: '',
+        });
+      }
+    });
+    this.sugerenciasEntidad = Array.from(mapa.values())
+      .filter(e => this.normaliza(e.razonSocial).includes(qn) || e.codigo.includes(q))
+      .slice(0, 8);
+  }
+
+  /** Cuando el usuario selecciona una entidad por autocomplete. */
+  onSelectEntidadAutocomplete(entidad: Entidad) {
+    this.filterEntidad = entidad;
+  }
+
+  /** Abre el modal Directorio de Entidades. */
+  abrirDirectorioEntidades() {
+    this.mostrarDirectorioEntidades = true;
+  }
+
+  /** Recibe la entidad seleccionada desde el modal. */
+  onEntidadSeleccionada(entidad: Entidad) {
+    this.filterEntidad = entidad;
+    this.filterEntidadInput = entidad;  // muestra el objeto en el autocomplete
+  }
+
+  /** Limpia solo el campo Entidad. */
+  limpiarEntidad() {
+    this.filterEntidad = null;
+    this.filterEntidadInput = '';
+  }
+
+  /** Normaliza texto: lowercase + sin tildes (para búsquedas insensibles). */
+  private normaliza(s: string): string {
+    return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   }
 
   // ── Validaciones CH-1368 (Crear usuario) ──
@@ -263,10 +401,12 @@ export class UsuariosComponent {
     const nuevo: Usuario = {
       id: Math.max(...this.usuarios.map(u => u.id)) + 1,
       codigo: this.nuevoCodigo.trim().toUpperCase(),
+      documento: '',
       nombre: this.nuevoNombre.trim(),
       correo: this.nuevoCorreo.trim().toLowerCase(),
       perfil: this.nuevoPerfil,
-      entidad: 'PROYECTO CHIP 2.0',
+      tipoUsuario: 'CENTRAL',
+      entidad: { codigo: '210105001', nombre: 'PROYECTO CHIP 2.0' },
       activo: true,
       ultimoAcceso: '—',
       vigencia: null,
