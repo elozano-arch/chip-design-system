@@ -110,8 +110,13 @@
     <ng-template #emptymessage>
       <tr>
         <td colspan="8" class="usr-empty">
-          <i class="pi pi-inbox" aria-hidden="true"></i>
-          <p>No se encontraron resultados para los filtros aplicados.</p>
+          @if (activeFilterCount === 0) {
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <p>Use los filtros de búsqueda para listar usuarios.</p>
+          } @else {
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>No se encontraron resultados para los filtros aplicados.</p>
+          }
         </td>
       </tr>
     </ng-template>

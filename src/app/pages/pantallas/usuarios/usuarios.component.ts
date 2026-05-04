@@ -150,6 +150,8 @@ export class UsuariosComponent {
   ];
 
   get filteredUsuarios(): Usuario[] {
+    // Mostrar resultados solo cuando haya al menos un filtro activo
+    if (this.activeFilterCount === 0) return [];
     const qn = this.searchUsuariosNombre.trim().toLowerCase();
     const qc = this.searchUsuariosCodigo.trim().toLowerCase();
     return this.usuarios.filter(u => {
