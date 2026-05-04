@@ -293,12 +293,14 @@ $sidebar-width-collapsed: 60px;
 
   &--collapsed &__link {
     justify-content: center;
+    align-items: center;
     padding: 10px 0;
     gap: 0;
 
     i {
       width: auto;
       font-size: 18px;
+      padding-top: 0;
     }
   }
 
@@ -328,16 +330,19 @@ $sidebar-width-collapsed: 60px;
 
   &__link {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     padding: 10px 14px;
     font-family: var(--font-body);
     font-size: 13px;
+    line-height: 1.35;
     color: var(--chip-grey-700);
     text-decoration: none;
     border-radius: var(--radius-sm);
     transition: all 0.15s;
-    white-space: nowrap;
+    /* Permitir wrap a 2+ líneas para títulos largos */
+    white-space: normal;
+    overflow-wrap: anywhere;
 
     i {
       font-size: 16px;
@@ -345,6 +350,16 @@ $sidebar-width-collapsed: 60px;
       text-align: center;
       color: var(--chip-grey-400);
       transition: color 0.15s;
+      flex-shrink: 0;
+      /* Alinea el icono con la primera línea del texto */
+      line-height: inherit;
+      padding-top: 1px;
+    }
+
+    /* El label crece hasta el chevron sin desbordar */
+    .app-sidebar__label {
+      flex: 1 1 auto;
+      min-width: 0;
     }
 
     &:hover {
