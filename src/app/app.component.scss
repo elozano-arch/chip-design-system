@@ -356,9 +356,8 @@ $sidebar-width-collapsed: 60px;
       padding-top: 1px;
     }
 
-    /* El label crece hasta el chevron sin desbordar */
+    /* Permite wrap del texto sin desbordar (no expande, junto al icono) */
     .app-sidebar__label {
-      flex: 1 1 auto;
       min-width: 0;
     }
 
