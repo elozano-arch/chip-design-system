@@ -196,12 +196,26 @@
    Filtros: campos extendidos para spec CH-1360
    ============================================================ */
 
-/* Asegura que cualquier p-iconField dentro de los filtros ocupe el ancho completo
-   de su columna en la grilla (sin gaps a la derecha) */
-.chip-filters__field p-iconfield,
-.chip-filters__field p-iconField {
-  display: block;
-  width: 100%;
+/* Fuerza que TODOS los wrappers host de PrimeNG ocupen 100% de la columna
+   del grid. Sin esto, p-iconfield/p-select/p-autocomplete son inline-block
+   por defecto y dejan espacio muerto a la derecha aunque el input interno
+   tenga w-full. */
+.chip-filters__field {
+  > p-iconfield,
+  > p-iconField,
+  > p-select,
+  > p-autocomplete,
+  > p-autoComplete {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* También los divs internos que renderiza PrimeNG dentro de cada host */
+  .p-iconfield,
+  .p-select,
+  .p-autocomplete {
+    width: 100% !important;
+  }
 }
 
 /* (Labels heredan del patrón global en src/styles.scss:
