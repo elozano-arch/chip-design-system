@@ -11,6 +11,7 @@ import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { TooltipModule } from 'primeng/tooltip';
 
 export interface Entidad {
   codigo: string;
@@ -27,6 +28,7 @@ export interface Entidad {
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
     SelectModule, TableModule, DialogModule, TagModule, RadioButtonModule,
+    TooltipModule,
   ],
   templateUrl: './directorio-entidades.component.html',
   styleUrl: './directorio-entidades.component.scss',
@@ -97,6 +99,12 @@ export class DirectorioEntidadesComponent {
   /** Si cambia el departamento, reset municipio. */
   onDepartamentoChange() {
     this.fMunicipio = '';
+  }
+
+  /** Indica si hay al menos un filtro con valor (para habilitar Consultar/Limpiar). */
+  get tieneAlgunFiltro(): boolean {
+    return !!(this.fCodigo.trim() || this.fNit.trim() || this.fRazonSocial.trim()
+              || this.fDepartamento || this.fMunicipio);
   }
 
   consultar() {

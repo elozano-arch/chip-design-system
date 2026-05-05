@@ -148,8 +148,12 @@
           <div class="chip-filters__actions-buttons">
             <p-button label="Limpiar" icon="pi pi-filter-slash"
               [text]="true" severity="secondary"
+              [disabled]="activeFilterCount === 0"
               (onClick)="clearFilters()" />
             <p-button label="Buscar" icon="pi pi-search"
+              [disabled]="activeFilterCount === 0"
+              pTooltip="Diligencie al menos un filtro para buscar"
+              [tooltipDisabled]="activeFilterCount > 0" tooltipPosition="top"
               (onClick)="onBuscar()" />
           </div>
         </div>

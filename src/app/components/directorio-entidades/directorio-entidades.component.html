@@ -44,8 +44,13 @@
 
       <div class="dir-ent__filtros-actions">
         <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary"
+          [disabled]="!tieneAlgunFiltro && !busquedaRealizada"
           (onClick)="limpiar()" />
-        <p-button label="Consultar" icon="pi pi-search" (onClick)="consultar()" />
+        <p-button label="Consultar" icon="pi pi-search"
+          [disabled]="!tieneAlgunFiltro"
+          pTooltip="Diligencie al menos un filtro para consultar"
+          [tooltipDisabled]="tieneAlgunFiltro" tooltipPosition="top"
+          (onClick)="consultar()" />
       </div>
     </section>
 
