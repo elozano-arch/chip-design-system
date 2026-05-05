@@ -204,6 +204,43 @@
   width: 100%;
 }
 
+/* Uniformidad de altura entre TODOS los controles del filtro (inputs simples,
+   inputs con icono, selects, autocomplete). Cada componente PrimeNG aplica
+   paddings ligeramente distintos — esto los nivela a una altura común. */
+.chip-filters__field {
+  --chip-filter-control-height: 40px;
+
+  /* Inputs nativos / con pInputText */
+  input.p-inputtext,
+  .p-inputtext {
+    min-height: var(--chip-filter-control-height);
+    box-sizing: border-box;
+    line-height: 1.4;
+  }
+
+  /* p-select: el wrapper externo y el label interno deben respetar altura */
+  .p-select,
+  .p-select .p-select-label {
+    min-height: var(--chip-filter-control-height);
+    display: flex;
+    align-items: center;
+  }
+
+  /* p-autocomplete: input interno */
+  .p-autocomplete,
+  .p-autocomplete .p-autocomplete-input,
+  .p-autocomplete-input {
+    min-height: var(--chip-filter-control-height);
+    box-sizing: border-box;
+  }
+
+  /* p-iconField: hereda de su input interno, pero aseguramos consistencia */
+  p-iconfield input.p-inputtext,
+  p-iconField input.p-inputtext {
+    min-height: var(--chip-filter-control-height);
+  }
+}
+
 /* Campo Entidad: el input es el TRIGGER del modal Directorio
    No es un input editable — es un selector con apariencia de input */
 .usr-entidad-trigger-input {
