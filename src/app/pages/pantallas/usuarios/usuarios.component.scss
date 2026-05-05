@@ -196,16 +196,55 @@
    Filtros: campos extendidos para spec CH-1360
    ============================================================ */
 
-/* Campo Entidad: input autocomplete + botón modal en línea */
+/* Campo Entidad: input-group (autocomplete + botón "Directorio" pegado) */
 .usr-entidad-field {
   display: flex;
-  gap: 6px;
   align-items: stretch;
+  width: 100%;
 
   > p-autoComplete,
   > p-autocomplete {
     flex: 1 1 auto;
     min-width: 0;
+
+    /* Quita el border-radius derecho del input para fusionarlo con el botón */
+    :is(input, .p-autocomplete-input, .p-inputtext) {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: 0;
+    }
+  }
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 14px;
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-700);
+    border: 1px solid var(--chip-cobalt-200, #C5D2EE);
+    border-top-right-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: var(--chip-cobalt-100, #C5D2EE);
+      color: var(--chip-cobalt-800);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-500);
+      outline-offset: 2px;
+    }
+
+    i {
+      font-size: 14px;
+    }
   }
 }
 

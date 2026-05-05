@@ -66,7 +66,7 @@
             </p-iconField>
           </div>
 
-          <!-- Entidad (autocomplete + botón modal) -->
+          <!-- Entidad (autocomplete + botón "Directorio" tipo input-group) -->
           <div class="chip-filters__field">
             <label for="usr-f-entidad">Entidad asociada</label>
             <div class="usr-entidad-field">
@@ -79,8 +79,8 @@
                 [forceSelection]="false"
                 [minLength]="3"
                 optionLabel="razonSocial"
-                placeholder="Escriba 3+ caracteres o use el directorio"
-                styleClass="w-full"
+                placeholder="Escriba 3+ caracteres o abra el directorio"
+                styleClass="usr-entidad-field__input w-full"
                 appendTo="body">
                 <ng-template let-e #item>
                   <div class="usr-ac-item">
@@ -89,10 +89,14 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-button icon="pi pi-search" severity="secondary" [outlined]="true"
-                pTooltip="Abrir Directorio de Entidades" tooltipPosition="top"
-                aria-label="Abrir Directorio de Entidades"
-                (onClick)="abrirDirectorioEntidades()" />
+              <button type="button"
+                class="usr-entidad-field__trigger"
+                (click)="abrirDirectorioEntidades()"
+                pTooltip="Buscar en el Directorio de Entidades" tooltipPosition="top"
+                aria-label="Abrir Directorio de Entidades">
+                <i class="pi pi-list" aria-hidden="true"></i>
+                <span>Directorio</span>
+              </button>
             </div>
             @if (filterEntidad) {
               <small class="usr-entidad-selected" aria-live="polite">
