@@ -383,6 +383,11 @@ p-breadcrumb .p-breadcrumb {
   }
 }
 
+/* Utilidades de ancho — globales para que apliquen en cualquier componente
+   con view encapsulation (estaba solo en home.component.scss antes) */
+.w-full { width: 100% !important; }
+.h-full { height: 100% !important; }
+
 /* Uniformidad de TODOS los controles dentro de los filtros (global porque
    los hosts de PrimeNG están fuera del scope de view encapsulation):
    - Hosts (p-iconfield, p-select, p-autocomplete) son inline-block por
