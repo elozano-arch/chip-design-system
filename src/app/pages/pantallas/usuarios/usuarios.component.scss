@@ -239,33 +239,29 @@
   }
 }
 
-/* Campo full (ocupa toda la fila del grid) */
-.chip-filters__field--full {
-  grid-column: 1 / -1;
+/* Campo "inline": label + control en línea horizontal (para fila inferior con Estado) */
+.chip-filters__field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+
+  > label {
+    margin: 0;
+    white-space: nowrap;
+  }
 }
 
-/* Label de grupo (radios) */
-.chip-filters__group-label {
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--chip-grey-700);
-  margin-bottom: 6px;
-  display: block;
-}
-
-/* Estado: segmented control (p-selectButton)
-   Apariencia inline compacta, ancho ajustado al contenido */
-.chip-filters__field .usr-estado-segmented {
+/* Estado: segmented control (p-selectButton) — ancho ajustado al contenido */
+.usr-estado-segmented {
   display: inline-flex;
-}
 
-.chip-filters__field .usr-estado-segmented .p-togglebutton {
-  font-family: var(--font-body);
-  font-size: 13px;
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 500;
+  .p-togglebutton {
+    font-family: var(--font-body);
+    font-size: 13px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+  }
 }
 
 /* Acciones del bloque de filtros (Limpiar / Buscar) */
@@ -273,9 +269,23 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 16px;
-  padding-top: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid var(--chip-grey-200);
+}
+
+/* Variante con Estado a la izquierda + botones a la derecha (mismo row) */
+.chip-filters__actions--with-state {
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.chip-filters__actions-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* Tabla: celda Entidad con código + nombre */

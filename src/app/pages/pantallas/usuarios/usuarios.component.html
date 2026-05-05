@@ -127,10 +127,13 @@
               class="w-full" />
           </div>
 
-          <!-- Estado (segmented control: Activo default, Inactivo, Todos) -->
-          <div class="chip-filters__field chip-filters__field--full">
-            <label class="chip-filters__group-label">Estado</label>
-            <p-selectButton
+        </div>
+
+        <!-- Fila inferior: Estado a la izquierda, acciones a la derecha -->
+        <div class="chip-filters__actions chip-filters__actions--with-state">
+          <div class="chip-filters__field chip-filters__field--inline">
+            <label for="usr-f-estado">Estado</label>
+            <p-selectButton inputId="usr-f-estado"
               [options]="estadoOptions"
               [(ngModel)]="filterEstado"
               optionLabel="label"
@@ -139,15 +142,13 @@
               styleClass="usr-estado-segmented"
               aria-label="Filtrar por estado" />
           </div>
-        </div>
-
-        <!-- Acciones de búsqueda -->
-        <div class="chip-filters__actions">
-          <p-button label="Limpiar" icon="pi pi-filter-slash"
-            [text]="true" severity="secondary"
-            (onClick)="clearFilters()" />
-          <p-button label="Buscar" icon="pi pi-search"
-            (onClick)="onBuscar()" />
+          <div class="chip-filters__actions-buttons">
+            <p-button label="Limpiar" icon="pi pi-filter-slash"
+              [text]="true" severity="secondary"
+              (onClick)="clearFilters()" />
+            <p-button label="Buscar" icon="pi pi-search"
+              (onClick)="onBuscar()" />
+          </div>
         </div>
       </div>
     }
