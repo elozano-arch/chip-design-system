@@ -41,7 +41,7 @@
           <!-- Usuario (alfanumérico 4-20) -->
           <div class="chip-filters__field">
             <label for="usr-f-usuario">Usuario</label>
-            <p-iconField>
+            <p-iconField styleClass="w-full">
               <p-inputIcon styleClass="pi pi-user" />
               <input pInputText id="usr-f-usuario"
                 placeholder="Código del usuario"
@@ -54,7 +54,7 @@
           <!-- Documento (numérico 4-20) -->
           <div class="chip-filters__field">
             <label for="usr-f-doc">Documento</label>
-            <p-iconField>
+            <p-iconField styleClass="w-full">
               <p-inputIcon styleClass="pi pi-id-card" />
               <input pInputText id="usr-f-doc"
                 placeholder="Cédula, NIT…"
@@ -69,12 +69,12 @@
           <!-- Entidad: input que actúa como trigger del Directorio (clic = abre modal) -->
           <div class="chip-filters__field">
             <label for="usr-f-entidad">Entidad asociada</label>
-            <p-iconField iconPosition="right">
+            <p-iconField iconPosition="right" styleClass="w-full usr-entidad-iconfield">
               <input pInputText id="usr-f-entidad"
                 class="w-full usr-entidad-trigger-input"
                 [value]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
                 readonly
-                placeholder="Haga clic para abrir el Directorio de Entidades"
+                placeholder="Buscar entidad"
                 role="combobox"
                 aria-haspopup="dialog"
                 [attr.aria-expanded]="mostrarDirectorioEntidades"
@@ -91,8 +91,6 @@
                   (click)="limpiarEntidad(); $event.stopPropagation()"
                   (keydown.enter)="limpiarEntidad(); $event.stopPropagation()"
                   (keydown.space)="limpiarEntidad(); $event.stopPropagation(); $event.preventDefault()" />
-              } @else {
-                <p-inputIcon styleClass="pi pi-chevron-down usr-entidad-chevron" />
               }
             </p-iconField>
           </div>

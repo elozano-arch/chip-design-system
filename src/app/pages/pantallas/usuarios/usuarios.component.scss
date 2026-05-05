@@ -196,6 +196,14 @@
    Filtros: campos extendidos para spec CH-1360
    ============================================================ */
 
+/* Asegura que cualquier p-iconField dentro de los filtros ocupe el ancho completo
+   de su columna en la grilla (sin gaps a la derecha) */
+.chip-filters__field p-iconfield,
+.chip-filters__field p-iconField {
+  display: block;
+  width: 100%;
+}
+
 /* Campo Entidad: el input es el TRIGGER del modal Directorio
    No es un input editable — es un selector con apariencia de input */
 .usr-entidad-trigger-input {
@@ -219,11 +227,6 @@
     outline-offset: 2px;
     cursor: pointer;
   }
-}
-
-.usr-entidad-chevron {
-  pointer-events: none; /* es decorativo, el clic va al input */
-  color: var(--chip-grey-500);
 }
 
 .usr-entidad-clear {
