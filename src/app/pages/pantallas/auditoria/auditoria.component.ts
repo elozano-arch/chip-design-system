@@ -37,7 +37,7 @@ interface LogEntry {
 })
 export class AuditoriaComponent {
   breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
+    { label: 'Seguridad', icon: 'pi pi-shield' },
     { label: 'Auditoría' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };

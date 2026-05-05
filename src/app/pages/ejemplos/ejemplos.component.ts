@@ -78,8 +78,7 @@ import { CodeBlockComponent } from '../../components/code-block/code-block.compo
 export class EjemplosComponent {
   // Breadcrumb
   breadcrumbItems: MenuItem[] = [
-    { label: 'Inicio', routerLink: '/' },
-    { label: 'Ejemplos de uso' },
+    { label: 'Ejemplos de Uso' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 

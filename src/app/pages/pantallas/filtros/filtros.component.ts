@@ -48,7 +48,7 @@ interface Usuario {
 })
 export class FiltrosComponent {
   breadcrumbItems: MenuItem[] = [
-    { label: 'Pantallas', routerLink: '/pantallas/seguridad/usuarios' },
+    { label: 'Pantallas', icon: 'pi pi-th-large' },
     { label: 'Propuesta de Filtros' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
