@@ -428,6 +428,36 @@ p-breadcrumb .p-breadcrumb {
   box-sizing: border-box;
 }
 
+/* ============================================================
+   ALTURA UNIFORME DE TODOS LOS INPUTS DEL DESIGN SYSTEM
+   ============================================================
+   Define la altura estándar para inputs/selects/autocomplete en TODA
+   la app (filtros, formularios, modales, login, etc.). Las variantes
+   .p-inputtext-sm y .p-inputtext-lg conservan su tamaño nativo. */
+
+:root {
+  --chip-input-height: 40px;
+}
+
+/* Inputs nativos PrimeNG (excluye variantes -sm y -lg) */
+input.p-inputtext:not(.p-inputtext-sm):not(.p-inputtext-lg),
+textarea.p-inputtext:not(.p-inputtext-sm):not(.p-inputtext-lg),
+.p-select:not(.p-select-sm):not(.p-select-lg),
+.p-autocomplete-input:not(.p-inputtext-sm):not(.p-inputtext-lg),
+.p-multiselect:not(.p-multiselect-sm):not(.p-multiselect-lg),
+.p-datepicker-input:not(.p-inputtext-sm):not(.p-inputtext-lg) {
+  height: var(--chip-input-height);
+  box-sizing: border-box;
+}
+
+/* Textarea sigue su propia lógica multi-línea (la altura aplica solo a
+   single-line). Si una textarea explícitamente debe ser más alta,
+   usar height: auto + min-height. */
+textarea.p-inputtext {
+  min-height: var(--chip-input-height);
+  height: auto;
+}
+
 .chip-filters__required,
 .field-required {
   color: var(--chip-danger);
