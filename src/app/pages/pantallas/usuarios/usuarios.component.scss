@@ -246,7 +246,14 @@
   }
 }
 
-/* (Estado ahora usa p-select para uniformidad con los demás filtros) */
+/* Estado: select fijo a 200px (no 100% del flex container).
+   Hereda height 40px del global pero override el width con mayor especificidad. */
+.chip-filters__field--inline .p-select.usr-estado-select,
+.chip-filters__field--inline .usr-estado-select {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+}
 
 /* Acciones del bloque de filtros (Limpiar / Buscar) */
 .chip-filters__actions {
