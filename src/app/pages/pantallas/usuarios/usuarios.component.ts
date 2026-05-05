@@ -98,8 +98,7 @@ export class UsuariosComponent {
   // ── Filtros (CH-1360 spec) ──
   filterUsuario = '';                                  // Alfanumérico 4-20
   filterDocumento = '';                                // Numérico 4-20
-  filterEntidad: Entidad | null = null;                // Selección via modal o autocomplete
-  filterEntidadInput: string | Entidad = '';           // Texto libre / autocomplete (acepta objeto al seleccionar)
+  filterEntidad: Entidad | null = null;                // Selección vía modal (input es trigger)
   filterNombre = '';                                   // Texto autocomplete 3-100
   filterPerfil = '';                                   // Selección
   filterTipoUsuario = '';                              // LOCAL/CENTRAL/ESTRATÉGICO
@@ -119,9 +118,8 @@ export class UsuariosComponent {
   // Modal Directorio de Entidades
   mostrarDirectorioEntidades = false;
 
-  // Sugerencias autocomplete
+  // Sugerencias autocomplete (solo del campo Nombre — Entidad usa modal)
   sugerenciasNombre: string[] = [];
-  sugerenciasEntidad: Entidad[] = [];
 
   showNewDialog = false;
   showEditDialog = false;
@@ -239,7 +237,6 @@ export class UsuariosComponent {
       this.filterEstado = 'true'; // vuelve al default
     } else if (field === 'filterEntidad') {
       this.filterEntidad = null;
-      this.filterEntidadInput = '';
     } else {
       (this as any)[field] = '';
     }
@@ -249,7 +246,6 @@ export class UsuariosComponent {
     this.filterUsuario = '';
     this.filterDocumento = '';
     this.filterEntidad = null;
-    this.filterEntidadInput = '';
     this.filterNombre = '';
     this.filterPerfil = '';
     this.filterTipoUsuario = '';
@@ -285,38 +281,7 @@ export class UsuariosComponent {
     ).slice(0, 8);
   }
 
-  /** Autocomplete por entidad — sugerencias de razón social/código. */
-  searchEntidades(event: AutoCompleteCompleteEvent) {
-    const q = event.query.trim();
-    if (q.length < 3) {
-      this.sugerenciasEntidad = [];
-      return;
-    }
-    const qn = this.normaliza(q);
-    // Reutiliza las entidades únicas que ya están asociadas a usuarios
-    const mapa = new Map<string, Entidad>();
-    this.usuarios.forEach(u => {
-      if (!mapa.has(u.entidad.codigo)) {
-        mapa.set(u.entidad.codigo, {
-          codigo: u.entidad.codigo,
-          nit: '',
-          razonSocial: u.entidad.nombre,
-          departamento: '',
-          municipio: '',
-        });
-      }
-    });
-    this.sugerenciasEntidad = Array.from(mapa.values())
-      .filter(e => this.normaliza(e.razonSocial).includes(qn) || e.codigo.includes(q))
-      .slice(0, 8);
-  }
-
-  /** Cuando el usuario selecciona una entidad por autocomplete. */
-  onSelectEntidadAutocomplete(entidad: Entidad) {
-    this.filterEntidad = entidad;
-  }
-
-  /** Abre el modal Directorio de Entidades. */
+  /** Abre el modal Directorio de Entidades (gatillo desde el input "Entidad"). */
   abrirDirectorioEntidades() {
     this.mostrarDirectorioEntidades = true;
   }
@@ -324,13 +289,11 @@ export class UsuariosComponent {
   /** Recibe la entidad seleccionada desde el modal. */
   onEntidadSeleccionada(entidad: Entidad) {
     this.filterEntidad = entidad;
-    this.filterEntidadInput = entidad;  // muestra el objeto en el autocomplete
   }
 
   /** Limpia solo el campo Entidad. */
   limpiarEntidad() {
     this.filterEntidad = null;
-    this.filterEntidadInput = '';
   }
 
   /** Normaliza texto: lowercase + sin tildes (para búsquedas insensibles). */

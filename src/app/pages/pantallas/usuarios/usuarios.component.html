@@ -66,44 +66,35 @@
             </p-iconField>
           </div>
 
-          <!-- Entidad (autocomplete + botón "Directorio" tipo input-group) -->
+          <!-- Entidad: input que actúa como trigger del Directorio (clic = abre modal) -->
           <div class="chip-filters__field">
             <label for="usr-f-entidad">Entidad asociada</label>
-            <div class="usr-entidad-field">
-              <p-autoComplete inputId="usr-f-entidad"
-                [(ngModel)]="filterEntidadInput"
-                [suggestions]="sugerenciasEntidad"
-                (completeMethod)="searchEntidades($event)"
-                (onSelect)="onSelectEntidadAutocomplete($event.value)"
-                (onClear)="limpiarEntidad()"
-                [forceSelection]="false"
-                [minLength]="3"
-                optionLabel="razonSocial"
-                placeholder="Escriba 3+ caracteres o abra el directorio"
-                styleClass="usr-entidad-field__input w-full"
-                appendTo="body">
-                <ng-template let-e #item>
-                  <div class="usr-ac-item">
-                    <span class="usr-ac-item__code">{{ e.codigo }}</span>
-                    <span class="usr-ac-item__name">{{ e.razonSocial }}</span>
-                  </div>
-                </ng-template>
-              </p-autoComplete>
-              <button type="button"
-                class="usr-entidad-field__trigger"
+            <p-iconField iconPosition="right">
+              <input pInputText id="usr-f-entidad"
+                class="w-full usr-entidad-trigger-input"
+                [value]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
+                readonly
+                placeholder="Haga clic para abrir el Directorio de Entidades"
+                role="combobox"
+                aria-haspopup="dialog"
+                [attr.aria-expanded]="mostrarDirectorioEntidades"
+                [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
                 (click)="abrirDirectorioEntidades()"
-                pTooltip="Buscar en el Directorio de Entidades" tooltipPosition="top"
-                aria-label="Abrir Directorio de Entidades">
-                <i class="pi pi-list" aria-hidden="true"></i>
-                <span>Directorio</span>
-              </button>
-            </div>
-            @if (filterEntidad) {
-              <small class="usr-entidad-selected" aria-live="polite">
-                <i class="pi pi-check-circle" aria-hidden="true"></i>
-                {{ filterEntidad.codigo }} · {{ filterEntidad.razonSocial }}
-              </small>
-            }
+                (keydown.enter)="abrirDirectorioEntidades()"
+                (keydown.space)="abrirDirectorioEntidades(); $event.preventDefault()" />
+              @if (filterEntidad) {
+                <p-inputIcon
+                  styleClass="pi pi-times-circle usr-entidad-clear"
+                  role="button" tabindex="0"
+                  pTooltip="Limpiar selección" tooltipPosition="top"
+                  aria-label="Limpiar entidad seleccionada"
+                  (click)="limpiarEntidad(); $event.stopPropagation()"
+                  (keydown.enter)="limpiarEntidad(); $event.stopPropagation()"
+                  (keydown.space)="limpiarEntidad(); $event.stopPropagation(); $event.preventDefault()" />
+              } @else {
+                <p-inputIcon styleClass="pi pi-chevron-down usr-entidad-chevron" />
+              }
+            </p-iconField>
           </div>
 
           <!-- Nombre completo (autocomplete 3+) -->

@@ -196,93 +196,43 @@
    Filtros: campos extendidos para spec CH-1360
    ============================================================ */
 
-/* Campo Entidad: input-group (autocomplete + botón "Directorio" pegado) */
-.usr-entidad-field {
-  display: flex;
-  align-items: stretch;
-  width: 100%;
+/* Campo Entidad: el input es el TRIGGER del modal Directorio
+   No es un input editable — es un selector con apariencia de input */
+.usr-entidad-trigger-input {
+  cursor: pointer;
+  caret-color: transparent; /* sin cursor de texto */
+  user-select: none;
 
-  > p-autoComplete,
-  > p-autocomplete {
-    flex: 1 1 auto;
-    min-width: 0;
-
-    /* Quita el border-radius derecho del input para fusionarlo con el botón */
-    :is(input, .p-autocomplete-input, .p-inputtext) {
-      border-top-right-radius: 0;
-      border-bottom-right-radius: 0;
-      border-right: 0;
-    }
+  &::placeholder {
+    color: var(--chip-grey-500);
+    font-style: normal;
   }
 
-  &__trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0 14px;
+  &:hover {
     background: var(--chip-cobalt-50);
-    color: var(--chip-cobalt-700);
-    border: 1px solid var(--chip-cobalt-200, #C5D2EE);
-    border-top-right-radius: var(--radius-md);
-    border-bottom-right-radius: var(--radius-md);
-    font-family: var(--font-body);
-    font-size: 13px;
-    font-weight: 600;
+    border-color: var(--chip-cobalt-300, var(--chip-cobalt-200));
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
     cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s, color 0.15s;
-
-    &:hover {
-      background: var(--chip-cobalt-100, #C5D2EE);
-      color: var(--chip-cobalt-800);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--chip-cobalt-500);
-      outline-offset: 2px;
-    }
-
-    i {
-      font-size: 14px;
-    }
   }
 }
 
-.usr-entidad-selected {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 4px 10px;
-  background: var(--chip-cobalt-50);
-  border-left: 3px solid var(--chip-cobalt-700);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  color: var(--chip-cobalt-700);
-
-  i {
-    color: var(--chip-success);
-    font-size: 12px;
-  }
+.usr-entidad-chevron {
+  pointer-events: none; /* es decorativo, el clic va al input */
+  color: var(--chip-grey-500);
 }
 
-/* Items del autocomplete de entidad */
-.usr-ac-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 2px 0;
+.usr-entidad-clear {
+  cursor: pointer;
+  color: var(--chip-grey-500);
+  transition: color 0.15s;
 
-  &__code {
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--chip-cobalt-700);
-  }
-
-  &__name {
-    font-size: 13px;
-    color: var(--chip-grey-700);
+  &:hover {
+    color: var(--chip-danger);
   }
 }
 
