@@ -19,7 +19,6 @@ import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { DirectorioEntidadesComponent, Entidad } from '../../../components/directorio-entidades/directorio-entidades.component';
@@ -49,7 +48,7 @@ interface Usuario {
     ToastModule, TooltipModule, BreadcrumbModule,
     IconFieldModule, InputIconModule, SelectModule,
     DialogModule, DividerModule, MenuModule, ChipModule,
-    AutoCompleteModule, RadioButtonModule, SelectButtonModule,
+    AutoCompleteModule, RadioButtonModule,
     DirectorioEntidadesComponent,
   ],
   providers: [MessageService],

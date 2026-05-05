@@ -246,18 +246,7 @@
   }
 }
 
-/* Estado: segmented control (p-selectButton) — ancho ajustado al contenido */
-.usr-estado-segmented {
-  display: inline-flex;
-
-  .p-togglebutton {
-    font-family: var(--font-body);
-    font-size: 13px;
-    text-transform: none;
-    letter-spacing: 0;
-    font-weight: 500;
-  }
-}
+/* (Estado ahora usa p-select para uniformidad con los demás filtros) */
 
 /* Acciones del bloque de filtros (Limpiar / Buscar) */
 .chip-filters__actions {

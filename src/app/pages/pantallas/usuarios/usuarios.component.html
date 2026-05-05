@@ -132,17 +132,18 @@
 
         </div>
 
-        <!-- Fila inferior: Estado a la izquierda, acciones a la derecha -->
+        <!-- Fila inferior: Estado (select) a la izquierda, acciones a la derecha -->
         <div class="chip-filters__actions chip-filters__actions--with-state">
           <div class="chip-filters__field chip-filters__field--inline">
             <label for="usr-f-estado">Estado</label>
-            <p-selectButton inputId="usr-f-estado"
+            <p-select inputId="usr-f-estado"
               [options]="estadoOptions"
               [(ngModel)]="filterEstado"
               optionLabel="label"
               optionValue="value"
-              [allowEmpty]="false"
-              styleClass="usr-estado-segmented"
+              [style]="{ width: '180px' }"
+              styleClass="w-full"
+              appendTo="body"
               aria-label="Filtrar por estado" />
           </div>
           <div class="chip-filters__actions-buttons">
