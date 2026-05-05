@@ -371,15 +371,15 @@ p-breadcrumb .p-breadcrumb {
 .chip-filters__field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 
   label {
     font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--chip-grey-600);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--chip-grey-700);
+    text-transform: none;
+    letter-spacing: 0;
   }
 }
 
