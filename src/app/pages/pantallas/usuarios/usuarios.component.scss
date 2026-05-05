@@ -262,40 +262,18 @@
   display: block;
 }
 
-/* Fila de radios */
-.usr-radio-row {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  flex-wrap: wrap;
+/* Estado: segmented control (p-selectButton)
+   Apariencia inline compacta, ancho ajustado al contenido */
+.chip-filters__field .usr-estado-segmented {
+  display: inline-flex;
 }
 
-.usr-radio {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Override del label uppercase global de .chip-filters__field para los radios:
-   las opciones (Activo/Inactivo/Todos) deben verse normales, no como label de campo */
-.chip-filters__field .usr-radio label {
+.chip-filters__field .usr-estado-segmented .p-togglebutton {
   font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 400;
-  color: var(--chip-grey-700);
   text-transform: none;
   letter-spacing: 0;
-  cursor: pointer;
-}
-
-/* Mismo override para el "label de grupo" (Estado): debe verse como label de
-   campo (uppercase pequeño) pero también necesitamos que el override no aplique aquí */
-.chip-filters__field .chip-filters__group-label {
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--chip-grey-600);
+  font-weight: 500;
 }
 
 /* Acciones del bloque de filtros (Limpiar / Buscar) */

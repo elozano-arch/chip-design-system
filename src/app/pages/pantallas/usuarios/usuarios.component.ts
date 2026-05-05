@@ -19,6 +19,7 @@ import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { DirectorioEntidadesComponent, Entidad } from '../../../components/directorio-entidades/directorio-entidades.component';
@@ -48,7 +49,7 @@ interface Usuario {
     ToastModule, TooltipModule, BreadcrumbModule,
     IconFieldModule, InputIconModule, SelectModule,
     DialogModule, DividerModule, MenuModule, ChipModule,
-    AutoCompleteModule, RadioButtonModule,
+    AutoCompleteModule, RadioButtonModule, SelectButtonModule,
     DirectorioEntidadesComponent,
   ],
   providers: [MessageService],
@@ -168,6 +169,13 @@ export class UsuariosComponent {
     { label: 'Local', value: 'LOCAL' },
     { label: 'Central', value: 'CENTRAL' },
     { label: 'Estratégico', value: 'ESTRATÉGICO' },
+  ];
+
+  /** Opciones para el SelectButton de Estado (segmented control). */
+  estadoOptions = [
+    { label: 'Activo', value: 'true' },
+    { label: 'Inactivo', value: 'false' },
+    { label: 'Todos', value: 'todos' },
   ];
 
   usuarios: Usuario[] = [

@@ -134,23 +134,17 @@
               class="w-full" />
           </div>
 
-          <!-- Estado (radio: Activo default, Inactivo, Todos) -->
+          <!-- Estado (segmented control: Activo default, Inactivo, Todos) -->
           <div class="chip-filters__field chip-filters__field--full">
             <label class="chip-filters__group-label">Estado</label>
-            <div class="usr-radio-row" role="radiogroup" aria-label="Filtrar por estado">
-              <div class="usr-radio">
-                <p-radioButton name="usr-f-estado" value="true" [(ngModel)]="filterEstado" inputId="usr-f-estado-act" />
-                <label for="usr-f-estado-act">Activo</label>
-              </div>
-              <div class="usr-radio">
-                <p-radioButton name="usr-f-estado" value="false" [(ngModel)]="filterEstado" inputId="usr-f-estado-ina" />
-                <label for="usr-f-estado-ina">Inactivo</label>
-              </div>
-              <div class="usr-radio">
-                <p-radioButton name="usr-f-estado" value="todos" [(ngModel)]="filterEstado" inputId="usr-f-estado-tod" />
-                <label for="usr-f-estado-tod">Todos</label>
-              </div>
-            </div>
+            <p-selectButton
+              [options]="estadoOptions"
+              [(ngModel)]="filterEstado"
+              optionLabel="label"
+              optionValue="value"
+              [allowEmpty]="false"
+              styleClass="usr-estado-segmented"
+              aria-label="Filtrar por estado" />
           </div>
         </div>
 
