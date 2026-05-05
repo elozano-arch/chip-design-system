@@ -204,6 +204,23 @@
   width: 100%;
 }
 
+/* Override de labels: case normal y peso medio en lugar de uppercase bold.
+   Más sutil, mejor jerarquía visual, los inputs son los protagonistas. */
+.chip-filters__field > label,
+.chip-filters__field--inline > label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--chip-grey-700);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 6px;
+}
+
+.chip-filters__field--inline > label {
+  margin-bottom: 0;
+}
+
 /* Uniformidad de altura entre TODOS los controles del filtro.
    Forzamos altura EXACTA (no min) + padding-y controlado para que
    inputs con icono, selects y autocomplete tengan exactamente la
