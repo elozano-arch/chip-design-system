@@ -403,9 +403,21 @@ p-breadcrumb .p-breadcrumb {
   width: 100% !important;
 }
 
+/* Divs internos de PrimeNG: forzar 100% width Y que sus hijos (label/input)
+   crezcan también con flex */
 .chip-filters__field .p-iconfield,
 .chip-filters__field .p-select,
 .chip-filters__field .p-autocomplete {
+  width: 100% !important;
+  min-width: 100% !important;
+  display: flex !important;
+}
+
+/* El label/input interno crece dentro del wrapper flex */
+.chip-filters__field .p-select > .p-select-label,
+.chip-filters__field .p-select > .p-inputtext,
+.chip-filters__field .p-autocomplete > .p-autocomplete-input {
+  flex: 1 1 auto !important;
   width: 100% !important;
 }
 
