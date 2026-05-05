@@ -58,11 +58,31 @@
     flex-direction: column;
     gap: 4px;
 
+    /* Labels alineados con el patrón global de filtros (uppercase pequeño) */
     label {
       font-family: var(--font-body);
       font-size: 12px;
       font-weight: 600;
-      color: var(--chip-grey-700);
+      color: var(--chip-grey-600);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Altura uniforme entre inputs y selects (igual al patrón de Usuarios) */
+    --dir-ent-control-height: 40px;
+
+    input.p-inputtext,
+    .p-inputtext {
+      min-height: var(--dir-ent-control-height);
+      box-sizing: border-box;
+      line-height: 1.4;
+    }
+
+    .p-select,
+    .p-select .p-select-label {
+      min-height: var(--dir-ent-control-height);
+      display: flex;
+      align-items: center;
     }
   }
 
@@ -79,6 +99,33 @@
     border-radius: var(--radius-md);
     padding: 16px 18px;
     background: #ffffff;
+
+    /* Header de tabla compacto: misma jerarquía que el Design System */
+    .p-datatable-thead > tr > th {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--chip-grey-700);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding: 10px 12px;
+      white-space: nowrap;
+    }
+
+    /* Sort icons más pequeños y alineados */
+    .p-sortable-column-icon,
+    .p-sortableColumnIcon,
+    p-sorticon {
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    /* Filas: padding cómodo, sin wrap excesivo */
+    .p-datatable-tbody > tr > td {
+      padding: 10px 12px;
+      font-size: 13px;
+      vertical-align: middle;
+    }
   }
 
   &__row--selected {

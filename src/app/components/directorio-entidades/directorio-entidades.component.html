@@ -4,7 +4,7 @@
   [modal]="true"
   [draggable]="false"
   [closeOnEscape]="true"
-  [style]="{ width: '760px' }"
+  [style]="{ width: '920px', maxWidth: '95vw' }"
   styleClass="dir-ent-dialog"
   header="Directorio de Entidades">
 
@@ -72,12 +72,12 @@
         </ng-template>
         <ng-template #header>
           <tr>
-            <th style="width: 48px"></th>
-            <th pSortableColumn="codigo" style="width: 120px">Código <p-sortIcon field="codigo" /></th>
-            <th pSortableColumn="nit" style="width: 140px">NIT <p-sortIcon field="nit" /></th>
-            <th pSortableColumn="razonSocial">Razón Social <p-sortIcon field="razonSocial" /></th>
-            <th pSortableColumn="departamento" style="width: 140px">Departamento <p-sortIcon field="departamento" /></th>
-            <th pSortableColumn="municipio" style="width: 140px">Municipio <p-sortIcon field="municipio" /></th>
+            <th style="width: 44px"></th>
+            <th pSortableColumn="codigo" style="width: 100px">Código <p-sortIcon field="codigo" /></th>
+            <th pSortableColumn="nit" style="width: 120px">NIT <p-sortIcon field="nit" /></th>
+            <th pSortableColumn="razonSocial" style="min-width: 240px">Razón Social <p-sortIcon field="razonSocial" /></th>
+            <th pSortableColumn="departamento" style="width: 130px">Departamento <p-sortIcon field="departamento" /></th>
+            <th pSortableColumn="municipio" style="width: 120px">Municipio <p-sortIcon field="municipio" /></th>
           </tr>
         </ng-template>
         <ng-template #body let-e>
