@@ -204,40 +204,55 @@
   width: 100%;
 }
 
-/* Uniformidad de altura entre TODOS los controles del filtro (inputs simples,
-   inputs con icono, selects, autocomplete). Cada componente PrimeNG aplica
-   paddings ligeramente distintos — esto los nivela a una altura común. */
+/* Uniformidad de altura entre TODOS los controles del filtro.
+   Forzamos altura EXACTA (no min) + padding-y controlado para que
+   inputs con icono, selects y autocomplete tengan exactamente la
+   misma altura visual. */
 .chip-filters__field {
   --chip-filter-control-height: 40px;
 
-  /* Inputs nativos / con pInputText */
+  /* TODOS los controles a la misma altura exacta + box-sizing border */
   input.p-inputtext,
-  .p-inputtext {
-    min-height: var(--chip-filter-control-height);
-    box-sizing: border-box;
-    line-height: 1.4;
-  }
-
-  /* p-select: el wrapper externo y el label interno deben respetar altura */
+  .p-inputtext,
   .p-select,
-  .p-select .p-select-label {
-    min-height: var(--chip-filter-control-height);
-    display: flex;
-    align-items: center;
-  }
-
-  /* p-autocomplete: input interno */
   .p-autocomplete,
-  .p-autocomplete .p-autocomplete-input,
   .p-autocomplete-input {
-    min-height: var(--chip-filter-control-height);
+    height: var(--chip-filter-control-height);
     box-sizing: border-box;
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1;
   }
 
-  /* p-iconField: hereda de su input interno, pero aseguramos consistencia */
+  /* p-iconfield wrapper: que no agregue altura extra */
+  p-iconfield,
+  p-iconField,
+  .p-iconfield {
+    display: block;
+    height: var(--chip-filter-control-height);
+  }
+
+  /* p-iconField input: la altura del input debe coincidir con el wrapper */
   p-iconfield input.p-inputtext,
   p-iconField input.p-inputtext {
-    min-height: var(--chip-filter-control-height);
+    height: var(--chip-filter-control-height);
+  }
+
+  /* p-select: wrapper, label y el contenedor interno alineados al centro */
+  .p-select,
+  .p-select .p-select-label,
+  .p-select .p-inputtext {
+    height: var(--chip-filter-control-height);
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+
+  /* p-autocomplete: el input interno debe respetar la altura del wrapper */
+  .p-autocomplete .p-autocomplete-input {
+    height: var(--chip-filter-control-height);
+    display: flex;
+    align-items: center;
   }
 }
 
