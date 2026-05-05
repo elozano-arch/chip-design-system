@@ -196,11 +196,17 @@
    Filtros: campos extendidos para spec CH-1360
    ============================================================ */
 
-/* Fuerza que TODOS los wrappers host de PrimeNG ocupen 100% de la columna
-   del grid. Sin esto, p-iconfield/p-select/p-autocomplete son inline-block
-   por defecto y dejan espacio muerto a la derecha aunque el input interno
-   tenga w-full. */
+/* (Labels heredan del patrón global en src/styles.scss:
+   case normal, peso 500, 13px, color grey-700) */
+
+/* Uniformidad de TODOS los controles del filtro:
+   - 100% del ancho de la columna del grid
+   - Altura idéntica (40px) entre inputs, selects, autocomplete e iconfield
+   - SIN tocar display interno de PrimeNG (rompe el layout interno) */
 .chip-filters__field {
+  --chip-filter-control-height: 40px;
+
+  /* Hosts directos de PrimeNG a 100% width (son inline-block por default) */
   > p-iconfield,
   > p-iconField,
   > p-select,
@@ -210,68 +216,23 @@
     width: 100% !important;
   }
 
-  /* También los divs internos que renderiza PrimeNG dentro de cada host */
+  /* Wrappers internos al 100% también */
   .p-iconfield,
   .p-select,
   .p-autocomplete {
     width: 100% !important;
   }
-}
 
-/* (Labels heredan del patrón global en src/styles.scss:
-   case normal, peso 500, 13px, color grey-700) */
-
-/* Uniformidad de altura entre TODOS los controles del filtro.
-   Forzamos altura EXACTA (no min) + padding-y controlado para que
-   inputs con icono, selects y autocomplete tengan exactamente la
-   misma altura visual. */
-.chip-filters__field {
-  --chip-filter-control-height: 40px;
-
-  /* TODOS los controles a la misma altura exacta + box-sizing border */
+  /* Altura uniforme — se aplica al input/control visible, no al wrapper */
   input.p-inputtext,
-  .p-inputtext,
   .p-select,
-  .p-autocomplete,
   .p-autocomplete-input {
-    height: var(--chip-filter-control-height);
+    height: var(--chip-filter-control-height) !important;
     box-sizing: border-box;
-    padding-top: 0;
-    padding-bottom: 0;
-    line-height: 1;
-  }
-
-  /* p-iconfield wrapper: que no agregue altura extra */
-  p-iconfield,
-  p-iconField,
-  .p-iconfield {
-    display: block;
-    height: var(--chip-filter-control-height);
-  }
-
-  /* p-iconField input: la altura del input debe coincidir con el wrapper */
-  p-iconfield input.p-inputtext,
-  p-iconField input.p-inputtext {
-    height: var(--chip-filter-control-height);
-  }
-
-  /* p-select: wrapper, label y el contenedor interno alineados al centro */
-  .p-select,
-  .p-select .p-select-label,
-  .p-select .p-inputtext {
-    height: var(--chip-filter-control-height);
-    display: flex;
-    align-items: center;
-    line-height: 1;
-  }
-
-  /* p-autocomplete: el input interno debe respetar la altura del wrapper */
-  .p-autocomplete .p-autocomplete-input {
-    height: var(--chip-filter-control-height);
-    display: flex;
-    align-items: center;
   }
 }
+
+/* (reglas duplicadas removidas — la nueva regla unificada arriba las reemplaza) */
 
 /* Campo Entidad: el input es el TRIGGER del modal Directorio
    No es un input editable — es un selector con apariencia de input */
