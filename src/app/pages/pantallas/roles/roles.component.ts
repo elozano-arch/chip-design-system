@@ -92,7 +92,7 @@ export class RolesComponent {
 
   // ── Breadcrumb ──
   breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield' },
+    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
     { label: 'Roles' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
@@ -100,7 +100,7 @@ export class RolesComponent {
   /** Breadcrumb del editor de permisos: el último ítem clickable regresa al listado. */
   get editBreadcrumbItems(): MenuItem[] {
     return [
-      { label: 'Seguridad', icon: 'pi pi-shield' },
+      { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
       { label: 'Roles', command: () => this.backToList() },
       { label: 'Permisos' },
     ];

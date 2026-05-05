@@ -86,7 +86,7 @@ export class FormulariosComponent {
 
   // ── Breadcrumb ──
   breadcrumbItems: MenuItem[] = [
-    { label: 'Pantallas', icon: 'pi pi-th-large' },
+    { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
     { label: 'Gestión de Formularios' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };

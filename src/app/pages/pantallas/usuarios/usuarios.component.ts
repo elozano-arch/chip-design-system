@@ -89,7 +89,7 @@ export class UsuariosComponent {
   }
 
   breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield' },
+    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
     { label: 'Usuarios' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };

@@ -42,7 +42,7 @@ interface DispositivoActivo {
 })
 export class CambiarContrasenaComponent implements OnInit {
   breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield' },
+    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
     { label: 'Cambiar contraseña' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };

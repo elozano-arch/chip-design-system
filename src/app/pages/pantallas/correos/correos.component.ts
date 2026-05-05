@@ -33,7 +33,7 @@ interface Plantilla {
 })
 export class CorreosComponent {
   breadcrumbItems: MenuItem[] = [
-    { label: 'Pantallas', icon: 'pi pi-th-large' },
+    { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
     { label: 'Plantillas de correo' },
   ];
   breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
