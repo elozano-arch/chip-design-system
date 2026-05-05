@@ -9,7 +9,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DividerModule } from 'primeng/divider';
@@ -19,6 +18,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
 import { MessageService, MenuItem } from 'primeng/api';
+
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
 interface Formulario {
   id: number;
@@ -52,7 +53,6 @@ interface AccionPermiso {
     TagModule,
     ToastModule,
     TooltipModule,
-    BreadcrumbModule,
     IconFieldModule,
     InputIconModule,
     DividerModule,
@@ -61,6 +61,7 @@ interface AccionPermiso {
     CheckboxModule,
     MenuModule,
     ChipModule,
+    AppBreadcrumbComponent,
   ],
   providers: [MessageService],
   templateUrl: './formularios.component.html',
@@ -83,13 +84,6 @@ export class FormulariosComponent {
     this.selectedFormularioForMenu = form;
     this.menuFormulario.toggle(event);
   }
-
-  // ── Breadcrumb ──
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
-    { label: 'Gestión de Formularios' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 
   // ── Filtros ──
   entidad = 'Contaduría General de la Nación';

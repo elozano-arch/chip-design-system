@@ -5,13 +5,13 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TagModule } from 'primeng/tag';
 import { ChipModule } from 'primeng/chip';
 import { DatePickerModule } from 'primeng/datepicker';
-import { MenuItem } from 'primeng/api';
+
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
 interface Usuario {
   codigo: string;
@@ -36,22 +36,17 @@ interface Usuario {
     TableModule,
     SelectModule,
     InputTextModule,
-    BreadcrumbModule,
     IconFieldModule,
     InputIconModule,
     TagModule,
     ChipModule,
     DatePickerModule,
+    AppBreadcrumbComponent,
   ],
   templateUrl: './filtros.component.html',
   styleUrl: './filtros.component.scss',
 })
 export class FiltrosComponent {
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
-    { label: 'Propuesta de Filtros' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 
   /* ══════════════════════════════════════════════ */
   /* 8 Filtros                                      */

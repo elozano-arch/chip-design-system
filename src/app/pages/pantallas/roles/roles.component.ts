@@ -21,6 +21,8 @@ import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
 import { MessageService, MenuItem, TreeNode } from 'primeng/api';
 
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+
 /** Nodo de permiso del árbol unificado: cada nodo tiene código y nombre. */
 interface PermisoData {
   codigo: string;
@@ -62,6 +64,7 @@ interface Role {
     MenuModule,
     MessageModule,
     ChipModule,
+    AppBreadcrumbComponent,
   ],
   providers: [MessageService],
   templateUrl: './roles.component.html',
@@ -90,14 +93,11 @@ export class RolesComponent {
     this.menuRol.toggle(event);
   }
 
-  // ── Breadcrumb ──
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
-    { label: 'Roles' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
+  // Breadcrumb del listado: viene del route data (consume <app-breadcrumb />)
 
-  /** Breadcrumb del editor de permisos: el último ítem clickable regresa al listado. */
+  // Breadcrumb del editor de permisos (dinámico con command para volver al listado).
+  // Se mantiene manual porque tiene comportamiento que no se puede declarar en route data.
+  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
   get editBreadcrumbItems(): MenuItem[] {
     return [
       { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },

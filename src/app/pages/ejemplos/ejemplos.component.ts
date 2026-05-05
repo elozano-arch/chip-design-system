@@ -11,7 +11,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { ToastModule } from 'primeng/toast';
 import { MessageModule } from 'primeng/message';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { DividerModule } from 'primeng/divider';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
@@ -31,8 +30,9 @@ import { PasswordModule } from 'primeng/password';
 import { AvatarGroupModule } from 'primeng/avatargroup';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { MessageService, MenuItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { CodeBlockComponent } from '../../components/code-block/code-block.component';
+import { AppBreadcrumbComponent } from '../../components/app-breadcrumb/app-breadcrumb.component';
 
 @Component({
   selector: 'app-ejemplos',
@@ -49,7 +49,6 @@ import { CodeBlockComponent } from '../../components/code-block/code-block.compo
     SelectModule,
     ToastModule,
     MessageModule,
-    BreadcrumbModule,
     DividerModule,
     DialogModule,
     TooltipModule,
@@ -70,18 +69,13 @@ import { CodeBlockComponent } from '../../components/code-block/code-block.compo
     IconFieldModule,
     InputIconModule,
     CodeBlockComponent,
+    AppBreadcrumbComponent,
   ],
   providers: [MessageService],
   templateUrl: './ejemplos.component.html',
   styleUrl: './ejemplos.component.scss',
 })
 export class EjemplosComponent {
-  // Breadcrumb
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Ejemplos de Uso' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
-
   // Module cards
   modules = [
     { title: 'Trámites', desc: 'Radicación y seguimiento de solicitudes ciudadanas', icon: 'pi pi-inbox', bg: '#EBF0FA' },

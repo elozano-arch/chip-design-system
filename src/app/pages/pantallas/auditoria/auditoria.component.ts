@@ -6,12 +6,12 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SelectModule } from 'primeng/select';
 import { ChipModule } from 'primeng/chip';
-import { MenuItem } from 'primeng/api';
+
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
 interface LogEntry {
   id: number;
@@ -30,18 +30,13 @@ interface LogEntry {
   imports: [
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, TableModule, TagModule,
-    BreadcrumbModule, IconFieldModule, InputIconModule, SelectModule, ChipModule,
+    IconFieldModule, InputIconModule, SelectModule, ChipModule,
+    AppBreadcrumbComponent,
   ],
   templateUrl: './auditoria.component.html',
   styleUrl: './auditoria.component.scss',
 })
 export class AuditoriaComponent {
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
-    { label: 'Auditoría' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
-
   searchLog = '';
   filterTipo = '';
   filtersCollapsed = false;

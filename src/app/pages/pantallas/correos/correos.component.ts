@@ -5,10 +5,11 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { ButtonModule } from 'primeng/button';
 import { TabsModule } from 'primeng/tabs';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
-import { MessageService, MenuItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
+
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
 interface Plantilla {
   jira: string;
@@ -25,19 +26,14 @@ interface Plantilla {
   standalone: true,
   imports: [
     CommonModule,
-    ButtonModule, TabsModule, BreadcrumbModule, ToastModule, TagModule,
+    ButtonModule, TabsModule, ToastModule, TagModule,
+    AppBreadcrumbComponent,
   ],
   providers: [MessageService],
   templateUrl: './correos.component.html',
   styleUrl: './correos.component.scss',
 })
 export class CorreosComponent {
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
-    { label: 'Plantillas de correo' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
-
   plantillas: Plantilla[] = [
     {
       jira: 'CH-1364',

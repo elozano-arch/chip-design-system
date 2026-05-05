@@ -138,6 +138,54 @@
 
 Los `*-header` están unificados en `src/styles.scss`. Para una nueva pantalla, agregar la clase a la lista compartida.
 
+### Breadcrumbs (miga de pan)
+
+**Convención del proyecto:** los breadcrumbs se declaran **una sola vez** en `app.routes.ts` (en `data.breadcrumb`) y se renderizan automáticamente con el componente `<app-breadcrumb />`. No declarar `breadcrumbItems` en cada componente.
+
+**1. Declarar el breadcrumb en la ruta** (`src/app/app.routes.ts`):
+```ts
+{
+  path: 'pantallas/seguridad/usuarios',
+  data: {
+    breadcrumb: [
+      { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
+      { label: 'Usuarios' }   // último item = página actual (sin link)
+    ]
+  },
+  loadComponent: () => import('...').then(m => m.UsuariosComponent),
+}
+```
+
+**2. Renderizar en el template** (cualquier componente):
+```html
+<div class="page-root" role="main">
+  <app-breadcrumb />
+  <!-- resto del contenido -->
+</div>
+```
+
+**3. Importar el componente** en el `imports` del componente:
+```ts
+import { AppBreadcrumbComponent } from '../../components/app-breadcrumb/app-breadcrumb.component';
+
+@Component({
+  imports: [..., AppBreadcrumbComponent],
+})
+```
+
+**Reglas de iconos por grupo:**
+- Bajo "Seguridad" (Login, Olvide-clave, Cambiar contraseña, Usuarios, Roles, Auditoría) → `pi pi-shield`
+- Bajo "Pantallas" (Correos, Filtros, Formularios) → `pi pi-th-large`
+- Pantallas raíz del DS (Tokens, Iconografía, etc.) → 1 solo item sin grupo
+
+**Reglas funcionales:**
+- El icono Home (🏠) lo provee automáticamente el componente, siempre lleva a `/`
+- Items intermedios (grupos) deben tener `routerLink` a la pantalla principal del grupo (Seguridad → /pantallas/seguridad/usuarios, Pantallas → /pantallas/correos)
+- El último item NO lleva `routerLink` (es la página actual)
+- Login y Olvide-clave NO declaran `breadcrumb` (pantallas públicas sin navegación contextual)
+
+**Caso especial — breadcrumb dinámico:** si necesitas un breadcrumb que cambie según estado del componente (ej. `command` para volver a una vista anterior), usa `<p-breadcrumb [model]="custom" [home]="home" />` directamente. Ver `roles.component` (editor de permisos) como referencia.
+
 ### Estado vacío en tablas (mensaje uniforme)
 ```html
 <ng-template #emptymessage>

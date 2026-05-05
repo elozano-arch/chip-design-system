@@ -10,9 +10,10 @@ import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { TagModule } from 'primeng/tag';
-import { MessageService, MenuItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
+
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
 interface PasswordRule {
   key: string;
@@ -34,19 +35,14 @@ interface DispositivoActivo {
   imports: [
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
-    DialogModule, MessageModule, ToastModule, BreadcrumbModule, TagModule,
+    DialogModule, MessageModule, ToastModule, TagModule,
+    AppBreadcrumbComponent,
   ],
   providers: [MessageService],
   templateUrl: './cambiar-contrasena.component.html',
   styleUrl: './cambiar-contrasena.component.scss',
 })
 export class CambiarContrasenaComponent implements OnInit {
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
-    { label: 'Cambiar contraseña' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
-
   // CH-1374: modo forzado tras login con contraseña vencida
   modoForzado = false;
 

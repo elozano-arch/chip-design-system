@@ -9,7 +9,6 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SelectModule } from 'primeng/select';
@@ -22,6 +21,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { DirectorioEntidadesComponent, Entidad } from '../../../components/directorio-entidades/directorio-entidades.component';
+import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
 interface Usuario {
   id: number;
@@ -45,11 +45,11 @@ interface Usuario {
   imports: [
     CommonModule, FormsModule, RouterModule,
     ButtonModule, InputTextModule, TableModule, TagModule,
-    ToastModule, TooltipModule, BreadcrumbModule,
+    ToastModule, TooltipModule,
     IconFieldModule, InputIconModule, SelectModule,
     DialogModule, DividerModule, MenuModule, ChipModule,
     AutoCompleteModule, RadioButtonModule,
-    DirectorioEntidadesComponent,
+    DirectorioEntidadesComponent, AppBreadcrumbComponent,
   ],
   providers: [MessageService],
   templateUrl: './usuarios.component.html',
@@ -87,12 +87,6 @@ export class UsuariosComponent {
     this.selectedUsuario = usuario;
     this.menuAcciones.toggle(event);
   }
-
-  breadcrumbItems: MenuItem[] = [
-    { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
-    { label: 'Usuarios' },
-  ];
-  breadcrumbHome: MenuItem = { icon: 'pi pi-home', routerLink: '/' };
 
   // ── Filtros (CH-1360 spec) ──
   filterUsuario = '';                                  // Alfanumérico 4-20
