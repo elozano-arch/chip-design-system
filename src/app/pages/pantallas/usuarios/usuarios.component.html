@@ -105,6 +105,7 @@
               [minLength]="3"
               placeholder="Escriba 3+ caracteres del nombre"
               styleClass="w-full"
+              [style]="{ width: '100%' }"
               appendTo="body" />
           </div>
 
@@ -115,7 +116,8 @@
               [(ngModel)]="filterPerfil"
               placeholder="Todos" appendTo="body"
               [filter]="true" filterBy="label"
-              class="w-full" />
+              [style]="{ width: '100%' }"
+              styleClass="w-full" />
           </div>
 
           <!-- Tipo usuario -->
@@ -124,7 +126,8 @@
             <p-select inputId="usr-f-tipo" [options]="tipoUsuarioOptions"
               [(ngModel)]="filterTipoUsuario"
               placeholder="Todos" appendTo="body"
-              class="w-full" />
+              [style]="{ width: '100%' }"
+              styleClass="w-full" />
           </div>
 
         </div>
