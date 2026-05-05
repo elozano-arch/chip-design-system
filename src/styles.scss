@@ -383,6 +383,34 @@ p-breadcrumb .p-breadcrumb {
   }
 }
 
+/* Uniformidad de TODOS los controles dentro de los filtros (global porque
+   los hosts de PrimeNG están fuera del scope de view encapsulation):
+   - Hosts (p-iconfield, p-select, p-autocomplete) son inline-block por
+     default → forzamos block + 100% width para llenar la columna del grid
+   - Altura idéntica de 40px en inputs, selects y autocomplete-input
+   - NO tocamos el display interno: PrimeNG ya tiene su propio layout */
+.chip-filters__field > p-iconfield,
+.chip-filters__field > p-iconField,
+.chip-filters__field > p-select,
+.chip-filters__field > p-autocomplete,
+.chip-filters__field > p-autoComplete {
+  display: block !important;
+  width: 100% !important;
+}
+
+.chip-filters__field .p-iconfield,
+.chip-filters__field .p-select,
+.chip-filters__field .p-autocomplete {
+  width: 100% !important;
+}
+
+.chip-filters__field input.p-inputtext,
+.chip-filters__field .p-select,
+.chip-filters__field .p-autocomplete-input {
+  height: 40px !important;
+  box-sizing: border-box;
+}
+
 .chip-filters__required,
 .field-required {
   color: var(--chip-danger);

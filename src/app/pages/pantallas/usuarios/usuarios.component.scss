@@ -196,43 +196,8 @@
    Filtros: campos extendidos para spec CH-1360
    ============================================================ */
 
-/* (Labels heredan del patrón global en src/styles.scss:
-   case normal, peso 500, 13px, color grey-700) */
-
-/* Uniformidad de TODOS los controles del filtro:
-   - 100% del ancho de la columna del grid
-   - Altura idéntica (40px) entre inputs, selects, autocomplete e iconfield
-   - SIN tocar display interno de PrimeNG (rompe el layout interno) */
-.chip-filters__field {
-  --chip-filter-control-height: 40px;
-
-  /* Hosts directos de PrimeNG a 100% width (son inline-block por default) */
-  > p-iconfield,
-  > p-iconField,
-  > p-select,
-  > p-autocomplete,
-  > p-autoComplete {
-    display: block !important;
-    width: 100% !important;
-  }
-
-  /* Wrappers internos al 100% también */
-  .p-iconfield,
-  .p-select,
-  .p-autocomplete {
-    width: 100% !important;
-  }
-
-  /* Altura uniforme — se aplica al input/control visible, no al wrapper */
-  input.p-inputtext,
-  .p-select,
-  .p-autocomplete-input {
-    height: var(--chip-filter-control-height) !important;
-    box-sizing: border-box;
-  }
-}
-
-/* (reglas duplicadas removidas — la nueva regla unificada arriba las reemplaza) */
+/* (Labels y uniformidad de tamaños movidos al global src/styles.scss
+   porque view encapsulation impedía que aplicaran al host de PrimeNG) */
 
 /* Campo Entidad: el input es el TRIGGER del modal Directorio
    No es un input editable — es un selector con apariencia de input */
