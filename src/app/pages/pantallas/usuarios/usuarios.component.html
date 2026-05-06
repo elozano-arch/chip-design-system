@@ -438,52 +438,166 @@
   (seleccionar)="onEntidadNuevoSeleccionada($event)" />
 
 <!-- Diálogo Editar Usuario -->
-<p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '500px' }" [draggable]="false">
+<p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '720px' }" [draggable]="false">
   <div class="usr-dialog">
-    <div class="usr-dialog__field">
-      <label for="edit-codigo">Código</label>
-      <input pInputText id="edit-codigo" [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
-      <small class="usr-dialog__help">El código de usuario no se puede modificar.</small>
-    </div>
-    <div class="usr-dialog__field">
-      <label for="edit-nombre">Nombre completo <span class="field-required">*</span></label>
-      <input pInputText id="edit-nombre"
-        [(ngModel)]="editNombre"
-        (blur)="editNombreTouched = true"
-        [class.ng-invalid]="editNombreInvalid"
-        [class.ng-dirty]="editNombreTouched"
-        placeholder="Nombre del usuario"
-        class="w-full"
-        aria-required="true"
-        [attr.aria-invalid]="editNombreInvalid"
-        aria-describedby="edit-nombre-error" />
-      @if (editNombreInvalid) {
-        <small id="edit-nombre-error" class="usr-dialog__error">El nombre completo es obligatorio.</small>
-      }
-    </div>
-    <div class="usr-dialog__field">
-      <label for="edit-correo">Correo electrónico <span class="field-required">*</span></label>
-      <input pInputText id="edit-correo"
-        [(ngModel)]="editCorreo"
-        (blur)="editCorreoTouched = true"
-        [class.ng-invalid]="editCorreoInvalid"
-        [class.ng-dirty]="editCorreoTouched"
-        type="email"
-        placeholder="correo@entidad.gov.co"
-        class="w-full"
-        autocomplete="email"
-        aria-required="true"
-        [attr.aria-invalid]="editCorreoInvalid"
-        aria-describedby="edit-correo-error" />
-      @if (editCorreoVacio) {
-        <small id="edit-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
-      } @else if (editCorreoFormatoInvalido) {
-        <small id="edit-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido.</small>
-      }
-    </div>
-    <div class="usr-dialog__field">
-      <label for="edit-perfil">Perfil de seguridad</label>
-      <p-select inputId="edit-perfil" [options]="perfilOptions" [(ngModel)]="editPerfil" placeholder="Seleccione perfil" appendTo="body" class="w-full" />
+    <div class="usr-dialog__grid usr-dialog__grid--2col">
+      <!-- Usuario (readonly) -->
+      <div class="usr-dialog__field">
+        <label for="edit-codigo">Usuario</label>
+        <input pInputText id="edit-codigo" [value]="selectedUsuario?.codigo" [disabled]="true" class="w-full" />
+        <small class="usr-dialog__help">El usuario no se puede modificar.</small>
+      </div>
+
+      <!-- Nombre completo -->
+      <div class="usr-dialog__field">
+        <label for="edit-nombre">Nombre Completo <span class="field-required">*</span></label>
+        <input pInputText id="edit-nombre"
+          [(ngModel)]="editNombre"
+          (blur)="editNombreTouched = true"
+          [class.ng-invalid]="editNombreInvalid"
+          [class.ng-dirty]="editNombreTouched"
+          placeholder="Nombre del usuario"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editNombreInvalid"
+          aria-describedby="edit-nombre-error" />
+        @if (editNombreInvalid) {
+          <small id="edit-nombre-error" class="usr-dialog__error">El nombre completo es obligatorio.</small>
+        }
+      </div>
+
+      <!-- Correo -->
+      <div class="usr-dialog__field">
+        <label for="edit-correo">Correo <span class="field-required">*</span></label>
+        <input pInputText id="edit-correo"
+          [(ngModel)]="editCorreo"
+          (blur)="editCorreoTouched = true"
+          [class.ng-invalid]="editCorreoInvalid"
+          [class.ng-dirty]="editCorreoTouched"
+          type="email"
+          placeholder="correo@entidad.gov.co"
+          class="w-full"
+          autocomplete="email"
+          aria-required="true"
+          [attr.aria-invalid]="editCorreoInvalid"
+          aria-describedby="edit-correo-error" />
+        @if (editCorreoVacio) {
+          <small id="edit-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
+        } @else if (editCorreoFormatoInvalido) {
+          <small id="edit-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido.</small>
+        }
+      </div>
+
+      <!-- Tipo -->
+      <div class="usr-dialog__field">
+        <label for="edit-tipo">Tipo <span class="field-required">*</span></label>
+        <p-select inputId="edit-tipo"
+          [options]="tipoUsuarioFormOptions" [(ngModel)]="editTipo"
+          (onBlur)="editTipoTouched = true"
+          [class.ng-invalid]="editTipoInvalid"
+          [class.ng-dirty]="editTipoTouched"
+          placeholder="Seleccione tipo"
+          appendTo="body" class="w-full"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editTipoInvalid"
+          aria-describedby="edit-tipo-error" />
+        @if (editTipoInvalid) {
+          <small id="edit-tipo-error" class="usr-dialog__error">Debe seleccionar un tipo de usuario.</small>
+        }
+      </div>
+
+      <!-- Documento -->
+      <div class="usr-dialog__field">
+        <label for="edit-doc">Documento <span class="field-required">*</span></label>
+        <input pInputText id="edit-doc"
+          [(ngModel)]="editDocumento"
+          (blur)="editDocumentoTouched = true"
+          [class.ng-invalid]="editDocumentoInvalid"
+          [class.ng-dirty]="editDocumentoTouched"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          minlength="4" maxlength="20"
+          placeholder="Número de documento"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editDocumentoInvalid"
+          aria-describedby="edit-doc-error" />
+        @if (editDocumentoVacio) {
+          <small id="edit-doc-error" class="usr-dialog__error">El documento es obligatorio.</small>
+        } @else if (editDocumentoFormatoInvalido) {
+          <small id="edit-doc-error" class="usr-dialog__error">El documento debe ser numérico (4 a 20 dígitos).</small>
+        }
+      </div>
+
+      <!-- Entidad: input que actúa como trigger del Directorio -->
+      <div class="usr-dialog__field">
+        <label for="edit-entidad">Entidad <span class="field-required">*</span></label>
+        <p-iconField iconPosition="right" styleClass="w-full">
+          <input pInputText id="edit-entidad"
+            class="w-full usr-entidad-trigger-input"
+            [class.ng-invalid]="editEntidadInvalid"
+            [class.ng-dirty]="editEntidadTouched"
+            [value]="editEntidad ? (editEntidad.codigo + ' - ' + editEntidad.razonSocial) : ''"
+            readonly
+            placeholder="Seleccione…"
+            role="combobox"
+            aria-haspopup="dialog"
+            aria-required="true"
+            [attr.aria-invalid]="editEntidadInvalid"
+            [attr.aria-expanded]="mostrarDirectorioEntidadesEdit"
+            [attr.aria-label]="editEntidad ? ('Entidad seleccionada: ' + editEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+            aria-describedby="edit-entidad-error"
+            (click)="abrirDirectorioEntidadesEdit()"
+            (keydown.enter)="abrirDirectorioEntidadesEdit()"
+            (keydown.space)="abrirDirectorioEntidadesEdit(); $event.preventDefault()" />
+          @if (editEntidad) {
+            <p-inputIcon
+              styleClass="pi pi-times-circle usr-entidad-clear"
+              role="button" tabindex="0"
+              pTooltip="Limpiar selección" tooltipPosition="top"
+              aria-label="Limpiar entidad seleccionada"
+              (click)="limpiarEntidadEdit(); $event.stopPropagation()"
+              (keydown.enter)="limpiarEntidadEdit(); $event.stopPropagation()"
+              (keydown.space)="limpiarEntidadEdit(); $event.stopPropagation(); $event.preventDefault()" />
+          }
+        </p-iconField>
+        @if (editEntidadInvalid) {
+          <small id="edit-entidad-error" class="usr-dialog__error">Debe seleccionar una entidad.</small>
+        }
+      </div>
+
+      <!-- Rol / Perfil -->
+      <div class="usr-dialog__field">
+        <label for="edit-perfil">Rol / Perfil <span class="field-required">*</span></label>
+        <p-select inputId="edit-perfil"
+          [options]="rolesFormOptions" [(ngModel)]="editPerfil"
+          placeholder="Seleccione rol"
+          [filter]="true" filterBy="label"
+          filterPlaceholder="Escriba para buscar..."
+          appendTo="body" class="w-full"
+          [style]="{ width: '100%' }"
+          styleClass="w-full" />
+      </div>
+
+      <!-- Estado -->
+      <div class="usr-dialog__field">
+        <label for="edit-estado">Estado</label>
+        <p-select inputId="edit-estado"
+          [options]="estadoFormOptions" [(ngModel)]="editEstado"
+          appendTo="body" class="w-full"
+          [style]="{ width: '100%' }"
+          styleClass="w-full" />
+      </div>
+
+      <!-- Fecha de Última Modificación (readonly) -->
+      <div class="usr-dialog__field">
+        <label for="edit-fecha-mod">Fecha de Última Modificación</label>
+        <input pInputText id="edit-fecha-mod"
+          [value]="editFechaUltimaModificacion"
+          [disabled]="true" class="w-full" />
+      </div>
     </div>
 
     <p-divider />
@@ -505,9 +619,14 @@
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showEditDialog = false" />
-    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditUsuario()" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEditUsuario()" />
   </ng-template>
 </p-dialog>
+
+<!-- Modal Directorio de Entidades para el formulario de edición -->
+<app-directorio-entidades
+  [(visible)]="mostrarDirectorioEntidadesEdit"
+  (seleccionar)="onEntidadEditSeleccionada($event)" />
 
 <!-- Diálogo Confirmar Activar/Desactivar -->
 <p-dialog header="Confirmar Cambio de Estado" [(visible)]="showToggleDialog" [modal]="true" [style]="{ width: '420px' }" [draggable]="false">
