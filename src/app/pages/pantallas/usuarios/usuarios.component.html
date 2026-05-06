@@ -7,7 +7,7 @@
     <h1 class="usr-header__title">Gestión de Usuarios</h1>
     <div class="usr-header__row">
       <p class="usr-header__desc">Consulte y administre los usuarios registrados en el sistema CHIP.</p>
-      <p-button label="Nuevo Usuario" icon="pi pi-user-plus" (onClick)="openNewDialog()" />
+      <p-button label="Crear Usuario" icon="pi pi-plus" (onClick)="openNewDialog()" />
     </div>
   </div>
 
@@ -38,26 +38,26 @@
     @if (!filtersCollapsed) {
       <div class="chip-filters__body" id="usr-filters-body">
         <div class="chip-filters__fields chip-filters__fields--3col">
-          <!-- Usuario (alfanumérico 4-20) -->
+          <!-- Código Usuario (alfanumérico 4-20) -->
           <div class="chip-filters__field">
-            <label for="usr-f-usuario">Usuario</label>
+            <label for="usr-f-usuario">Código Usuario</label>
             <p-iconField styleClass="w-full">
               <p-inputIcon styleClass="pi pi-user" />
               <input pInputText id="usr-f-usuario"
-                placeholder="Código del usuario"
+                placeholder="Buscar por código..."
                 [(ngModel)]="filterUsuario"
                 minlength="4" maxlength="20"
                 class="w-full" />
             </p-iconField>
           </div>
 
-          <!-- Documento (numérico 4-20) -->
+          <!-- Documento de Usuario (numérico 4-20) -->
           <div class="chip-filters__field">
-            <label for="usr-f-doc">Documento</label>
+            <label for="usr-f-doc">Documento de Usuario</label>
             <p-iconField styleClass="w-full">
               <p-inputIcon styleClass="pi pi-id-card" />
               <input pInputText id="usr-f-doc"
-                placeholder="Cédula, NIT…"
+                placeholder="Buscar por documento..."
                 [(ngModel)]="filterDocumento"
                 inputmode="numeric"
                 pattern="[0-9]*"
@@ -66,15 +66,29 @@
             </p-iconField>
           </div>
 
+          <!-- Nombre de Usuario (autocomplete 3+) -->
+          <div class="chip-filters__field">
+            <label for="usr-f-nombre">Nombre de Usuario</label>
+            <p-autoComplete inputId="usr-f-nombre"
+              [(ngModel)]="filterNombre"
+              [suggestions]="sugerenciasNombre"
+              (completeMethod)="searchNombres($event)"
+              [minLength]="3"
+              placeholder="Buscar por nombre..."
+              styleClass="w-full"
+              [style]="{ width: '100%' }"
+              appendTo="body" />
+          </div>
+
           <!-- Entidad: input que actúa como trigger del Directorio (clic = abre modal) -->
           <div class="chip-filters__field">
-            <label for="usr-f-entidad">Entidad asociada</label>
+            <label for="usr-f-entidad">Entidad</label>
             <p-iconField iconPosition="right" styleClass="w-full usr-entidad-iconfield">
               <input pInputText id="usr-f-entidad"
                 class="w-full usr-entidad-trigger-input"
                 [value]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
                 readonly
-                placeholder="Buscar entidad"
+                placeholder="Todas"
                 role="combobox"
                 aria-haspopup="dialog"
                 [attr.aria-expanded]="mostrarDirectorioEntidades"
@@ -95,37 +109,23 @@
             </p-iconField>
           </div>
 
-          <!-- Nombre completo (autocomplete 3+) -->
+          <!-- Tipo de Usuario -->
           <div class="chip-filters__field">
-            <label for="usr-f-nombre">Nombre completo</label>
-            <p-autoComplete inputId="usr-f-nombre"
-              [(ngModel)]="filterNombre"
-              [suggestions]="sugerenciasNombre"
-              (completeMethod)="searchNombres($event)"
-              [minLength]="3"
-              placeholder="Buscar nombre completo"
-              styleClass="w-full"
-              [style]="{ width: '100%' }"
-              appendTo="body" />
-          </div>
-
-          <!-- Rol/Perfil -->
-          <div class="chip-filters__field">
-            <label for="usr-f-perfil">Rol / Perfil</label>
-            <p-select inputId="usr-f-perfil" [options]="perfilOptions"
-              [(ngModel)]="filterPerfil"
+            <label for="usr-f-tipo">Tipo de Usuario</label>
+            <p-select inputId="usr-f-tipo" [options]="tipoUsuarioOptions"
+              [(ngModel)]="filterTipoUsuario"
               placeholder="Todos" appendTo="body"
-              [filter]="true" filterBy="label"
               [style]="{ width: '100%' }"
               styleClass="w-full" />
           </div>
 
-          <!-- Tipo usuario -->
+          <!-- Rol -->
           <div class="chip-filters__field">
-            <label for="usr-f-tipo">Tipo usuario</label>
-            <p-select inputId="usr-f-tipo" [options]="tipoUsuarioOptions"
-              [(ngModel)]="filterTipoUsuario"
+            <label for="usr-f-perfil">Rol</label>
+            <p-select inputId="usr-f-perfil" [options]="perfilOptions"
+              [(ngModel)]="filterPerfil"
               placeholder="Todos" appendTo="body"
+              [filter]="true" filterBy="label"
               [style]="{ width: '100%' }"
               styleClass="w-full" />
           </div>
@@ -173,26 +173,26 @@
     </ng-template>
     <ng-template #header>
       <tr>
-        <th pSortableColumn="codigo" style="width: 120px">Código <p-sortIcon field="codigo" /></th>
+        <th pSortableColumn="id" style="width: 100px">Código <p-sortIcon field="id" /></th>
+        <th pSortableColumn="documento" style="width: 140px">Documento <p-sortIcon field="documento" /></th>
+        <th pSortableColumn="codigo" style="width: 130px">Usuario <p-sortIcon field="codigo" /></th>
         <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
-        <th>Correo</th>
-        <th pSortableColumn="perfil">Perfil <p-sortIcon field="perfil" /></th>
         <th pSortableColumn="entidad.nombre">Entidad <p-sortIcon field="entidad.nombre" /></th>
-        <th style="width: 80px; text-align: center">Estado</th>
-        <th style="width: 100px">Último Acceso</th>
-        <th style="width: 90px; text-align: center">Acciones</th>
+        <th pSortableColumn="tipoUsuario" style="width: 110px">Tipo <p-sortIcon field="tipoUsuario" /></th>
+        <th pSortableColumn="perfil" style="width: 200px">Rol <p-sortIcon field="perfil" /></th>
+        <th style="width: 90px; text-align: center">Estado</th>
+        <th style="width: 110px; text-align: center">Acciones</th>
       </tr>
     </ng-template>
     <ng-template #body let-u>
       <tr>
-        <td><span class="usr-code">{{ u.codigo }}</span></td>
+        <td><span class="usr-code">{{ formatCodigoDisplay(u.id) }}</span></td>
+        <td class="usr-doc">{{ u.documento }}</td>
+        <td><span class="usr-username">{{ u.codigo }}</span></td>
         <td class="usr-name">{{ u.nombre }}</td>
-        <td class="usr-email">{{ u.correo }}</td>
+        <td class="usr-entity">{{ u.entidad.nombre }}</td>
+        <td><p-tag [value]="formatTipoUsuario(u.tipoUsuario)" severity="secondary" /></td>
         <td><p-tag [value]="u.perfil" severity="info" /></td>
-        <td class="usr-entity">
-          <span class="usr-entity__code">{{ u.entidad.codigo }}</span>
-          <span class="usr-entity__name">{{ u.entidad.nombre }}</span>
-        </td>
         <td style="text-align: center">
           @if (u.activo) {
             <p-tag value="Activo" severity="success" />
@@ -200,20 +200,30 @@
             <p-tag value="Inactivo" severity="danger" />
           }
         </td>
-        <td class="usr-date">{{ u.ultimoAcceso }}</td>
         <td>
           <div class="usr-actions">
-            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
-              severity="secondary" size="small"
-              [attr.aria-label]="'Acciones para ' + u.nombre"
-              (onClick)="abrirMenuAcciones($event, u)" />
+            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true"
+              severity="info" size="small"
+              pTooltip="Editar" tooltipPosition="top"
+              [attr.aria-label]="'Editar ' + u.nombre"
+              (onClick)="onEditarClick(u)" />
+            <p-button [icon]="u.activo ? 'pi pi-ban' : 'pi pi-check'" [rounded]="true" [text]="true"
+              [severity]="u.activo ? 'warn' : 'success'" size="small"
+              [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top"
+              [attr.aria-label]="(u.activo ? 'Desactivar ' : 'Activar ') + u.nombre"
+              (onClick)="onToggleClick(u)" />
+            <p-button icon="pi pi-trash" [rounded]="true" [text]="true"
+              severity="danger" size="small"
+              pTooltip="Eliminar" tooltipPosition="top"
+              [attr.aria-label]="'Eliminar ' + u.nombre"
+              (onClick)="onEliminarClick(u)" />
           </div>
         </td>
       </tr>
     </ng-template>
     <ng-template #emptymessage>
       <tr>
-        <td colspan="8" class="usr-empty">
+        <td colspan="9" class="usr-empty">
           @if (!busquedaRealizada) {
             <i class="pi pi-search" aria-hidden="true"></i>
             <p>Use los filtros y presione <strong>Buscar</strong> para listar usuarios.</p>
@@ -229,102 +239,203 @@
   <p-menu #menuAcciones [model]="menuAccionesItems" [popup]="true" appendTo="body" />
 </div>
 
-<!-- Diálogo Nuevo Usuario -->
-<p-dialog header="Nuevo Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '500px' }" [draggable]="false">
+<!-- Diálogo Crear Usuario -->
+<p-dialog header="Crear Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '720px' }" [draggable]="false">
   <div class="usr-dialog">
     <p class="usr-dialog__hint">
       Los campos marcados con <span class="field-required">*</span> son obligatorios.
     </p>
 
-    <!-- Código -->
-    <div class="usr-dialog__field">
-      <label for="nuevo-codigo">Código de usuario <span class="field-required">*</span></label>
-      <input pInputText id="nuevo-codigo"
-        [(ngModel)]="nuevoCodigo"
-        (blur)="nuevoCodigoTouched = true"
-        [class.ng-invalid]="nuevoCodigoInvalid"
-        [class.ng-dirty]="nuevoCodigoTouched"
-        placeholder="Ej: ABCD123456"
-        maxlength="10"
-        class="w-full"
-        aria-required="true"
-        [attr.aria-invalid]="nuevoCodigoInvalid"
-        aria-describedby="nuevo-codigo-help nuevo-codigo-error" />
-      <small id="nuevo-codigo-help" class="usr-dialog__help">Formato: 4 letras + 6 números (ej: JLMU880704)</small>
-      @if (nuevoCodigoVacio) {
-        <small id="nuevo-codigo-error" class="usr-dialog__error">El código es obligatorio.</small>
-      } @else if (nuevoCodigoFormatoInvalido) {
-        <small id="nuevo-codigo-error" class="usr-dialog__error">El código debe tener 4 letras seguidas de 6 números.</small>
-      } @else if (nuevoCodigoDuplicado) {
-        <small id="nuevo-codigo-error" class="usr-dialog__error">Este código ya está registrado. Use uno diferente.</small>
-      }
-    </div>
+    <div class="usr-dialog__grid usr-dialog__grid--2col">
+      <!-- Usuario (código) -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-codigo">Usuario <span class="field-required">*</span></label>
+        <input pInputText id="nuevo-codigo"
+          [(ngModel)]="nuevoCodigo"
+          (blur)="nuevoCodigoTouched = true"
+          [class.ng-invalid]="nuevoCodigoInvalid"
+          [class.ng-dirty]="nuevoCodigoTouched"
+          placeholder="Ej: ABCD123456"
+          maxlength="10"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="nuevoCodigoInvalid"
+          aria-describedby="nuevo-codigo-help nuevo-codigo-error" />
+        <small id="nuevo-codigo-help" class="usr-dialog__help">Formato: 4 letras + 6 números (ej: JLMU880704)</small>
+        @if (nuevoCodigoVacio) {
+          <small id="nuevo-codigo-error" class="usr-dialog__error">El usuario es obligatorio.</small>
+        } @else if (nuevoCodigoFormatoInvalido) {
+          <small id="nuevo-codigo-error" class="usr-dialog__error">El usuario debe tener 4 letras seguidas de 6 números.</small>
+        } @else if (nuevoCodigoDuplicado) {
+          <small id="nuevo-codigo-error" class="usr-dialog__error">Este usuario ya está registrado. Use uno diferente.</small>
+        }
+      </div>
 
-    <!-- Nombre -->
-    <div class="usr-dialog__field">
-      <label for="nuevo-nombre">Nombre completo <span class="field-required">*</span></label>
-      <input pInputText id="nuevo-nombre"
-        [(ngModel)]="nuevoNombre"
-        (blur)="nuevoNombreTouched = true"
-        [class.ng-invalid]="nuevoNombreInvalid"
-        [class.ng-dirty]="nuevoNombreTouched"
-        placeholder="Ej: María Fernanda García"
-        class="w-full"
-        aria-required="true"
-        [attr.aria-invalid]="nuevoNombreInvalid"
-        aria-describedby="nuevo-nombre-error" />
-      @if (nuevoNombreInvalid) {
-        <small id="nuevo-nombre-error" class="usr-dialog__error">El nombre completo es obligatorio.</small>
-      }
-    </div>
+      <!-- Nombre completo -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-nombre">Nombre completo <span class="field-required">*</span></label>
+        <input pInputText id="nuevo-nombre"
+          [(ngModel)]="nuevoNombre"
+          (blur)="nuevoNombreTouched = true"
+          [class.ng-invalid]="nuevoNombreInvalid"
+          [class.ng-dirty]="nuevoNombreTouched"
+          placeholder="Ej: María Fernanda García"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="nuevoNombreInvalid"
+          aria-describedby="nuevo-nombre-error" />
+        @if (nuevoNombreInvalid) {
+          <small id="nuevo-nombre-error" class="usr-dialog__error">El nombre completo es obligatorio.</small>
+        }
+      </div>
 
-    <!-- Correo -->
-    <div class="usr-dialog__field">
-      <label for="nuevo-correo">Correo electrónico <span class="field-required">*</span></label>
-      <input pInputText id="nuevo-correo"
-        [(ngModel)]="nuevoCorreo"
-        (blur)="nuevoCorreoTouched = true"
-        [class.ng-invalid]="nuevoCorreoInvalid"
-        [class.ng-dirty]="nuevoCorreoTouched"
-        type="email"
-        placeholder="correo@entidad.gov.co"
-        class="w-full"
-        autocomplete="email"
-        aria-required="true"
-        [attr.aria-invalid]="nuevoCorreoInvalid"
-        aria-describedby="nuevo-correo-error" />
-      @if (nuevoCorreoVacio) {
-        <small id="nuevo-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
-      } @else if (nuevoCorreoFormatoInvalido) {
-        <small id="nuevo-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido (ej: nombre&#64;entidad.gov.co).</small>
-      } @else if (nuevoCorreoDuplicado) {
-        <small id="nuevo-correo-error" class="usr-dialog__error">Este correo ya está registrado. Use uno diferente.</small>
-      }
-    </div>
+      <!-- Correo -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-correo">Correo <span class="field-required">*</span></label>
+        <input pInputText id="nuevo-correo"
+          [(ngModel)]="nuevoCorreo"
+          (blur)="nuevoCorreoTouched = true"
+          [class.ng-invalid]="nuevoCorreoInvalid"
+          [class.ng-dirty]="nuevoCorreoTouched"
+          type="email"
+          placeholder="correo@entidad.gov.co"
+          class="w-full"
+          autocomplete="email"
+          aria-required="true"
+          [attr.aria-invalid]="nuevoCorreoInvalid"
+          aria-describedby="nuevo-correo-error" />
+        @if (nuevoCorreoVacio) {
+          <small id="nuevo-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
+        } @else if (nuevoCorreoFormatoInvalido) {
+          <small id="nuevo-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido (ej: nombre&#64;entidad.gov.co).</small>
+        } @else if (nuevoCorreoDuplicado) {
+          <small id="nuevo-correo-error" class="usr-dialog__error">Este correo ya está registrado. Use uno diferente.</small>
+        }
+      </div>
 
-    <!-- Perfil -->
-    <div class="usr-dialog__field">
-      <label for="nuevo-perfil">Perfil de seguridad <span class="field-required">*</span></label>
-      <p-select inputId="nuevo-perfil"
-        [options]="perfilOptions" [(ngModel)]="nuevoPerfil"
-        (onBlur)="nuevoPerfilTouched = true"
-        [class.ng-invalid]="nuevoPerfilInvalid"
-        [class.ng-dirty]="nuevoPerfilTouched"
-        placeholder="Seleccione perfil"
-        appendTo="body" class="w-full"
-        aria-required="true"
-        [attr.aria-invalid]="nuevoPerfilInvalid"
-        aria-describedby="nuevo-perfil-error" />
-      @if (nuevoPerfilInvalid) {
-        <small id="nuevo-perfil-error" class="usr-dialog__error">Debe seleccionar un perfil de seguridad.</small>
-      }
+      <!-- Tipo -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-tipo">Tipo <span class="field-required">*</span></label>
+        <p-select inputId="nuevo-tipo"
+          [options]="tipoUsuarioFormOptions" [(ngModel)]="nuevoTipo"
+          (onBlur)="nuevoTipoTouched = true"
+          [class.ng-invalid]="nuevoTipoInvalid"
+          [class.ng-dirty]="nuevoTipoTouched"
+          placeholder="Seleccione tipo"
+          appendTo="body" class="w-full"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="nuevoTipoInvalid"
+          aria-describedby="nuevo-tipo-error" />
+        @if (nuevoTipoInvalid) {
+          <small id="nuevo-tipo-error" class="usr-dialog__error">Debe seleccionar un tipo de usuario.</small>
+        }
+      </div>
+
+      <!-- Documento -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-doc">Documento <span class="field-required">*</span></label>
+        <input pInputText id="nuevo-doc"
+          [(ngModel)]="nuevoDocumento"
+          (blur)="nuevoDocumentoTouched = true"
+          [class.ng-invalid]="nuevoDocumentoInvalid"
+          [class.ng-dirty]="nuevoDocumentoTouched"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          minlength="4" maxlength="20"
+          placeholder="Número de documento"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="nuevoDocumentoInvalid"
+          aria-describedby="nuevo-doc-error" />
+        @if (nuevoDocumentoVacio) {
+          <small id="nuevo-doc-error" class="usr-dialog__error">El documento es obligatorio.</small>
+        } @else if (nuevoDocumentoFormatoInvalido) {
+          <small id="nuevo-doc-error" class="usr-dialog__error">El documento debe ser numérico (4 a 20 dígitos).</small>
+        }
+      </div>
+
+      <!-- Entidad: input que actúa como trigger del Directorio -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-entidad">Entidad <span class="field-required">*</span></label>
+        <p-iconField iconPosition="right" styleClass="w-full">
+          <input pInputText id="nuevo-entidad"
+            class="w-full usr-entidad-trigger-input"
+            [class.ng-invalid]="nuevoEntidadInvalid"
+            [class.ng-dirty]="nuevoEntidadTouched"
+            [value]="nuevoEntidad ? (nuevoEntidad.codigo + ' - ' + nuevoEntidad.razonSocial) : ''"
+            readonly
+            placeholder="Seleccione…"
+            role="combobox"
+            aria-haspopup="dialog"
+            aria-required="true"
+            [attr.aria-invalid]="nuevoEntidadInvalid"
+            [attr.aria-expanded]="mostrarDirectorioEntidadesNuevo"
+            [attr.aria-label]="nuevoEntidad ? ('Entidad seleccionada: ' + nuevoEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+            aria-describedby="nuevo-entidad-error"
+            (click)="abrirDirectorioEntidadesNuevo()"
+            (keydown.enter)="abrirDirectorioEntidadesNuevo()"
+            (keydown.space)="abrirDirectorioEntidadesNuevo(); $event.preventDefault()" />
+          @if (nuevoEntidad) {
+            <p-inputIcon
+              styleClass="pi pi-times-circle usr-entidad-clear"
+              role="button" tabindex="0"
+              pTooltip="Limpiar selección" tooltipPosition="top"
+              aria-label="Limpiar entidad seleccionada"
+              (click)="limpiarEntidadNuevo(); $event.stopPropagation()"
+              (keydown.enter)="limpiarEntidadNuevo(); $event.stopPropagation()"
+              (keydown.space)="limpiarEntidadNuevo(); $event.stopPropagation(); $event.preventDefault()" />
+          }
+        </p-iconField>
+        @if (nuevoEntidadInvalid) {
+          <small id="nuevo-entidad-error" class="usr-dialog__error">Debe seleccionar una entidad.</small>
+        }
+      </div>
+
+      <!-- Rol / Perfil -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-perfil">Rol / Perfil <span class="field-required">*</span></label>
+        <p-select inputId="nuevo-perfil"
+          [options]="rolesFormOptions" [(ngModel)]="nuevoPerfil"
+          (onBlur)="nuevoPerfilTouched = true"
+          [class.ng-invalid]="nuevoPerfilInvalid"
+          [class.ng-dirty]="nuevoPerfilTouched"
+          placeholder="Seleccione rol"
+          [filter]="true" filterBy="label"
+          filterPlaceholder="Escriba para buscar..."
+          appendTo="body" class="w-full"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="nuevoPerfilInvalid"
+          aria-describedby="nuevo-perfil-error" />
+        @if (nuevoPerfilInvalid) {
+          <small id="nuevo-perfil-error" class="usr-dialog__error">Debe seleccionar un rol/perfil.</small>
+        }
+      </div>
+
+      <!-- Estado -->
+      <div class="usr-dialog__field">
+        <label for="nuevo-estado">Estado</label>
+        <p-select inputId="nuevo-estado"
+          [options]="estadoFormOptions" [(ngModel)]="nuevoEstado"
+          appendTo="body" class="w-full"
+          [style]="{ width: '100%' }"
+          styleClass="w-full" />
+      </div>
     </div>
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showNewDialog = false" />
-    <p-button label="Crear usuario" icon="pi pi-check" (onClick)="createUsuario()" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="createUsuario()" />
   </ng-template>
 </p-dialog>
+
+<!-- Modal Directorio de Entidades para el formulario de creación -->
+<app-directorio-entidades
+  [(visible)]="mostrarDirectorioEntidadesNuevo"
+  (seleccionar)="onEntidadNuevoSeleccionada($event)" />
 
 <!-- Diálogo Editar Usuario -->
 <p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '500px' }" [draggable]="false">

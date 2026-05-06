@@ -32,7 +32,20 @@
 
 .usr-entity {
   font-size: 13px;
-  color: var(--chip-grey-500);
+  color: var(--chip-grey-700);
+}
+
+.usr-doc {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--chip-grey-700);
+}
+
+.usr-username {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--chip-grey-800);
 }
 
 .usr-date {
@@ -43,7 +56,8 @@
 .usr-actions {
   display: flex;
   justify-content: center;
-  gap: 2px;
+  align-items: center;
+  gap: 4px;
 }
 
 /* --- Empty State --- */
@@ -190,6 +204,19 @@
     gap: 16px;
     flex-wrap: wrap;
   }
+
+  &__grid {
+    display: grid;
+    gap: 16px 20px;
+
+    &--2col {
+      grid-template-columns: 1fr 1fr;
+
+      @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
 }
 
 /* ============================================================
@@ -279,22 +306,4 @@
   align-items: center;
 }
 
-/* Tabla: celda Entidad con código + nombre */
-.usr-entity {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  &__code {
-    font-family: 'Courier New', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--chip-cobalt-700);
-  }
-
-  &__name {
-    font-size: 13px;
-    color: var(--chip-grey-700);
-  }
-}
 

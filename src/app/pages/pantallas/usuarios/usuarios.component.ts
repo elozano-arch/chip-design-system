@@ -88,6 +88,36 @@ export class UsuariosComponent {
     this.menuAcciones.toggle(event);
   }
 
+  /** Formato del código mostrado en la tabla: USR-001, USR-002, ... */
+  formatCodigoDisplay(id: number): string {
+    return 'USR-' + String(id).padStart(3, '0');
+  }
+
+  /** Convierte 'LOCAL' / 'CENTRAL' / 'ESTRATÉGICO' a 'Local' / 'Central' / 'Estratégico'. */
+  formatTipoUsuario(tipo: 'LOCAL' | 'CENTRAL' | 'ESTRATÉGICO'): string {
+    if (!tipo) return '';
+    return tipo.charAt(0).toUpperCase() + tipo.slice(1).toLowerCase();
+  }
+
+  /** Acción inline: Editar usuario desde la fila. */
+  onEditarClick(usuario: Usuario) {
+    this.selectedUsuario = usuario;
+    this.openEditDialog(usuario);
+  }
+
+  /** Acción inline: Eliminar usuario desde la fila (abre diálogo de confirmación). */
+  onEliminarClick(usuario: Usuario) {
+    this.selectedUsuario = usuario;
+    this.deleteConfirmText = '';
+    this.showDeleteDialog = true;
+  }
+
+  /** Acción inline: Activar/Desactivar usuario desde la fila (abre diálogo de confirmación). */
+  onToggleClick(usuario: Usuario) {
+    this.selectedUsuario = usuario;
+    this.showToggleDialog = true;
+  }
+
   // ── Filtros (CH-1360 spec) ──
   filterUsuario = '';                                  // Alfanumérico 4-20
   filterDocumento = '';                                // Numérico 4-20
@@ -130,12 +160,22 @@ export class UsuariosComponent {
   nuevoNombre = '';
   nuevoCorreo = '';
   nuevoPerfil = '';
+  nuevoDocumento = '';
+  nuevoTipo: 'LOCAL' | 'CENTRAL' | 'ESTRATÉGICO' | '' = '';
+  nuevoEntidad: Entidad | null = null;
+  nuevoEstado = true;
 
   // Touched flags (validación visual)
   nuevoCodigoTouched = false;
   nuevoNombreTouched = false;
   nuevoCorreoTouched = false;
   nuevoPerfilTouched = false;
+  nuevoDocumentoTouched = false;
+  nuevoTipoTouched = false;
+  nuevoEntidadTouched = false;
+
+  // Modal Directorio para el formulario de creación (independiente del filtro)
+  mostrarDirectorioEntidadesNuevo = false;
 
   // Editar usuario
   editNombre = '';
@@ -160,6 +200,39 @@ export class UsuariosComponent {
     { label: 'Local', value: 'LOCAL' },
     { label: 'Central', value: 'CENTRAL' },
     { label: 'Estratégico', value: 'ESTRATÉGICO' },
+  ];
+
+  /** Opciones de Tipo para el formulario de creación (sin "Todos"). */
+  tipoUsuarioFormOptions = [
+    { label: 'Local', value: 'LOCAL' },
+    { label: 'Central', value: 'CENTRAL' },
+    { label: 'Estratégico', value: 'ESTRATÉGICO' },
+  ];
+
+  /** Opciones de Estado para el formulario de creación. */
+  estadoFormOptions = [
+    { label: 'Activo', value: true },
+    { label: 'Inactivo', value: false },
+  ];
+
+  /** Perfiles disponibles para el formulario (excluye "Todos"). */
+  get perfilFormOptions() {
+    return this.perfilOptions.filter(o => o.value !== '');
+  }
+
+  /**
+   * Roles técnicos disponibles para asignar al crear un usuario.
+   * Códigos de sistema (no nombres legibles) — convención CHIP/CGN.
+   */
+  rolesFormOptions = [
+    { label: 'ADM_CATEGORIZACION', value: 'ADM_CATEGORIZACION' },
+    { label: 'ADM_CAT_BDME', value: 'ADM_CAT_BDME' },
+    { label: 'ADM_CAT_CGR', value: 'ADM_CAT_CGR' },
+    { label: 'ADM_CAT_CINTERNO', value: 'ADM_CAT_CINTERNO' },
+    { label: 'ADM_PARAMETRIZACION', value: 'ADM_PARAMETRIZACION' },
+    { label: 'ADM_REPORTES', value: 'ADM_REPORTES' },
+    { label: 'OPE_FORMULARIOS', value: 'OPE_FORMULARIOS' },
+    { label: 'OPE_VALIDACION', value: 'OPE_VALIDACION' },
   ];
 
   /** Opciones para el SelectButton de Estado (segmented control). */
@@ -336,6 +409,43 @@ export class UsuariosComponent {
     return this.nuevoPerfilTouched && !this.nuevoPerfil;
   }
 
+  // Documento del nuevo usuario (4-20 dígitos)
+  private readonly DOCUMENTO_REGEX = /^\d{4,20}$/;
+  get nuevoDocumentoVacio(): boolean {
+    return this.nuevoDocumentoTouched && !this.nuevoDocumento.trim();
+  }
+  get nuevoDocumentoFormatoInvalido(): boolean {
+    if (!this.nuevoDocumentoTouched || !this.nuevoDocumento.trim()) return false;
+    return !this.DOCUMENTO_REGEX.test(this.nuevoDocumento.trim());
+  }
+  get nuevoDocumentoInvalid(): boolean {
+    return this.nuevoDocumentoVacio || this.nuevoDocumentoFormatoInvalido;
+  }
+
+  get nuevoTipoInvalid(): boolean {
+    return this.nuevoTipoTouched && !this.nuevoTipo;
+  }
+
+  get nuevoEntidadInvalid(): boolean {
+    return this.nuevoEntidadTouched && !this.nuevoEntidad;
+  }
+
+  /** Abre el directorio de entidades desde el formulario de creación. */
+  abrirDirectorioEntidadesNuevo() {
+    this.mostrarDirectorioEntidadesNuevo = true;
+  }
+
+  /** Recibe la entidad seleccionada desde el modal del formulario de creación. */
+  onEntidadNuevoSeleccionada(entidad: Entidad) {
+    this.nuevoEntidad = entidad;
+    this.nuevoEntidadTouched = true;
+  }
+
+  /** Limpia la entidad del formulario de creación. */
+  limpiarEntidadNuevo() {
+    this.nuevoEntidad = null;
+  }
+
   get nuevoFormValido(): boolean {
     return !!this.nuevoCodigo.trim()
       && this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase())
@@ -344,7 +454,11 @@ export class UsuariosComponent {
       && !!this.nuevoCorreo.trim()
       && this.EMAIL_REGEX.test(this.nuevoCorreo.trim())
       && !this.usuarios.some(u => u.correo.toLowerCase() === this.nuevoCorreo.trim().toLowerCase())
-      && !!this.nuevoPerfil;
+      && !!this.nuevoPerfil
+      && !!this.nuevoDocumento.trim()
+      && this.DOCUMENTO_REGEX.test(this.nuevoDocumento.trim())
+      && !!this.nuevoTipo
+      && !!this.nuevoEntidad;
   }
 
   createUsuario() {
@@ -352,6 +466,9 @@ export class UsuariosComponent {
     this.nuevoNombreTouched = true;
     this.nuevoCorreoTouched = true;
     this.nuevoPerfilTouched = true;
+    this.nuevoDocumentoTouched = true;
+    this.nuevoTipoTouched = true;
+    this.nuevoEntidadTouched = true;
 
     if (!this.nuevoFormValido) {
       this.messageService.add({
@@ -365,13 +482,16 @@ export class UsuariosComponent {
     const nuevo: Usuario = {
       id: Math.max(...this.usuarios.map(u => u.id)) + 1,
       codigo: this.nuevoCodigo.trim().toUpperCase(),
-      documento: '',
+      documento: this.nuevoDocumento.trim(),
       nombre: this.nuevoNombre.trim(),
       correo: this.nuevoCorreo.trim().toLowerCase(),
       perfil: this.nuevoPerfil,
-      tipoUsuario: 'CENTRAL',
-      entidad: { codigo: '210105001', nombre: 'PROYECTO CHIP 2.0' },
-      activo: true,
+      tipoUsuario: this.nuevoTipo as 'LOCAL' | 'CENTRAL' | 'ESTRATÉGICO',
+      entidad: {
+        codigo: this.nuevoEntidad!.codigo,
+        nombre: this.nuevoEntidad!.razonSocial,
+      },
+      activo: this.nuevoEstado,
       ultimoAcceso: '—',
       vigencia: null,
       intentos: null,
@@ -392,10 +512,17 @@ export class UsuariosComponent {
     this.nuevoNombre = '';
     this.nuevoCorreo = '';
     this.nuevoPerfil = '';
+    this.nuevoDocumento = '';
+    this.nuevoTipo = '';
+    this.nuevoEntidad = null;
+    this.nuevoEstado = true;
     this.nuevoCodigoTouched = false;
     this.nuevoNombreTouched = false;
     this.nuevoCorreoTouched = false;
     this.nuevoPerfilTouched = false;
+    this.nuevoDocumentoTouched = false;
+    this.nuevoTipoTouched = false;
+    this.nuevoEntidadTouched = false;
   }
 
   /** Abrir diálogo Nuevo Usuario reseteando estado */
