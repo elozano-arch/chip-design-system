@@ -41,10 +41,17 @@
     font-size: 13px;
   }
 
+  &__date {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+  }
+
   &__actions {
     display: flex;
     justify-content: center;
-    gap: 4px;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   &__empty {
@@ -59,6 +66,86 @@
     }
 
     p { margin: 0; }
+  }
+}
+
+/* ============================================================
+   Vista "Modificar Permisos del Rol": header + card de info
+   ============================================================ */
+
+.perm-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 12px;
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+  }
+}
+
+.perm-info-card {
+  background: var(--chip-bg-solitude, #EBF0FA);
+  border: 1px solid var(--chip-cobalt-200, #C8D4F0);
+  border-left: 4px solid var(--chip-cobalt-700);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 18px;
+
+  &__title {
+    margin: 0 0 12px;
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: var(--chip-cobalt-700);
+    text-transform: uppercase;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 32px;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--chip-grey-600);
+  }
+
+  &__value {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+  }
+}
+
+/* Grid 2-col para el modal Modificar Datos del Rol */
+.dialog-form__grid {
+  display: grid;
+  gap: 16px 20px;
+
+  &--2col {
+    grid-template-columns: 1fr 1fr;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
   }
 }
 
@@ -81,8 +168,9 @@
     justify-content: space-between;
     gap: 16px;
     padding: 20px 28px;
-    background: linear-gradient(135deg, #0A2E6B 0%, var(--chip-cobalt-700) 100%);
-    color: #fff;
+    background: #fff;
+    border-bottom: 1px solid var(--chip-grey-200);
+    color: var(--chip-grey-800);
     flex-wrap: wrap;
   }
 
@@ -95,7 +183,7 @@
     font-family: var(--font-heading);
     font-size: 22px;
     font-weight: 800;
-    color: #fff;
+    color: var(--chip-cobalt-700);
     margin: 0 0 4px;
     line-height: 1.2;
   }
@@ -103,7 +191,7 @@
   &__subtitle {
     font-family: var(--font-body);
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--chip-grey-500);
     margin: 0;
   }
 
@@ -116,31 +204,31 @@
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: var(--chip-cobalt-50);
+    border: 1px solid var(--chip-cobalt-200, #C8D4F0);
     border-radius: var(--radius-md);
     font-family: var(--font-body);
     font-size: 13px;
-    color: #fff;
-    backdrop-filter: blur(4px);
+    color: var(--chip-cobalt-700);
 
     i {
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.85);
+      color: var(--chip-cobalt-700);
     }
 
     strong {
       font-family: var(--font-heading);
       font-weight: 800;
       font-size: 15px;
+      color: var(--chip-cobalt-700);
     }
 
     &-sep {
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--chip-grey-400);
     }
 
     &-label {
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--chip-grey-600);
       margin-left: 2px;
     }
   }

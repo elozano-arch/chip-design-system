@@ -40,9 +40,9 @@
 
       @if (!filtersCollapsed) {
         <div class="chip-filters__body" id="roles-filters-body">
-          <div class="chip-filters__fields chip-filters__fields--2col">
+          <div class="chip-filters__fields chip-filters__fields--3col">
             <div class="chip-filters__field">
-              <label for="roles-search-nombre">Nombre</label>
+              <label for="roles-search-nombre">Nombre de Rol</label>
               <p-iconField>
                 <p-inputIcon styleClass="pi pi-search" />
                 <input pInputText placeholder="Buscar por nombre..." [(ngModel)]="searchRolesNombre" id="roles-search-nombre" class="w-full" />
@@ -54,6 +54,17 @@
                 <p-inputIcon styleClass="pi pi-search" />
                 <input pInputText placeholder="Buscar por código..." [(ngModel)]="searchRolesCodigo" id="roles-search-codigo" class="w-full" />
               </p-iconField>
+            </div>
+            <div class="chip-filters__field">
+              <label for="roles-search-funcionalidad">Funcionalidad</label>
+              <p-select inputId="roles-search-funcionalidad"
+                [options]="funcionalidadOptions"
+                [(ngModel)]="searchRolesFuncionalidad"
+                placeholder="Todas"
+                appendTo="body"
+                [filter]="true" filterBy="label"
+                [style]="{ width: '100%' }"
+                styleClass="w-full" />
             </div>
           </div>
         </div>
@@ -68,30 +79,38 @@
         <tr>
           <th pSortableColumn="codigo" style="width: 120px">Código <p-sortIcon field="codigo" /></th>
           <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
-          <th>Descripción</th>
-          <th pSortableColumn="usuarios" style="width: 100px; text-align: center">Usuarios <p-sortIcon field="usuarios" /></th>
-          <th style="width: 100px; text-align: center">Acciones</th>
+          <th pSortableColumn="activo" style="width: 110px; text-align: center">Estado <p-sortIcon field="activo" /></th>
+          <th pSortableColumn="fechaModificacion" style="width: 160px">Última Modificación <p-sortIcon field="fechaModificacion" /></th>
+          <th style="width: 220px; text-align: center">Acciones</th>
         </tr>
       </ng-template>
       <ng-template #body let-role>
         <tr>
           <td><span class="roles-table__code">{{ role.codigo }}</span></td>
           <td>
-            <span class="roles-table__name">
+            <span class="roles-table__name" [pTooltip]="role.nombre" tooltipPosition="top" [showDelay]="400">
               <i class="pi pi-shield"></i>
               {{ role.nombre }}
             </span>
           </td>
-          <td class="roles-table__desc">{{ role.descripcion }}</td>
           <td style="text-align: center">
-            <p-tag [value]="role.usuarios + ''" severity="info" [rounded]="true" />
+            @if (role.activo) {
+              <p-tag value="Activo" severity="success" />
+            } @else {
+              <p-tag value="Inactivo" severity="danger" />
+            }
           </td>
+          <td class="roles-table__date">{{ role.fechaModificacion }}</td>
           <td>
             <div class="roles-table__actions">
-              <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
-                severity="secondary" size="small"
-                [attr.aria-label]="'Acciones para ' + role.nombre"
-                (onClick)="abrirMenuRol($event, role)" />
+              <p-button label="Datos" icon="pi pi-pencil" [text]="true" severity="info" size="small"
+                pTooltip="Modificar datos del rol" tooltipPosition="top"
+                [attr.aria-label]="'Modificar datos de ' + role.nombre"
+                (onClick)="onDatosClick(role)" />
+              <p-button label="Permisos" icon="pi pi-angle-right" iconPos="right" [text]="true" severity="info" size="small"
+                pTooltip="Modificar permisos del rol" tooltipPosition="top"
+                [attr.aria-label]="'Modificar permisos de ' + role.nombre"
+                (onClick)="onPermisosClick(role)" />
             </div>
           </td>
         </tr>
@@ -117,12 +136,35 @@
   <div class="roles-page" role="main">
     <p-breadcrumb [model]="editBreadcrumbItems" [home]="breadcrumbHome" />
 
+    <!-- Header con botón Volver + título principal -->
+    <div class="perm-page-header">
+      <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary" size="small"
+        (onClick)="backToList()"
+        aria-label="Volver al listado de roles" />
+      <h1 class="perm-page-header__title">Modificar Permisos del Rol</h1>
+    </div>
+
+    <!-- Card "Información del Rol" (readonly: código + nombre) -->
+    <section class="perm-info-card" aria-label="Información del rol seleccionado">
+      <h3 class="perm-info-card__title">INFORMACIÓN DEL ROL</h3>
+      <div class="perm-info-card__grid">
+        <div class="perm-info-card__field">
+          <span class="perm-info-card__label">Código:</span>
+          <strong class="perm-info-card__value">{{ selectedRole.codigo }}</strong>
+        </div>
+        <div class="perm-info-card__field">
+          <span class="perm-info-card__label">Nombre:</span>
+          <strong class="perm-info-card__value">{{ selectedRole.nombre }}</strong>
+        </div>
+      </div>
+    </section>
+
     <!-- Card estilo Chip 2.0: header oscuro + cuerpo blanco + footer con acciones -->
     <section class="perm-card" aria-labelledby="perm-card-title">
       <header class="perm-card__header">
         <div class="perm-card__header-left">
-          <h1 id="perm-card-title" class="perm-card__title">Gestión de Roles</h1>
-          <p class="perm-card__subtitle">Permisos del rol</p>
+          <h1 id="perm-card-title" class="perm-card__title">Árbol de Permisos</h1>
+          <p class="perm-card__subtitle">Seleccione los permisos que desea asignar al rol. Al seleccionar un elemento padre, se seleccionarán automáticamente todos sus hijos.</p>
         </div>
         <div class="perm-card__header-right">
           <span class="perm-card__counter" aria-live="polite">
@@ -149,7 +191,7 @@
             <p-iconField>
               <p-inputIcon styleClass="pi pi-search" />
               <input pInputText type="text"
-                placeholder="Buscar permiso por nombre o código..."
+                placeholder="Buscar permiso por nombre..."
                 [(ngModel)]="searchPermisos"
                 (input)="onGlobalFilter($event)"
                 aria-label="Buscar permiso"
@@ -172,13 +214,12 @@
           [rowsPerPageOptions]="[5, 10, 25]"
           [showCurrentPageReport]="true"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} módulos"
-          [globalFilterFields]="['nombre', 'codigo']"
+          [globalFilterFields]="['nombre']"
           styleClass="perm-tt"
           [scrollable]="false">
           <ng-template #header>
             <tr>
               <th class="perm-tt__th-name">Permiso</th>
-              <th class="perm-tt__th-code" style="width: 160px">Código</th>
             </tr>
           </ng-template>
           <ng-template #body let-rowNode let-rowData="rowData">
@@ -192,14 +233,11 @@
                   [attr.aria-label]="'Permiso ' + rowData.nombre" />
                 <span class="perm-tt__label">{{ rowData.nombre }}</span>
               </td>
-              <td>
-                <span class="perm-tt__code">{{ rowData.codigo }}</span>
-              </td>
             </tr>
           </ng-template>
           <ng-template #emptymessage>
             <tr>
-              <td colspan="2" class="perm-tt__empty">
+              <td class="perm-tt__empty">
                 <i class="pi pi-search" aria-hidden="true"></i>
                 <p>No se encontraron permisos para la búsqueda.</p>
               </td>
@@ -211,7 +249,7 @@
       <footer class="perm-card__footer">
         <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true"
           (onClick)="backToList()" />
-        <p-button label="Guardar"
+        <p-button label="Guardar Permisos Rol"
           icon="pi pi-check"
           (onClick)="savePermissions()"
           [badge]="totalChanges > 0 ? totalChanges + '' : ''"
@@ -358,56 +396,98 @@
 </p-dialog>
 
 <!-- ============================================================
-     DIÁLOGO: EDITAR ROL
+     DIÁLOGO: MODIFICAR DATOS DEL ROL
      ============================================================ -->
-<p-dialog header="Editar Perfil" [(visible)]="showEditRoleDialog" [modal]="true"
-  [style]="{ width: '520px' }" [draggable]="false">
+<p-dialog header="Modificar Datos del Rol" [(visible)]="showEditRoleDialog" [modal]="true"
+  [style]="{ width: '720px' }" [draggable]="false">
   <div class="dialog-form">
-    <div class="dialog-form__field">
-      <label for="edit-role-codigo">Código</label>
-      <input pInputText id="edit-role-codigo" [value]="editingRole?.codigo" [disabled]="true" class="w-full" />
+    <p class="dialog-form__hint">
+      Los campos marcados con <span class="field-required">*</span> son obligatorios.
+    </p>
+
+    <div class="dialog-form__grid dialog-form__grid--2col">
+      <!-- Código Rol (readonly) -->
+      <div class="dialog-form__field">
+        <label for="edit-role-codigo">Código Rol <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-codigo" [value]="editingRole?.codigo" [disabled]="true" class="w-full" />
+        <small class="dialog-form__help">El código del rol no se puede modificar.</small>
+      </div>
+
+      <!-- Nombre Rol -->
+      <div class="dialog-form__field">
+        <label for="edit-role-nombre">Nombre Rol <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-nombre"
+          [(ngModel)]="editRoleName"
+          (blur)="editRoleNameTouched = true"
+          [class.ng-invalid]="editRoleNameInvalid"
+          [class.ng-dirty]="editRoleNameTouched"
+          placeholder="Nombre del rol"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleNameInvalid"
+          aria-describedby="edit-role-nombre-error" />
+        @if (editRoleNameInvalid) {
+          <small id="edit-role-nombre-error" class="dialog-form__error">El nombre del rol es obligatorio.</small>
+        }
+      </div>
+
+      <!-- Número de Intentos Fallidos -->
+      <div class="dialog-form__field">
+        <label for="edit-role-intentos">Número de Intentos Fallidos <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-intentos"
+          [(ngModel)]="editRoleIntentos"
+          (blur)="editRoleIntentosTouched = true"
+          [class.ng-invalid]="editRoleIntentosInvalid"
+          [class.ng-dirty]="editRoleIntentosTouched"
+          type="number" placeholder="3" min="1"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleIntentosInvalid"
+          aria-describedby="edit-role-intentos-error" />
+        @if (editRoleIntentosInvalid) {
+          <small id="edit-role-intentos-error" class="dialog-form__error">Debe ingresar un valor mayor o igual a 1.</small>
+        }
+      </div>
+
+      <!-- Periodo de Vigencia -->
+      <div class="dialog-form__field">
+        <label for="edit-role-vigencia">Periodo de Vigencia (días) <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-vigencia"
+          [(ngModel)]="editRoleVigencia"
+          (blur)="editRoleVigenciaTouched = true"
+          [class.ng-invalid]="editRoleVigenciaInvalid"
+          [class.ng-dirty]="editRoleVigenciaTouched"
+          type="number" placeholder="90" min="1"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleVigenciaInvalid"
+          aria-describedby="edit-role-vigencia-error" />
+        @if (editRoleVigenciaInvalid) {
+          <small id="edit-role-vigencia-error" class="dialog-form__error">Debe ingresar un valor mayor o igual a 1.</small>
+        }
+      </div>
     </div>
-    <div class="dialog-form__field">
-      <label for="edit-role-nombre">Nombre <span class="field-required">*</span></label>
-      <input pInputText id="edit-role-nombre"
-        [(ngModel)]="editRoleName"
-        (blur)="editRoleNameTouched = true"
-        [class.ng-invalid]="editRoleNameInvalid"
-        [class.ng-dirty]="editRoleNameTouched"
-        placeholder="Nombre del perfil"
-        class="w-full"
-        aria-required="true"
-        [attr.aria-invalid]="editRoleNameInvalid"
-        aria-describedby="edit-role-nombre-error" />
-      @if (editRoleNameInvalid) {
-        <small id="edit-role-nombre-error" class="dialog-form__error">El nombre del perfil es obligatorio.</small>
-      }
-    </div>
+
+    <!-- Descripción (full width) -->
     <div class="dialog-form__field">
       <label for="edit-role-desc">Descripción</label>
-      <textarea pInputText id="edit-role-desc" [(ngModel)]="editRoleDesc" placeholder="Descripción del perfil"
+      <textarea pInputText id="edit-role-desc" [(ngModel)]="editRoleDesc"
+        placeholder="Ingrese descripción del rol"
         class="w-full" rows="3" maxlength="200" style="resize: vertical"></textarea>
       <small class="dialog-form__help">Máximo 200 caracteres. ({{ (editRoleDesc || '').length }}/200)</small>
     </div>
 
-    <p-divider />
-
-    <h4 class="dialog-form__section">Política de Contraseña</h4>
-
-    <div class="dialog-form__row">
-      <div class="dialog-form__field">
-        <label for="edit-role-vigencia">Periodo de Vigencia (Días)</label>
-        <input pInputText id="edit-role-vigencia" [(ngModel)]="editRoleVigencia" type="number" placeholder="90" min="0" style="width: 140px" />
-      </div>
-      <div class="dialog-form__field">
-        <label for="edit-role-intentos">Intentos Fallidos</label>
-        <input pInputText id="edit-role-intentos" [(ngModel)]="editRoleIntentos" type="number" placeholder="3" min="0" style="width: 140px" />
-      </div>
+    <!-- Fecha Última Modificación (readonly) -->
+    <div class="dialog-form__field">
+      <label for="edit-role-fecha-mod">Fecha Última Modificación</label>
+      <input pInputText id="edit-role-fecha-mod"
+        [value]="editingRole?.fechaModificacion ?? '—'"
+        [disabled]="true" class="w-full" style="max-width: 320px" />
     </div>
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showEditRoleDialog = false" />
-    <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="saveEditRole()" />
+    <p-button label="Guardar Cambios" icon="pi pi-check" (onClick)="saveEditRole()" />
   </ng-template>
 </p-dialog>
 
