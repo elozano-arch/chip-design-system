@@ -15,6 +15,7 @@ import { DividerModule } from 'primeng/divider';
 import { CheckboxModule } from 'primeng/checkbox';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { SelectModule } from 'primeng/select';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { MessageModule } from 'primeng/message';
 import { MenuModule } from 'primeng/menu';
@@ -39,6 +40,12 @@ interface Role {
   vigencia: number | null;
   intentos: number | null;
   fechaModificacion: string;
+  activo: boolean;
+  /**
+   * Funcionalidades raíz (padres) que el rol tiene asignadas.
+   * Permite filtrar por "qué roles tocan X módulo".
+   */
+  funcionalidades: string[];
 }
 
 @Component({
@@ -60,6 +67,7 @@ interface Role {
     CheckboxModule,
     IconFieldModule,
     InputIconModule,
+    SelectModule,
     BreadcrumbModule,
     MenuModule,
     MessageModule,
@@ -113,6 +121,7 @@ export class RolesComponent {
   // ── Búsqueda del listado de roles ──
   searchRolesNombre = '';
   searchRolesCodigo = '';
+  searchRolesFuncionalidad = '';
   filtersCollapsed = false;
 
   // ── Búsqueda del árbol de permisos (TreeTable) ──
@@ -136,6 +145,8 @@ export class RolesComponent {
   editRoleVigencia: number | null = null;
   editRoleIntentos: number | null = null;
   editRoleNameTouched = false;
+  editRoleVigenciaTouched = false;
+  editRoleIntentosTouched = false;
   newRoleCode = '';
   newRoleName = '';
   newRoleDesc = '';
@@ -147,13 +158,26 @@ export class RolesComponent {
 
   // ── Roles (perfiles reales del sistema CHIP) ──
   roles: Role[] = [
-    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-12' },
-    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-10' },
-    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, fechaModificacion: '2026-04-08' },
-    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, fechaModificacion: '2026-03-25' },
-    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-01' },
-    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, fechaModificacion: '2026-03-18' },
-    { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', descripcion: 'Rol recién creado, pendiente de configuración', usuarios: 0, permisos: 0, vigencia: null, intentos: null, fechaModificacion: '2026-02-14' },
+    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-12', activo: true, funcionalidades: ['Operaciones Generales', 'Seguridad', 'Formularios', 'Entidades', 'Consolidación'] },
+    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-10', activo: true, funcionalidades: ['Formularios', 'Operaciones Generales'] },
+    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, fechaModificacion: '2026-04-08', activo: true, funcionalidades: ['Formularios', 'Entidades'] },
+    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, fechaModificacion: '2026-03-25', activo: true, funcionalidades: ['Operaciones Generales'] },
+    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-01', activo: true, funcionalidades: ['Seguridad', 'Operaciones Generales'] },
+    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, fechaModificacion: '2026-03-18', activo: true, funcionalidades: ['Seguridad'] },
+    { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', descripcion: 'Rol recién creado, pendiente de configuración', usuarios: 0, permisos: 0, vigencia: null, intentos: null, fechaModificacion: '2026-02-14', activo: false, funcionalidades: [] },
+  ];
+
+  /**
+   * Opciones de "Funcionalidad" (padres top-level del árbol de permisos).
+   * Filtro: muestra los roles que tengan asignada al menos una funcionalidad de esa rama.
+   */
+  funcionalidadOptions = [
+    { label: 'Todas', value: '' },
+    { label: 'Operaciones Generales', value: 'Operaciones Generales' },
+    { label: 'Seguridad', value: 'Seguridad' },
+    { label: 'Formularios', value: 'Formularios' },
+    { label: 'Entidades', value: 'Entidades' },
+    { label: 'Consolidación', value: 'Consolidación' },
   ];
 
   // ============================================================
@@ -360,6 +384,7 @@ export class RolesComponent {
     let count = 0;
     if (this.searchRolesNombre) count++;
     if (this.searchRolesCodigo) count++;
+    if (this.searchRolesFuncionalidad) count++;
     return count;
   }
 
@@ -367,6 +392,7 @@ export class RolesComponent {
     const filters: { label: string; field: string }[] = [];
     if (this.searchRolesNombre) filters.push({ label: `Nombre: "${this.searchRolesNombre}"`, field: 'searchRolesNombre' });
     if (this.searchRolesCodigo) filters.push({ label: `Código: "${this.searchRolesCodigo}"`, field: 'searchRolesCodigo' });
+    if (this.searchRolesFuncionalidad) filters.push({ label: `Funcionalidad: ${this.searchRolesFuncionalidad}`, field: 'searchRolesFuncionalidad' });
     return filters;
   }
 
@@ -377,16 +403,19 @@ export class RolesComponent {
   clearFilters() {
     this.searchRolesNombre = '';
     this.searchRolesCodigo = '';
+    this.searchRolesFuncionalidad = '';
   }
 
   get filteredRoles(): Role[] {
     const qn = this.searchRolesNombre.trim().toLowerCase();
     const qc = this.searchRolesCodigo.trim().toLowerCase();
-    if (!qn && !qc) return this.roles;
+    const qf = this.searchRolesFuncionalidad;
+    if (!qn && !qc && !qf) return this.roles;
     return this.roles.filter(r => {
       const matchNombre = !qn || r.nombre.toLowerCase().includes(qn);
       const matchCodigo = !qc || r.codigo.toLowerCase().includes(qc);
-      return matchNombre && matchCodigo;
+      const matchFuncionalidad = !qf || r.funcionalidades.includes(qf);
+      return matchNombre && matchCodigo && matchFuncionalidad;
     });
   }
 
@@ -415,6 +444,8 @@ export class RolesComponent {
     this.editRoleVigencia = role.vigencia;
     this.editRoleIntentos = role.intentos;
     this.editRoleNameTouched = false;
+    this.editRoleVigenciaTouched = false;
+    this.editRoleIntentosTouched = false;
     this.showEditRoleDialog = true;
   }
 
@@ -431,11 +462,13 @@ export class RolesComponent {
 
   saveEditRole() {
     this.editRoleNameTouched = true;
-    if (!this.editingRole || !this.editRoleName.trim()) {
+    this.editRoleVigenciaTouched = true;
+    this.editRoleIntentosTouched = true;
+    if (!this.editingRole || !this.editRoleFormValido) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Datos incompletos',
-        detail: 'El nombre del perfil es obligatorio.',
+        detail: 'Revise los campos marcados en rojo y corrija los errores.',
       });
       return;
     }
@@ -443,12 +476,15 @@ export class RolesComponent {
     this.editingRole.descripcion = this.editRoleDesc.trim();
     this.editingRole.vigencia = this.editRoleVigencia;
     this.editingRole.intentos = this.editRoleIntentos;
+    this.editingRole.fechaModificacion = this.fechaHoy();
     this.messageService.add({
       severity: 'success',
       summary: 'Rol actualizado',
       detail: `El perfil "${this.editRoleName}" fue actualizado exitosamente.`,
     });
     this.editRoleNameTouched = false;
+    this.editRoleVigenciaTouched = false;
+    this.editRoleIntentosTouched = false;
     this.showEditRoleDialog = false;
     this.editingRole = null;
   }
@@ -535,6 +571,38 @@ export class RolesComponent {
   get editRoleNameInvalid(): boolean {
     return this.editRoleNameTouched && !this.editRoleName.trim();
   }
+  get editRoleVigenciaInvalid(): boolean {
+    return this.editRoleVigenciaTouched && (this.editRoleVigencia == null || this.editRoleVigencia < 1);
+  }
+  get editRoleIntentosInvalid(): boolean {
+    return this.editRoleIntentosTouched && (this.editRoleIntentos == null || this.editRoleIntentos < 1);
+  }
+  get editRoleFormValido(): boolean {
+    return !!this.editRoleName.trim()
+      && this.editRoleVigencia != null && this.editRoleVigencia >= 1
+      && this.editRoleIntentos != null && this.editRoleIntentos >= 1;
+  }
+
+  /** Devuelve la fecha de hoy en formato DD/MM/YYYY (igual al patrón de Usuarios). */
+  private fechaHoy(): string {
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
+  }
+
+  /** Acción inline: abrir modal "Modificar Datos del Rol" desde la fila. */
+  onDatosClick(role: Role) {
+    this.selectedRoleForMenu = role;
+    this.openEditDialog(role);
+  }
+
+  /** Acción inline: ir a la vista completa "Modificar Permisos del Rol". */
+  onPermisosClick(role: Role) {
+    this.selectedRoleForMenu = role;
+    this.editRole(role);
+  }
 
   createRole() {
     this.newRoleCodeTouched = true;
@@ -560,7 +628,9 @@ export class RolesComponent {
       permisos: 0,
       vigencia: this.newRoleVigencia,
       intentos: this.newRoleIntentos,
-      fechaModificacion: new Date().toLocaleDateString('es-CO'),
+      fechaModificacion: this.fechaHoy(),
+      activo: true,
+      funcionalidades: [],
     };
     this.roles.unshift(newRole);
     this.messageService.add({

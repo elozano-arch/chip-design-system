@@ -127,6 +127,8 @@
                 aria-haspopup="dialog"
                 [attr.aria-expanded]="mostrarDirectorioEntidades"
                 [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+                [pTooltip]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
+                tooltipPosition="top" [showDelay]="500"
                 (click)="!esVistaLocal && abrirDirectorioEntidades()"
                 (keydown.enter)="!esVistaLocal && abrirDirectorioEntidades()"
                 (keydown.space)="!esVistaLocal && abrirDirectorioEntidades(); $event.preventDefault()" />
@@ -229,8 +231,8 @@
         <td><span class="usr-code">{{ formatCodigoDisplay(u.id) }}</span></td>
         <td class="usr-doc">{{ u.documento }}</td>
         <td><span class="usr-username">{{ u.codigo }}</span></td>
-        <td class="usr-name">{{ u.nombre }}</td>
-        <td class="usr-entity">{{ u.entidad.nombre }}</td>
+        <td class="usr-name" [pTooltip]="u.nombre" tooltipPosition="top" [showDelay]="400">{{ u.nombre }}</td>
+        <td class="usr-entity" [pTooltip]="u.entidad.nombre" tooltipPosition="top" [showDelay]="400">{{ u.entidad.nombre }}</td>
         <td><p-tag [value]="formatTipoUsuario(u.tipoUsuario)" severity="secondary" /></td>
         <td><p-tag [value]="u.perfil" severity="info" /></td>
         <td style="text-align: center">
@@ -426,6 +428,8 @@
             [attr.aria-expanded]="mostrarDirectorioEntidadesNuevo"
             [attr.aria-label]="nuevoEntidad ? ('Entidad seleccionada: ' + nuevoEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
             aria-describedby="nuevo-entidad-error"
+            [pTooltip]="nuevoEntidad ? (nuevoEntidad.codigo + ' - ' + nuevoEntidad.razonSocial) : ''"
+            tooltipPosition="top" [showDelay]="500"
             (click)="!esVistaLocal && abrirDirectorioEntidadesNuevo()"
             (keydown.enter)="!esVistaLocal && abrirDirectorioEntidadesNuevo()"
             (keydown.space)="!esVistaLocal && abrirDirectorioEntidadesNuevo(); $event.preventDefault()" />
@@ -613,6 +617,8 @@
             [attr.aria-expanded]="mostrarDirectorioEntidadesEdit"
             [attr.aria-label]="editEntidad ? ('Entidad seleccionada: ' + editEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
             aria-describedby="edit-entidad-error"
+            [pTooltip]="editEntidad ? (editEntidad.codigo + ' - ' + editEntidad.razonSocial) : ''"
+            tooltipPosition="top" [showDelay]="500"
             (click)="!esVistaLocal && abrirDirectorioEntidadesEdit()"
             (keydown.enter)="!esVistaLocal && abrirDirectorioEntidadesEdit()"
             (keydown.space)="!esVistaLocal && abrirDirectorioEntidadesEdit(); $event.preventDefault()" />
