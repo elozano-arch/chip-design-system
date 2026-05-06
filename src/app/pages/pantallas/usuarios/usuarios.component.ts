@@ -34,6 +34,8 @@ interface Usuario {
   entidad: { codigo: string; nombre: string };
   activo: boolean;
   ultimoAcceso: string;
+  /** Fecha de la última edición — se actualiza automáticamente al guardar cambios. */
+  fechaUltimaModificacion?: string;
   /** Override a la política del rol (null = hereda del rol asignado). */
   vigencia: number | null;
   intentos: number | null;
@@ -181,10 +183,21 @@ export class UsuariosComponent {
   editNombre = '';
   editCorreo = '';
   editPerfil = '';
+  editDocumento = '';
+  editTipo: 'LOCAL' | 'CENTRAL' | 'ESTRATÉGICO' | '' = '';
+  editEntidad: Entidad | null = null;
+  editEstado = true;
+  editFechaUltimaModificacion = '';
   editVigencia: number | null = null;
   editIntentos: number | null = null;
   editNombreTouched = false;
   editCorreoTouched = false;
+  editDocumentoTouched = false;
+  editTipoTouched = false;
+  editEntidadTouched = false;
+
+  // Modal Directorio para el formulario de edición
+  mostrarDirectorioEntidadesEdit = false;
 
   perfilOptions = [
     { label: 'Todos', value: '' },
@@ -243,14 +256,14 @@ export class UsuariosComponent {
   ];
 
   usuarios: Usuario[] = [
-    { id: 1, codigo: 'DILA710990', documento: '52789012', nombre: 'Omaira Lozada Ladino', correo: 'olozada@cgn.gov.co', perfil: 'Administrador Categorización', tipoUsuario: 'CENTRAL', entidad: { codigo: '210105001', nombre: 'PROYECTO CHIP 2.0' }, activo: true, ultimoAcceso: '14/04/2024', vigencia: 90, intentos: 3 },
-    { id: 2, codigo: 'JMGA850312', documento: '79456123', nombre: 'Juan Manuel García Arévalo', correo: 'jgarcia@minhacienda.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'CENTRAL', entidad: { codigo: '211511001', nombre: 'MINISTERIO DE HACIENDA' }, activo: true, ultimoAcceso: '20/03/2024', vigencia: 60, intentos: 5 },
-    { id: 3, codigo: 'MCRP920115', documento: '52123456', nombre: 'María Cristina Rodríguez', correo: 'mrodriguez@cgn.gov.co', perfil: 'Consulta', tipoUsuario: 'CENTRAL', entidad: { codigo: '210111001', nombre: 'CGN - CONTADURÍA GENERAL' }, activo: true, ultimoAcceso: '10/04/2024', vigencia: null, intentos: null },
-    { id: 4, codigo: 'CPLS880704', documento: '79987654', nombre: 'Carlos Pérez López', correo: 'cperez@cgn.gov.co', perfil: 'Administrador General', tipoUsuario: 'ESTRATÉGICO', entidad: { codigo: '210111001', nombre: 'CGN - CONTADURÍA GENERAL' }, activo: true, ultimoAcceso: '28/02/2024', vigencia: 90, intentos: 3 },
-    { id: 5, codigo: 'AMVR760521', documento: '43654321', nombre: 'Ana María Vargas Restrepo', correo: 'avargas@contraloria.gov.co', perfil: 'Auditor', tipoUsuario: 'CENTRAL', entidad: { codigo: '210168001', nombre: 'CONTRALORÍA GENERAL' }, activo: true, ultimoAcceso: '05/04/2024', vigencia: 90, intentos: 3 },
-    { id: 6, codigo: 'LFHM900830', documento: '80345678', nombre: 'Luis Fernando Hernández', correo: 'lhernandez@bogota.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'LOCAL', entidad: { codigo: '211511001', nombre: 'ALCALDÍA DE BOGOTÁ' }, activo: false, ultimoAcceso: '15/01/2024', vigencia: 60, intentos: 5 },
-    { id: 7, codigo: 'SMPG950210', documento: '32678910', nombre: 'Sandra Milena Pinzón', correo: 'spinzon@antioquia.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'LOCAL', entidad: { codigo: '210105001', nombre: 'GOBERNACIÓN DE ANTIOQUIA' }, activo: true, ultimoAcceso: '12/04/2024', vigencia: null, intentos: null },
-    { id: 8, codigo: 'RDTM830619', documento: '79234567', nombre: 'Ricardo Daniel Torres', correo: 'rtorres@dane.gov.co', perfil: 'Consulta', tipoUsuario: 'CENTRAL', entidad: { codigo: '211511001', nombre: 'DANE' }, activo: true, ultimoAcceso: '30/03/2024', vigencia: null, intentos: null },
+    { id: 1, codigo: 'DILA710990', documento: '52789012', nombre: 'Omaira Lozada Ladino', correo: 'olozada@cgn.gov.co', perfil: 'Administrador Categorización', tipoUsuario: 'CENTRAL', entidad: { codigo: '210105001', nombre: 'PROYECTO CHIP 2.0' }, activo: true, ultimoAcceso: '14/04/2024', fechaUltimaModificacion: '14/04/2024', vigencia: 90, intentos: 3 },
+    { id: 2, codigo: 'JMGA850312', documento: '79456123', nombre: 'Juan Manuel García Arévalo', correo: 'jgarcia@minhacienda.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'CENTRAL', entidad: { codigo: '211511001', nombre: 'MINISTERIO DE HACIENDA' }, activo: true, ultimoAcceso: '20/03/2024', fechaUltimaModificacion: '18/03/2024', vigencia: 60, intentos: 5 },
+    { id: 3, codigo: 'MCRP920115', documento: '52123456', nombre: 'María Cristina Rodríguez', correo: 'mrodriguez@cgn.gov.co', perfil: 'Consulta', tipoUsuario: 'CENTRAL', entidad: { codigo: '210111001', nombre: 'CGN - CONTADURÍA GENERAL' }, activo: true, ultimoAcceso: '10/04/2024', fechaUltimaModificacion: '02/04/2024', vigencia: null, intentos: null },
+    { id: 4, codigo: 'CPLS880704', documento: '79987654', nombre: 'Carlos Pérez López', correo: 'cperez@cgn.gov.co', perfil: 'Administrador General', tipoUsuario: 'ESTRATÉGICO', entidad: { codigo: '210111001', nombre: 'CGN - CONTADURÍA GENERAL' }, activo: true, ultimoAcceso: '28/02/2024', fechaUltimaModificacion: '15/02/2024', vigencia: 90, intentos: 3 },
+    { id: 5, codigo: 'AMVR760521', documento: '43654321', nombre: 'Ana María Vargas Restrepo', correo: 'avargas@contraloria.gov.co', perfil: 'Auditor', tipoUsuario: 'CENTRAL', entidad: { codigo: '210168001', nombre: 'CONTRALORÍA GENERAL' }, activo: true, ultimoAcceso: '05/04/2024', fechaUltimaModificacion: '01/04/2024', vigencia: 90, intentos: 3 },
+    { id: 6, codigo: 'LFHM900830', documento: '80345678', nombre: 'Luis Fernando Hernández', correo: 'lhernandez@bogota.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'LOCAL', entidad: { codigo: '211511001', nombre: 'ALCALDÍA DE BOGOTÁ' }, activo: false, ultimoAcceso: '15/01/2024', fechaUltimaModificacion: '20/12/2023', vigencia: 60, intentos: 5 },
+    { id: 7, codigo: 'SMPG950210', documento: '32678910', nombre: 'Sandra Milena Pinzón', correo: 'spinzon@antioquia.gov.co', perfil: 'Operador de Entidad', tipoUsuario: 'LOCAL', entidad: { codigo: '210105001', nombre: 'GOBERNACIÓN DE ANTIOQUIA' }, activo: true, ultimoAcceso: '12/04/2024', fechaUltimaModificacion: '08/04/2024', vigencia: null, intentos: null },
+    { id: 8, codigo: 'RDTM830619', documento: '79234567', nombre: 'Ricardo Daniel Torres', correo: 'rtorres@dane.gov.co', perfil: 'Consulta', tipoUsuario: 'CENTRAL', entidad: { codigo: '211511001', nombre: 'DANE' }, activo: true, ultimoAcceso: '30/03/2024', fechaUltimaModificacion: '25/03/2024', vigencia: null, intentos: null },
   ];
 
   /** Resultados de la búsqueda — solo se calculan tras presionar "Buscar". */
@@ -493,6 +506,7 @@ export class UsuariosComponent {
       },
       activo: this.nuevoEstado,
       ultimoAcceso: '—',
+      fechaUltimaModificacion: this.fechaHoy(),
       vigencia: null,
       intentos: null,
     };
@@ -545,10 +559,56 @@ export class UsuariosComponent {
   get editCorreoInvalid(): boolean {
     return this.editCorreoVacio || this.editCorreoFormatoInvalido;
   }
+  get editDocumentoVacio(): boolean {
+    return this.editDocumentoTouched && !this.editDocumento.trim();
+  }
+  get editDocumentoFormatoInvalido(): boolean {
+    if (!this.editDocumentoTouched || !this.editDocumento.trim()) return false;
+    return !this.DOCUMENTO_REGEX.test(this.editDocumento.trim());
+  }
+  get editDocumentoInvalid(): boolean {
+    return this.editDocumentoVacio || this.editDocumentoFormatoInvalido;
+  }
+  get editTipoInvalid(): boolean {
+    return this.editTipoTouched && !this.editTipo;
+  }
+  get editEntidadInvalid(): boolean {
+    return this.editEntidadTouched && !this.editEntidad;
+  }
   get editFormValido(): boolean {
     return !!this.editNombre.trim()
       && !!this.editCorreo.trim()
-      && this.EMAIL_REGEX.test(this.editCorreo.trim());
+      && this.EMAIL_REGEX.test(this.editCorreo.trim())
+      && !!this.editDocumento.trim()
+      && this.DOCUMENTO_REGEX.test(this.editDocumento.trim())
+      && !!this.editTipo
+      && !!this.editEntidad
+      && !!this.editPerfil;
+  }
+
+  /** Abre el directorio de entidades desde el formulario de edición. */
+  abrirDirectorioEntidadesEdit() {
+    this.mostrarDirectorioEntidadesEdit = true;
+  }
+
+  /** Recibe la entidad seleccionada en el formulario de edición. */
+  onEntidadEditSeleccionada(entidad: Entidad) {
+    this.editEntidad = entidad;
+    this.editEntidadTouched = true;
+  }
+
+  /** Limpia la entidad del formulario de edición. */
+  limpiarEntidadEdit() {
+    this.editEntidad = null;
+  }
+
+  /** Devuelve la fecha de hoy en formato DD/MM/YYYY. */
+  private fechaHoy(): string {
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}/${mm}/${yyyy}`;
   }
 
   toggleEstado(u: Usuario) {
@@ -560,16 +620,30 @@ export class UsuariosComponent {
     this.editNombre = u.nombre;
     this.editCorreo = u.correo;
     this.editPerfil = u.perfil;
+    this.editDocumento = u.documento;
+    this.editTipo = u.tipoUsuario;
+    // Reconstruye un Entidad-like desde el snapshot guardado en el usuario
+    this.editEntidad = u.entidad
+      ? { codigo: u.entidad.codigo, nit: '', razonSocial: u.entidad.nombre, departamento: '', municipio: '' }
+      : null;
+    this.editEstado = u.activo;
+    this.editFechaUltimaModificacion = u.fechaUltimaModificacion ?? '—';
     this.editVigencia = u.vigencia;
     this.editIntentos = u.intentos;
     this.editNombreTouched = false;
     this.editCorreoTouched = false;
+    this.editDocumentoTouched = false;
+    this.editTipoTouched = false;
+    this.editEntidadTouched = false;
     this.showEditDialog = true;
   }
 
   saveEditUsuario() {
     this.editNombreTouched = true;
     this.editCorreoTouched = true;
+    this.editDocumentoTouched = true;
+    this.editTipoTouched = true;
+    this.editEntidadTouched = true;
     if (!this.selectedUsuario || !this.editFormValido) {
       this.messageService.add({
         severity: 'warn',
@@ -581,6 +655,14 @@ export class UsuariosComponent {
     this.selectedUsuario.nombre = this.editNombre.trim();
     this.selectedUsuario.correo = this.editCorreo.trim().toLowerCase();
     this.selectedUsuario.perfil = this.editPerfil;
+    this.selectedUsuario.documento = this.editDocumento.trim();
+    this.selectedUsuario.tipoUsuario = this.editTipo as 'LOCAL' | 'CENTRAL' | 'ESTRATÉGICO';
+    this.selectedUsuario.entidad = {
+      codigo: this.editEntidad!.codigo,
+      nombre: this.editEntidad!.razonSocial,
+    };
+    this.selectedUsuario.activo = this.editEstado;
+    this.selectedUsuario.fechaUltimaModificacion = this.fechaHoy();
     this.selectedUsuario.vigencia = this.editVigencia;
     this.selectedUsuario.intentos = this.editIntentos;
     this.messageService.add({
@@ -590,6 +672,9 @@ export class UsuariosComponent {
     });
     this.editNombreTouched = false;
     this.editCorreoTouched = false;
+    this.editDocumentoTouched = false;
+    this.editTipoTouched = false;
+    this.editEntidadTouched = false;
     this.showEditDialog = false;
   }
 
