@@ -18,6 +18,7 @@ import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
 import { AutoCompleteModule, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { DirectorioEntidadesComponent, Entidad } from '../../../components/directorio-entidades/directorio-entidades.component';
@@ -50,7 +51,7 @@ interface Usuario {
     ToastModule, TooltipModule,
     IconFieldModule, InputIconModule, SelectModule,
     DialogModule, DividerModule, MenuModule, ChipModule,
-    AutoCompleteModule, RadioButtonModule,
+    AutoCompleteModule, RadioButtonModule, SelectButtonModule,
     DirectorioEntidadesComponent, AppBreadcrumbComponent,
   ],
   providers: [MessageService],
@@ -236,6 +237,7 @@ export class UsuariosComponent {
   /**
    * Roles técnicos disponibles para asignar al crear un usuario.
    * Códigos de sistema (no nombres legibles) — convención CHIP/CGN.
+   * Aplica al perfil "Admin Central" (sin restricciones).
    */
   rolesFormOptions = [
     { label: 'ADM_CATEGORIZACION', value: 'ADM_CATEGORIZACION' },
@@ -247,6 +249,60 @@ export class UsuariosComponent {
     { label: 'OPE_FORMULARIOS', value: 'OPE_FORMULARIOS' },
     { label: 'OPE_VALIDACION', value: 'OPE_VALIDACION' },
   ];
+
+  /**
+   * Roles disponibles para un Admin Local (entidad reportante: alcaldía,
+   * hospital, etc.). Subset reducido — solo gestiona usuarios de su entidad.
+   */
+  rolesLocalesOptions = [
+    { label: 'Administrador', value: 'Administrador' },
+    { label: 'Registro', value: 'Registro' },
+    { label: 'Registro y publicación', value: 'Registro y publicación' },
+  ];
+
+  // ── Vista de demostración (perfil del administrador) ──
+  /**
+   * Perfil del usuario que está viendo la pantalla. Toggle de demostración.
+   * - 'central': Admin del CHIP central (Diana Cati, Sandrao). Sin restricciones.
+   * - 'local': Admin de entidad reportante (alcaldía, hospital). Tipo + Entidad
+   *   bloqueados al perfil del usuario logueado; subset de roles reducido.
+   */
+  vistaAdmin: 'central' | 'local' = 'central';
+
+  vistaAdminOptions = [
+    { label: 'Admin Central', value: 'central' },
+    { label: 'Admin Local', value: 'local' },
+  ];
+
+  /**
+   * Entidad "logueada" simulada cuando vistaAdmin === 'local'.
+   * En producción vendría del token/sesión del usuario.
+   */
+  loggedEntidadLocal: Entidad = {
+    codigo: '211511001',
+    nit: '800.890.123-8',
+    razonSocial: 'Alcaldía Mayor de Bogotá D.C.',
+    departamento: 'Cundinamarca',
+    municipio: 'Bogotá D.C.',
+  };
+
+  /** True cuando el usuario está viendo como Admin Local. */
+  get esVistaLocal(): boolean {
+    return this.vistaAdmin === 'local';
+  }
+
+  /** Roles disponibles según la vista actual (central = todos, local = subset). */
+  get rolesDisponibles() {
+    return this.esVistaLocal ? this.rolesLocalesOptions : this.rolesFormOptions;
+  }
+
+  /** Opciones para el filtro de Rol — incluye "Todos" + el subset según vista. */
+  get rolesFilterOptions() {
+    if (this.esVistaLocal) {
+      return [{ label: 'Todos', value: '' }, ...this.rolesLocalesOptions];
+    }
+    return this.perfilOptions;
+  }
 
   /** Opciones para el SelectButton de Estado (segmented control). */
   estadoOptions = [
@@ -300,10 +356,12 @@ export class UsuariosComponent {
     const filters: { label: string; field: string }[] = [];
     if (this.filterUsuario) filters.push({ label: `Usuario: "${this.filterUsuario}"`, field: 'filterUsuario' });
     if (this.filterDocumento) filters.push({ label: `Documento: "${this.filterDocumento}"`, field: 'filterDocumento' });
-    if (this.filterEntidad) filters.push({ label: `Entidad: ${this.filterEntidad.codigo} · ${this.filterEntidad.razonSocial}`, field: 'filterEntidad' });
+    // Entidad y Tipo NO se muestran como chips removibles cuando el perfil es Local
+    // (el usuario no puede modificarlos manualmente — están bloqueados).
+    if (this.filterEntidad && !this.esVistaLocal) filters.push({ label: `Entidad: ${this.filterEntidad.codigo} · ${this.filterEntidad.razonSocial}`, field: 'filterEntidad' });
     if (this.filterNombre) filters.push({ label: `Nombre: "${this.filterNombre}"`, field: 'filterNombre' });
     if (this.filterPerfil) filters.push({ label: `Perfil: ${this.filterPerfil}`, field: 'filterPerfil' });
-    if (this.filterTipoUsuario) filters.push({ label: `Tipo: ${this.filterTipoUsuario}`, field: 'filterTipoUsuario' });
+    if (this.filterTipoUsuario && !this.esVistaLocal) filters.push({ label: `Tipo: ${this.filterTipoUsuario}`, field: 'filterTipoUsuario' });
     if (this.filterEstado !== 'true') {
       const lbl = this.filterEstado === 'todos' ? 'Todos' : (this.filterEstado === 'false' ? 'Inactivo' : 'Activo');
       filters.push({ label: `Estado: ${lbl}`, field: 'filterEstado' });
@@ -324,11 +382,38 @@ export class UsuariosComponent {
   clearFilters() {
     this.filterUsuario = '';
     this.filterDocumento = '';
-    this.filterEntidad = null;
     this.filterNombre = '';
     this.filterPerfil = '';
-    this.filterTipoUsuario = '';
     this.filterEstado = 'true';
+    if (this.esVistaLocal) {
+      // Mantener los campos bloqueados — el Admin Local no puede liberarlos.
+      this.filterTipoUsuario = 'LOCAL';
+      this.filterEntidad = this.loggedEntidadLocal;
+    } else {
+      this.filterTipoUsuario = '';
+      this.filterEntidad = null;
+    }
+    this.busquedaRealizada = false;
+    this.filtrosAplicados = null;
+  }
+
+  /**
+   * Aplica los bloqueos al cambiar el toggle de vista de demostración.
+   * En modo Local: fija Tipo=LOCAL y Entidad=loggedEntidadLocal.
+   * En modo Central: libera ambos campos a sus defaults.
+   */
+  onVistaAdminChange() {
+    if (this.esVistaLocal) {
+      this.filterTipoUsuario = 'LOCAL';
+      this.filterEntidad = this.loggedEntidadLocal;
+      // Si el filtro de Rol tiene un valor que no existe en el subset local, limpiarlo.
+      if (this.filterPerfil && !this.rolesLocalesOptions.some(r => r.value === this.filterPerfil)) {
+        this.filterPerfil = '';
+      }
+    } else {
+      this.filterTipoUsuario = '';
+      this.filterEntidad = null;
+    }
     this.busquedaRealizada = false;
     this.filtrosAplicados = null;
   }
@@ -542,6 +627,11 @@ export class UsuariosComponent {
   /** Abrir diálogo Nuevo Usuario reseteando estado */
   openNewDialog() {
     this.resetNuevoForm();
+    if (this.esVistaLocal) {
+      // Admin Local: Tipo y Entidad se heredan de la sesión y quedan bloqueados.
+      this.nuevoTipo = 'LOCAL';
+      this.nuevoEntidad = this.loggedEntidadLocal;
+    }
     this.showNewDialog = true;
   }
 

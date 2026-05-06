@@ -11,6 +11,34 @@
     </div>
   </div>
 
+  <!-- Toggle de vista de demostración (Admin Central / Admin Local) -->
+  <section class="usr-vista-demo" role="region" aria-label="Vista de demostración">
+    <div class="usr-vista-demo__row">
+      <span class="usr-vista-demo__label">
+        <i class="pi pi-eye" aria-hidden="true"></i>
+        Vista de demostración:
+      </span>
+      <p-selectButton
+        [options]="vistaAdminOptions"
+        [(ngModel)]="vistaAdmin"
+        optionLabel="label" optionValue="value"
+        (onChange)="onVistaAdminChange()"
+        styleClass="usr-vista-demo__toggle"
+        aria-label="Alternar entre Admin Central y Admin Local" />
+    </div>
+    @if (esVistaLocal) {
+      <div class="usr-vista-demo__banner" aria-live="polite">
+        <i class="pi pi-lock" aria-hidden="true"></i>
+        <span>
+          Viendo como <strong>Administrador Local</strong> — entidad logueada:
+          <strong>{{ loggedEntidadLocal.razonSocial }}</strong>.
+          Los campos <strong>Tipo</strong> y <strong>Entidad</strong> están bloqueados;
+          los roles disponibles son los del usuario local.
+        </span>
+      </div>
+    }
+  </section>
+
   <!-- Filtros colapsables con chips -->
   <div class="chip-filters" role="region" aria-label="Filtros de búsqueda">
     <div class="chip-filters__header">
@@ -82,21 +110,27 @@
 
           <!-- Entidad: input que actúa como trigger del Directorio (clic = abre modal) -->
           <div class="chip-filters__field">
-            <label for="usr-f-entidad">Entidad</label>
+            <label for="usr-f-entidad">Entidad
+              @if (esVistaLocal) {
+                <i class="pi pi-lock usr-lock-icon" aria-hidden="true"
+                  pTooltip="Bloqueada por tu perfil de Admin Local" tooltipPosition="top"></i>
+              }
+            </label>
             <p-iconField iconPosition="right" styleClass="w-full usr-entidad-iconfield">
               <input pInputText id="usr-f-entidad"
                 class="w-full usr-entidad-trigger-input"
                 [value]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
                 readonly
+                [disabled]="esVistaLocal"
                 placeholder="Todas"
                 role="combobox"
                 aria-haspopup="dialog"
                 [attr.aria-expanded]="mostrarDirectorioEntidades"
                 [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
-                (click)="abrirDirectorioEntidades()"
-                (keydown.enter)="abrirDirectorioEntidades()"
-                (keydown.space)="abrirDirectorioEntidades(); $event.preventDefault()" />
-              @if (filterEntidad) {
+                (click)="!esVistaLocal && abrirDirectorioEntidades()"
+                (keydown.enter)="!esVistaLocal && abrirDirectorioEntidades()"
+                (keydown.space)="!esVistaLocal && abrirDirectorioEntidades(); $event.preventDefault()" />
+              @if (filterEntidad && !esVistaLocal) {
                 <p-inputIcon
                   styleClass="pi pi-times-circle usr-entidad-clear"
                   role="button" tabindex="0"
@@ -111,9 +145,15 @@
 
           <!-- Tipo de Usuario -->
           <div class="chip-filters__field">
-            <label for="usr-f-tipo">Tipo de Usuario</label>
+            <label for="usr-f-tipo">Tipo de Usuario
+              @if (esVistaLocal) {
+                <i class="pi pi-lock usr-lock-icon" aria-hidden="true"
+                  pTooltip="Bloqueado por tu perfil de Admin Local" tooltipPosition="top"></i>
+              }
+            </label>
             <p-select inputId="usr-f-tipo" [options]="tipoUsuarioOptions"
               [(ngModel)]="filterTipoUsuario"
+              [disabled]="esVistaLocal"
               placeholder="Todos" appendTo="body"
               [style]="{ width: '100%' }"
               styleClass="w-full" />
@@ -122,7 +162,7 @@
           <!-- Rol -->
           <div class="chip-filters__field">
             <label for="usr-f-perfil">Rol</label>
-            <p-select inputId="usr-f-perfil" [options]="perfilOptions"
+            <p-select inputId="usr-f-perfil" [options]="rolesFilterOptions"
               [(ngModel)]="filterPerfil"
               placeholder="Todos" appendTo="body"
               [filter]="true" filterBy="label"
@@ -315,12 +355,18 @@
 
       <!-- Tipo -->
       <div class="usr-dialog__field">
-        <label for="nuevo-tipo">Tipo <span class="field-required">*</span></label>
+        <label for="nuevo-tipo">Tipo <span class="field-required">*</span>
+          @if (esVistaLocal) {
+            <i class="pi pi-lock usr-lock-icon" aria-hidden="true"
+              pTooltip="Bloqueado por tu perfil de Admin Local" tooltipPosition="top"></i>
+          }
+        </label>
         <p-select inputId="nuevo-tipo"
           [options]="tipoUsuarioFormOptions" [(ngModel)]="nuevoTipo"
           (onBlur)="nuevoTipoTouched = true"
           [class.ng-invalid]="nuevoTipoInvalid"
           [class.ng-dirty]="nuevoTipoTouched"
+          [disabled]="esVistaLocal"
           placeholder="Seleccione tipo"
           appendTo="body" class="w-full"
           [style]="{ width: '100%' }"
@@ -358,7 +404,12 @@
 
       <!-- Entidad: input que actúa como trigger del Directorio -->
       <div class="usr-dialog__field">
-        <label for="nuevo-entidad">Entidad <span class="field-required">*</span></label>
+        <label for="nuevo-entidad">Entidad <span class="field-required">*</span>
+          @if (esVistaLocal) {
+            <i class="pi pi-lock usr-lock-icon" aria-hidden="true"
+              pTooltip="Bloqueada por tu perfil de Admin Local" tooltipPosition="top"></i>
+          }
+        </label>
         <p-iconField iconPosition="right" styleClass="w-full">
           <input pInputText id="nuevo-entidad"
             class="w-full usr-entidad-trigger-input"
@@ -366,6 +417,7 @@
             [class.ng-dirty]="nuevoEntidadTouched"
             [value]="nuevoEntidad ? (nuevoEntidad.codigo + ' - ' + nuevoEntidad.razonSocial) : ''"
             readonly
+            [disabled]="esVistaLocal"
             placeholder="Seleccione…"
             role="combobox"
             aria-haspopup="dialog"
@@ -374,10 +426,10 @@
             [attr.aria-expanded]="mostrarDirectorioEntidadesNuevo"
             [attr.aria-label]="nuevoEntidad ? ('Entidad seleccionada: ' + nuevoEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
             aria-describedby="nuevo-entidad-error"
-            (click)="abrirDirectorioEntidadesNuevo()"
-            (keydown.enter)="abrirDirectorioEntidadesNuevo()"
-            (keydown.space)="abrirDirectorioEntidadesNuevo(); $event.preventDefault()" />
-          @if (nuevoEntidad) {
+            (click)="!esVistaLocal && abrirDirectorioEntidadesNuevo()"
+            (keydown.enter)="!esVistaLocal && abrirDirectorioEntidadesNuevo()"
+            (keydown.space)="!esVistaLocal && abrirDirectorioEntidadesNuevo(); $event.preventDefault()" />
+          @if (nuevoEntidad && !esVistaLocal) {
             <p-inputIcon
               styleClass="pi pi-times-circle usr-entidad-clear"
               role="button" tabindex="0"
@@ -397,7 +449,7 @@
       <div class="usr-dialog__field">
         <label for="nuevo-perfil">Rol / Perfil <span class="field-required">*</span></label>
         <p-select inputId="nuevo-perfil"
-          [options]="rolesFormOptions" [(ngModel)]="nuevoPerfil"
+          [options]="rolesDisponibles" [(ngModel)]="nuevoPerfil"
           (onBlur)="nuevoPerfilTouched = true"
           [class.ng-invalid]="nuevoPerfilInvalid"
           [class.ng-dirty]="nuevoPerfilTouched"
@@ -490,12 +542,18 @@
 
       <!-- Tipo -->
       <div class="usr-dialog__field">
-        <label for="edit-tipo">Tipo <span class="field-required">*</span></label>
+        <label for="edit-tipo">Tipo <span class="field-required">*</span>
+          @if (esVistaLocal) {
+            <i class="pi pi-lock usr-lock-icon" aria-hidden="true"
+              pTooltip="Bloqueado por tu perfil de Admin Local" tooltipPosition="top"></i>
+          }
+        </label>
         <p-select inputId="edit-tipo"
           [options]="tipoUsuarioFormOptions" [(ngModel)]="editTipo"
           (onBlur)="editTipoTouched = true"
           [class.ng-invalid]="editTipoInvalid"
           [class.ng-dirty]="editTipoTouched"
+          [disabled]="esVistaLocal"
           placeholder="Seleccione tipo"
           appendTo="body" class="w-full"
           [style]="{ width: '100%' }"
@@ -533,7 +591,12 @@
 
       <!-- Entidad: input que actúa como trigger del Directorio -->
       <div class="usr-dialog__field">
-        <label for="edit-entidad">Entidad <span class="field-required">*</span></label>
+        <label for="edit-entidad">Entidad <span class="field-required">*</span>
+          @if (esVistaLocal) {
+            <i class="pi pi-lock usr-lock-icon" aria-hidden="true"
+              pTooltip="Bloqueada por tu perfil de Admin Local" tooltipPosition="top"></i>
+          }
+        </label>
         <p-iconField iconPosition="right" styleClass="w-full">
           <input pInputText id="edit-entidad"
             class="w-full usr-entidad-trigger-input"
@@ -541,6 +604,7 @@
             [class.ng-dirty]="editEntidadTouched"
             [value]="editEntidad ? (editEntidad.codigo + ' - ' + editEntidad.razonSocial) : ''"
             readonly
+            [disabled]="esVistaLocal"
             placeholder="Seleccione…"
             role="combobox"
             aria-haspopup="dialog"
@@ -549,10 +613,10 @@
             [attr.aria-expanded]="mostrarDirectorioEntidadesEdit"
             [attr.aria-label]="editEntidad ? ('Entidad seleccionada: ' + editEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
             aria-describedby="edit-entidad-error"
-            (click)="abrirDirectorioEntidadesEdit()"
-            (keydown.enter)="abrirDirectorioEntidadesEdit()"
-            (keydown.space)="abrirDirectorioEntidadesEdit(); $event.preventDefault()" />
-          @if (editEntidad) {
+            (click)="!esVistaLocal && abrirDirectorioEntidadesEdit()"
+            (keydown.enter)="!esVistaLocal && abrirDirectorioEntidadesEdit()"
+            (keydown.space)="!esVistaLocal && abrirDirectorioEntidadesEdit(); $event.preventDefault()" />
+          @if (editEntidad && !esVistaLocal) {
             <p-inputIcon
               styleClass="pi pi-times-circle usr-entidad-clear"
               role="button" tabindex="0"
@@ -572,7 +636,7 @@
       <div class="usr-dialog__field">
         <label for="edit-perfil">Rol / Perfil <span class="field-required">*</span></label>
         <p-select inputId="edit-perfil"
-          [options]="rolesFormOptions" [(ngModel)]="editPerfil"
+          [options]="rolesDisponibles" [(ngModel)]="editPerfil"
           placeholder="Seleccione rol"
           [filter]="true" filterBy="label"
           filterPlaceholder="Escriba para buscar..."
