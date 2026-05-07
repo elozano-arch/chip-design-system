@@ -321,33 +321,6 @@
   }
 }
 
-/* Campo "inline": label + control en línea horizontal (Estado) */
-.chip-filters__field--inline {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-
-  > label {
-    margin: 0;
-    white-space: nowrap;
-  }
-}
-
-/* Fila Estado: dentro del bloque de filtros, encima del separador.
-   Margen superior pequeño para separarla visualmente de la grilla 3-col. */
-.chip-filters__field--estado {
-  margin-top: 16px;
-}
-
-/* Estado: select fijo a 200px (no 100% del flex container).
-   Hereda height 40px del global pero override el width con mayor especificidad. */
-.chip-filters__field--inline .p-select.usr-estado-select,
-.chip-filters__field--inline .usr-estado-select {
-  width: 200px !important;
-  min-width: 200px !important;
-  max-width: 200px !important;
-}
-
 /* Acciones del bloque de filtros (Limpiar / Buscar) — separadas por la línea */
 .chip-filters__actions {
   display: flex;
