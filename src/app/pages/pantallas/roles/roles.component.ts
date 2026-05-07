@@ -24,6 +24,7 @@ import { MessageService, MenuItem, TreeNode } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
+import { PermisosTreeComponent } from '../../../components/permisos-tree/permisos-tree.component';
 
 /** Nodo de permiso del árbol unificado: cada nodo tiene código y nombre. */
 interface PermisoData {
@@ -75,6 +76,7 @@ interface Role {
     ChipModule,
     AppBreadcrumbComponent,
     FormErrorBannerComponent,
+    PermisosTreeComponent,
   ],
   providers: [MessageService],
   templateUrl: './roles.component.html',
@@ -87,7 +89,47 @@ export class RolesComponent {
   selectedRoleForMenu: Role | null = null;
 
   constructor(private messageService: MessageService, private cdr: ChangeDetectorRef) {
+    this.augmentTreeWithMassiveLevel();
     this.initLeafIndex();
+  }
+
+  /**
+   * Inyecta una rama de 150 cuentas auxiliares bajo "Efectivo y equivalentes"
+   * para demostrar el comportamiento del árbol con niveles muy poblados:
+   * - Aparece el input de búsqueda (umbral > 30 hijos).
+   * - "Mostrar más" carga de a 50 (umbral > 100 hijos), no de a 10.
+   *
+   * En producción esto vendría del backend; aquí se genera para demo.
+   */
+  private augmentTreeWithMassiveLevel() {
+    const efectivo = this.findNode(this.permissionsTree, '31111');
+    if (!efectivo) return;
+    efectivo.children = [];
+    // 150 cuentas auxiliares con prefijo PUC realista (1110501XX)
+    for (let i = 1; i <= 150; i++) {
+      const num = String(i).padStart(2, '0');
+      efectivo.children.push({
+        key: `31111-${num}`,
+        data: {
+          codigo: `1110501${num}`,
+          nombre: `Cuenta auxiliar 1110501${num} — Efectivo en bancos`,
+        },
+      });
+    }
+  }
+
+  private findNode(
+    nodes: TreeNode<PermisoData>[],
+    key: string,
+  ): TreeNode<PermisoData> | null {
+    for (const n of nodes) {
+      if (n.key === key) return n;
+      if (n.children) {
+        const found = this.findNode(n.children as TreeNode<PermisoData>[], key);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 
   // ── Menú contextual de fila ──
@@ -223,7 +265,66 @@ export class RolesComponent {
         {
           key: '31', data: { codigo: '31', nombre: 'Categorías de Información' },
           children: [
-            { key: '311', data: { codigo: '311', nombre: 'INFORMACIÓN CONTABLE PÚBLICA (K1)' } },
+            // Nivel 4 con sub-niveles para demostrar profundidad de 5 niveles:
+            // Categorías → Categorías de Información → K1 → Activos → cuentas (hojas)
+            {
+              key: '311', data: { codigo: '311', nombre: 'INFORMACIÓN CONTABLE PÚBLICA (K1)' },
+              children: [
+                {
+                  key: '3111', data: { codigo: '3111', nombre: 'Activos' },
+                  children: [
+                    { key: '31111', data: { codigo: '31111', nombre: 'Efectivo y equivalentes al efectivo' } },
+                    { key: '31112', data: { codigo: '31112', nombre: 'Inversiones e instrumentos derivados' } },
+                    { key: '31113', data: { codigo: '31113', nombre: 'Cuentas por cobrar' } },
+                    { key: '31114', data: { codigo: '31114', nombre: 'Préstamos por cobrar' } },
+                    { key: '31115', data: { codigo: '31115', nombre: 'Inventarios' } },
+                    { key: '31116', data: { codigo: '31116', nombre: 'Propiedades, planta y equipo' } },
+                    { key: '31117', data: { codigo: '31117', nombre: 'Bienes de uso público e históricos' } },
+                    { key: '31118', data: { codigo: '31118', nombre: 'Recursos naturales no renovables' } },
+                    { key: '31119', data: { codigo: '31119', nombre: 'Activos intangibles' } },
+                    { key: '31120', data: { codigo: '31120', nombre: 'Activos por impuestos diferidos' } },
+                    { key: '31121', data: { codigo: '31121', nombre: 'Otros activos' } },
+                    { key: '31122', data: { codigo: '31122', nombre: 'Activos contingentes' } },
+                  ],
+                },
+                {
+                  key: '3112', data: { codigo: '3112', nombre: 'Pasivos' },
+                  children: [
+                    { key: '31123', data: { codigo: '31123', nombre: 'Préstamos por pagar' } },
+                    { key: '31124', data: { codigo: '31124', nombre: 'Cuentas por pagar' } },
+                    { key: '31125', data: { codigo: '31125', nombre: 'Beneficios a empleados' } },
+                    { key: '31126', data: { codigo: '31126', nombre: 'Provisiones' } },
+                    { key: '31127', data: { codigo: '31127', nombre: 'Pasivos contingentes' } },
+                    { key: '31128', data: { codigo: '31128', nombre: 'Otros pasivos' } },
+                  ],
+                },
+                {
+                  key: '3113', data: { codigo: '3113', nombre: 'Patrimonio' },
+                  children: [
+                    { key: '31129', data: { codigo: '31129', nombre: 'Capital fiscal' } },
+                    { key: '31130', data: { codigo: '31130', nombre: 'Resultados del ejercicio' } },
+                    { key: '31131', data: { codigo: '31131', nombre: 'Resultados de ejercicios anteriores' } },
+                  ],
+                },
+                {
+                  key: '3114', data: { codigo: '3114', nombre: 'Ingresos' },
+                  children: [
+                    { key: '31132', data: { codigo: '31132', nombre: 'Ingresos fiscales' } },
+                    { key: '31133', data: { codigo: '31133', nombre: 'Transferencias y subvenciones' } },
+                    { key: '31134', data: { codigo: '31134', nombre: 'Venta de bienes y servicios' } },
+                    { key: '31135', data: { codigo: '31135', nombre: 'Otros ingresos' } },
+                  ],
+                },
+                {
+                  key: '3115', data: { codigo: '3115', nombre: 'Gastos' },
+                  children: [
+                    { key: '31136', data: { codigo: '31136', nombre: 'Gastos de administración' } },
+                    { key: '31137', data: { codigo: '31137', nombre: 'Gastos de operación' } },
+                    { key: '31138', data: { codigo: '31138', nombre: 'Provisiones, agotamiento, depreciaciones' } },
+                  ],
+                },
+              ],
+            },
             { key: '312', data: { codigo: '312', nombre: 'NOTAS GENERALES A ESTADOS CONTABLES' } },
             { key: '313', data: { codigo: '313', nombre: 'CGR_PRESUPUESTAL' } },
             { key: '314', data: { codigo: '314', nombre: 'INGRESOS (K12)' } },
@@ -231,6 +332,14 @@ export class RolesComponent {
             { key: '316', data: { codigo: '316', nombre: 'REGALÍAS (K23)' } },
             { key: '317', data: { codigo: '317', nombre: 'CONTROL INTERNO CONTABLE' } },
             { key: '318', data: { codigo: '318', nombre: 'FUT_CIERRE_FISCAL (K29)' } },
+            { key: '319', data: { codigo: '319', nombre: 'BOLETÍN DE DEUDORES MOROSOS (BDME)' } },
+            { key: '320', data: { codigo: '320', nombre: 'CGR_INVERSIÓN' } },
+            { key: '321', data: { codigo: '321', nombre: 'FUT_INVERSIÓN' } },
+            { key: '322', data: { codigo: '322', nombre: 'CONVERGENCIA NICSP' } },
+            { key: '323', data: { codigo: '323', nombre: 'INFORMACIÓN PRESUPUESTAL Y FINANCIERA' } },
+            { key: '324', data: { codigo: '324', nombre: 'BIENES, RENTAS Y SUELDOS DE FUNCIONARIOS' } },
+            { key: '325', data: { codigo: '325', nombre: 'OPERACIONES RECÍPROCAS' } },
+            { key: '326', data: { codigo: '326', nombre: 'BALANCE GENERAL DE LA NACIÓN' } },
           ],
         },
       ],
@@ -294,11 +403,11 @@ export class RolesComponent {
   ];
 
   /**
-   * Selección actual de permisos en el TreeTable. PrimeNG maneja la cascada
-   * (padre → hijos) y el estado parcial (rayita a la mitad) automáticamente
-   * con `selectionMode="checkbox"`.
+   * Selección actual de permisos. Set de keys explícitamente marcadas.
+   * El árbol custom <app-permisos-tree> infiere el estado parcial de los
+   * padres consultando los descendientes.
    */
-  selectedPermisos: TreeNode<PermisoData>[] = [];
+  selectedKeys = new Set<string>();
 
   /** Snapshot de keys seleccionadas al entrar a edición (para calcular el diff). */
   private initialSelectedKeys = new Set<string>();
@@ -321,15 +430,12 @@ export class RolesComponent {
     walk(this.permissionsTree);
   }
 
-  /** Set de keys de hojas actualmente seleccionadas (derivado del estado del TreeTable). */
+  /**
+   * Set de keys de hojas seleccionadas. Como `selectedKeys` solo almacena
+   * hojas (los padres se infieren), es equivalente al Set principal.
+   */
   private get selectedLeafKeys(): Set<string> {
-    const out = new Set<string>();
-    for (const node of this.selectedPermisos) {
-      if (node.key && (!node.children || node.children.length === 0)) {
-        out.add(node.key);
-      }
-    }
-    return out;
+    return this.selectedKeys;
   }
 
   // ── Contadores del árbol ──
@@ -369,12 +475,19 @@ export class RolesComponent {
   }
 
   // ── Acciones del árbol ──
-  /** Toggle de selección de todos los permisos (incluye padres y hojas — PrimeNG mantiene la cascada). */
+  /**
+   * Toggle de selección de todos los permisos. Solo marca las HOJAS —
+   * el estado de los padres se infiere automáticamente desde el árbol custom.
+   */
   toggleSelectAll(checked: boolean) {
     if (checked) {
-      this.selectedPermisos = [...this.allTreeNodes];
+      this.selectedKeys = new Set(
+        this.allTreeNodes
+          .filter(n => !!n.key && (!n.children || !n.children.length))
+          .map(n => n.key!),
+      );
     } else {
-      this.selectedPermisos = [];
+      this.selectedKeys = new Set<string>();
     }
     this.cdr.detectChanges();
     const action = checked ? 'seleccionados' : 'deseleccionados';
@@ -386,10 +499,10 @@ export class RolesComponent {
   }
 
   onGlobalFilter(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    if (this.permTree) {
-      this.permTree.filterGlobal(value, 'contains');
-    }
+    // Búsqueda de permisos pendiente de implementación con el árbol custom.
+    // Por ahora se mantiene la firma para evitar romper el template.
+    const _value = (event.target as HTMLInputElement).value;
+    void _value;
   }
 
   // ── Filtros del listado ──
@@ -441,7 +554,7 @@ export class RolesComponent {
 
     // Estado inicial vacío — replica comportamiento Chip 2.0 real donde cada rol
     // arranca sin permisos y el admin marca explícitamente cada uno.
-    this.selectedPermisos = [];
+    this.selectedKeys = new Set<string>();
     this.initialSelectedKeys = new Set<string>();
   }
 
@@ -714,9 +827,7 @@ export class RolesComponent {
 
   discardChanges() {
     // Restaurar selección a partir del snapshot inicial.
-    this.selectedPermisos = this.allTreeNodes.filter(
-      n => n.key && this.initialSelectedKeys.has(n.key),
-    );
+    this.selectedKeys = new Set(this.initialSelectedKeys);
     this.cdr.detectChanges();
     this.messageService.add({
       severity: 'info',
