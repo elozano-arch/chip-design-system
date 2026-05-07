@@ -174,30 +174,30 @@
 
         </div>
 
-        <!-- Fila inferior: Estado (select) a la izquierda, acciones a la derecha -->
-        <div class="chip-filters__actions chip-filters__actions--with-state">
-          <div class="chip-filters__field chip-filters__field--inline">
-            <label for="usr-f-estado">Estado</label>
-            <p-select inputId="usr-f-estado"
-              [options]="estadoOptions"
-              [(ngModel)]="filterEstado"
-              optionLabel="label"
-              optionValue="value"
-              styleClass="usr-estado-select"
-              appendTo="body"
-              aria-label="Filtrar por estado" />
-          </div>
-          <div class="chip-filters__actions-buttons">
-            <p-button label="Limpiar" icon="pi pi-filter-slash"
-              [text]="true" severity="secondary"
-              [disabled]="activeFilterCount === 0"
-              (onClick)="clearFilters()" />
-            <p-button label="Buscar" icon="pi pi-search"
-              [disabled]="activeFilterCount === 0"
-              pTooltip="Diligencie al menos un filtro para buscar"
-              [tooltipDisabled]="activeFilterCount > 0" tooltipPosition="top"
-              (onClick)="onBuscar()" />
-          </div>
+        <!-- Estado: ahora dentro del bloque de filtros (antes del separador) -->
+        <div class="chip-filters__field chip-filters__field--inline chip-filters__field--estado">
+          <label for="usr-f-estado">Estado</label>
+          <p-select inputId="usr-f-estado"
+            [options]="estadoOptions"
+            [(ngModel)]="filterEstado"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="usr-estado-select"
+            appendTo="body"
+            aria-label="Filtrar por estado" />
+        </div>
+
+        <!-- Acciones: solo botones, separadas del bloque de filtros por la línea -->
+        <div class="chip-filters__actions">
+          <p-button label="Limpiar" icon="pi pi-filter-slash"
+            [text]="true" severity="secondary"
+            [disabled]="activeFilterCount === 0"
+            (onClick)="clearFilters()" />
+          <p-button label="Buscar" icon="pi pi-search"
+            [disabled]="activeFilterCount === 0"
+            pTooltip="Diligencie al menos un filtro para buscar"
+            [tooltipDisabled]="activeFilterCount > 0" tooltipPosition="top"
+            (onClick)="onBuscar()" />
         </div>
       </div>
     }
