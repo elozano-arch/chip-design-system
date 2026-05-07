@@ -42,9 +42,17 @@ export class LoginComponent {
   contrasenaTouched = false;
   loginFormSubmitted = false;
 
-  // Bloqueo de seguridad
+  // ── Bloqueo de seguridad ──
+  /** Contador local de intentos fallidos en la sesión actual del navegador. */
   intentosFallidos = 0;
-  readonly MAX_INTENTOS = 3;
+  /**
+   * Máximo de intentos fallidos antes de bloquear la cuenta.
+   * Variable parametrizable: viene del campo `intentos_fallidos` del rol
+   * asignado al usuario (ver pantalla 'Modificar Datos del Rol').
+   * En producción: `usuario.rol.intentos_fallidos`.
+   * Mock: 3, equivalente a la variable `{{intentos_fallidos}}`.
+   */
+  intentosFallidosMax = 3;
   bloqueado = false;
 
   // Versión del sistema
@@ -160,8 +168,8 @@ export class LoginComponent {
       // Rama 2: contraseña incorrecta (usuario inexistente o pass mal)
       if (!user || user.password !== this.contrasena) {
         this.intentosFallidos++;
-        const restantes = this.MAX_INTENTOS - this.intentosFallidos;
-        if (this.intentosFallidos >= this.MAX_INTENTOS) {
+        const restantes = this.intentosFallidosMax - this.intentosFallidos;
+        if (this.intentosFallidos >= this.intentosFallidosMax) {
           // failed_logins >= max_failed_logins → set enabled = 0
           this.bloqueado = true;
           this.errorMsg = 'El usuario está bloqueado y no puede conectarse a la aplicación. Por favor contacte al administrador del sistema.';

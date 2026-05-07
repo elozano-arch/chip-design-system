@@ -143,12 +143,15 @@ export class CambiarContrasenaComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // CH-1374: si se llega con ?forzado=true desde login, abrir modal y forzar estado vencida
+    // CH-1374: si se llega con ?forzado=true (desde login con caducidad o
+    // primer ingreso, o desde link de correo), activar modo forzado.
+    // En modo forzado el form se renderiza INLINE en la página, NO en modal
+    // (es una redirección, no un overlay sobre otra pantalla).
     this.route.queryParamMap.subscribe(params => {
       if (params.get('forzado') === 'true') {
         this.modoForzado = true;
         this.seguridadInfo.diasParaVencer = 0;
-        this.abrirDialog();
+        // No abrir el modal — el form está inline en la página.
       }
     });
   }
@@ -182,28 +185,35 @@ export class CambiarContrasenaComponent implements OnInit {
   }
 
   get formValido(): boolean {
-    return !!this.actual.trim()
+    // En modo forzado (acceso vía link de correo o caducidad), el campo
+    // "Contraseña actual" no aplica — el link/login ya autenticó al usuario.
+    const actualOk = this.modoForzado || !!this.actual.trim();
+    const noEsIgualActual = this.modoForzado || !this.nuevaIgualActual;
+    return actualOk
       && this.rules.every(r => r.validate(this.nueva))
       && this.coincide
-      && !this.nuevaIgualActual;
+      && noEsIgualActual;
   }
 
   /**
    * Errores que alimentan el banner. Prioriza errorMsg (auth fallido) sobre
    * validación de form (campos vacíos / reglas no cumplidas).
+   * En modo forzado se omiten los errores relativos a "contraseña actual".
    */
   get cpwBannerErrors(): string[] {
     if (this.errorMsg) return [this.errorMsg];
     if (!this.cpwFormSubmitted) return [];
     const errors: string[] = [];
-    if (!this.actual.trim()) errors.push('La contraseña actual es obligatoria.');
+    if (!this.modoForzado && !this.actual.trim()) {
+      errors.push('La contraseña actual es obligatoria.');
+    }
     const failed = this.rules.filter(r => !r.validate(this.nueva));
     if (this.nueva.length === 0) {
       errors.push('La nueva contraseña es obligatoria.');
     } else if (failed.length > 0) {
       errors.push(`La nueva contraseña no cumple ${failed.length} regla${failed.length === 1 ? '' : 's'} de seguridad.`);
     }
-    if (this.nuevaIgualActual) {
+    if (!this.modoForzado && this.nuevaIgualActual) {
       errors.push('La nueva contraseña debe ser distinta de la actual.');
     }
     if (this.confirmar.length === 0) {
@@ -267,7 +277,8 @@ export class CambiarContrasenaComponent implements OnInit {
     this.loading = true;
     setTimeout(() => {
       this.loading = false;
-      if (this.actual !== 'demo123') {
+      // En modo forzado el link/login ya autenticó — no se valida 'actual'.
+      if (!this.modoForzado && this.actual !== 'demo123') {
         this.errorMsg = 'La contraseña actual es incorrecta.';
         return;
       }
