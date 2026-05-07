@@ -54,9 +54,23 @@ export class OlvideClaveComponent implements OnInit {
   correosAutorizados: string[] = [];
   correoSeleccionado = '';
 
-  // Constantes UI
+  /** Estado del modal cuando el usuario no existe en el sistema. */
+  usuarioNoEncontrado = false;
+  /** Estado del modal cuando el usuario existe pero está bloqueado. */
+  usuarioBloqueado = false;
+
+  /**
+   * Listado de usuarios válidos (mock — en producción consulta al backend).
+   * Reusamos los mismos del login para coherencia entre flujos.
+   */
+  private readonly USUARIOS_VALIDOS = ['JLMUNOZ', 'VENCIDO', 'PRIMER'];
+  /** Usuarios cuyo `enabled = 0` en BD — no pueden recuperar contraseña. */
+  private readonly USUARIOS_BLOQUEADOS = ['BLOQUEADO'];
+
+  // Constantes UI — datos de la mesa de servicio CGN
   private readonly USUARIO_REGEX = /^[A-Za-z0-9]{4,20}$/;
-  readonly MESA_SERVICIO_PBX = '(601) 492 6400 Opción 2';
+  readonly MESA_SERVICIO_PBX = '4926400 Opción 2';
+  readonly MESA_SERVICIO_EMAIL = 'mesadeservicio@contaduria.gov.co';
   readonly MESA_SERVICIO_TEL = '+576014926400';
 
   constructor(
@@ -113,7 +127,9 @@ export class OlvideClaveComponent implements OnInit {
 
   /**
    * Paso 1: el usuario ingresa su nombre de usuario y supera el reCAPTCHA.
-   * Si pasa validación, abrimos el modal con los correos autorizados.
+   * Si pasa validación, evalúa el estado del usuario:
+   *  - Si existe y está activo → modal con correos autorizados.
+   *  - Si NO existe o está bloqueado → modal con aviso de mesa de ayuda.
    */
   onSubmit() {
     this.okFormSubmitted = true;
@@ -128,12 +144,29 @@ export class OlvideClaveComponent implements OnInit {
       this.loading = false;
       this.usuarioSolicitud = this.usuario.trim().toUpperCase();
 
-      // Mock de los correos asociados al usuario.
-      // En producción el backend devuelve los correos enmascarados.
-      this.correosAutorizados = this.obtenerCorreosMock(this.usuarioSolicitud);
+      // Reset de flags de estado del modal antes de evaluar.
+      this.usuarioNoEncontrado = false;
+      this.usuarioBloqueado = false;
       this.correoSeleccionado = '';
+      this.correosAutorizados = [];
+
+      // Evaluar estado del usuario contra mock (en producción → backend).
+      if (this.USUARIOS_BLOQUEADOS.includes(this.usuarioSolicitud)) {
+        this.usuarioBloqueado = true;
+      } else if (!this.USUARIOS_VALIDOS.includes(this.usuarioSolicitud)) {
+        this.usuarioNoEncontrado = true;
+      } else {
+        // Usuario válido y activo → cargar correos enmascarados.
+        this.correosAutorizados = this.obtenerCorreosMock(this.usuarioSolicitud);
+      }
+
       this.showCorreosDialog = true;
     }, 600);
+  }
+
+  /** True cuando el modal debe mostrar el aviso de mesa de ayuda en lugar del listado. */
+  get mostrarMesaAyuda(): boolean {
+    return this.usuarioNoEncontrado || this.usuarioBloqueado;
   }
 
   /**
@@ -155,6 +188,8 @@ export class OlvideClaveComponent implements OnInit {
   cancelarRestablecer() {
     this.showCorreosDialog = false;
     this.correoSeleccionado = '';
+    this.usuarioNoEncontrado = false;
+    this.usuarioBloqueado = false;
   }
 
   /** Reset del flujo para volver al paso 1. */
@@ -164,6 +199,8 @@ export class OlvideClaveComponent implements OnInit {
     this.usuarioSolicitud = '';
     this.correoSeleccionado = '';
     this.correosAutorizados = [];
+    this.usuarioNoEncontrado = false;
+    this.usuarioBloqueado = false;
     this.recaptchaOk = false;
     this.usuarioTouched = false;
     this.recaptchaTouched = false;

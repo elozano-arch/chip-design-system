@@ -127,7 +127,7 @@
   </div>
 </div>
 
-<!-- Modal: paso 2 — confirmación de correos autorizados -->
+<!-- Modal: paso 2 — confirmación de correos autorizados o aviso mesa de ayuda -->
 <p-dialog
   header="Confirmación para restablecer contraseña"
   [(visible)]="showCorreosDialog"
@@ -137,36 +137,72 @@
   [style]="{ width: '560px', maxWidth: '95vw' }"
   (onHide)="cancelarRestablecer()">
   <div class="olv-correos">
-    <p class="olv-correos__intro">
-      Los siguientes son los correos autorizados en el Sistema CHIP para el cambio
-      de contraseña, seleccione uno de ellos:
-    </p>
+    @if (mostrarMesaAyuda) {
+      <!-- Aviso: usuario no encontrado o bloqueado → mesa de ayuda -->
+      <div class="olv-correos__alerta" role="alert" aria-live="assertive">
+        @if (usuarioBloqueado) {
+          <p class="olv-correos__alerta-titulo">
+            <i class="pi pi-lock" aria-hidden="true"></i>
+            El usuario <strong>{{ usuarioSolicitud }}</strong> está bloqueado.
+          </p>
+        } @else {
+          <p class="olv-correos__alerta-titulo">
+            <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+            No se encontró el usuario <strong>{{ usuarioSolicitud }}</strong>.
+          </p>
+        }
+        <p class="olv-correos__alerta-msg">Por favor contacte a la mesa de ayuda</p>
+      </div>
 
-    <div class="olv-correos__opciones" role="radiogroup" aria-label="Correos autorizados">
-      @for (correo of correosAutorizados; track correo) {
-        <label class="olv-correos__opcion">
-          <p-radioButton name="correoAutorizado" [value]="correo"
-            [(ngModel)]="correoSeleccionado"
-            [inputId]="'correo-' + $index" />
-          <span class="olv-correos__email">{{ correo }}</span>
-        </label>
-      }
-    </div>
+      <div class="olv-correos__mesa-servicio" role="note">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        <span>
+          Comuníquese con la mesa de servicio de primer nivel de la Contaduría General
+          de la Nación al correo
+          <strong>{{ MESA_SERVICIO_EMAIL }}</strong>
+          o al PBX <strong>{{ MESA_SERVICIO_PBX }}</strong>.
+        </span>
+      </div>
+    } @else {
+      <!-- Caso normal: usuario válido → seleccionar correo autorizado -->
+      <p class="olv-correos__intro">
+        Los siguientes son los correos autorizados en el Sistema CHIP para el cambio
+        de contraseña, seleccione uno de ellos:
+      </p>
 
-    <div class="olv-correos__mesa-servicio" role="note">
-      <i class="pi pi-info-circle" aria-hidden="true"></i>
-      <span>
-        Si los correos no corresponden, debe comunicarse con la mesa de servicio
-        de primer nivel de la Contaduría General de la Nación PBX:
-        <strong>{{ MESA_SERVICIO_PBX }}</strong>.
-      </span>
-    </div>
+      <div class="olv-correos__opciones" role="radiogroup" aria-label="Correos autorizados">
+        @for (correo of correosAutorizados; track correo) {
+          <label class="olv-correos__opcion">
+            <p-radioButton name="correoAutorizado" [value]="correo"
+              [(ngModel)]="correoSeleccionado"
+              [inputId]="'correo-' + $index" />
+            <span class="olv-correos__email">{{ correo }}</span>
+          </label>
+        }
+      </div>
+
+      <div class="olv-correos__mesa-servicio" role="note">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        <span>
+          Si los correos no corresponden, debe comunicarse con la mesa de servicio
+          de primer nivel de la Contaduría General de la Nación al correo
+          <strong>{{ MESA_SERVICIO_EMAIL }}</strong>
+          o al PBX <strong>{{ MESA_SERVICIO_PBX }}</strong>.
+        </span>
+      </div>
+    }
   </div>
   <ng-template #footer>
-    <p-button label="Cancelar" [text]="true" severity="secondary"
-      (onClick)="cancelarRestablecer()" />
-    <p-button label="Restablecer" icon="pi pi-check"
-      [disabled]="!correoSeleccionado"
-      (onClick)="confirmarRestablecer()" />
+    @if (mostrarMesaAyuda) {
+      <!-- En modo mesa de ayuda solo se puede cerrar — no hay correo que restablecer -->
+      <p-button label="Entendido" icon="pi pi-check"
+        (onClick)="cancelarRestablecer()" />
+    } @else {
+      <p-button label="Cancelar" [text]="true" severity="secondary"
+        (onClick)="cancelarRestablecer()" />
+      <p-button label="Restablecer" icon="pi pi-check"
+        [disabled]="!correoSeleccionado"
+        (onClick)="confirmarRestablecer()" />
+    }
   </ng-template>
 </p-dialog>

@@ -304,6 +304,47 @@
     line-height: 1.5;
   }
 
+  /* Alerta cuando el usuario no existe o está bloqueado — patrón Kit UI rojo */
+  &__alerta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 18px;
+    background: #FFEBEE;
+    border: 1px solid #FFCDD2;
+    border-left: 4px solid var(--chip-danger, #F44336);
+    border-radius: var(--radius-sm);
+  }
+
+  &__alerta-titulo {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: #7F0000;
+
+    i {
+      font-size: 16px;
+      color: var(--chip-danger, #F44336);
+    }
+
+    strong {
+      color: #7F0000;
+    }
+  }
+
+  &__alerta-msg {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7F0000;
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+
   &__opciones {
     display: flex;
     flex-direction: column;
