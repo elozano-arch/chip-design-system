@@ -172,19 +172,21 @@
               styleClass="w-full" />
           </div>
 
-        </div>
+          <!-- Estado: dentro del mismo grid de filtros, label arriba (no inline) -->
+          <div class="chip-filters__field">
+            <label for="usr-f-estado">Estado</label>
+            <p-select inputId="usr-f-estado"
+              [options]="estadoOptions"
+              [(ngModel)]="filterEstado"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Activo"
+              appendTo="body"
+              [style]="{ width: '100%' }"
+              styleClass="w-full"
+              aria-label="Filtrar por estado" />
+          </div>
 
-        <!-- Estado: ahora dentro del bloque de filtros (antes del separador) -->
-        <div class="chip-filters__field chip-filters__field--inline chip-filters__field--estado">
-          <label for="usr-f-estado">Estado</label>
-          <p-select inputId="usr-f-estado"
-            [options]="estadoOptions"
-            [(ngModel)]="filterEstado"
-            optionLabel="label"
-            optionValue="value"
-            styleClass="usr-estado-select"
-            appendTo="body"
-            aria-label="Filtrar por estado" />
         </div>
 
         <!-- Acciones: solo botones, separadas del bloque de filtros por la línea -->
