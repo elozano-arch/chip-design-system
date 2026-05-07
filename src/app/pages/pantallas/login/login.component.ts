@@ -13,6 +13,8 @@ import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
+import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -20,6 +22,7 @@ import { MessageService } from 'primeng/api';
     CommonModule, FormsModule, RouterModule,
     ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
     CheckboxModule, SelectModule, MessageModule, ToastModule,
+    FormErrorBannerComponent,
   ],
   providers: [MessageService],
   templateUrl: './login.component.html',
@@ -28,7 +31,6 @@ import { MessageService } from 'primeng/api';
 export class LoginComponent {
   usuario = '';
   contrasena = '';
-  entidad = '';
   recordar = false;
   showPassword = false;
   capsLockOn = false;
@@ -38,6 +40,7 @@ export class LoginComponent {
   // Validaciones UI
   usuarioTouched = false;
   contrasenaTouched = false;
+  loginFormSubmitted = false;
 
   // Bloqueo de seguridad
   intentosFallidos = 0;
@@ -46,16 +49,6 @@ export class LoginComponent {
 
   // Versión del sistema
   versionSistema = 'v2.0.0';
-
-  // Opciones de entidad (mock)
-  entidadOptions = [
-    { label: 'CGN - Contaduría General de la Nación', value: 'CGN' },
-    { label: 'Ministerio de Hacienda', value: 'MINHACIENDA' },
-    { label: 'DNP - Departamento Nacional de Planeación', value: 'DNP' },
-    { label: 'Contraloría General', value: 'CGR' },
-    { label: 'Alcaldía de Bogotá', value: 'BOGOTA' },
-    { label: 'DANE', value: 'DANE' },
-  ];
 
   constructor(private router: Router, private messageService: MessageService) {}
 
@@ -80,14 +73,35 @@ export class LoginComponent {
     return this.contrasenaVacia;
   }
 
-  get entidadInvalid(): boolean {
-    return this.contrasenaTouched && !this.entidad;
-  }
-
   get formInvalid(): boolean {
-    if (!this.usuario.trim() || !this.contrasena.trim() || !this.entidad) return true;
+    if (!this.usuario.trim() || !this.contrasena.trim()) return true;
     if (!this.USUARIO_REGEX.test(this.usuario.trim())) return true;
     return false;
+  }
+
+  /**
+   * Errores que alimentan el banner. Combina:
+   * - Errores de validación del form (campos vacíos / formato).
+   * - Error de autenticación (credenciales incorrectas, bloqueo).
+   * Los dos casos son mutuamente excluyentes — el auth solo dispara después
+   * de que el form pasó validación.
+   */
+  get loginBannerErrors(): string[] {
+    if (this.errorMsg) return [this.errorMsg];
+    if (!this.loginFormSubmitted) return [];
+    const errors: string[] = [];
+    if (!this.usuario.trim()) {
+      errors.push('El usuario es obligatorio.');
+    } else if (!this.USUARIO_REGEX.test(this.usuario.trim())) {
+      errors.push('El usuario debe tener de 4 a 20 caracteres alfanuméricos.');
+    }
+    if (!this.contrasena.trim()) errors.push('La contraseña es obligatoria.');
+    return errors;
+  }
+
+  get loginBannerSummary(): string | undefined {
+    if (this.errorMsg) return this.bloqueado ? 'Cuenta bloqueada' : 'No se pudo iniciar sesión';
+    return undefined;
   }
 
   togglePassword() {
@@ -98,9 +112,32 @@ export class LoginComponent {
     this.capsLockOn = event.getModifierState && event.getModifierState('CapsLock');
   }
 
+  /**
+   * Mock de usuarios para demostrar las 4 ramas del flujo de login (diagrama CGN).
+   * En producción esto vendría del backend.
+   *
+   * - JLMUNOZ + demo123  → ingreso exitoso normal.
+   * - VENCIDO + demo123  → contraseña caducada (last_password_change_date + duration < hoy).
+   * - PRIMER  + demo123  → primer ingreso (password_changed_required = 1).
+   * - BLOQUEADO + cualquier → usuario inactivo en BD (enabled = 0).
+   * - Cualquier otro → credenciales incorrectas (failed_logins +1, bloqueo al 3er intento).
+   */
+  private readonly USUARIOS_MOCK: Record<string, {
+    password: string;
+    enabled: boolean;
+    passwordChangedRequired: boolean;
+    passwordExpired: boolean;
+  }> = {
+    JLMUNOZ: { password: 'demo123', enabled: true, passwordChangedRequired: false, passwordExpired: false },
+    VENCIDO: { password: 'demo123', enabled: true, passwordChangedRequired: false, passwordExpired: true },
+    PRIMER: { password: 'demo123', enabled: true, passwordChangedRequired: true, passwordExpired: false },
+    BLOQUEADO: { password: 'demo123', enabled: false, passwordChangedRequired: false, passwordExpired: false },
+  };
+
   onSubmit() {
     if (this.bloqueado) return;
 
+    this.loginFormSubmitted = true;
     this.usuarioTouched = true;
     this.contrasenaTouched = true;
     this.errorMsg = '';
@@ -110,52 +147,70 @@ export class LoginComponent {
     this.loading = true;
     setTimeout(() => {
       this.loading = false;
-      if (this.usuario.toUpperCase() === 'JLMUNOZ' && this.contrasena === 'demo123') {
-        this.intentosFallidos = 0;
-        // CH-1374: validar contraseña vencida (mock con usuario VENCIDO)
-        const contrasenaVencida = false; // En producción consultar al backend
-        if (contrasenaVencida) {
-          this.messageService.add({
-            severity: 'warn',
-            summary: 'Contraseña vencida',
-            detail: 'Debe cambiar su contraseña antes de continuar.',
-            life: 4000,
-          });
-          setTimeout(() => this.router.navigate(
-            ['/pantallas/seguridad/cambiar-contrasena'],
-            { queryParams: { forzado: 'true' } },
-          ), 1500);
-          return;
+      const userKey = this.usuario.trim().toUpperCase();
+      const user = this.USUARIOS_MOCK[userKey];
+
+      // Rama 1: enabled = 0 → bloqueado en BD (texto exacto solicitado)
+      if (user && !user.enabled) {
+        this.bloqueado = true;
+        this.errorMsg = 'El usuario está bloqueado y no puede conectarse a la aplicación. Por favor contacte al administrador del sistema.';
+        return;
+      }
+
+      // Rama 2: contraseña incorrecta (usuario inexistente o pass mal)
+      if (!user || user.password !== this.contrasena) {
+        this.intentosFallidos++;
+        const restantes = this.MAX_INTENTOS - this.intentosFallidos;
+        if (this.intentosFallidos >= this.MAX_INTENTOS) {
+          // failed_logins >= max_failed_logins → set enabled = 0
+          this.bloqueado = true;
+          this.errorMsg = 'El usuario está bloqueado y no puede conectarse a la aplicación. Por favor contacte al administrador del sistema.';
+        } else {
+          this.errorMsg = `Usuario o contraseña incorrectos. Le quedan ${restantes} intento${restantes === 1 ? '' : 's'}.`;
         }
+        return;
+      }
+
+      // Credenciales correctas — reset contador
+      this.intentosFallidos = 0;
+
+      // Rama 3: password_changed_required = 1 → forzar cambio (primer ingreso)
+      if (user.passwordChangedRequired) {
         this.messageService.add({
-          severity: 'success',
-          summary: 'Bienvenido',
-          detail: `Sesión iniciada como ${this.usuario.toUpperCase()}`,
-        });
-        setTimeout(() => this.router.navigate(['/']), 1000);
-      } else if (this.usuario.toUpperCase() === 'VENCIDO' && this.contrasena === 'demo123') {
-        // Demo del flujo: usuario "VENCIDO" tiene contraseña vencida (CH-1374)
-        this.intentosFallidos = 0;
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Contraseña vencida',
-          detail: 'Su contraseña expiró. Debe cambiarla antes de continuar.',
+          severity: 'info',
+          summary: 'Primer ingreso',
+          detail: 'Por seguridad, debe cambiar su contraseña antes de continuar.',
           life: 4000,
         });
         setTimeout(() => this.router.navigate(
           ['/pantallas/seguridad/cambiar-contrasena'],
-          { queryParams: { forzado: 'true' } },
-        ), 1500);
-      } else {
-        this.intentosFallidos++;
-        const restantes = this.MAX_INTENTOS - this.intentosFallidos;
-        if (this.intentosFallidos >= this.MAX_INTENTOS) {
-          this.bloqueado = true;
-          this.errorMsg = 'Cuenta bloqueada temporalmente por múltiples intentos fallidos. Contacte al administrador.';
-        } else {
-          this.errorMsg = `Usuario o contraseña incorrectos. Le quedan ${restantes} intento${restantes === 1 ? '' : 's'}.`;
-        }
+          { queryParams: { forzado: 'true', motivo: 'primer-ingreso' } },
+        ), 1200);
+        return;
       }
+
+      // Rama 4: contraseña caducada (last_password_change_date + duration < hoy)
+      if (user.passwordExpired) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Contraseña vencida',
+          detail: 'Por motivos de seguridad, su contraseña del CHIP debe renovarse.',
+          life: 4000,
+        });
+        setTimeout(() => this.router.navigate(
+          ['/pantallas/seguridad/cambiar-contrasena'],
+          { queryParams: { forzado: 'true', motivo: 'caducidad' } },
+        ), 1200);
+        return;
+      }
+
+      // Rama final: ingreso exitoso
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Bienvenido',
+        detail: `Sesión iniciada como ${userKey}`,
+      });
+      setTimeout(() => this.router.navigate(['/pantallas/seguridad/perfil-usuario']), 1000);
     }, 800);
   }
 }

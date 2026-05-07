@@ -11,15 +11,6 @@
 
     <!-- Formulario -->
     <form class="login-form" (ngSubmit)="onSubmit()" novalidate>
-      <!-- Entidad -->
-      <div class="login-form__field">
-        <label for="login-entidad">Entidad <span class="field-required">*</span></label>
-        <p-select inputId="login-entidad"
-          [options]="entidadOptions" [(ngModel)]="entidad" name="entidad"
-          placeholder="Seleccione su entidad" appendTo="body" [filter]="true"
-          aria-required="true" class="w-full" [disabled]="bloqueado" />
-      </div>
-
       <!-- Usuario -->
       <div class="login-form__field">
         <label for="login-usuario">Usuario <span class="field-required">*</span></label>
@@ -92,12 +83,11 @@
         <label for="login-recordar">Recordar mi usuario</label>
       </div>
 
-      <!-- Mensaje de error / bloqueo -->
-      @if (errorMsg) {
-        <div role="alert" aria-live="assertive">
-          <p-message [severity]="bloqueado ? 'error' : 'warn'" [text]="errorMsg" styleClass="w-full" />
-        </div>
-      }
+      <!-- Mensaje de error / bloqueo (banner unificado) -->
+      <app-form-error-banner
+        [visible]="loginBannerErrors.length > 0"
+        [errors]="loginBannerErrors"
+        [summary]="loginBannerSummary" />
 
       <!-- Botón principal: solo visible cuando no está bloqueado -->
       @if (!bloqueado) {

@@ -214,6 +214,152 @@
   }
 }
 
+/* --- reCAPTCHA mock visual --- */
+.olv-form__recaptcha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #F9F9F9;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s;
+
+  &--invalid {
+    border-color: var(--chip-danger, #F44336);
+    background: #FFEBEE;
+  }
+
+  &-check {
+    width: 28px;
+    height: 28px;
+    background: #fff;
+    border: 2px solid #C1C1C1;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+
+    &:hover {
+      border-color: var(--chip-cobalt-500);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-500);
+      outline-offset: 2px;
+    }
+
+    i {
+      font-size: 18px;
+      color: var(--chip-success, #4CAF50);
+      font-weight: 700;
+    }
+
+    &--ok {
+      border-color: var(--chip-success, #4CAF50);
+    }
+  }
+
+  &-label {
+    flex: 1;
+    font-size: 14px;
+    color: var(--chip-grey-800);
+    font-weight: 500;
+  }
+
+  &-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: var(--chip-grey-500);
+    line-height: 1;
+  }
+
+  &-icon i {
+    font-size: 22px;
+    color: var(--chip-cobalt-700);
+  }
+
+  &-brand-text {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* --- Modal: correos autorizados --- */
+.olv-correos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__intro {
+    margin: 0;
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+  }
+
+  &__opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--chip-grey-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--chip-grey-200);
+  }
+
+  &__opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+    }
+  }
+
+  &__email {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: var(--chip-grey-800);
+    word-break: break-all;
+  }
+
+  &__mesa-servicio {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--chip-bg-solitude, #EBF0FA);
+    border-left: 3px solid var(--chip-cobalt-700);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+
+    i {
+      font-size: 16px;
+      color: var(--chip-cobalt-700);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    strong {
+      color: var(--chip-cobalt-700);
+    }
+  }
+}
+
 /* --- Responsive --- */
 @media (max-width: 480px) {
   .olv-card {

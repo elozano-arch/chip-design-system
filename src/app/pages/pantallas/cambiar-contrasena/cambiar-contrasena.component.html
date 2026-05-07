@@ -241,12 +241,11 @@
       }
     </div>
 
-    <!-- Mensaje de error -->
-    @if (errorMsg) {
-      <div role="alert" aria-live="assertive">
-        <p-message severity="error" [text]="errorMsg" styleClass="w-full" />
-      </div>
-    }
+    <!-- Banner unificado: errores de validación o de auth -->
+    <app-form-error-banner
+      [visible]="cpwBannerErrors.length > 0"
+      [errors]="cpwBannerErrors"
+      [summary]="cpwBannerSummary" />
   </div>
 
   <ng-template #footer>

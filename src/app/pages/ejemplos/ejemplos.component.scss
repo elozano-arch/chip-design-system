@@ -457,22 +457,27 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 32px;
-  background: linear-gradient(135deg, #0943B5 0%, #1E54B8 100%);
-  color: #fff;
+  padding: 20px 32px;
+  background: var(--chip-bg-solitude, #EBF0FA);
+  border-bottom: 1px solid var(--chip-cobalt-200, #C8D4F0);
+  border-left: 4px solid var(--chip-cobalt-700);
 
   h3 {
     font-family: 'Nunito Sans', sans-serif;
     font-size: 22px;
-    font-weight: 700;
-    color: #ffffff;
+    font-weight: 800;
+    color: var(--chip-cobalt-700);
     margin: 0 0 4px 0;
   }
 
   p {
     font-size: 14px;
     margin: 0;
-    color: #ffffff;
+    color: var(--chip-grey-700);
+
+    strong {
+      color: var(--chip-grey-800);
+    }
   }
 }
 

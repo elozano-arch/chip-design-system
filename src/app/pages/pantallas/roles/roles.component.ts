@@ -23,6 +23,7 @@ import { ChipModule } from 'primeng/chip';
 import { MessageService, MenuItem, TreeNode } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
 
 /** Nodo de permiso del árbol unificado: cada nodo tiene código y nombre. */
 interface PermisoData {
@@ -73,6 +74,7 @@ interface Role {
     MessageModule,
     ChipModule,
     AppBreadcrumbComponent,
+    FormErrorBannerComponent,
   ],
   providers: [MessageService],
   templateUrl: './roles.component.html',
@@ -154,31 +156,36 @@ export class RolesComponent {
   newRoleIntentos: number | null = null;
   newRoleCodeTouched = false;
   newRoleNameTouched = false;
+  // Submitted flags — controlan los banners de errores
+  newRoleFormSubmitted = false;
+  editRoleFormSubmitted = false;
+  deleteRoleFormSubmitted = false;
   private readonly ROLE_CODE_REGEX = /^ROL[0-9]{3,4}$/;
 
   // ── Roles (perfiles reales del sistema CHIP) ──
   roles: Role[] = [
-    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-12', activo: true, funcionalidades: ['Operaciones Generales', 'Seguridad', 'Formularios', 'Entidades', 'Consolidación'] },
-    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-10', activo: true, funcionalidades: ['Formularios', 'Operaciones Generales'] },
-    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, fechaModificacion: '2026-04-08', activo: true, funcionalidades: ['Formularios', 'Entidades'] },
-    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, fechaModificacion: '2026-03-25', activo: true, funcionalidades: ['Operaciones Generales'] },
-    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-01', activo: true, funcionalidades: ['Seguridad', 'Operaciones Generales'] },
-    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, fechaModificacion: '2026-03-18', activo: true, funcionalidades: ['Seguridad'] },
+    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-12', activo: true, funcionalidades: ['Menú de Aplicación', 'Tablas de Parámetros', 'Categorías', 'Consolidación', 'Seguridad', 'Entidades'] },
+    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-10', activo: true, funcionalidades: ['Categorías', 'Tablas de Parámetros', 'Menú de Aplicación'] },
+    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, fechaModificacion: '2026-04-08', activo: true, funcionalidades: ['Categorías', 'Entidades', 'Menú de Aplicación'] },
+    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, fechaModificacion: '2026-03-25', activo: true, funcionalidades: ['Consultas', 'Categorías'] },
+    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-01', activo: true, funcionalidades: ['Seguridad', 'Consultas', 'Categorías'] },
+    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, fechaModificacion: '2026-03-18', activo: true, funcionalidades: ['Seguridad', 'Entidades'] },
     { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', descripcion: 'Rol recién creado, pendiente de configuración', usuarios: 0, permisos: 0, vigencia: null, intentos: null, fechaModificacion: '2026-02-14', activo: false, funcionalidades: [] },
   ];
 
   /**
-   * Opciones de "Funcionalidad" (padres top-level del árbol de permisos).
-   * Filtro: muestra los roles que tengan asignada al menos una funcionalidad de esa rama.
+   * Opciones de "Funcionalidad" — derivadas dinámicamente de los padres
+   * top-level del árbol de permisos. Si se agregan/eliminan padres del árbol,
+   * el filtro se actualiza automáticamente.
    */
-  funcionalidadOptions = [
-    { label: 'Todas', value: '' },
-    { label: 'Operaciones Generales', value: 'Operaciones Generales' },
-    { label: 'Seguridad', value: 'Seguridad' },
-    { label: 'Formularios', value: 'Formularios' },
-    { label: 'Entidades', value: 'Entidades' },
-    { label: 'Consolidación', value: 'Consolidación' },
-  ];
+  get funcionalidadOptions() {
+    return [
+      { label: 'Todas', value: '' },
+      ...this.permissionsTree
+        .filter(n => !!n.data?.nombre)
+        .map(n => ({ label: n.data!.nombre, value: n.data!.nombre })),
+    ];
+  }
 
   // ============================================================
   // ÁRBOL UNIFICADO DE PERMISOS (Chip 2.0 — TreeTable)
@@ -286,24 +293,26 @@ export class RolesComponent {
   ];
 
   /**
-   * Claves de permisos marcadas. Cada checkbox es independiente —
-   * marcar un padre NO propaga a sus hijos (replicando comportamiento Chip 2.0 real).
+   * Selección actual de permisos en el TreeTable. PrimeNG maneja la cascada
+   * (padre → hijos) y el estado parcial (rayita a la mitad) automáticamente
+   * con `selectionMode="checkbox"`.
    */
-  checkedKeys = new Set<string>();
+  selectedPermisos: TreeNode<PermisoData>[] = [];
 
-  /** Snapshot de claves marcadas al entrar a edición (para calcular el diff). */
-  private initialCheckedKeys = new Set<string>();
+  /** Snapshot de keys seleccionadas al entrar a edición (para calcular el diff). */
+  private initialSelectedKeys = new Set<string>();
 
   /** Índice key → nombre de cada nodo del árbol (precomputado). Incluye padres y hojas. */
   private nameByKey = new Map<string, string>();
-  private totalNodeCount = 0;
+  /** Lista plana de TODOS los nodos del árbol (para "Seleccionar todo"). */
+  private allTreeNodes: TreeNode<PermisoData>[] = [];
 
   private initLeafIndex() {
     this.nameByKey.clear();
-    this.totalNodeCount = 0;
+    this.allTreeNodes = [];
     const walk = (nodes: TreeNode<PermisoData>[]) => {
       for (const n of nodes) {
-        this.totalNodeCount++;
+        this.allTreeNodes.push(n);
         if (n.key && n.data) this.nameByKey.set(n.key, n.data.nombre);
         if (n.children) walk(n.children as TreeNode<PermisoData>[]);
       }
@@ -311,30 +320,32 @@ export class RolesComponent {
     walk(this.permissionsTree);
   }
 
-  // ── Checkbox API (independiente por nodo, sin cascada) ──
-  isChecked(key: string | undefined | null): boolean {
-    return !!key && this.checkedKeys.has(key);
-  }
-
-  toggleCheck(key: string | undefined | null) {
-    if (!key) return;
-    if (this.checkedKeys.has(key)) {
-      this.checkedKeys.delete(key);
-    } else {
-      this.checkedKeys.add(key);
+  /** Set de keys de hojas actualmente seleccionadas (derivado del estado del TreeTable). */
+  private get selectedLeafKeys(): Set<string> {
+    const out = new Set<string>();
+    for (const node of this.selectedPermisos) {
+      if (node.key && (!node.children || node.children.length === 0)) {
+        out.add(node.key);
+      }
     }
+    return out;
   }
 
   // ── Contadores del árbol ──
-  get totalLeaves(): number { return this.totalNodeCount; }
+  get totalLeaves(): number {
+    return this.allTreeNodes.filter(n => !n.children || n.children.length === 0).length;
+  }
 
-  get selectedLeafCount(): number { return this.checkedKeys.size; }
+  get selectedLeafCount(): number {
+    return this.selectedLeafKeys.size;
+  }
 
   // ── Diff de cambios (comparando contra snapshot inicial) ──
   get addedLeafNames(): string[] {
     const out: string[] = [];
-    for (const k of this.checkedKeys) {
-      if (!this.initialCheckedKeys.has(k)) {
+    const current = this.selectedLeafKeys;
+    for (const k of current) {
+      if (!this.initialSelectedKeys.has(k)) {
         out.push(this.nameByKey.get(k) || k);
       }
     }
@@ -343,8 +354,9 @@ export class RolesComponent {
 
   get removedLeafNames(): string[] {
     const out: string[] = [];
-    for (const k of this.initialCheckedKeys) {
-      if (!this.checkedKeys.has(k)) {
+    const current = this.selectedLeafKeys;
+    for (const k of this.initialSelectedKeys) {
+      if (!current.has(k)) {
         out.push(this.nameByKey.get(k) || k);
       }
     }
@@ -356,12 +368,12 @@ export class RolesComponent {
   }
 
   // ── Acciones del árbol ──
-  /** Toggle de selección de todos los permisos (leaves + padres). */
+  /** Toggle de selección de todos los permisos (incluye padres y hojas — PrimeNG mantiene la cascada). */
   toggleSelectAll(checked: boolean) {
     if (checked) {
-      this.checkedKeys = new Set(this.nameByKey.keys());
+      this.selectedPermisos = [...this.allTreeNodes];
     } else {
-      this.checkedKeys = new Set();
+      this.selectedPermisos = [];
     }
     this.cdr.detectChanges();
     const action = checked ? 'seleccionados' : 'deseleccionados';
@@ -428,8 +440,8 @@ export class RolesComponent {
 
     // Estado inicial vacío — replica comportamiento Chip 2.0 real donde cada rol
     // arranca sin permisos y el admin marca explícitamente cada uno.
-    this.checkedKeys = new Set<string>();
-    this.initialCheckedKeys = new Set<string>();
+    this.selectedPermisos = [];
+    this.initialSelectedKeys = new Set<string>();
   }
 
   backToList() {
@@ -443,6 +455,7 @@ export class RolesComponent {
     this.editRoleDesc = role.descripcion;
     this.editRoleVigencia = role.vigencia;
     this.editRoleIntentos = role.intentos;
+    this.editRoleFormSubmitted = false;
     this.editRoleNameTouched = false;
     this.editRoleVigenciaTouched = false;
     this.editRoleIntentosTouched = false;
@@ -455,21 +468,19 @@ export class RolesComponent {
     this.newRoleDesc = '';
     this.newRoleVigencia = null;
     this.newRoleIntentos = null;
+    this.newRoleFormSubmitted = false;
     this.newRoleCodeTouched = false;
     this.newRoleNameTouched = false;
     this.showNewRoleDialog = true;
   }
 
   saveEditRole() {
+    this.editRoleFormSubmitted = true;
     this.editRoleNameTouched = true;
     this.editRoleVigenciaTouched = true;
     this.editRoleIntentosTouched = true;
     if (!this.editingRole || !this.editRoleFormValido) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Datos incompletos',
-        detail: 'Revise los campos marcados en rojo y corrija los errores.',
-      });
+      // Banner de errores asume el feedback.
       return;
     }
     this.editingRole.nombre = this.editRoleName.trim();
@@ -485,6 +496,7 @@ export class RolesComponent {
     this.editRoleNameTouched = false;
     this.editRoleVigenciaTouched = false;
     this.editRoleIntentosTouched = false;
+    this.editRoleFormSubmitted = false;
     this.showEditRoleDialog = false;
     this.editingRole = null;
   }
@@ -509,12 +521,9 @@ export class RolesComponent {
 
   deleteRole() {
     if (!this.canDeleteRole) return;
+    this.deleteRoleFormSubmitted = true;
     if (!this.deleteRoleConfirmValid) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Confirmación incorrecta',
-        detail: 'Debe escribir "ELIMINAR" para confirmar la acción.',
-      });
+      // Banner de errores asume el feedback.
       return;
     }
     if (this.roleToDelete) {
@@ -528,12 +537,14 @@ export class RolesComponent {
       });
       this.roleToDelete = null;
       this.deleteRoleConfirmText = '';
+      this.deleteRoleFormSubmitted = false;
       this.showDeleteDialog = false;
     }
   }
 
   closeDeleteRoleDialog() {
     this.deleteRoleConfirmText = '';
+    this.deleteRoleFormSubmitted = false;
     this.roleToDelete = null;
     this.showDeleteDialog = false;
   }
@@ -583,6 +594,43 @@ export class RolesComponent {
       && this.editRoleIntentos != null && this.editRoleIntentos >= 1;
   }
 
+  /** Errores del formulario Crear Rol (alimenta el banner). */
+  get newRoleFormErrors(): string[] {
+    const errors: string[] = [];
+    if (!this.newRoleCode.trim()) {
+      errors.push('El código del rol es obligatorio.');
+    } else if (!this.ROLE_CODE_REGEX.test(this.newRoleCode.trim().toUpperCase())) {
+      errors.push('El código debe tener formato ROL seguido de 3 o 4 números.');
+    } else if (this.roles.some(r => r.codigo.toUpperCase() === this.newRoleCode.trim().toUpperCase())) {
+      errors.push('Este código ya existe. Use uno diferente.');
+    }
+    if (!this.newRoleName.trim()) {
+      errors.push('El nombre del rol es obligatorio.');
+    } else if (this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase())) {
+      errors.push('Ya existe un rol con este nombre.');
+    }
+    return errors;
+  }
+
+  /** Errores del formulario Modificar Datos del Rol (alimenta el banner). */
+  get editRoleFormErrors(): string[] {
+    const errors: string[] = [];
+    if (!this.editRoleName.trim()) errors.push('El nombre del rol es obligatorio.');
+    if (this.editRoleIntentos == null || this.editRoleIntentos < 1) {
+      errors.push('Número de intentos fallidos: debe ser mayor o igual a 1.');
+    }
+    if (this.editRoleVigencia == null || this.editRoleVigencia < 1) {
+      errors.push('Periodo de vigencia: debe ser mayor o igual a 1 día.');
+    }
+    return errors;
+  }
+
+  /** Errores del diálogo Eliminar Rol (texto de confirmación). */
+  get deleteRoleFormErrors(): string[] {
+    if (this.deleteRoleConfirmValid) return [];
+    return ['Debe escribir "ELIMINAR" en el campo para confirmar la acción.'];
+  }
+
   /** Devuelve la fecha de hoy en formato DD/MM/YYYY (igual al patrón de Usuarios). */
   private fechaHoy(): string {
     const d = new Date();
@@ -605,15 +653,12 @@ export class RolesComponent {
   }
 
   createRole() {
+    this.newRoleFormSubmitted = true;
     this.newRoleCodeTouched = true;
     this.newRoleNameTouched = true;
 
     if (!this.newRoleFormValido) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Datos incompletos',
-        detail: 'Revise los campos marcados en rojo y corrija los errores.',
-      });
+      // Banner de errores asume el feedback.
       return;
     }
 
@@ -643,6 +688,7 @@ export class RolesComponent {
     this.newRoleDesc = '';
     this.newRoleVigencia = null;
     this.newRoleIntentos = null;
+    this.newRoleFormSubmitted = false;
     this.newRoleCodeTouched = false;
     this.newRoleNameTouched = false;
     this.showNewRoleDialog = false;
@@ -666,7 +712,10 @@ export class RolesComponent {
   }
 
   discardChanges() {
-    this.checkedKeys = new Set(this.initialCheckedKeys);
+    // Restaurar selección a partir del snapshot inicial.
+    this.selectedPermisos = this.allTreeNodes.filter(
+      n => n.key && this.initialSelectedKeys.has(n.key),
+    );
     this.cdr.detectChanges();
     this.messageService.add({
       severity: 'info',

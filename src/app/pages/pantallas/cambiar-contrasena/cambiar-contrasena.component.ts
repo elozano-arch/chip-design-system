@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
 
 interface PasswordRule {
   key: string;
@@ -36,7 +37,7 @@ interface DispositivoActivo {
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
     DialogModule, MessageModule, ToastModule, TagModule,
-    AppBreadcrumbComponent,
+    AppBreadcrumbComponent, FormErrorBannerComponent,
   ],
   providers: [MessageService],
   templateUrl: './cambiar-contrasena.component.html',
@@ -49,6 +50,7 @@ export class CambiarContrasenaComponent implements OnInit {
   showDialog = false;
   loading = false;
   errorMsg = '';
+  cpwFormSubmitted = false;
 
   // Campos
   actual = '';
@@ -186,6 +188,37 @@ export class CambiarContrasenaComponent implements OnInit {
       && !this.nuevaIgualActual;
   }
 
+  /**
+   * Errores que alimentan el banner. Prioriza errorMsg (auth fallido) sobre
+   * validación de form (campos vacíos / reglas no cumplidas).
+   */
+  get cpwBannerErrors(): string[] {
+    if (this.errorMsg) return [this.errorMsg];
+    if (!this.cpwFormSubmitted) return [];
+    const errors: string[] = [];
+    if (!this.actual.trim()) errors.push('La contraseña actual es obligatoria.');
+    const failed = this.rules.filter(r => !r.validate(this.nueva));
+    if (this.nueva.length === 0) {
+      errors.push('La nueva contraseña es obligatoria.');
+    } else if (failed.length > 0) {
+      errors.push(`La nueva contraseña no cumple ${failed.length} regla${failed.length === 1 ? '' : 's'} de seguridad.`);
+    }
+    if (this.nuevaIgualActual) {
+      errors.push('La nueva contraseña debe ser distinta de la actual.');
+    }
+    if (this.confirmar.length === 0) {
+      errors.push('Debe confirmar la nueva contraseña.');
+    } else if (!this.coincide) {
+      errors.push('La confirmación no coincide con la nueva contraseña.');
+    }
+    return errors;
+  }
+
+  get cpwBannerSummary(): string | undefined {
+    if (this.errorMsg) return 'No se pudo cambiar la contraseña';
+    return undefined;
+  }
+
   abrirDialog() {
     this.resetForm();
     this.showDialog = true;
@@ -219,9 +252,11 @@ export class CambiarContrasenaComponent implements OnInit {
     this.nuevaTouched = false;
     this.confirmarTouched = false;
     this.errorMsg = '';
+    this.cpwFormSubmitted = false;
   }
 
   guardar() {
+    this.cpwFormSubmitted = true;
     this.actualTouched = true;
     this.nuevaTouched = true;
     this.confirmarTouched = true;

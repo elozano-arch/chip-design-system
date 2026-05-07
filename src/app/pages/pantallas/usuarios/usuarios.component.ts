@@ -23,6 +23,7 @@ import { MessageService, MenuItem } from 'primeng/api';
 
 import { DirectorioEntidadesComponent, Entidad } from '../../../components/directorio-entidades/directorio-entidades.component';
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
 
 interface Usuario {
   id: number;
@@ -52,7 +53,7 @@ interface Usuario {
     IconFieldModule, InputIconModule, SelectModule,
     DialogModule, DividerModule, MenuModule, ChipModule,
     AutoCompleteModule, RadioButtonModule, SelectButtonModule,
-    DirectorioEntidadesComponent, AppBreadcrumbComponent,
+    DirectorioEntidadesComponent, AppBreadcrumbComponent, FormErrorBannerComponent,
   ],
   providers: [MessageService],
   templateUrl: './usuarios.component.html',
@@ -177,6 +178,9 @@ export class UsuariosComponent {
   nuevoTipoTouched = false;
   nuevoEntidadTouched = false;
 
+  // Submitted flag — controla cuándo se muestra el banner de errores
+  nuevoFormSubmitted = false;
+
   // Modal Directorio para el formulario de creación (independiente del filtro)
   mostrarDirectorioEntidadesNuevo = false;
 
@@ -196,6 +200,10 @@ export class UsuariosComponent {
   editDocumentoTouched = false;
   editTipoTouched = false;
   editEntidadTouched = false;
+
+  // Submitted flags — controlan los banners de errores
+  editFormSubmitted = false;
+  deleteFormSubmitted = false;
 
   // Modal Directorio para el formulario de edición
   mostrarDirectorioEntidadesEdit = false;
@@ -559,7 +567,38 @@ export class UsuariosComponent {
       && !!this.nuevoEntidad;
   }
 
+  /** Lista de errores actuales del formulario Crear Usuario (alimenta el banner). */
+  get nuevoFormErrors(): string[] {
+    const errors: string[] = [];
+    // Usuario (código)
+    if (!this.nuevoCodigo.trim()) {
+      errors.push('El usuario es obligatorio.');
+    } else if (!this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase())) {
+      errors.push('El usuario debe tener 4 letras seguidas de 6 números.');
+    } else if (this.usuarios.some(u => u.codigo.toUpperCase() === this.nuevoCodigo.trim().toUpperCase())) {
+      errors.push('Este usuario ya está registrado. Use uno diferente.');
+    }
+    if (!this.nuevoNombre.trim()) errors.push('El nombre completo es obligatorio.');
+    if (!this.nuevoCorreo.trim()) {
+      errors.push('El correo es obligatorio.');
+    } else if (!this.EMAIL_REGEX.test(this.nuevoCorreo.trim())) {
+      errors.push('Ingrese un correo electrónico válido.');
+    } else if (this.usuarios.some(u => u.correo.toLowerCase() === this.nuevoCorreo.trim().toLowerCase())) {
+      errors.push('Este correo ya está registrado. Use uno diferente.');
+    }
+    if (!this.nuevoTipo) errors.push('Debe seleccionar un tipo de usuario.');
+    if (!this.nuevoDocumento.trim()) {
+      errors.push('El documento es obligatorio.');
+    } else if (!this.DOCUMENTO_REGEX.test(this.nuevoDocumento.trim())) {
+      errors.push('El documento debe ser numérico (4 a 20 dígitos).');
+    }
+    if (!this.nuevoEntidad) errors.push('Debe seleccionar una entidad.');
+    if (!this.nuevoPerfil) errors.push('Debe seleccionar un rol/perfil.');
+    return errors;
+  }
+
   createUsuario() {
+    this.nuevoFormSubmitted = true;
     this.nuevoCodigoTouched = true;
     this.nuevoNombreTouched = true;
     this.nuevoCorreoTouched = true;
@@ -569,11 +608,7 @@ export class UsuariosComponent {
     this.nuevoEntidadTouched = true;
 
     if (!this.nuevoFormValido) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Datos incompletos',
-        detail: 'Revise los campos marcados en rojo y corrija los errores indicados.',
-      });
+      // El banner de errores asume el rol del feedback (reemplaza el toast).
       return;
     }
 
@@ -615,6 +650,7 @@ export class UsuariosComponent {
     this.nuevoTipo = '';
     this.nuevoEntidad = null;
     this.nuevoEstado = true;
+    this.nuevoFormSubmitted = false;
     this.nuevoCodigoTouched = false;
     this.nuevoNombreTouched = false;
     this.nuevoCorreoTouched = false;
@@ -646,8 +682,20 @@ export class UsuariosComponent {
     if (!this.editCorreoTouched || !this.editCorreo.trim()) return false;
     return !this.EMAIL_REGEX.test(this.editCorreo.trim());
   }
+  /**
+   * True si el correo ya está registrado en OTRO usuario (excluye al usuario
+   * que se está editando para que pueda conservar su propio correo).
+   */
+  get editCorreoDuplicado(): boolean {
+    if (!this.editCorreoTouched || !this.editCorreo.trim()) return false;
+    const correoNormalizado = this.editCorreo.trim().toLowerCase();
+    return this.usuarios.some(u =>
+      u.id !== this.selectedUsuario?.id
+      && u.correo.toLowerCase() === correoNormalizado,
+    );
+  }
   get editCorreoInvalid(): boolean {
-    return this.editCorreoVacio || this.editCorreoFormatoInvalido;
+    return this.editCorreoVacio || this.editCorreoFormatoInvalido || this.editCorreoDuplicado;
   }
   get editDocumentoVacio(): boolean {
     return this.editDocumentoTouched && !this.editDocumento.trim();
@@ -666,14 +714,51 @@ export class UsuariosComponent {
     return this.editEntidadTouched && !this.editEntidad;
   }
   get editFormValido(): boolean {
+    const correo = this.editCorreo.trim().toLowerCase();
+    const correoDuplicado = !!correo && this.usuarios.some(u =>
+      u.id !== this.selectedUsuario?.id && u.correo.toLowerCase() === correo,
+    );
     return !!this.editNombre.trim()
       && !!this.editCorreo.trim()
       && this.EMAIL_REGEX.test(this.editCorreo.trim())
+      && !correoDuplicado
       && !!this.editDocumento.trim()
       && this.DOCUMENTO_REGEX.test(this.editDocumento.trim())
       && !!this.editTipo
       && !!this.editEntidad
       && !!this.editPerfil;
+  }
+
+  /** Lista de errores actuales del formulario Editar Usuario (alimenta el banner). */
+  get editFormErrors(): string[] {
+    const errors: string[] = [];
+    if (!this.editNombre.trim()) errors.push('El nombre completo es obligatorio.');
+    if (!this.editCorreo.trim()) {
+      errors.push('El correo es obligatorio.');
+    } else if (!this.EMAIL_REGEX.test(this.editCorreo.trim())) {
+      errors.push('Ingrese un correo electrónico válido.');
+    } else {
+      const correoNormalizado = this.editCorreo.trim().toLowerCase();
+      const duplicado = this.usuarios.some(u =>
+        u.id !== this.selectedUsuario?.id && u.correo.toLowerCase() === correoNormalizado,
+      );
+      if (duplicado) errors.push('Este correo ya está registrado en otro usuario.');
+    }
+    if (!this.editTipo) errors.push('Debe seleccionar un tipo de usuario.');
+    if (!this.editDocumento.trim()) {
+      errors.push('El documento es obligatorio.');
+    } else if (!this.DOCUMENTO_REGEX.test(this.editDocumento.trim())) {
+      errors.push('El documento debe ser numérico (4 a 20 dígitos).');
+    }
+    if (!this.editEntidad) errors.push('Debe seleccionar una entidad.');
+    if (!this.editPerfil) errors.push('Debe seleccionar un rol/perfil.');
+    return errors;
+  }
+
+  /** Lista de errores del diálogo Eliminar Usuario (texto de confirmación). */
+  get deleteFormErrors(): string[] {
+    if (this.deleteConfirmValid) return [];
+    return ['Debe escribir "ELIMINAR" en el campo para confirmar la acción.'];
   }
 
   /** Abre el directorio de entidades desde el formulario de edición. */
@@ -720,6 +805,7 @@ export class UsuariosComponent {
     this.editFechaUltimaModificacion = u.fechaUltimaModificacion ?? '—';
     this.editVigencia = u.vigencia;
     this.editIntentos = u.intentos;
+    this.editFormSubmitted = false;
     this.editNombreTouched = false;
     this.editCorreoTouched = false;
     this.editDocumentoTouched = false;
@@ -729,17 +815,14 @@ export class UsuariosComponent {
   }
 
   saveEditUsuario() {
+    this.editFormSubmitted = true;
     this.editNombreTouched = true;
     this.editCorreoTouched = true;
     this.editDocumentoTouched = true;
     this.editTipoTouched = true;
     this.editEntidadTouched = true;
     if (!this.selectedUsuario || !this.editFormValido) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Datos incompletos',
-        detail: 'Revise los campos marcados en rojo y corrija los errores.',
-      });
+      // Banner de errores asume el feedback (reemplaza el toast).
       return;
     }
     this.selectedUsuario.nombre = this.editNombre.trim();
@@ -776,12 +859,9 @@ export class UsuariosComponent {
   }
 
   confirmDeleteUsuario() {
+    this.deleteFormSubmitted = true;
     if (!this.deleteConfirmValid) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Confirmación incorrecta',
-        detail: 'Debe escribir "ELIMINAR" para confirmar la acción.',
-      });
+      // Banner de errores asume el feedback.
       return;
     }
     if (this.selectedUsuario) {
@@ -793,11 +873,13 @@ export class UsuariosComponent {
       });
     }
     this.deleteConfirmText = '';
+    this.deleteFormSubmitted = false;
     this.showDeleteDialog = false;
   }
 
   closeDeleteDialog() {
     this.deleteConfirmText = '';
+    this.deleteFormSubmitted = false;
     this.showDeleteDialog = false;
   }
 }
