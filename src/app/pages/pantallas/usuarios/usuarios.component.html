@@ -244,21 +244,11 @@
         </td>
         <td>
           <div class="usr-actions">
-            <p-button icon="pi pi-pencil" [rounded]="true" [text]="true"
-              severity="info" size="small"
-              pTooltip="Editar" tooltipPosition="top"
-              [attr.aria-label]="'Editar ' + u.nombre"
-              (onClick)="onEditarClick(u)" />
-            <p-button [icon]="u.activo ? 'pi pi-ban' : 'pi pi-check'" [rounded]="true" [text]="true"
-              [severity]="u.activo ? 'warn' : 'success'" size="small"
-              [pTooltip]="u.activo ? 'Desactivar' : 'Activar'" tooltipPosition="top"
-              [attr.aria-label]="(u.activo ? 'Desactivar ' : 'Activar ') + u.nombre"
-              (onClick)="onToggleClick(u)" />
-            <p-button icon="pi pi-trash" [rounded]="true" [text]="true"
-              severity="danger" size="small"
-              pTooltip="Eliminar" tooltipPosition="top"
-              [attr.aria-label]="'Eliminar ' + u.nombre"
-              (onClick)="onEliminarClick(u)" />
+            <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+              severity="secondary" size="small"
+              pTooltip="Acciones" tooltipPosition="top"
+              [attr.aria-label]="'Acciones para ' + u.nombre"
+              (onClick)="abrirMenuAcciones($event, u)" />
           </div>
         </td>
       </tr>

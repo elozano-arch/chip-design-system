@@ -91,11 +91,12 @@ export class RolesComponent {
   }
 
   // ── Menú contextual de fila ──
+  // Labels alineados con los headers de cada vista (Modificar Datos / Permisos del Rol).
   menuRolItems: MenuItem[] = [
-    { label: 'Configurar permisos', icon: 'pi pi-cog', command: () => { if (this.selectedRoleForMenu) this.editRole(this.selectedRoleForMenu); } },
-    { label: 'Editar', icon: 'pi pi-pencil', command: () => { if (this.selectedRoleForMenu) this.openEditDialog(this.selectedRoleForMenu); } },
+    { label: 'Modificar Datos del Rol', icon: 'pi pi-pencil', command: () => { if (this.selectedRoleForMenu) this.openEditDialog(this.selectedRoleForMenu); } },
+    { label: 'Modificar Permisos del Rol', icon: 'pi pi-shield', command: () => { if (this.selectedRoleForMenu) this.editRole(this.selectedRoleForMenu); } },
     { separator: true },
-    { label: 'Eliminar', icon: 'pi pi-trash', command: () => { if (this.selectedRoleForMenu) this.confirmDelete(this.selectedRoleForMenu); } },
+    { label: 'Eliminar Rol', icon: 'pi pi-trash', command: () => { if (this.selectedRoleForMenu) this.confirmDelete(this.selectedRoleForMenu); } },
   ];
 
   abrirMenuRol(event: Event, role: Role) {

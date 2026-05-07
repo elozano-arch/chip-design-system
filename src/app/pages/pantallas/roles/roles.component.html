@@ -81,7 +81,7 @@
           <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
           <th pSortableColumn="activo" style="width: 110px; text-align: center">Estado <p-sortIcon field="activo" /></th>
           <th pSortableColumn="fechaModificacion" style="width: 160px">Última Modificación <p-sortIcon field="fechaModificacion" /></th>
-          <th style="width: 220px; text-align: center">Acciones</th>
+          <th style="width: 100px; text-align: center">Acciones</th>
         </tr>
       </ng-template>
       <ng-template #body let-role>
@@ -103,14 +103,11 @@
           <td class="roles-table__date">{{ role.fechaModificacion }}</td>
           <td>
             <div class="roles-table__actions">
-              <p-button label="Datos" icon="pi pi-pencil" [text]="true" severity="info" size="small"
-                pTooltip="Modificar datos del rol" tooltipPosition="top"
-                [attr.aria-label]="'Modificar datos de ' + role.nombre"
-                (onClick)="onDatosClick(role)" />
-              <p-button label="Permisos" icon="pi pi-angle-right" iconPos="right" [text]="true" severity="info" size="small"
-                pTooltip="Modificar permisos del rol" tooltipPosition="top"
-                [attr.aria-label]="'Modificar permisos de ' + role.nombre"
-                (onClick)="onPermisosClick(role)" />
+              <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
+                severity="secondary" size="small"
+                pTooltip="Acciones" tooltipPosition="top"
+                [attr.aria-label]="'Acciones para ' + role.nombre"
+                (onClick)="abrirMenuRol($event, role)" />
             </div>
           </td>
         </tr>
