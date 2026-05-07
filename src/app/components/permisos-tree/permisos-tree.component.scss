@@ -93,6 +93,17 @@
   gap: 6px;
 }
 
+/* Input de búsqueda dentro del nivel (solo cuando hay >30 hijos) */
+.perm-tree__search {
+  display: block;
+  margin-bottom: 4px;
+
+  ::ng-deep input.p-inputtext {
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
 /* Botón "Mostrar más" — al final de cada bloque de hijos */
 .perm-tree__show-more {
   display: inline-flex;
@@ -127,8 +138,3 @@
   }
 }
 
-.perm-tree__show-more-count {
-  color: var(--chip-grey-500);
-  font-weight: 500;
-  font-size: 12px;
-}

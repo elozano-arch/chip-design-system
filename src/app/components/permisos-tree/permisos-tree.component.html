@@ -31,6 +31,19 @@
       <!-- Hijos visibles (cuando expandido) -->
       @if (isExpanded(node.key) && hasChildren(node)) {
         <div class="perm-tree__children">
+          <!-- Input de búsqueda dentro del nivel: solo cuando hay > 30 hijos -->
+          @if (shouldShowSearch(node)) {
+            <p-iconField iconPosition="left" styleClass="perm-tree__search">
+              <p-inputIcon styleClass="pi pi-search" />
+              <input pInputText type="text"
+                [value]="getSearch(node.key)"
+                (input)="onSearchChange(node.key, $event)"
+                placeholder="Buscar en este nivel..."
+                [attr.aria-label]="'Buscar permiso dentro de ' + node.data?.nombre"
+                class="w-full" />
+            </p-iconField>
+          }
+
           <app-permisos-tree
             [nodes]="visibleChildren(node)"
             [selectedKeys]="selectedKeys"
@@ -40,10 +53,9 @@
           @if (hasMoreChildren(node)) {
             <button type="button" class="perm-tree__show-more"
               (click)="loadMore(node)"
-              [attr.aria-label]="'Mostrar ' + LOAD_INCREMENT + ' permisos más bajo ' + node.data?.nombre">
+              [attr.aria-label]="'Mostrar más permisos bajo ' + node.data?.nombre">
               <i class="pi pi-chevron-down" aria-hidden="true"></i>
               Mostrar más
-              <span class="perm-tree__show-more-count">({{ hiddenCount(node) }} restantes)</span>
             </button>
           }
         </div>

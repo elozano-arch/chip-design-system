@@ -89,7 +89,47 @@ export class RolesComponent {
   selectedRoleForMenu: Role | null = null;
 
   constructor(private messageService: MessageService, private cdr: ChangeDetectorRef) {
+    this.augmentTreeWithMassiveLevel();
     this.initLeafIndex();
+  }
+
+  /**
+   * Inyecta una rama de 150 cuentas auxiliares bajo "Efectivo y equivalentes"
+   * para demostrar el comportamiento del árbol con niveles muy poblados:
+   * - Aparece el input de búsqueda (umbral > 30 hijos).
+   * - "Mostrar más" carga de a 50 (umbral > 100 hijos), no de a 10.
+   *
+   * En producción esto vendría del backend; aquí se genera para demo.
+   */
+  private augmentTreeWithMassiveLevel() {
+    const efectivo = this.findNode(this.permissionsTree, '31111');
+    if (!efectivo) return;
+    efectivo.children = [];
+    // 150 cuentas auxiliares con prefijo PUC realista (1110501XX)
+    for (let i = 1; i <= 150; i++) {
+      const num = String(i).padStart(2, '0');
+      efectivo.children.push({
+        key: `31111-${num}`,
+        data: {
+          codigo: `1110501${num}`,
+          nombre: `Cuenta auxiliar 1110501${num} — Efectivo en bancos`,
+        },
+      });
+    }
+  }
+
+  private findNode(
+    nodes: TreeNode<PermisoData>[],
+    key: string,
+  ): TreeNode<PermisoData> | null {
+    for (const n of nodes) {
+      if (n.key === key) return n;
+      if (n.children) {
+        const found = this.findNode(n.children as TreeNode<PermisoData>[], key);
+        if (found) return found;
+      }
+    }
+    return null;
   }
 
   // ── Menú contextual de fila ──
@@ -225,7 +265,66 @@ export class RolesComponent {
         {
           key: '31', data: { codigo: '31', nombre: 'Categorías de Información' },
           children: [
-            { key: '311', data: { codigo: '311', nombre: 'INFORMACIÓN CONTABLE PÚBLICA (K1)' } },
+            // Nivel 4 con sub-niveles para demostrar profundidad de 5 niveles:
+            // Categorías → Categorías de Información → K1 → Activos → cuentas (hojas)
+            {
+              key: '311', data: { codigo: '311', nombre: 'INFORMACIÓN CONTABLE PÚBLICA (K1)' },
+              children: [
+                {
+                  key: '3111', data: { codigo: '3111', nombre: 'Activos' },
+                  children: [
+                    { key: '31111', data: { codigo: '31111', nombre: 'Efectivo y equivalentes al efectivo' } },
+                    { key: '31112', data: { codigo: '31112', nombre: 'Inversiones e instrumentos derivados' } },
+                    { key: '31113', data: { codigo: '31113', nombre: 'Cuentas por cobrar' } },
+                    { key: '31114', data: { codigo: '31114', nombre: 'Préstamos por cobrar' } },
+                    { key: '31115', data: { codigo: '31115', nombre: 'Inventarios' } },
+                    { key: '31116', data: { codigo: '31116', nombre: 'Propiedades, planta y equipo' } },
+                    { key: '31117', data: { codigo: '31117', nombre: 'Bienes de uso público e históricos' } },
+                    { key: '31118', data: { codigo: '31118', nombre: 'Recursos naturales no renovables' } },
+                    { key: '31119', data: { codigo: '31119', nombre: 'Activos intangibles' } },
+                    { key: '31120', data: { codigo: '31120', nombre: 'Activos por impuestos diferidos' } },
+                    { key: '31121', data: { codigo: '31121', nombre: 'Otros activos' } },
+                    { key: '31122', data: { codigo: '31122', nombre: 'Activos contingentes' } },
+                  ],
+                },
+                {
+                  key: '3112', data: { codigo: '3112', nombre: 'Pasivos' },
+                  children: [
+                    { key: '31123', data: { codigo: '31123', nombre: 'Préstamos por pagar' } },
+                    { key: '31124', data: { codigo: '31124', nombre: 'Cuentas por pagar' } },
+                    { key: '31125', data: { codigo: '31125', nombre: 'Beneficios a empleados' } },
+                    { key: '31126', data: { codigo: '31126', nombre: 'Provisiones' } },
+                    { key: '31127', data: { codigo: '31127', nombre: 'Pasivos contingentes' } },
+                    { key: '31128', data: { codigo: '31128', nombre: 'Otros pasivos' } },
+                  ],
+                },
+                {
+                  key: '3113', data: { codigo: '3113', nombre: 'Patrimonio' },
+                  children: [
+                    { key: '31129', data: { codigo: '31129', nombre: 'Capital fiscal' } },
+                    { key: '31130', data: { codigo: '31130', nombre: 'Resultados del ejercicio' } },
+                    { key: '31131', data: { codigo: '31131', nombre: 'Resultados de ejercicios anteriores' } },
+                  ],
+                },
+                {
+                  key: '3114', data: { codigo: '3114', nombre: 'Ingresos' },
+                  children: [
+                    { key: '31132', data: { codigo: '31132', nombre: 'Ingresos fiscales' } },
+                    { key: '31133', data: { codigo: '31133', nombre: 'Transferencias y subvenciones' } },
+                    { key: '31134', data: { codigo: '31134', nombre: 'Venta de bienes y servicios' } },
+                    { key: '31135', data: { codigo: '31135', nombre: 'Otros ingresos' } },
+                  ],
+                },
+                {
+                  key: '3115', data: { codigo: '3115', nombre: 'Gastos' },
+                  children: [
+                    { key: '31136', data: { codigo: '31136', nombre: 'Gastos de administración' } },
+                    { key: '31137', data: { codigo: '31137', nombre: 'Gastos de operación' } },
+                    { key: '31138', data: { codigo: '31138', nombre: 'Provisiones, agotamiento, depreciaciones' } },
+                  ],
+                },
+              ],
+            },
             { key: '312', data: { codigo: '312', nombre: 'NOTAS GENERALES A ESTADOS CONTABLES' } },
             { key: '313', data: { codigo: '313', nombre: 'CGR_PRESUPUESTAL' } },
             { key: '314', data: { codigo: '314', nombre: 'INGRESOS (K12)' } },

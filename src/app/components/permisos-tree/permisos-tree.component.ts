@@ -6,6 +6,9 @@ import { FormsModule } from '@angular/forms';
 import { TreeNode } from 'primeng/api';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 /**
  * Árbol jerárquico de permisos con cascada y paginación por nivel.
@@ -31,7 +34,11 @@ import { ButtonModule } from 'primeng/button';
 @Component({
   selector: 'app-permisos-tree',
   standalone: true,
-  imports: [CommonModule, FormsModule, CheckboxModule, ButtonModule],
+  imports: [
+    CommonModule, FormsModule,
+    CheckboxModule, ButtonModule,
+    InputTextModule, IconFieldModule, InputIconModule,
+  ],
   templateUrl: './permisos-tree.component.html',
   styleUrl: './permisos-tree.component.scss',
   changeDetection: ChangeDetectionStrategy.Default,
@@ -51,16 +58,23 @@ export class PermisosTreeComponent {
   /** Profundidad para indentación. El padre raíz arranca en 0. */
   @Input() depth = 0;
 
-  /** Cuántos hijos mostrar inicialmente por nodo padre. */
-  readonly INITIAL_LIMIT = 10;
-  /** Cuántos hijos sumar al hacer click en "Mostrar más". */
-  readonly LOAD_INCREMENT = 10;
+  /** Cuántos hijos mostrar/cargar por defecto. */
+  readonly SMALL_INCREMENT = 10;
+  /** Para nodos con muchos hijos: incremento más grande para no fatigar. */
+  readonly LARGE_INCREMENT = 50;
+  /** Umbral a partir del cual se usa el incremento grande. */
+  readonly LARGE_BATCH_THRESHOLD = 100;
+  /** Umbral a partir del cual aparece el input de búsqueda dentro del nivel. */
+  readonly SEARCH_THRESHOLD = 30;
 
   /** Set local de keys expandidas (estado de UI, no se propaga). */
   expandedKeys = new Set<string>();
 
   /** Map local: key del padre → cuántos hijos mostrar actualmente. */
   showLimits = new Map<string, number>();
+
+  /** Map local: key del padre → query de búsqueda dentro de ese nivel. */
+  searchQueries = new Map<string, string>();
 
   // ── Estado de expand/collapse ──
   isExpanded(key: string | undefined): boolean {
@@ -76,29 +90,68 @@ export class PermisosTreeComponent {
     }
   }
 
+  // ── Configuración adaptativa según tamaño del nivel ──
+  /** Para listas grandes (>100), arranca mostrando 50; para chicas, 10. */
+  private initialLimitFor(node: TreeNode<{ nombre: string }>): number {
+    const total = node.children?.length ?? 0;
+    return total > this.LARGE_BATCH_THRESHOLD ? this.LARGE_INCREMENT : this.SMALL_INCREMENT;
+  }
+
+  /** Tamaño del batch que carga "Mostrar más": 50 si es nivel grande, 10 si no. */
+  private incrementFor(node: TreeNode<{ nombre: string }>): number {
+    const total = node.children?.length ?? 0;
+    return total > this.LARGE_BATCH_THRESHOLD ? this.LARGE_INCREMENT : this.SMALL_INCREMENT;
+  }
+
+  /** True cuando conviene mostrar un input de búsqueda en este nivel. */
+  shouldShowSearch(node: TreeNode<{ nombre: string }>): boolean {
+    return (node.children?.length ?? 0) > this.SEARCH_THRESHOLD;
+  }
+
+  /** Lee el query actual del input de búsqueda de un padre. */
+  getSearch(key: string | undefined): string {
+    return (key && this.searchQueries.get(key)) || '';
+  }
+
+  /** Actualiza el query y resetea el límite de visibles para ese padre. */
+  onSearchChange(key: string | undefined, event: Event) {
+    if (!key) return;
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQueries.set(key, value);
+    // Al cambiar la búsqueda, resetear el límite para mostrar los primeros
+    // resultados filtrados desde el inicio.
+    this.showLimits.delete(key);
+  }
+
+  /** Hijos del nodo después de aplicar filtro de búsqueda (si hay). */
+  private filteredChildren(node: TreeNode<{ nombre: string }>): TreeNode<{ nombre: string }>[] {
+    if (!node.children) return [];
+    const query = this.getSearch(node.key).trim().toLowerCase();
+    if (!query) return node.children;
+    return node.children.filter(c =>
+      (c.data?.nombre ?? '').toLowerCase().includes(query),
+    );
+  }
+
   // ── Visibilidad / paginación de hijos ──
   visibleChildren(node: TreeNode<{ nombre: string }>): TreeNode<{ nombre: string }>[] {
     if (!node.children || !node.key) return [];
-    const limit = this.showLimits.get(node.key) ?? this.INITIAL_LIMIT;
-    return node.children.slice(0, limit);
+    const filtered = this.filteredChildren(node);
+    const limit = this.showLimits.get(node.key) ?? this.initialLimitFor(node);
+    return filtered.slice(0, limit);
   }
 
   hasMoreChildren(node: TreeNode<{ nombre: string }>): boolean {
     if (!node.children || !node.key) return false;
-    const limit = this.showLimits.get(node.key) ?? this.INITIAL_LIMIT;
-    return node.children.length > limit;
-  }
-
-  hiddenCount(node: TreeNode<{ nombre: string }>): number {
-    if (!node.children || !node.key) return 0;
-    const limit = this.showLimits.get(node.key) ?? this.INITIAL_LIMIT;
-    return Math.max(0, node.children.length - limit);
+    const filtered = this.filteredChildren(node);
+    const limit = this.showLimits.get(node.key) ?? this.initialLimitFor(node);
+    return filtered.length > limit;
   }
 
   loadMore(node: TreeNode<{ nombre: string }>) {
     if (!node.key) return;
-    const current = this.showLimits.get(node.key) ?? this.INITIAL_LIMIT;
-    this.showLimits.set(node.key, current + this.LOAD_INCREMENT);
+    const current = this.showLimits.get(node.key) ?? this.initialLimitFor(node);
+    this.showLimits.set(node.key, current + this.incrementFor(node));
   }
 
   // ── Estado del checkbox (marcado / parcial) ──
