@@ -237,6 +237,35 @@
     padding: 24px 28px 8px;
   }
 
+  /* Wrapper del árbol custom de permisos: header tipo tabla + el árbol debajo */
+  &__tree-wrapper {
+    margin-top: 16px;
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-sm, 6px);
+    overflow: hidden;
+    background: var(--chip-grey-50);
+  }
+
+  &__tree-header {
+    background: var(--chip-grey-100);
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--chip-grey-200);
+  }
+
+  &__tree-th {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-700);
+    text-transform: none;
+  }
+
+  /* El árbol se renderiza dentro del wrapper con un padding sutil */
+  app-permisos-tree {
+    display: block;
+    padding: 14px 18px;
+  }
+
   &__section-title {
     margin-bottom: 20px;
     padding-bottom: 16px;

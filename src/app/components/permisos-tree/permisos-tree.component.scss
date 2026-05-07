@@ -1,0 +1,134 @@
+/**
+ * Árbol jerárquico de permisos con cards indentadas + paginación per-level.
+ * Visual: cada nodo es una card con borde sutil; los hijos se muestran
+ * indentados; "Mostrar más" debajo de cada bloque.
+ */
+
+.perm-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.perm-tree--root {
+  padding: 0;
+}
+
+.perm-tree__node {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Fila card de cada nodo */
+.perm-tree__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-sm, 6px);
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--chip-cobalt-300, var(--chip-cobalt-200));
+    background: var(--chip-grey-50);
+  }
+}
+
+/* Botón chevron expand/collapse */
+.perm-tree__chevron {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--chip-grey-600);
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-700);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+  }
+
+  i {
+    font-size: 12px;
+  }
+}
+
+/* Espacio reservado cuando el nodo no tiene hijos (para mantener alineación) */
+.perm-tree__chevron-placeholder {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* Label del permiso */
+.perm-tree__label {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--chip-grey-800);
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.3;
+}
+
+/* Bloque de hijos (indentado) */
+.perm-tree__children {
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Botón "Mostrar más" — al final de cada bloque de hijos */
+.perm-tree__show-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px dashed var(--chip-cobalt-200, #C8D4F0);
+  border-radius: var(--radius-sm, 6px);
+  color: var(--chip-cobalt-700);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 2px;
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    border-color: var(--chip-cobalt-700);
+    border-style: solid;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+  }
+
+  i {
+    font-size: 11px;
+  }
+}
+
+.perm-tree__show-more-count {
+  color: var(--chip-grey-500);
+  font-weight: 500;
+  font-size: 12px;
+}

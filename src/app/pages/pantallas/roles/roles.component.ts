@@ -24,6 +24,7 @@ import { MessageService, MenuItem, TreeNode } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
+import { PermisosTreeComponent } from '../../../components/permisos-tree/permisos-tree.component';
 
 /** Nodo de permiso del árbol unificado: cada nodo tiene código y nombre. */
 interface PermisoData {
@@ -75,6 +76,7 @@ interface Role {
     ChipModule,
     AppBreadcrumbComponent,
     FormErrorBannerComponent,
+    PermisosTreeComponent,
   ],
   providers: [MessageService],
   templateUrl: './roles.component.html',
@@ -231,6 +233,14 @@ export class RolesComponent {
             { key: '316', data: { codigo: '316', nombre: 'REGALÍAS (K23)' } },
             { key: '317', data: { codigo: '317', nombre: 'CONTROL INTERNO CONTABLE' } },
             { key: '318', data: { codigo: '318', nombre: 'FUT_CIERRE_FISCAL (K29)' } },
+            { key: '319', data: { codigo: '319', nombre: 'BOLETÍN DE DEUDORES MOROSOS (BDME)' } },
+            { key: '320', data: { codigo: '320', nombre: 'CGR_INVERSIÓN' } },
+            { key: '321', data: { codigo: '321', nombre: 'FUT_INVERSIÓN' } },
+            { key: '322', data: { codigo: '322', nombre: 'CONVERGENCIA NICSP' } },
+            { key: '323', data: { codigo: '323', nombre: 'INFORMACIÓN PRESUPUESTAL Y FINANCIERA' } },
+            { key: '324', data: { codigo: '324', nombre: 'BIENES, RENTAS Y SUELDOS DE FUNCIONARIOS' } },
+            { key: '325', data: { codigo: '325', nombre: 'OPERACIONES RECÍPROCAS' } },
+            { key: '326', data: { codigo: '326', nombre: 'BALANCE GENERAL DE LA NACIÓN' } },
           ],
         },
       ],
@@ -294,11 +304,11 @@ export class RolesComponent {
   ];
 
   /**
-   * Selección actual de permisos en el TreeTable. PrimeNG maneja la cascada
-   * (padre → hijos) y el estado parcial (rayita a la mitad) automáticamente
-   * con `selectionMode="checkbox"`.
+   * Selección actual de permisos. Set de keys explícitamente marcadas.
+   * El árbol custom <app-permisos-tree> infiere el estado parcial de los
+   * padres consultando los descendientes.
    */
-  selectedPermisos: TreeNode<PermisoData>[] = [];
+  selectedKeys = new Set<string>();
 
   /** Snapshot de keys seleccionadas al entrar a edición (para calcular el diff). */
   private initialSelectedKeys = new Set<string>();
@@ -321,15 +331,12 @@ export class RolesComponent {
     walk(this.permissionsTree);
   }
 
-  /** Set de keys de hojas actualmente seleccionadas (derivado del estado del TreeTable). */
+  /**
+   * Set de keys de hojas seleccionadas. Como `selectedKeys` solo almacena
+   * hojas (los padres se infieren), es equivalente al Set principal.
+   */
   private get selectedLeafKeys(): Set<string> {
-    const out = new Set<string>();
-    for (const node of this.selectedPermisos) {
-      if (node.key && (!node.children || node.children.length === 0)) {
-        out.add(node.key);
-      }
-    }
-    return out;
+    return this.selectedKeys;
   }
 
   // ── Contadores del árbol ──
@@ -369,12 +376,19 @@ export class RolesComponent {
   }
 
   // ── Acciones del árbol ──
-  /** Toggle de selección de todos los permisos (incluye padres y hojas — PrimeNG mantiene la cascada). */
+  /**
+   * Toggle de selección de todos los permisos. Solo marca las HOJAS —
+   * el estado de los padres se infiere automáticamente desde el árbol custom.
+   */
   toggleSelectAll(checked: boolean) {
     if (checked) {
-      this.selectedPermisos = [...this.allTreeNodes];
+      this.selectedKeys = new Set(
+        this.allTreeNodes
+          .filter(n => !!n.key && (!n.children || !n.children.length))
+          .map(n => n.key!),
+      );
     } else {
-      this.selectedPermisos = [];
+      this.selectedKeys = new Set<string>();
     }
     this.cdr.detectChanges();
     const action = checked ? 'seleccionados' : 'deseleccionados';
@@ -386,10 +400,10 @@ export class RolesComponent {
   }
 
   onGlobalFilter(event: Event) {
-    const value = (event.target as HTMLInputElement).value;
-    if (this.permTree) {
-      this.permTree.filterGlobal(value, 'contains');
-    }
+    // Búsqueda de permisos pendiente de implementación con el árbol custom.
+    // Por ahora se mantiene la firma para evitar romper el template.
+    const _value = (event.target as HTMLInputElement).value;
+    void _value;
   }
 
   // ── Filtros del listado ──
@@ -441,7 +455,7 @@ export class RolesComponent {
 
     // Estado inicial vacío — replica comportamiento Chip 2.0 real donde cada rol
     // arranca sin permisos y el admin marca explícitamente cada uno.
-    this.selectedPermisos = [];
+    this.selectedKeys = new Set<string>();
     this.initialSelectedKeys = new Set<string>();
   }
 
@@ -714,9 +728,7 @@ export class RolesComponent {
 
   discardChanges() {
     // Restaurar selección a partir del snapshot inicial.
-    this.selectedPermisos = this.allTreeNodes.filter(
-      n => n.key && this.initialSelectedKeys.has(n.key),
-    );
+    this.selectedKeys = new Set(this.initialSelectedKeys);
     this.cdr.detectChanges();
     this.messageService.add({
       severity: 'info',

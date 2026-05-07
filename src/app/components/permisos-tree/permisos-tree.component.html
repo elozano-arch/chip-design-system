@@ -1,0 +1,53 @@
+<div class="perm-tree" [class.perm-tree--root]="depth === 0" role="tree">
+  @for (node of nodes; track node.key) {
+    <div class="perm-tree__node" role="treeitem"
+      [attr.aria-expanded]="hasChildren(node) ? isExpanded(node.key) : null"
+      [attr.aria-level]="depth + 1">
+
+      <!-- Fila card: chevron + checkbox + label -->
+      <div class="perm-tree__row">
+        @if (hasChildren(node)) {
+          <button type="button" class="perm-tree__chevron"
+            (click)="toggleExpand(node.key)"
+            [attr.aria-label]="(isExpanded(node.key) ? 'Contraer ' : 'Expandir ') + node.data?.nombre">
+            <i class="pi" [class.pi-chevron-down]="isExpanded(node.key)" [class.pi-chevron-right]="!isExpanded(node.key)" aria-hidden="true"></i>
+          </button>
+        } @else {
+          <span class="perm-tree__chevron-placeholder" aria-hidden="true"></span>
+        }
+
+        <p-checkbox
+          [binary]="true"
+          [ngModel]="isChecked(node)"
+          [indeterminate]="isPartial(node)"
+          [inputId]="'perm-' + node.key"
+          (onChange)="toggleCheck(node)" />
+
+        <label [for]="'perm-' + node.key" class="perm-tree__label">
+          {{ node.data?.nombre }}
+        </label>
+      </div>
+
+      <!-- Hijos visibles (cuando expandido) -->
+      @if (isExpanded(node.key) && hasChildren(node)) {
+        <div class="perm-tree__children">
+          <app-permisos-tree
+            [nodes]="visibleChildren(node)"
+            [selectedKeys]="selectedKeys"
+            [depth]="depth + 1"
+            (selectedKeysChange)="onChildSelectionChange($event)" />
+
+          @if (hasMoreChildren(node)) {
+            <button type="button" class="perm-tree__show-more"
+              (click)="loadMore(node)"
+              [attr.aria-label]="'Mostrar ' + LOAD_INCREMENT + ' permisos más bajo ' + node.data?.nombre">
+              <i class="pi pi-chevron-down" aria-hidden="true"></i>
+              Mostrar más
+              <span class="perm-tree__show-more-count">({{ hiddenCount(node) }} restantes)</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

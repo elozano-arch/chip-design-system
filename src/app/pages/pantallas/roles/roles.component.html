@@ -203,42 +203,15 @@
           </div>
         </div>
 
-        <!-- TreeTable de permisos: cascada padre↔hijos con estado parcial (rayita a la mitad) -->
-        <p-treeTable #permTree
-          [value]="permissionsTree"
-          selectionMode="checkbox"
-          [(selection)]="selectedPermisos"
-          [paginator]="true"
-          [rows]="5"
-          [rowsPerPageOptions]="[5, 10, 25]"
-          [showCurrentPageReport]="true"
-          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} módulos"
-          [globalFilterFields]="['nombre']"
-          styleClass="perm-tt"
-          [scrollable]="false">
-          <ng-template #header>
-            <tr>
-              <th class="perm-tt__th-name">Permiso</th>
-            </tr>
-          </ng-template>
-          <ng-template #body let-rowNode let-rowData="rowData">
-            <tr [ttRow]="rowNode" class="perm-tt__row">
-              <td>
-                <p-treeTableToggler [rowNode]="rowNode" />
-                <p-treeTableCheckbox [value]="rowNode" />
-                <span class="perm-tt__label">{{ rowData.nombre }}</span>
-              </td>
-            </tr>
-          </ng-template>
-          <ng-template #emptymessage>
-            <tr>
-              <td class="perm-tt__empty">
-                <i class="pi pi-search" aria-hidden="true"></i>
-                <p>No se encontraron permisos para la búsqueda.</p>
-              </td>
-            </tr>
-          </ng-template>
-        </p-treeTable>
+        <!-- Árbol de permisos jerárquico: cards indentadas con cascada y "Mostrar más" per-level -->
+        <div class="perm-card__tree-wrapper">
+          <header class="perm-card__tree-header">
+            <span class="perm-card__tree-th">Permiso</span>
+          </header>
+          <app-permisos-tree
+            [nodes]="permissionsTree"
+            [(selectedKeys)]="selectedKeys" />
+        </div>
       </div>
 
       <footer class="perm-card__footer">
