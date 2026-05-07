@@ -219,70 +219,9 @@
           (onClick)="backToList()" />
         <p-button label="Guardar Permisos Rol"
           icon="pi pi-check"
-          (onClick)="savePermissions()"
-          [badge]="totalChanges > 0 ? totalChanges + '' : ''"
-          badgeSeverity="warn" />
+          (onClick)="savePermissions()" />
       </footer>
     </section>
-
-    <!-- ============================================================
-         RESUMEN DE CAMBIOS (sticky bottom bar, visible solo con cambios)
-         ============================================================ -->
-    @if (totalChanges > 0) {
-    <div class="changes-bar changes-bar--has-changes">
-      <div class="changes-bar__header"
-        (click)="changesExpanded = !changesExpanded"
-        role="button" tabindex="0" [attr.aria-expanded]="changesExpanded"
-        (keydown.enter)="changesExpanded = !changesExpanded"
-        (keydown.space)="changesExpanded = !changesExpanded; $event.preventDefault()">
-        <div class="changes-bar__header-left">
-          <i class="pi" [class.pi-chevron-up]="!changesExpanded" [class.pi-chevron-down]="changesExpanded"></i>
-          <i class="pi pi-list-check"></i>
-          <span>Resumen de Cambios</span>
-          <p-tag [value]="totalChanges + ' cambio(s)'" severity="warn" />
-        </div>
-        <div class="changes-bar__actions">
-          <p-button label="Descartar" icon="pi pi-times" severity="secondary" [text]="true" size="small"
-            (onClick)="discardChanges(); $event.stopPropagation()" />
-        </div>
-      </div>
-
-      @if (changesExpanded) {
-        <div class="changes-bar__body" aria-live="polite">
-          @if (addedLeafNames.length > 0) {
-            <div class="changes-section">
-              <h4 class="changes-section__title">
-                <i class="pi pi-plus-circle" aria-hidden="true" style="color: var(--chip-success)"></i>
-                Permisos agregados
-                <span class="changes-section__count">{{ addedLeafNames.length }}</span>
-              </h4>
-              @for (item of addedLeafNames; track item) {
-                <div class="changes-item changes-item--added">
-                  <i class="pi pi-plus-circle" aria-hidden="true"></i>
-                  <span>{{ item }}</span>
-                </div>
-              }
-            </div>
-          }
-          @if (removedLeafNames.length > 0) {
-            <div class="changes-section">
-              <h4 class="changes-section__title">
-                <i class="pi pi-minus-circle" aria-hidden="true" style="color: var(--chip-danger)"></i>
-                Permisos removidos
-                <span class="changes-section__count">{{ removedLeafNames.length }}</span>
-              </h4>
-              @for (item of removedLeafNames; track item) {
-                <div class="changes-item changes-item--removed">
-                  <i class="pi pi-minus-circle" aria-hidden="true"></i>
-                  <span>{{ item }}</span>
-                </div>
-              }
-            </div>
-          }
-        </div>
-      }
-    </div>
-    }
   </div>
 }
 

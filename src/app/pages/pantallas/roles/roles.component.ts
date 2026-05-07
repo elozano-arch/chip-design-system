@@ -169,9 +169,8 @@ export class RolesComponent {
   searchRolesFuncionalidad = '';
   filtersCollapsed = false;
 
-  // ── Búsqueda del árbol de permisos (TreeTable) ──
+  // ── Búsqueda del árbol de permisos (filtro per-level se hace dentro del componente) ──
   searchPermisos = '';
-  changesExpanded = false;
 
   // ── Diálogos ──
   showNewRoleDialog = false;
@@ -409,33 +408,18 @@ export class RolesComponent {
    */
   selectedKeys = new Set<string>();
 
-  /** Snapshot de keys seleccionadas al entrar a edición (para calcular el diff). */
-  private initialSelectedKeys = new Set<string>();
-
-  /** Índice key → nombre de cada nodo del árbol (precomputado). Incluye padres y hojas. */
-  private nameByKey = new Map<string, string>();
-  /** Lista plana de TODOS los nodos del árbol (para "Seleccionar todo"). */
+  /** Lista plana de TODOS los nodos del árbol (para "Seleccionar todo" y contadores). */
   private allTreeNodes: TreeNode<PermisoData>[] = [];
 
   private initLeafIndex() {
-    this.nameByKey.clear();
     this.allTreeNodes = [];
     const walk = (nodes: TreeNode<PermisoData>[]) => {
       for (const n of nodes) {
         this.allTreeNodes.push(n);
-        if (n.key && n.data) this.nameByKey.set(n.key, n.data.nombre);
         if (n.children) walk(n.children as TreeNode<PermisoData>[]);
       }
     };
     walk(this.permissionsTree);
-  }
-
-  /**
-   * Set de keys de hojas seleccionadas. Como `selectedKeys` solo almacena
-   * hojas (los padres se infieren), es equivalente al Set principal.
-   */
-  private get selectedLeafKeys(): Set<string> {
-    return this.selectedKeys;
   }
 
   // ── Contadores del árbol ──
@@ -444,34 +428,7 @@ export class RolesComponent {
   }
 
   get selectedLeafCount(): number {
-    return this.selectedLeafKeys.size;
-  }
-
-  // ── Diff de cambios (comparando contra snapshot inicial) ──
-  get addedLeafNames(): string[] {
-    const out: string[] = [];
-    const current = this.selectedLeafKeys;
-    for (const k of current) {
-      if (!this.initialSelectedKeys.has(k)) {
-        out.push(this.nameByKey.get(k) || k);
-      }
-    }
-    return out;
-  }
-
-  get removedLeafNames(): string[] {
-    const out: string[] = [];
-    const current = this.selectedLeafKeys;
-    for (const k of this.initialSelectedKeys) {
-      if (!current.has(k)) {
-        out.push(this.nameByKey.get(k) || k);
-      }
-    }
-    return out;
-  }
-
-  get totalChanges(): number {
-    return this.addedLeafNames.length + this.removedLeafNames.length;
+    return this.selectedKeys.size;
   }
 
   // ── Acciones del árbol ──
@@ -550,12 +507,10 @@ export class RolesComponent {
     this.selectedRole = role;
     this.currentView = 'edit';
     this.searchPermisos = '';
-    this.changesExpanded = false;
 
     // Estado inicial vacío — replica comportamiento Chip 2.0 real donde cada rol
     // arranca sin permisos y el admin marca explícitamente cada uno.
     this.selectedKeys = new Set<string>();
-    this.initialSelectedKeys = new Set<string>();
   }
 
   backToList() {
@@ -808,31 +763,17 @@ export class RolesComponent {
     this.showNewRoleDialog = false;
   }
 
-  // ── Guardar / descartar permisos ──
+  // ── Guardar permisos ──
   savePermissions() {
     if (this.selectedRole) {
       this.selectedRole.permisos = this.selectedLeafCount;
     }
-    const resumen = this.totalChanges > 0
-      ? `${this.addedLeafNames.length} agregado(s) · ${this.removedLeafNames.length} removido(s).`
-      : 'No hubo cambios por guardar.';
     this.messageService.add({
       severity: 'success',
       summary: 'Permisos guardados',
-      detail: `Rol "${this.selectedRole?.nombre}". ${resumen}`,
+      detail: `Los permisos del rol "${this.selectedRole?.nombre}" fueron actualizados exitosamente.`,
       life: 4500,
     });
     this.backToList();
-  }
-
-  discardChanges() {
-    // Restaurar selección a partir del snapshot inicial.
-    this.selectedKeys = new Set(this.initialSelectedKeys);
-    this.cdr.detectChanges();
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Cambios descartados',
-      detail: 'Se restauraron los permisos al estado original.',
-    });
   }
 }
