@@ -6,7 +6,48 @@
 /* CH-1374: banner de bloqueo cuando se llega forzado tras login con contraseña vencida */
 .cpw-forzado-banner {
   display: block;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
+  max-width: 640px;
+}
+
+/* Wrapper del header en modo forzado: centrado para alinear con el form abajo */
+.cpw-page > .cpw-header:has(.cpw-forzado-banner) {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  text-align: center;
+}
+
+/* Formulario inline en modo forzado (NO modal) — viene de redirección desde
+   correo o login con contraseña caducada/primer ingreso. Centrado horizontalmente
+   para mantener uniformidad con el resto del proyecto en pantallas focused. */
+.cpw-forzado-form {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-left: 4px solid var(--chip-cobalt-700);
+  border-radius: var(--radius-md);
+  padding: 28px 32px;
+  margin: 0 auto;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+
+  &__title {
+    margin: 0 0 4px;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--chip-grey-200);
+  }
 }
 
 /* --- Grid de cards de estado --- */
