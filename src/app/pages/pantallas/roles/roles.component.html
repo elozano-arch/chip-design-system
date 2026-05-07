@@ -206,9 +206,11 @@
           </div>
         </div>
 
-        <!-- TreeTable de permisos: checkboxes independientes, sin cascada -->
+        <!-- TreeTable de permisos: cascada padre↔hijos con estado parcial (rayita a la mitad) -->
         <p-treeTable #permTree
           [value]="permissionsTree"
+          selectionMode="checkbox"
+          [(selection)]="selectedPermisos"
           [paginator]="true"
           [rows]="5"
           [rowsPerPageOptions]="[5, 10, 25]"
@@ -226,11 +228,7 @@
             <tr [ttRow]="rowNode" class="perm-tt__row">
               <td>
                 <p-treeTableToggler [rowNode]="rowNode" />
-                <p-checkbox [binary]="true"
-                  [ngModel]="isChecked(rowNode.node.key)"
-                  (onChange)="toggleCheck(rowNode.node.key)"
-                  [inputId]="'perm-' + rowNode.node.key"
-                  [attr.aria-label]="'Permiso ' + rowData.nombre" />
+                <p-treeTableCheckbox [value]="rowNode" />
                 <span class="perm-tt__label">{{ rowData.nombre }}</span>
               </td>
             </tr>
@@ -324,6 +322,9 @@
 <p-dialog header="Nuevo Perfil" [(visible)]="showNewRoleDialog" [modal]="true"
   [style]="{ width: '520px' }" [draggable]="false">
   <div class="dialog-form">
+    <app-form-error-banner
+      [visible]="newRoleFormSubmitted && newRoleFormErrors.length > 0"
+      [errors]="newRoleFormErrors" />
     <p class="dialog-form__hint">
       Los campos marcados con <span class="field-required">*</span> son obligatorios.
     </p>
@@ -401,6 +402,9 @@
 <p-dialog header="Modificar Datos del Rol" [(visible)]="showEditRoleDialog" [modal]="true"
   [style]="{ width: '720px' }" [draggable]="false">
   <div class="dialog-form">
+    <app-form-error-banner
+      [visible]="editRoleFormSubmitted && editRoleFormErrors.length > 0"
+      [errors]="editRoleFormErrors" />
     <p class="dialog-form__hint">
       Los campos marcados con <span class="field-required">*</span> son obligatorios.
     </p>
@@ -495,7 +499,10 @@
      DIÁLOGO: CONFIRMAR ELIMINACIÓN
      ============================================================ -->
 <p-dialog [header]="canDeleteRole ? 'Eliminar perfil' : 'No se puede eliminar'" [(visible)]="showDeleteDialog" [modal]="true"
-  [style]="{ width: '460px' }" [draggable]="false" (onHide)="deleteRoleConfirmText = ''">
+  [style]="{ width: '460px' }" [draggable]="false" (onHide)="closeDeleteRoleDialog()">
+  <app-form-error-banner
+    [visible]="deleteRoleFormSubmitted && deleteRoleFormErrors.length > 0"
+    [errors]="deleteRoleFormErrors" />
   <div class="dialog-confirm">
     <i class="pi pi-exclamation-triangle dialog-confirm__icon" aria-hidden="true"></i>
 

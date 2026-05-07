@@ -1,0 +1,57 @@
+/**
+ * Banner persistente de errores de formulario.
+ * Estilos alineados con el Kit UI GOV.CO: fondo rojo claro, borde izquierdo
+ * fuerte (acento), texto en rojo oscuro contrastado.
+ */
+.form-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: #FFEBEE;
+  border: 1px solid #FFCDD2;
+  border-left: 4px solid var(--chip-danger, #F44336);
+  border-radius: var(--radius-sm, 6px);
+  color: #7F0000;
+  font-size: 13px;
+  line-height: 1.5;
+
+  &__icon {
+    font-size: 20px;
+    color: var(--chip-danger, #F44336);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__summary {
+    display: block;
+    color: #7F0000;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  &__single {
+    margin: 0;
+    color: #7F0000;
+  }
+
+  &__list {
+    margin: 4px 0 0;
+    padding-left: 18px;
+
+    li {
+      color: #7F0000;
+      margin-bottom: 2px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

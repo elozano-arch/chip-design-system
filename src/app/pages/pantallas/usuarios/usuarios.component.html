@@ -284,6 +284,10 @@
 <!-- Diálogo Crear Usuario -->
 <p-dialog header="Crear Usuario" [(visible)]="showNewDialog" [modal]="true" [style]="{ width: '720px' }" [draggable]="false">
   <div class="usr-dialog">
+    <app-form-error-banner
+      [visible]="nuevoFormSubmitted && nuevoFormErrors.length > 0"
+      [errors]="nuevoFormErrors" />
+
     <p class="usr-dialog__hint">
       Los campos marcados con <span class="field-required">*</span> son obligatorios.
     </p>
@@ -496,6 +500,10 @@
 <!-- Diálogo Editar Usuario -->
 <p-dialog header="Editar Usuario" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '720px' }" [draggable]="false">
   <div class="usr-dialog">
+    <app-form-error-banner
+      [visible]="editFormSubmitted && editFormErrors.length > 0"
+      [errors]="editFormErrors" />
+
     <div class="usr-dialog__grid usr-dialog__grid--2col">
       <!-- Usuario (readonly) -->
       <div class="usr-dialog__field">
@@ -541,6 +549,8 @@
           <small id="edit-correo-error" class="usr-dialog__error">El correo es obligatorio.</small>
         } @else if (editCorreoFormatoInvalido) {
           <small id="edit-correo-error" class="usr-dialog__error">Ingrese un correo electrónico válido.</small>
+        } @else if (editCorreoDuplicado) {
+          <small id="edit-correo-error" class="usr-dialog__error">Este correo ya está registrado en otro usuario.</small>
         }
       </div>
 
@@ -718,7 +728,10 @@
 
 <!-- Diálogo Confirmar Eliminación -->
 <p-dialog header="Eliminar usuario" [(visible)]="showDeleteDialog" [modal]="true"
-  [style]="{ width: '460px' }" [draggable]="false" (onHide)="deleteConfirmText = ''">
+  [style]="{ width: '460px' }" [draggable]="false" (onHide)="closeDeleteDialog()">
+  <app-form-error-banner
+    [visible]="deleteFormSubmitted && deleteFormErrors.length > 0"
+    [errors]="deleteFormErrors" />
   <div class="usr-dialog-confirm">
     <i class="pi pi-exclamation-triangle usr-dialog-confirm__icon" aria-hidden="true"></i>
     <p>

@@ -1,0 +1,17 @@
+@if (visible && errors.length > 0) {
+  <div class="form-error-banner" role="alert" aria-live="assertive">
+    <i class="pi pi-exclamation-circle form-error-banner__icon" aria-hidden="true"></i>
+    <div class="form-error-banner__body">
+      <strong class="form-error-banner__summary">{{ computedSummary }}</strong>
+      @if (errors.length > 1) {
+        <ul class="form-error-banner__list">
+          @for (err of errors; track err) {
+            <li>{{ err }}</li>
+          }
+        </ul>
+      } @else {
+        <p class="form-error-banner__single">{{ errors[0] }}</p>
+      }
+    </div>
+  </div>
+}
