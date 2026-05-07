@@ -110,6 +110,17 @@ export const routes: Routes = [
       import('./pages/pantallas/olvide-clave/olvide-clave.component').then(m => m.OlvideClaveComponent),
   },
   {
+    path: 'pantallas/seguridad/perfil-usuario',
+    data: {
+      breadcrumb: [
+        { label: 'Seguridad', icon: 'pi pi-shield', routerLink: '/pantallas/seguridad/usuarios' },
+        { label: 'Perfil del Usuario' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/perfil-usuario/perfil-usuario.component').then(m => m.PerfilUsuarioComponent),
+  },
+  {
     path: 'pantallas/seguridad/cambiar-contrasena',
     data: {
       breadcrumb: [

@@ -5,47 +5,78 @@
     <!-- Header con branding -->
     <div class="olv-card__header">
       <img src="assets/logos/chip-logo.png" alt="CHIP" class="olv-card__logo" />
-      <h1 class="olv-card__title">{{ enviado ? 'Solicitud recibida' : 'Recuperar contraseña' }}</h1>
+      <h1 class="olv-card__title">{{ enviado ? 'Solicitud recibida' : '¿Olvidó su contraseña?' }}</h1>
       <p class="olv-card__subtitle">
         {{ enviado
-          ? 'Si el correo está registrado en el sistema, recibirá las instrucciones para restablecer su contraseña.'
-          : 'Ingrese su correo y le enviaremos un enlace para restablecer su contraseña.' }}
+          ? 'Si el usuario está registrado, recibirá un correo con las instrucciones para restablecer su contraseña.'
+          : 'Usted puede restablecer su contraseña aquí, ingresando a continuación su usuario:' }}
       </p>
     </div>
 
-    <!-- Estado: formulario -->
+    <!-- Aviso link vencido (cuando llega por ?expired=true) -->
+    @if (linkVencido && !enviado) {
+      <app-form-error-banner
+        [visible]="true"
+        [errors]="['El enlace que utilizó ya caducó. Realice nuevamente el proceso de olvidé mi contraseña.']"
+        summary="Enlace vencido" />
+    }
+
+    <!-- Estado: formulario (paso 1) -->
     @if (!enviado) {
       <form class="olv-form" (ngSubmit)="onSubmit()" novalidate>
         <div class="olv-form__field">
-          <label for="olv-correo">Correo electrónico <span class="field-required">*</span></label>
+          <label for="olv-usuario">Usuario <span class="field-required">*</span></label>
           <p-iconfield class="olv-form__correo">
-            <p-inputicon styleClass="pi pi-envelope" />
-            <input pInputText id="olv-correo"
-              [(ngModel)]="correo" name="correo"
-              (blur)="correoTouched = true"
-              [class.ng-invalid]="correoInvalid"
-              [class.ng-dirty]="correoTouched"
-              placeholder="correo@entidad.gov.co"
-              autocomplete="email"
-              type="email"
+            <p-inputicon styleClass="pi pi-user" />
+            <input pInputText id="olv-usuario"
+              [(ngModel)]="usuario" name="usuario"
+              (blur)="usuarioTouched = true"
+              [class.ng-invalid]="usuarioInvalid"
+              [class.ng-dirty]="usuarioTouched"
+              placeholder="Ingrese su usuario"
+              autocomplete="username"
+              minlength="4" maxlength="20"
               aria-required="true"
-              [attr.aria-invalid]="correoInvalid"
-              aria-describedby="correo-error"
+              [attr.aria-invalid]="usuarioInvalid"
+              aria-describedby="usuario-error"
               class="w-full" />
           </p-iconfield>
-          @if (correoVacio) {
-            <small id="correo-error" class="olv-form__error">El correo es obligatorio.</small>
-          } @else if (correoFormatoInvalido) {
-            <small id="correo-error" class="olv-form__error">Ingrese un correo válido.</small>
+          @if (usuarioVacio) {
+            <small id="usuario-error" class="olv-form__error">El usuario es obligatorio.</small>
+          } @else if (usuarioFormatoInvalido) {
+            <small id="usuario-error" class="olv-form__error">El usuario debe tener de 4 a 20 caracteres alfanuméricos.</small>
           }
         </div>
 
-        @if (errorMsg) {
-          <p-message severity="error" [text]="errorMsg" styleClass="w-full" />
-        }
+        <!-- reCAPTCHA mock visual (en producción usar grecaptcha de Google) -->
+        <div class="olv-form__recaptcha"
+          [class.olv-form__recaptcha--invalid]="recaptchaInvalid"
+          role="region" aria-label="Verificación reCAPTCHA">
+          <button type="button"
+            class="olv-form__recaptcha-check"
+            [class.olv-form__recaptcha-check--ok]="recaptchaOk"
+            [attr.aria-pressed]="recaptchaOk"
+            [attr.aria-label]="recaptchaOk ? 'Verificación reCAPTCHA marcada' : 'Marcar para confirmar que no es un robot'"
+            (click)="toggleRecaptcha()">
+            @if (recaptchaOk) {
+              <i class="pi pi-check" aria-hidden="true"></i>
+            }
+          </button>
+          <span class="olv-form__recaptcha-label">No soy un robot</span>
+          <div class="olv-form__recaptcha-brand" aria-hidden="true">
+            <span class="olv-form__recaptcha-icon">
+              <i class="pi pi-shield"></i>
+            </span>
+            <span class="olv-form__recaptcha-brand-text">reCAPTCHA</span>
+          </div>
+        </div>
+
+        <app-form-error-banner
+          [visible]="okBannerErrors.length > 0"
+          [errors]="okBannerErrors" />
 
         <div class="olv-form__actions">
-          <p-button type="submit" label="Enviar enlace" icon="pi pi-send"
+          <p-button type="submit" label="Restablecer contraseña" icon="pi pi-key"
             [loading]="loading" [disabled]="loading" />
         </div>
 
@@ -56,19 +87,20 @@
       </form>
     }
 
-    <!-- Estado: enviado -->
+    <!-- Estado: enviado (paso 3) -->
     @if (enviado) {
       <div class="olv-success" role="status" aria-live="polite">
         <div class="olv-success__icon">
           <i class="pi pi-check-circle" aria-hidden="true"></i>
         </div>
         <p class="olv-success__email">
-          Si el correo <strong>{{ correoNormalizado }}</strong> está registrado,
-          recibirá las instrucciones en su bandeja de entrada.
+          Si el usuario <strong>{{ usuarioSolicitud }}</strong> está registrado en el sistema,
+          recibirá un correo con las instrucciones en
+          <strong>{{ correoSeleccionado }}</strong>.
         </p>
         <p class="olv-success__hint">
-          El enlace caduca en <strong>24 horas</strong>. Si no lo recibe en unos minutos,
-          revise la carpeta de spam o vuelva a intentar.
+          El enlace <strong>caduca en 24 horas</strong> y solo puede usarse una vez.
+          Si no lo recibe en unos minutos, revise la carpeta de spam o intente nuevamente.
         </p>
 
         <div class="olv-form__actions">
@@ -78,7 +110,7 @@
 
         <button type="button" class="olv-form__link olv-form__link--button" (click)="reintentar()">
           <i class="pi pi-refresh" aria-hidden="true"></i>
-          Reenviar a otro correo
+          Reiniciar el proceso
         </button>
       </div>
     }
@@ -94,3 +126,47 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: paso 2 — confirmación de correos autorizados -->
+<p-dialog
+  header="Confirmación para restablecer contraseña"
+  [(visible)]="showCorreosDialog"
+  [modal]="true"
+  [draggable]="false"
+  [closeOnEscape]="true"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  (onHide)="cancelarRestablecer()">
+  <div class="olv-correos">
+    <p class="olv-correos__intro">
+      Los siguientes son los correos autorizados en el Sistema CHIP para el cambio
+      de contraseña, seleccione uno de ellos:
+    </p>
+
+    <div class="olv-correos__opciones" role="radiogroup" aria-label="Correos autorizados">
+      @for (correo of correosAutorizados; track correo) {
+        <label class="olv-correos__opcion">
+          <p-radioButton name="correoAutorizado" [value]="correo"
+            [(ngModel)]="correoSeleccionado"
+            [inputId]="'correo-' + $index" />
+          <span class="olv-correos__email">{{ correo }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="olv-correos__mesa-servicio" role="note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <span>
+        Si los correos no corresponden, debe comunicarse con la mesa de servicio
+        de primer nivel de la Contaduría General de la Nación PBX:
+        <strong>{{ MESA_SERVICIO_PBX }}</strong>.
+      </span>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary"
+      (onClick)="cancelarRestablecer()" />
+    <p-button label="Restablecer" icon="pi pi-check"
+      [disabled]="!correoSeleccionado"
+      (onClick)="confirmarRestablecer()" />
+  </ng-template>
+</p-dialog>
