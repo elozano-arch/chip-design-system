@@ -193,8 +193,6 @@ export class UsuariosComponent {
   editEntidad: Entidad | null = null;
   editEstado = true;
   editFechaUltimaModificacion = '';
-  editVigencia: number | null = null;
-  editIntentos: number | null = null;
   editNombreTouched = false;
   editCorreoTouched = false;
   editDocumentoTouched = false;
@@ -803,8 +801,6 @@ export class UsuariosComponent {
       : null;
     this.editEstado = u.activo;
     this.editFechaUltimaModificacion = u.fechaUltimaModificacion ?? '—';
-    this.editVigencia = u.vigencia;
-    this.editIntentos = u.intentos;
     this.editFormSubmitted = false;
     this.editNombreTouched = false;
     this.editCorreoTouched = false;
@@ -836,8 +832,6 @@ export class UsuariosComponent {
     };
     this.selectedUsuario.activo = this.editEstado;
     this.selectedUsuario.fechaUltimaModificacion = this.fechaHoy();
-    this.selectedUsuario.vigencia = this.editVigencia;
-    this.selectedUsuario.intentos = this.editIntentos;
     this.messageService.add({
       severity: 'success',
       summary: 'Usuario actualizado',
