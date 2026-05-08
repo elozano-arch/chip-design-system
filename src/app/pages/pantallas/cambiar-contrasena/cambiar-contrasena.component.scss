@@ -10,16 +10,17 @@
   max-width: 640px;
 }
 
-/* Wrapper del header en modo forzado: centrado para alinear con el form abajo */
-.cpw-page > .cpw-header:has(.cpw-forzado-banner) {
+/* Header de la pantalla — centrado siempre (modo normal y modo forzado),
+   diseño unificado tipo "focused task". */
+.cpw-page > .cpw-header {
   max-width: 640px;
   margin: 0 auto 20px;
   text-align: center;
 }
 
-/* Formulario inline en modo forzado (NO modal) — viene de redirección desde
-   correo o login con contraseña caducada/primer ingreso. Centrado horizontalmente
-   para mantener uniformidad con el resto del proyecto en pantallas focused. */
+/* Formulario inline (NO modal) — siempre visible. En modo forzado oculta
+   la "Contraseña actual"; en modo normal la pide para autenticar el cambio.
+   Centrado horizontalmente, focused task UX. */
 .cpw-forzado-form {
   background: #fff;
   border: 1px solid var(--chip-grey-200);
