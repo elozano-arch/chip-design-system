@@ -1,0 +1,170 @@
+<div class="prop-page" role="main">
+  <app-breadcrumb />
+
+  <header class="prop-header">
+    <h1 class="prop-header__title">Propuesta de Diseño · Ajustando criterios</h1>
+    <p class="prop-header__desc">
+      Concepto de diseño y experiencia de usuario para el TreeTable de conceptos
+      (subcuentas y variables). La <strong>arquitectura técnica</strong> propuesta
+      por desarrollo —paginadores por padre, footer sticky y búsqueda interna—
+      <strong>está bien encaminada</strong>. Los ajustes que se proponen aquí
+      son de <strong>legibilidad y jerarquía visual</strong>, no de estructura.
+    </p>
+  </header>
+
+  <!-- Resumen ejecutivo -->
+  <section class="prop-resumen" aria-label="Resumen ejecutivo">
+    <div class="prop-resumen__col prop-resumen__col--ok">
+      <header>
+        <i class="pi pi-check-circle" aria-hidden="true"></i>
+        <strong>Lo que ya está bien</strong>
+      </header>
+      <ul>
+        <li>Paginador independiente por concepto padre.</li>
+        <li>Footer sticky que muestra el contexto del padre activo.</li>
+        <li>Botón "Volver arriba" en árboles largos.</li>
+        <li>Búsqueda dentro del árbol (existe, solo hay que ubicarla mejor).</li>
+      </ul>
+    </div>
+    <div class="prop-resumen__col prop-resumen__col--ajustar">
+      <header>
+        <i class="pi pi-pencil" aria-hidden="true"></i>
+        <strong>Lo que se propone ajustar</strong>
+      </header>
+      <ul>
+        <li>Acortar los códigos visibles (tooltip con el código completo).</li>
+        <li>Diferenciar visualmente padres de hijos.</li>
+        <li>Un solo buscador, no uno debajo de cada padre.</li>
+        <li>Breadcrumb del nodo actual en el header.</li>
+        <li>Un footer activo a la vez.</li>
+        <li>Paginación también de columnas (formularios con muchas variables).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 criterios en cards -->
+  <section class="prop-criterios" aria-label="Criterios de ajuste">
+    <h2 class="prop-section-title">
+      <i class="pi pi-list" aria-hidden="true"></i>
+      Criterios uno por uno
+    </h2>
+    <p class="prop-section-desc">
+      Cada criterio explica el problema en lenguaje sencillo y propone una solución concreta.
+      Etiquetados por <strong>impacto en la experiencia</strong>: alto (lo que más rompe la lectura),
+      medio (claridad), bajo (oportunidad).
+    </p>
+
+    <div class="prop-criterios__grid">
+      @for (criterio of criterios; track criterio.id) {
+        <article class="prop-criterio" [attr.aria-label]="'Criterio ' + criterio.id + ': ' + criterio.titulo">
+          <header class="prop-criterio__header">
+            <span class="prop-criterio__num">{{ criterio.id }}</span>
+            <i class="prop-criterio__icon" [class]="criterio.icono" aria-hidden="true"></i>
+            <h3 class="prop-criterio__title">{{ criterio.titulo }}</h3>
+            <p-tag [value]="'Impacto ' + criterio.impacto"
+              [severity]="impactoSeverity(criterio.impacto)" />
+          </header>
+          <div class="prop-criterio__body">
+            <div class="prop-criterio__block">
+              <span class="prop-criterio__label">Hoy</span>
+              <p>{{ criterio.problema }}</p>
+            </div>
+            <div class="prop-criterio__block prop-criterio__block--rec">
+              <span class="prop-criterio__label">Propuesta</span>
+              <p>{{ criterio.recomendacion }}</p>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <!-- Mockup visual aplicando los criterios -->
+  <section class="prop-mockup" aria-label="Mockup visual aplicando la propuesta">
+    <h2 class="prop-section-title">
+      <i class="pi pi-desktop" aria-hidden="true"></i>
+      Cómo se vería aplicando los criterios
+    </h2>
+    <p class="prop-section-desc">
+      Mockup ilustrativo (no funcional). Pase el mouse sobre los códigos para ver el código completo.
+    </p>
+
+    <div class="prop-tree">
+      <!-- Toolbar superior: buscador único + breadcrumb dinámico -->
+      <header class="prop-tree__toolbar">
+        <div class="prop-tree__breadcrumb" aria-label="Ruta del nodo actual">
+          <i class="pi pi-map-marker" aria-hidden="true"></i>
+          @for (item of breadcrumbActivo; track item; let last = $last) {
+            <span [class.prop-tree__breadcrumb-actual]="last">{{ item }}</span>
+            @if (!last) {
+              <i class="pi pi-angle-right" aria-hidden="true"></i>
+            }
+          }
+        </div>
+        <p-iconfield class="prop-tree__search">
+          <p-inputicon styleClass="pi pi-search" />
+          <input pInputText placeholder="Buscar en todo el árbol..." [(ngModel)]="busquedaGlobal" />
+        </p-iconfield>
+      </header>
+
+      <!-- Tabla con jerarquía visual aplicada -->
+      <div class="prop-tree__table">
+        <div class="prop-tree__row prop-tree__row--header">
+          <span class="prop-tree__col prop-tree__col--codigo">Código</span>
+          <span class="prop-tree__col prop-tree__col--nombre">Nombre</span>
+          <span class="prop-tree__col prop-tree__col--estado">¿Tiene valor?</span>
+          <span class="prop-tree__col prop-tree__col--valor">Valor</span>
+        </div>
+
+        @for (nodo of nodosMockup; track nodo.codigoCompleto) {
+          <div class="prop-tree__row"
+               [class.prop-tree__row--padre]="nodo.tipo === 'padre'"
+               [class.prop-tree__row--hijo]="nodo.tipo === 'hijo'">
+            <span class="prop-tree__col prop-tree__col--codigo"
+                  [style.padding-left]="indentacion(nodo.nivel)">
+              @if (nodo.tipo === 'padre') {
+                <i class="pi" [class.pi-chevron-down]="nodo.expandido"
+                   [class.pi-chevron-right]="!nodo.expandido"
+                   aria-hidden="true"></i>
+              } @else {
+                <span class="prop-tree__leaf" aria-hidden="true"></span>
+              }
+              <span class="prop-tree__codigo-corto"
+                    [pTooltip]="nodo.codigoCompleto" tooltipPosition="right">
+                {{ nodo.codigoCorto }}
+              </span>
+            </span>
+            <span class="prop-tree__col prop-tree__col--nombre">{{ nodo.nombre }}</span>
+            <span class="prop-tree__col prop-tree__col--estado">
+              <p-tag [value]="nodo.estado"
+                [severity]="nodo.estado === 'Si' ? 'success' : 'secondary'" />
+            </span>
+            <span class="prop-tree__col prop-tree__col--valor">{{ nodo.valor }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Footer sticky con paginador del padre activo -->
+      <footer class="prop-tree__footer">
+        <div class="prop-tree__footer-context">
+          <i class="pi pi-folder-open" aria-hidden="true"></i>
+          <span>
+            Padre activo:
+            <strong>Subcuenta 2</strong>
+            <small>(mostrando 1 a 5 de 12)</small>
+          </span>
+        </div>
+        <div class="prop-tree__footer-pager">
+          <p-button icon="pi pi-chevron-left" [text]="true" size="small" severity="secondary" aria-label="Página anterior" />
+          <span class="prop-tree__footer-info">Página 1 de 3</span>
+          <p-button icon="pi pi-chevron-right" [text]="true" size="small" severity="secondary" aria-label="Página siguiente" />
+        </div>
+      </footer>
+    </div>
+
+    <p-message severity="info" class="prop-mockup__note">
+      Este mockup es ilustrativo. La idea es que el equipo de desarrollo lo use como referencia visual
+      para aplicar los criterios sobre el componente TreeTable que ya tienen construido — no reescribirlo desde cero.
+    </p-message>
+  </section>
+</div>
