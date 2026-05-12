@@ -40,6 +40,11 @@
           <p-select inputId="dir-ent-mun" [options]="municipioOptions" [(ngModel)]="fMunicipio"
             placeholder="Todos" appendTo="body" class="w-full" />
         </div>
+        <div class="dir-ent__field">
+          <label for="dir-ent-estado">Estado</label>
+          <p-select inputId="dir-ent-estado" [options]="estadoOptions" [(ngModel)]="fEstado"
+            placeholder="Todos" appendTo="body" class="w-full" />
+        </div>
       </div>
 
       <div class="dir-ent__filtros-actions">
@@ -83,6 +88,7 @@
             <th pSortableColumn="razonSocial" style="min-width: 240px">Razón Social <p-sortIcon field="razonSocial" /></th>
             <th pSortableColumn="departamento" style="width: 130px">Departamento <p-sortIcon field="departamento" /></th>
             <th pSortableColumn="municipio" style="width: 120px">Municipio <p-sortIcon field="municipio" /></th>
+            <th pSortableColumn="estado" style="width: 100px">Estado <p-sortIcon field="estado" /></th>
           </tr>
         </ng-template>
         <ng-template #body let-e>
@@ -98,11 +104,15 @@
             <td>{{ e.razonSocial }}</td>
             <td>{{ e.departamento }}</td>
             <td>{{ e.municipio }}</td>
+            <td>
+              <p-tag [value]="e.estado"
+                [severity]="e.estado === 'Activo' ? 'success' : 'danger'" />
+            </td>
           </tr>
         </ng-template>
         <ng-template #emptymessage>
           <tr>
-            <td colspan="6" class="dir-ent__empty">
+            <td colspan="7" class="dir-ent__empty">
               @if (!busquedaRealizada) {
                 <i class="pi pi-inbox" aria-hidden="true"></i>
                 <p>Utilice los filtros y presione <strong>Consultar</strong> para buscar entidades.</p>
