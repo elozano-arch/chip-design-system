@@ -261,6 +261,15 @@ p-breadcrumb .p-breadcrumb {
   padding: 24px;
 }
 
+/**
+ * Modificador para pantallas que necesitan más espacio horizontal
+ * (formularios con muchas variables/columnas, tipo Registro Manual).
+ * Aplica solo a la pantalla que lo declara, no rompe el resto del DS.
+ */
+.form-page--wide {
+  max-width: min(1680px, calc(100vw - 280px));
+}
+
 /* Pantallas — header compartido */
 .usr-header,
 .form-header,
