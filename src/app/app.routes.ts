@@ -186,4 +186,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/pantallas/filtros/filtros.component').then(m => m.FiltrosComponent),
   },
+  {
+    path: 'pantallas/propuesta-diseno',
+    data: {
+      breadcrumb: [
+        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Propuesta de Diseño' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/propuesta-diseno/propuesta-diseno.component').then(m => m.PropuestaDisenoComponent),
+  },
 ];
