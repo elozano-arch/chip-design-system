@@ -290,6 +290,7 @@ export class UsuariosComponent {
     razonSocial: 'Alcaldía Mayor de Bogotá D.C.',
     departamento: 'Cundinamarca',
     municipio: 'Bogotá D.C.',
+    estado: 'Activo',
   };
 
   /** True cuando el usuario está viendo como Admin Local. */
@@ -797,7 +798,7 @@ export class UsuariosComponent {
     this.editTipo = u.tipoUsuario;
     // Reconstruye un Entidad-like desde el snapshot guardado en el usuario
     this.editEntidad = u.entidad
-      ? { codigo: u.entidad.codigo, nit: '', razonSocial: u.entidad.nombre, departamento: '', municipio: '' }
+      ? { codigo: u.entidad.codigo, nit: '', razonSocial: u.entidad.nombre, departamento: '', municipio: '', estado: 'Activo' }
       : null;
     this.editEstado = u.activo;
     this.editFechaUltimaModificacion = u.fechaUltimaModificacion ?? '—';

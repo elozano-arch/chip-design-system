@@ -19,6 +19,7 @@ export interface Entidad {
   razonSocial: string;
   departamento: string;
   municipio: string;
+  estado: 'Activo' | 'Inactivo';
 }
 
 @Component({
@@ -50,6 +51,13 @@ export class DirectorioEntidadesComponent {
   fRazonSocial = '';
   fDepartamento = '';
   fMunicipio = '';
+  fEstado = '';
+
+  readonly estadoOptions = [
+    { label: 'Todos', value: '' },
+    { label: 'Activo', value: 'Activo' },
+    { label: 'Inactivo', value: 'Inactivo' },
+  ];
 
   // Estado de la búsqueda
   busquedaRealizada = false;
@@ -60,18 +68,18 @@ export class DirectorioEntidadesComponent {
 
   // Mock de entidades — usado si el padre no pasa una lista propia
   private readonly entidadesMock: Entidad[] = [
-    { codigo: '210111001', nit: '800.123.456-1', razonSocial: 'Municipio de Leticia', departamento: 'Amazonas', municipio: 'Leticia' },
-    { codigo: '210105001', nit: '800.234.567-2', razonSocial: 'Gobernación de Antioquia', departamento: 'Antioquia', municipio: 'Medellín' },
-    { codigo: '210111076', nit: '800.345.678-3', razonSocial: 'Municipio de Puerto Nariño', departamento: 'Amazonas', municipio: 'Puerto Nariño' },
-    { codigo: '210108001', nit: '800.456.789-4', razonSocial: 'Gobernación del Atlántico', departamento: 'Atlántico', municipio: 'Barranquilla' },
-    { codigo: '210111002', nit: '800.567.890-5', razonSocial: 'Empresa de Servicios Públicos de Leticia', departamento: 'Amazonas', municipio: 'Leticia' },
-    { codigo: '210105088', nit: '800.678.901-6', razonSocial: 'Municipio de Bello', departamento: 'Antioquia', municipio: 'Bello' },
-    { codigo: '210105360', nit: '800.789.012-7', razonSocial: 'Municipio de Itagüí', departamento: 'Antioquia', municipio: 'Itagüí' },
-    { codigo: '211511001', nit: '800.890.123-8', razonSocial: 'Alcaldía Mayor de Bogotá D.C.', departamento: 'Cundinamarca', municipio: 'Bogotá D.C.' },
-    { codigo: '210176001', nit: '800.901.234-9', razonSocial: 'Gobernación del Valle del Cauca', departamento: 'Valle del Cauca', municipio: 'Cali' },
-    { codigo: '210173001', nit: '801.012.345-0', razonSocial: 'Gobernación del Tolima', departamento: 'Tolima', municipio: 'Ibagué' },
-    { codigo: '210168001', nit: '801.123.456-1', razonSocial: 'Gobernación de Santander', departamento: 'Santander', municipio: 'Bucaramanga' },
-    { codigo: '210113001', nit: '801.234.567-2', razonSocial: 'Gobernación de Bolívar', departamento: 'Bolívar', municipio: 'Cartagena de Indias' },
+    { codigo: '210111001', nit: '800.123.456-1', razonSocial: 'Municipio de Leticia', departamento: 'Amazonas', municipio: 'Leticia', estado: 'Activo' },
+    { codigo: '210105001', nit: '800.234.567-2', razonSocial: 'Gobernación de Antioquia', departamento: 'Antioquia', municipio: 'Medellín', estado: 'Activo' },
+    { codigo: '210111076', nit: '800.345.678-3', razonSocial: 'Municipio de Puerto Nariño', departamento: 'Amazonas', municipio: 'Puerto Nariño', estado: 'Inactivo' },
+    { codigo: '210108001', nit: '800.456.789-4', razonSocial: 'Gobernación del Atlántico', departamento: 'Atlántico', municipio: 'Barranquilla', estado: 'Activo' },
+    { codigo: '210111002', nit: '800.567.890-5', razonSocial: 'Empresa de Servicios Públicos de Leticia', departamento: 'Amazonas', municipio: 'Leticia', estado: 'Activo' },
+    { codigo: '210105088', nit: '800.678.901-6', razonSocial: 'Municipio de Bello', departamento: 'Antioquia', municipio: 'Bello', estado: 'Activo' },
+    { codigo: '210105360', nit: '800.789.012-7', razonSocial: 'Municipio de Itagüí', departamento: 'Antioquia', municipio: 'Itagüí', estado: 'Inactivo' },
+    { codigo: '211511001', nit: '800.890.123-8', razonSocial: 'Alcaldía Mayor de Bogotá D.C.', departamento: 'Cundinamarca', municipio: 'Bogotá D.C.', estado: 'Activo' },
+    { codigo: '210176001', nit: '800.901.234-9', razonSocial: 'Gobernación del Valle del Cauca', departamento: 'Valle del Cauca', municipio: 'Cali', estado: 'Activo' },
+    { codigo: '210173001', nit: '801.012.345-0', razonSocial: 'Gobernación del Tolima', departamento: 'Tolima', municipio: 'Ibagué', estado: 'Activo' },
+    { codigo: '210168001', nit: '801.123.456-1', razonSocial: 'Gobernación de Santander', departamento: 'Santander', municipio: 'Bucaramanga', estado: 'Inactivo' },
+    { codigo: '210113001', nit: '801.234.567-2', razonSocial: 'Gobernación de Bolívar', departamento: 'Bolívar', municipio: 'Cartagena de Indias', estado: 'Activo' },
   ];
 
   // Opciones de departamento/municipio derivadas del listado
@@ -104,7 +112,7 @@ export class DirectorioEntidadesComponent {
   /** Indica si hay al menos un filtro con valor (para habilitar Consultar/Limpiar). */
   get tieneAlgunFiltro(): boolean {
     return !!(this.fCodigo.trim() || this.fNit.trim() || this.fRazonSocial.trim()
-              || this.fDepartamento || this.fMunicipio);
+              || this.fDepartamento || this.fMunicipio || this.fEstado);
   }
 
   consultar() {
@@ -118,7 +126,8 @@ export class DirectorioEntidadesComponent {
       const matchRazon = !qr || this.normaliza(e.razonSocial).includes(this.normaliza(qr));
       const matchDpto = !this.fDepartamento || e.departamento === this.fDepartamento;
       const matchMun = !this.fMunicipio || e.municipio === this.fMunicipio;
-      return matchCodigo && matchNit && matchRazon && matchDpto && matchMun;
+      const matchEstado = !this.fEstado || e.estado === this.fEstado;
+      return matchCodigo && matchNit && matchRazon && matchDpto && matchMun && matchEstado;
     });
     this.busquedaRealizada = true;
     this.seleccion = null;
@@ -130,6 +139,7 @@ export class DirectorioEntidadesComponent {
     this.fRazonSocial = '';
     this.fDepartamento = '';
     this.fMunicipio = '';
+    this.fEstado = '';
     this.resultados = [];
     this.busquedaRealizada = false;
     this.seleccion = null;
