@@ -408,8 +408,9 @@
    * como control auxiliar y no como contenido — feedback de Manuel.
    */
   &__pager-row {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 2px;
     padding: 4px 18px 4px 0;
     background: #fff;
