@@ -404,15 +404,28 @@
    * Paginador inline minimalista — propuesta simplificada de Manuel.
    * Sin pill ni nombre del padre: la pertenencia se entiende por la
    * indentación + el color del padre activo arriba.
+   * Fuente más pequeña que las filas (11px vs 13px) para que se lea
+   * como control auxiliar y no como contenido — feedback de Manuel.
    */
   &__pager-row {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 6px 18px 6px 0;
+    gap: 2px;
+    padding: 4px 18px 4px 0;
     background: #fff;
     border-bottom: 1px solid var(--chip-grey-100);
     min-width: 560px;
+
+    /* Reducir tamaño de iconos para reforzar la jerarquía. */
+    ::ng-deep .p-button {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+
+      .p-button-icon {
+        font-size: 10px;
+      }
+    }
 
     /* Cuando el paginador pertenece al padre activo, hereda su color. */
     &--activo {
@@ -424,10 +437,12 @@
   }
 
   &__pager-info {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
-    color: var(--chip-grey-700);
-    min-width: 100px;
+    color: var(--chip-grey-600);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    min-width: 90px;
     text-align: center;
   }
 }
