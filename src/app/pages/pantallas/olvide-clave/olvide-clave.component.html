@@ -1,6 +1,7 @@
 <p-toast />
 
 <div class="olv-page" role="main">
+  <div class="olv-stack">
   <div class="olv-card">
     <!-- Header con branding -->
     <div class="olv-card__header">
@@ -124,6 +125,39 @@
       </div>
       <p class="olv-card__version">CHIP v2.0.0</p>
     </div>
+  </div>
+
+  <!-- Panel de ayuda para demo (mock-only) -->
+  <aside class="demo-help" aria-label="Credenciales de prueba para el demo">
+    <div class="demo-help__header">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <h2 class="demo-help__title">Credenciales de prueba</h2>
+      <span class="demo-help__badge">DEMO</span>
+    </div>
+    <p class="demo-help__intro">Pruebe los escenarios del flujo de recuperación:</p>
+    <ul class="demo-help__list">
+      <li>
+        <span class="demo-help__creds"><code>JLMUNOZ</code> + reCAPTCHA</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Modal con correo enmascarado</span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><code>BLOQUEADO</code></span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Modal "usuario bloqueado, contacte mesa de ayuda"</span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><code>ADSA</code> (cualquier inexistente)</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Modal "usuario no encontrado, contacte mesa de ayuda"</span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><code>?expired=true</code> en la URL</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Banner de "enlace vencido"</span>
+      </li>
+    </ul>
+  </aside>
   </div>
 </div>
 

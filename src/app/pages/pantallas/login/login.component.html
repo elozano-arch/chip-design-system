@@ -1,6 +1,7 @@
 <p-toast />
 
 <div class="login-page" role="main">
+  <div class="login-stack">
   <div class="login-card">
     <!-- Header con branding -->
     <div class="login-card__header">
@@ -130,5 +131,43 @@
       </div>
       <p class="login-card__version">CHIP {{ versionSistema }}</p>
     </div>
+  </div>
+
+  <!-- Panel de ayuda para demo (mock-only) -->
+  <aside class="demo-help" aria-label="Credenciales de prueba para el demo">
+    <div class="demo-help__header">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <h2 class="demo-help__title">Credenciales de prueba</h2>
+      <span class="demo-help__badge">DEMO</span>
+    </div>
+    <p class="demo-help__intro">Sin campo <strong>Entidad</strong>, solo Usuario + Contraseña:</p>
+    <ul class="demo-help__list">
+      <li>
+        <span class="demo-help__creds"><code>JLMUNOZ</code> + <code>demo123</code></span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Ingreso exitoso a Perfil</span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><code>VENCIDO</code> + <code>demo123</code></span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Fuerza cambio de contraseña (caducada)</span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><code>PRIMER</code> + <code>demo123</code></span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Fuerza cambio (primer ingreso)</span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><code>BLOQUEADO</code> + cualquier</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Mensaje "usuario bloqueado"</span>
+      </li>
+      <li>
+        <span class="demo-help__creds">3 intentos fallidos</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">Bloqueo automático</span>
+      </li>
+    </ul>
+  </aside>
   </div>
 </div>
