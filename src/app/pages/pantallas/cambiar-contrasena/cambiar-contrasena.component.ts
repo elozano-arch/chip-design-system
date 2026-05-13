@@ -53,17 +53,14 @@ export class CambiarContrasenaComponent implements OnInit {
   cpwFormSubmitted = false;
 
   // Campos
-  actual = '';
   nueva = '';
   confirmar = '';
 
   // Visibilidad
-  showActual = false;
   showNueva = false;
   showConfirmar = false;
 
   // Touched
-  actualTouched = false;
   nuevaTouched = false;
   confirmarTouched = false;
 
@@ -180,41 +177,23 @@ export class CambiarContrasenaComponent implements OnInit {
     return this.nueva === this.confirmar && this.confirmar.length > 0;
   }
 
-  get nuevaIgualActual(): boolean {
-    return this.nueva.length > 0 && this.actual.length > 0 && this.nueva === this.actual;
-  }
-
   get formValido(): boolean {
-    // En modo forzado (acceso vía link de correo o caducidad), el campo
-    // "Contraseña actual" no aplica — el link/login ya autenticó al usuario.
-    const actualOk = this.modoForzado || !!this.actual.trim();
-    const noEsIgualActual = this.modoForzado || !this.nuevaIgualActual;
-    return actualOk
-      && this.rules.every(r => r.validate(this.nueva))
-      && this.coincide
-      && noEsIgualActual;
+    return this.rules.every(r => r.validate(this.nueva)) && this.coincide;
   }
 
   /**
    * Errores que alimentan el banner. Prioriza errorMsg (auth fallido) sobre
    * validación de form (campos vacíos / reglas no cumplidas).
-   * En modo forzado se omiten los errores relativos a "contraseña actual".
    */
   get cpwBannerErrors(): string[] {
     if (this.errorMsg) return [this.errorMsg];
     if (!this.cpwFormSubmitted) return [];
     const errors: string[] = [];
-    if (!this.modoForzado && !this.actual.trim()) {
-      errors.push('La contraseña actual es obligatoria.');
-    }
     const failed = this.rules.filter(r => !r.validate(this.nueva));
     if (this.nueva.length === 0) {
       errors.push('La nueva contraseña es obligatoria.');
     } else if (failed.length > 0) {
       errors.push(`La nueva contraseña no cumple ${failed.length} regla${failed.length === 1 ? '' : 's'} de seguridad.`);
-    }
-    if (!this.modoForzado && this.nuevaIgualActual) {
-      errors.push('La nueva contraseña debe ser distinta de la actual.');
     }
     if (this.confirmar.length === 0) {
       errors.push('Debe confirmar la nueva contraseña.');
@@ -252,13 +231,10 @@ export class CambiarContrasenaComponent implements OnInit {
   }
 
   private resetForm() {
-    this.actual = '';
     this.nueva = '';
     this.confirmar = '';
-    this.showActual = false;
     this.showNueva = false;
     this.showConfirmar = false;
-    this.actualTouched = false;
     this.nuevaTouched = false;
     this.confirmarTouched = false;
     this.errorMsg = '';
@@ -267,7 +243,6 @@ export class CambiarContrasenaComponent implements OnInit {
 
   guardar() {
     this.cpwFormSubmitted = true;
-    this.actualTouched = true;
     this.nuevaTouched = true;
     this.confirmarTouched = true;
     this.errorMsg = '';
@@ -277,11 +252,6 @@ export class CambiarContrasenaComponent implements OnInit {
     this.loading = true;
     setTimeout(() => {
       this.loading = false;
-      // En modo forzado el link/login ya autenticó — no se valida 'actual'.
-      if (!this.modoForzado && this.actual !== 'demo123') {
-        this.errorMsg = 'La contraseña actual es incorrecta.';
-        return;
-      }
       this.messageService.add({
         severity: 'success',
         summary: 'Contraseña actualizada',

@@ -28,38 +28,9 @@
     }
   </div>
 
-  <!-- Form inline siempre (no modal) — diseño unificado independiente del modo.
-       En modo forzado se omite "Contraseña actual" (el link/login ya autenticó).
-       En modo normal se pide para verificar la identidad antes del cambio. -->
+  <!-- Form inline siempre (no modal) — diseño unificado independiente del modo. -->
   <section class="cpw-forzado-form" aria-labelledby="cpw-form-title">
     <h2 id="cpw-form-title" class="cpw-forzado-form__title">Nueva contraseña</h2>
-
-    <!-- Contraseña actual (solo en modo NO forzado) -->
-    @if (!modoForzado) {
-      <div class="cpw-modal__field">
-        <label for="cpw-actual">Contraseña actual <span class="field-required">*</span></label>
-        <p-iconfield class="cpw-modal__password">
-          <input pInputText id="cpw-actual"
-            [type]="showActual ? 'text' : 'password'"
-            [(ngModel)]="actual" name="actual"
-            (blur)="actualTouched = true"
-            placeholder="Ingrese su contraseña actual"
-            autocomplete="current-password"
-            aria-required="true"
-            class="w-full" />
-          <p-inputicon
-            (click)="showActual = !showActual"
-            role="button" tabindex="0"
-            (keydown.enter)="showActual = !showActual"
-            (keydown.space)="showActual = !showActual; $event.preventDefault()"
-            [attr.aria-label]="showActual ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-            [styleClass]="showActual ? 'pi pi-eye-slash' : 'pi pi-eye'" />
-        </p-iconfield>
-        @if (actualTouched && !actual.trim()) {
-          <small class="cpw-modal__error">La contraseña actual es obligatoria.</small>
-        }
-      </div>
-    }
 
     <!-- Contraseña nueva -->
     <div class="cpw-modal__field">
@@ -82,9 +53,6 @@
           [attr.aria-label]="showNueva ? 'Ocultar contraseña' : 'Mostrar contraseña'"
           [styleClass]="showNueva ? 'pi pi-eye-slash' : 'pi pi-eye'" />
       </p-iconfield>
-      @if (!modoForzado && nuevaIgualActual) {
-        <small class="cpw-modal__error">La nueva contraseña debe ser diferente a la actual.</small>
-      }
     </div>
 
     <!-- Reglas de la política -->
