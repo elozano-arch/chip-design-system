@@ -412,19 +412,19 @@
     align-items: center;
     justify-content: flex-start;
     gap: 2px;
-    padding: 4px 18px 4px 0;
+    padding: 3px 18px 3px 0;
     background: #fff;
     border-bottom: 1px solid var(--chip-grey-100);
     min-width: 560px;
 
-    /* Reducir tamaño de iconos para reforzar la jerarquía. */
+    /* Iconos pequeños para que armonicen con la tipografía 10px. */
     ::ng-deep .p-button {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
       padding: 0;
 
       .p-button-icon {
-        font-size: 10px;
+        font-size: 9px;
       }
     }
 
@@ -438,11 +438,9 @@
   }
 
   &__pager-info {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--chip-grey-600);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
     min-width: 90px;
     text-align: center;
   }
