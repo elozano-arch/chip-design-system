@@ -127,13 +127,23 @@ export class FormulariosComponent {
     { label: 'Opción 2 · Paso a paso', value: 'opcion-2' },
   ];
 
-  /** Paso actual del wizard de Opción 2 (0: filtros, 1: formulario, 2: detalle). */
+  /**
+   * Paso actual del wizard de Opción 2 (CRIS propone 4 pasos por fase del flujo):
+   *   0: Filtros (contexto + Consultar Envíos)
+   *   1: Datos (Importar + listado de formularios disponibles)
+   *   2: Trabajo sobre formulario (detalle / edición / validar / exportar / protocolo)
+   *   3: Envío (Enviar Categoría + Enviar Adjunto)
+   */
   wizardStep = 0;
+
+  /** Panel de "Consultar Envíos" desplegable en el paso 1. */
+  wizardConsultarEnviosAbierto = false;
 
   cambiarVista(v: 'opcion-1' | 'opcion-2') {
     this.vistaActiva = v;
     this.cerrarDetalle();
     this.wizardStep = 0;
+    this.wizardConsultarEnviosAbierto = false;
   }
 
   /**
@@ -153,6 +163,11 @@ export class FormulariosComponent {
 
   pasoNavegable(step: number): boolean {
     return step <= this.wizardStep;
+  }
+
+  /** Toggle del panel "Consultar Envíos" dentro del paso 1 del wizard. */
+  toggleConsultarEnviosWizard() {
+    this.wizardConsultarEnviosAbierto = !this.wizardConsultarEnviosAbierto;
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -257,10 +272,9 @@ export class FormulariosComponent {
     this.paginaColumnas = 0;
     this.conceptos.forEach(c => c.pagina = 0);
     if (this.vistaActiva === 'opcion-2') {
+      // En el wizard de 4 pasos, abrir el detalle = entrar al paso 3 (Trabajo).
       this.wizardStep = 2;
     }
-    // El detalle se monta arriba de la página — sube el scroll para
-    // que el usuario vea la transición al paso 3.
     queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
@@ -303,8 +317,8 @@ export class FormulariosComponent {
     this.detalleAbierto = null;
     this.editandoCelda = null;
     this.modalEditar = null;
-    // En el wizard, volver al detalle = ir al paso anterior (lista de
-    // formularios) — manteniendo el indicador de pasos siempre visible.
+    // En el wizard, "volver al listado" = paso 2 (Datos) — donde está la
+    // tabla de formularios disponibles.
     if (this.vistaActiva === 'opcion-2') {
       this.wizardStep = 1;
     }

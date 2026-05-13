@@ -981,6 +981,67 @@
       line-height: 1.5;
     }
   }
+
+  /* Sub-secciones dentro de un paso del wizard (Importar + Listado, etc.) */
+  &__subsection {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--chip-grey-100);
+
+    &:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+      margin-bottom: 16px;
+    }
+  }
+
+  &__subsection-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-700);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    > i {
+      color: var(--chip-cobalt-700);
+      font-size: 14px;
+    }
+
+    small {
+      margin-left: auto;
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--chip-grey-500);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  }
+
+  &__subsection-desc {
+    font-size: 13px;
+    color: var(--chip-grey-600);
+    margin: 0 0 12px;
+    line-height: 1.5;
+  }
+
+  /* Acción secundaria dentro del paso 1 (Consultar Envíos) */
+  &__secondary-action {
+    display: flex;
+    justify-content: flex-end;
+    margin: 16px 0 0;
+    padding-top: 12px;
+    border-top: 1px dashed var(--chip-grey-200);
+  }
+
+  &__inline-panel {
+    margin-top: 12px;
+    animation: slideDown 0.2s ease;
+  }
 }
 
 /* ============================================================
