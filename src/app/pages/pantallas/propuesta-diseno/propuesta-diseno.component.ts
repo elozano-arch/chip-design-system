@@ -27,16 +27,31 @@ interface Criterio {
   impacto: 'alto' | 'medio' | 'bajo';
 }
 
-/** Nodo del mockup visual — refleja la jerarquía con códigos truncados. */
+/**
+ * Nodo del mockup visual. Tres tipos:
+ *  - 'padre': fila destacada (bold, fondo cobalto).
+ *  - 'hijo': fila normal (variables / hojas).
+ *  - 'pager': fila de paginador inline, anclada a un padre y con la
+ *    indentación de ese padre — refleja la propuesta de Manuel.
+ */
 interface NodoMock {
-  codigoCorto: string;
-  codigoCompleto: string;
-  nombre: string;
+  codigoCorto?: string;
+  codigoCompleto?: string;
+  nombre?: string;
   nivel: number;
-  tipo: 'padre' | 'hijo';
-  valor: string;
-  estado: 'Si' | 'No';
+  tipo: 'padre' | 'hijo' | 'pager';
+  valor?: string;
+  estado?: 'Si' | 'No';
   expandido?: boolean;
+  /** True si el padre es el "activo" — recibe color de selección. */
+  activo?: boolean;
+  /**
+   * Solo para tipo 'pager': info compacta de paginación.
+   * Refleja la simplificación de Manuel — no repetimos el nombre del
+   * padre porque ya está indicado por la indentación + el color del
+   * padre activo.
+   */
+  pagerInfo?: { paginaActual: number; totalPaginas: number };
 }
 
 @Component({
@@ -92,11 +107,11 @@ export class PropuestaDisenoComponent {
     },
     {
       id: 5,
-      icono: 'pi pi-window-minimize',
-      titulo: 'Un solo footer activo a la vez',
-      problema: 'El footer sticky con el nombre del padre y su paginador está bien, pero si aparecen varios al tiempo (porque hay varios padres expandidos) se superponen y confunden.',
-      recomendacion: 'Mostrar solo el footer del padre que está más cerca del viewport al hacer scroll (el "más visible"). Así siempre hay contexto, pero sin acumular elementos flotantes.',
-      impacto: 'medio',
+      icono: 'pi pi-align-left',
+      titulo: 'Paginador indentado al padre + color en el padre activo',
+      problema: 'Si el paginador flota suelto al final, no se sabe a qué padre pertenece. Y cuando hay varios sub-menús expandidos al tiempo, se necesitan varios paginadores — uno por cada padre.',
+      recomendacion: 'Cada paginador es una fila minimalista (← Página 1 de 3 →) indentada al nivel de su padre. El padre activo se resalta con color (fondo cobalto + borde izquierdo). Así no es necesario repetir el nombre del padre en el paginador — la indentación y el color ya lo indican.',
+      impacto: 'alto',
     },
     {
       id: 6,
@@ -117,15 +132,41 @@ export class PropuestaDisenoComponent {
 
   readonly breadcrumbActivo: string[] = ['Concepto', 'Subcuenta 1', 'Subcuenta 2'];
 
+  /**
+   * Estructura jerárquica del mockup. Refleja el feedback de Manuel:
+   * cada padre con muchos hijos tiene SU paginador inline al final de
+   * sus hijos, indentado al nivel del padre. Así, cuando hay varios
+   * sub-menús expandidos al tiempo, hay varios paginadores visibles
+   * y cada uno está claramente anclado a su padre.
+   */
+  /**
+   * Estructura jerárquica del mockup. Aplica el feedback de Manuel:
+   * - El padre "activo" se marca con color (border-left + fondo).
+   * - El paginador es minimalista: solo "Página X de Y" + flechas,
+   *   indentado al nivel del padre. No repite el nombre del padre
+   *   porque la indentación + el color del padre ya lo indican.
+   */
   readonly nodosMockup: NodoMock[] = [
+    // Padre raíz
     { codigoCorto: 'p0-001', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-001', nombre: 'Concepto principal', nivel: 0, tipo: 'padre', valor: '93,00', estado: 'No', expandido: true },
+
+    // Sub-padre nivel 1
     { codigoCorto: 'p0-001', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-001', nombre: 'Subcuenta 1', nivel: 1, tipo: 'padre', valor: '92,00', estado: 'No', expandido: true },
-    { codigoCorto: 'p0-001', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-001', nombre: 'Subcuenta 2', nivel: 2, tipo: 'padre', valor: '67,00', estado: 'No', expandido: true },
+
+    // Sub-padre nivel 2 — marcado como ACTIVO (recibe color)
+    { codigoCorto: 'p0-001', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-001', nombre: 'Subcuenta 2', nivel: 2, tipo: 'padre', valor: '67,00', estado: 'No', expandido: true, activo: true },
     { codigoCorto: 'p0-001', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-i0-p0-001', nombre: 'Variable 1', nivel: 3, tipo: 'hijo', valor: '79,00', estado: 'Si' },
     { codigoCorto: 'p0-002', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-i0-p0-002', nombre: 'Variable 2', nivel: 3, tipo: 'hijo', valor: '80,00', estado: 'No' },
     { codigoCorto: 'p0-003', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-i0-p0-003', nombre: 'Variable 3', nivel: 3, tipo: 'hijo', valor: '65,00', estado: 'No' },
     { codigoCorto: 'p0-004', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-i0-p0-004', nombre: 'Variable 4', nivel: 3, tipo: 'hijo', valor: '66,00', estado: 'No' },
     { codigoCorto: 'p0-005', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-i0-p0-005', nombre: 'Variable 5', nivel: 3, tipo: 'hijo', valor: '67,00', estado: 'Si' },
+    // ↓ Paginador de Subcuenta 2 — minimalista, indentado al nivel 2 (su padre)
+    { nivel: 2, tipo: 'pager', activo: true, pagerInfo: { paginaActual: 1, totalPaginas: 3 } },
+
+    // Otro hijo de Subcuenta 1, después del bloque anidado anterior
+    { codigoCorto: 'p0-002', codigoCompleto: 'N1-01-p0-i0-p0-i5-p0-i0-p0-i0-p0-002', nombre: 'Subcuenta 3', nivel: 2, tipo: 'hijo', valor: '54,00', estado: 'No' },
+    // ↓ Paginador de Subcuenta 1 — minimalista, indentado al nivel 1 (su padre)
+    { nivel: 1, tipo: 'pager', pagerInfo: { paginaActual: 1, totalPaginas: 2 } },
   ];
 
   /** Cada nivel suma 24px de indentación (similar al patrón de árboles). */
