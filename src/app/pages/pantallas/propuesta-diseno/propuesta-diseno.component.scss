@@ -243,16 +243,20 @@
   background: #fff;
   border: 1px solid var(--chip-grey-200);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  /* No usamos overflow:hidden global — recortaba el paginador y el
+     breadcrumb cuando el viewport era angosto. La tabla maneja su
+     propio scroll horizontal y los corners siguen redondeados. */
 
   &__toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 12px 18px;
+    gap: 12px;
+    padding: 12px 16px;
     background: var(--chip-grey-50);
     border-bottom: 1px solid var(--chip-grey-200);
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
     position: sticky;
     top: 0;
     z-index: 2;
@@ -294,15 +298,19 @@
   &__table {
     display: flex;
     flex-direction: column;
+    /* Cuando el viewport es angosto, la tabla scrollea — no se recorta. */
+    overflow-x: auto;
   }
 
   &__row {
     display: grid;
-    grid-template-columns: minmax(260px, 1.5fr) 1.2fr 130px 120px;
+    /* Columnas más flexibles para anchos pequeños. */
+    grid-template-columns: minmax(180px, 1.4fr) minmax(140px, 1.2fr) 110px 100px;
     align-items: center;
     padding: 8px 18px;
     border-bottom: 1px solid var(--chip-grey-100);
     font-size: 13px;
+    min-width: 560px;
 
     &--header {
       background: var(--chip-bg-white-smoke);
@@ -323,6 +331,22 @@
     &--hijo {
       background: #fff;
       color: var(--chip-grey-700);
+    }
+
+    /**
+     * Padre activo/seleccionado — el que el usuario está paginando.
+     * Color más fuerte + borde izquierdo cobalto-700: deja claro a qué
+     * padre pertenece el paginador siguiente sin necesidad de etiquetas.
+     */
+    &--activo {
+      background: var(--chip-cobalt-100, #D4DEF1) !important;
+      border-left: 4px solid var(--chip-cobalt-700);
+      color: var(--chip-cobalt-700);
+
+      .prop-tree__codigo-corto {
+        background: var(--chip-cobalt-50);
+        border-color: var(--chip-cobalt-300);
+      }
     }
 
     &:not(.prop-tree__row--header):hover {
@@ -376,44 +400,30 @@
     }
   }
 
-  &__footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 10px 18px;
-    background: var(--chip-grey-50);
-    border-top: 1px solid var(--chip-grey-200);
-    position: sticky;
-    bottom: 0;
-    flex-wrap: wrap;
-  }
-
-  &__footer-context {
+  /**
+   * Paginador inline minimalista — propuesta simplificada de Manuel.
+   * Sin pill ni nombre del padre: la pertenencia se entiende por la
+   * indentación + el color del padre activo arriba.
+   */
+  &__pager-row {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: var(--chip-grey-700);
+    gap: 4px;
+    padding: 6px 18px 6px 0;
+    background: #fff;
+    border-bottom: 1px solid var(--chip-grey-100);
+    min-width: 560px;
 
-    i { color: var(--chip-cobalt-700); }
+    /* Cuando el paginador pertenece al padre activo, hereda su color. */
+    &--activo {
+      background: var(--chip-cobalt-50);
+      border-left: 4px solid var(--chip-cobalt-700);
 
-    strong { color: var(--chip-grey-900, var(--chip-grey-800)); }
-
-    small {
-      color: var(--chip-grey-500);
-      font-size: 12px;
-      margin-left: 4px;
+      .prop-tree__pager-info { color: var(--chip-cobalt-700); }
     }
   }
 
-  &__footer-pager {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  &__footer-info {
+  &__pager-info {
     font-size: 12px;
     font-weight: 600;
     color: var(--chip-grey-700);

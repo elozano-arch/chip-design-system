@@ -116,50 +116,54 @@
           <span class="prop-tree__col prop-tree__col--valor">Valor</span>
         </div>
 
-        @for (nodo of nodosMockup; track nodo.codigoCompleto) {
-          <div class="prop-tree__row"
-               [class.prop-tree__row--padre]="nodo.tipo === 'padre'"
-               [class.prop-tree__row--hijo]="nodo.tipo === 'hijo'">
-            <span class="prop-tree__col prop-tree__col--codigo"
-                  [style.padding-left]="indentacion(nodo.nivel)">
-              @if (nodo.tipo === 'padre') {
-                <i class="pi" [class.pi-chevron-down]="nodo.expandido"
-                   [class.pi-chevron-right]="!nodo.expandido"
-                   aria-hidden="true"></i>
-              } @else {
-                <span class="prop-tree__leaf" aria-hidden="true"></span>
-              }
-              <span class="prop-tree__codigo-corto"
-                    [pTooltip]="nodo.codigoCompleto" tooltipPosition="right">
-                {{ nodo.codigoCorto }}
+        @for (nodo of nodosMockup; track $index) {
+          @if (nodo.tipo === 'pager' && nodo.pagerInfo) {
+            <!-- Paginador inline minimalista — solo "Página X de Y" + flechas,
+                 indentado al nivel del padre. La pertenencia se entiende por
+                 la indentación + el color del padre activo. -->
+            <div class="prop-tree__pager-row"
+                 [class.prop-tree__pager-row--activo]="nodo.activo"
+                 [style.padding-left]="indentacion(nodo.nivel)"
+                 aria-label="Paginador del nivel">
+              <p-button icon="pi pi-chevron-left" [text]="true" size="small" severity="secondary"
+                aria-label="Página anterior" />
+              <span class="prop-tree__pager-info">
+                Página {{ nodo.pagerInfo.paginaActual }} de {{ nodo.pagerInfo.totalPaginas }}
               </span>
-            </span>
-            <span class="prop-tree__col prop-tree__col--nombre">{{ nodo.nombre }}</span>
-            <span class="prop-tree__col prop-tree__col--estado">
-              <p-tag [value]="nodo.estado"
-                [severity]="nodo.estado === 'Si' ? 'success' : 'secondary'" />
-            </span>
-            <span class="prop-tree__col prop-tree__col--valor">{{ nodo.valor }}</span>
-          </div>
+              <p-button icon="pi pi-chevron-right" [text]="true" size="small" severity="secondary"
+                aria-label="Página siguiente" />
+            </div>
+          } @else {
+            <div class="prop-tree__row"
+                 [class.prop-tree__row--padre]="nodo.tipo === 'padre'"
+                 [class.prop-tree__row--hijo]="nodo.tipo === 'hijo'"
+                 [class.prop-tree__row--activo]="nodo.activo">
+              <span class="prop-tree__col prop-tree__col--codigo"
+                    [style.padding-left]="indentacion(nodo.nivel)">
+                @if (nodo.tipo === 'padre') {
+                  <i class="pi" [class.pi-chevron-down]="nodo.expandido"
+                     [class.pi-chevron-right]="!nodo.expandido"
+                     aria-hidden="true"></i>
+                } @else {
+                  <span class="prop-tree__leaf" aria-hidden="true"></span>
+                }
+                <span class="prop-tree__codigo-corto"
+                      [pTooltip]="nodo.codigoCompleto || ''" tooltipPosition="right">
+                  {{ nodo.codigoCorto }}
+                </span>
+              </span>
+              <span class="prop-tree__col prop-tree__col--nombre">{{ nodo.nombre }}</span>
+              <span class="prop-tree__col prop-tree__col--estado">
+                @if (nodo.estado) {
+                  <p-tag [value]="nodo.estado"
+                    [severity]="nodo.estado === 'Si' ? 'success' : 'secondary'" />
+                }
+              </span>
+              <span class="prop-tree__col prop-tree__col--valor">{{ nodo.valor }}</span>
+            </div>
+          }
         }
       </div>
-
-      <!-- Footer sticky con paginador del padre activo -->
-      <footer class="prop-tree__footer">
-        <div class="prop-tree__footer-context">
-          <i class="pi pi-folder-open" aria-hidden="true"></i>
-          <span>
-            Padre activo:
-            <strong>Subcuenta 2</strong>
-            <small>(mostrando 1 a 5 de 12)</small>
-          </span>
-        </div>
-        <div class="prop-tree__footer-pager">
-          <p-button icon="pi pi-chevron-left" [text]="true" size="small" severity="secondary" aria-label="Página anterior" />
-          <span class="prop-tree__footer-info">Página 1 de 3</span>
-          <p-button icon="pi pi-chevron-right" [text]="true" size="small" severity="secondary" aria-label="Página siguiente" />
-        </div>
-      </footer>
     </div>
 
     <p-message severity="info" class="prop-mockup__note">
