@@ -277,7 +277,8 @@ p-breadcrumb .p-breadcrumb {
 .roles-header,
 .flt-header,
 .cpw-header,
-.cor-header {
+.cor-header,
+.lvr-header {
   margin-bottom: 28px;
 }
 
@@ -287,7 +288,8 @@ p-breadcrumb .p-breadcrumb {
 .roles-header__title,
 .flt-header__title,
 .cpw-header__title,
-.cor-header__title {
+.cor-header__title,
+.lvr-header__title {
   font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 800;
@@ -299,7 +301,8 @@ p-breadcrumb .p-breadcrumb {
 .form-header__row,
 .aud-header__row,
 .roles-header__row,
-.cpw-header__row {
+.cpw-header__row,
+.lvr-header__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -312,7 +315,8 @@ p-breadcrumb .p-breadcrumb {
 .roles-header__desc,
 .flt-header__desc,
 .cpw-header__desc,
-.cor-header__desc {
+.cor-header__desc,
+.lvr-header__desc {
   font-size: 15px;
   color: var(--chip-grey-500);
   margin: 0;
@@ -479,13 +483,15 @@ textarea.p-inputtext {
   .form-page,
   .aud-page,
   .roles-page,
-  .flt-page {
+  .flt-page,
+  .lvr-page {
     padding: 16px;
   }
 
   .usr-header,
   .form-header,
-  .roles-header {
+  .roles-header,
+  .lvr-header {
     flex-direction: column;
   }
 
@@ -493,7 +499,8 @@ textarea.p-inputtext {
   .form-header__title,
   .aud-header__title,
   .roles-header__title,
-  .flt-header__title {
+  .flt-header__title,
+  .lvr-header__title {
     font-size: 24px;
   }
 
