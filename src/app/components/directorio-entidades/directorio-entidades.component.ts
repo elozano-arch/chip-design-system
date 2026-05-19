@@ -42,6 +42,9 @@ export class DirectorioEntidadesComponent {
   /** Listado de entidades (si no se pasa usa el mock interno). */
   @Input() entidades: Entidad[] | null = null;
 
+  /** Muestra/oculta el filtro de Estado del modal. */
+  @Input() showEstadoFilter = true;
+
   /** Emite la entidad seleccionada al hacer Aceptar. */
   @Output() seleccionar = new EventEmitter<Entidad>();
 

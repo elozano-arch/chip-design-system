@@ -125,6 +125,28 @@
         </a>
       }
 
+      <!-- ══ CATEGORÍAS ══ -->
+      <button class="app-sidebar__link app-sidebar__toggle-sub" (click)="categoriasOpen = !categoriasOpen"
+        [attr.aria-expanded]="categoriasOpen"
+        [pTooltip]="sidebarCollapsed ? 'Categorías' : ''" tooltipPosition="right">
+        <i class="pi pi-tags"></i> <span class="app-sidebar__label">Categorías</span>
+        @if (!sidebarCollapsed) {
+          <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!categoriasOpen" [class.pi-chevron-up]="categoriasOpen"></i>
+        }
+      </button>
+      @if (categoriasOpen && !sidebarCollapsed) {
+        <div class="app-sidebar__submenu">
+          <a routerLink="/pantallas/categorias/levantamiento-restricciones" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-unlock"></i> <span class="app-sidebar__label">Levantamiento de Restricciones</span>
+          </a>
+        </div>
+      }
+      @if (sidebarCollapsed) {
+        <a routerLink="/pantallas/categorias/levantamiento-restricciones" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Levantamiento de Restricciones" tooltipPosition="right">
+          <i class="pi pi-unlock"></i> <span class="app-sidebar__label">Levantamiento de Restricciones</span>
+        </a>
+      }
+
       <!-- ══ FORMULARIOS ══ -->
       <a routerLink="/pantallas/formularios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Formularios' : ''" tooltipPosition="right">
         <i class="pi pi-file-edit"></i> <span class="app-sidebar__label">Formularios</span>
