@@ -517,7 +517,7 @@
   <!-- ============================================================= -->
   @if (vistaActiva === 'opcion-2') {
     <div class="form-wizard" role="region" aria-label="Asistente paso a paso de gestión de formularios">
-      <!-- Indicador de pasos (4 fases del flujo según CRIS) -->
+      <!-- Indicador de pasos (3 fases del flujo) -->
       <ol class="form-wizard__steps" aria-label="Pasos del asistente">
         <li>
           <button type="button" class="form-wizard__step"
@@ -530,7 +530,7 @@
             <span class="form-wizard__step-num">1</span>
             <div class="form-wizard__step-info">
               <strong>Filtros</strong>
-              <span>Contexto + Consultar Envíos</span>
+              <span>Contexto + Consultar envíos</span>
             </div>
           </button>
         </li>
@@ -544,37 +544,22 @@
             (click)="irAPaso(1)">
             <span class="form-wizard__step-num">2</span>
             <div class="form-wizard__step-info">
-              <strong>Datos</strong>
-              <span>Importar + listado de formularios</span>
+              <strong>Formularios</strong>
+              <span>Importar, exportar, validar, editar, protocolo</span>
             </div>
           </button>
         </li>
         <li>
           <button type="button" class="form-wizard__step"
             [class.form-wizard__step--active]="wizardStep === 2"
-            [class.form-wizard__step--done]="wizardStep > 2"
             [class.form-wizard__step--clickable]="pasoNavegable(2)"
             [disabled]="!pasoNavegable(2)"
             [attr.aria-current]="wizardStep === 2 ? 'step' : null"
             (click)="irAPaso(2)">
             <span class="form-wizard__step-num">3</span>
             <div class="form-wizard__step-info">
-              <strong>Trabajo</strong>
-              <span>Editar, validar, exportar, protocolo</span>
-            </div>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="form-wizard__step"
-            [class.form-wizard__step--active]="wizardStep === 3"
-            [class.form-wizard__step--clickable]="pasoNavegable(3)"
-            [disabled]="!pasoNavegable(3)"
-            [attr.aria-current]="wizardStep === 3 ? 'step' : null"
-            (click)="irAPaso(3)">
-            <span class="form-wizard__step-num">4</span>
-            <div class="form-wizard__step-info">
-              <strong>Envío</strong>
-              <span>Enviar Categoría + Adjunto</span>
+              <strong>Envíos</strong>
+              <span>Adjunto + entidades + enviar categoría</span>
             </div>
           </button>
         </li>
@@ -656,37 +641,81 @@
         </section>
       }
 
-      <!-- Paso 2: Selección de formulario -->
-      @if (wizardStep === 1) {
-        <section class="form-wizard__panel" aria-label="Paso 2: Seleccionar formulario">
+      <!-- Paso 2: Formularios (importar, exportar, validar, acciones, editar, protocolo) -->
+      @if (wizardStep === 1 && !detalleAbierto) {
+        <section class="form-wizard__panel" aria-label="Paso 2: Formularios">
           <header class="form-wizard__panel-header">
-            <h2>Paso 2 · Cargue los datos</h2>
+            <h2>Paso 2 · Formularios</h2>
             <p>
-              Importe la información del formulario desde un archivo
-              (.xlsx o .csv) o trabaje directamente con los formularios
-              ya disponibles para esta categoría.
+              Importe, exporte, valide o genere protocolos sobre los formularios
+              de esta categoría. Use <strong>Editar</strong> en una fila para diligenciar
+              el registro manual.
             </p>
           </header>
 
-          <!-- Sub-sección: Importar -->
-          <div class="form-wizard__subsection">
-            <h3 class="form-wizard__subsection-title">
-              <i class="pi pi-upload" aria-hidden="true"></i>
-              Importar archivo
-            </h3>
-            <div class="form-context-panel__upload">
-              <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
-                (onClick)="wizImportInput.click()" />
-              <span class="form-context-panel__filename">{{ importFileName || 'Ningún archivo seleccionado' }}</span>
-              <input #wizImportInput type="file" accept=".xlsx,.csv" hidden
-                (change)="importFileName = $any($event.target).files[0]?.name || ''" />
-              <p-button label="Importar" icon="pi pi-upload"
-                [disabled]="!importFileName"
-                (onClick)="confirmImport()" />
-            </div>
+          <!-- Toolbar de acciones globales -->
+          <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones sobre los formularios">
+            <p-button label="Importar" icon="pi pi-upload"
+              (onClick)="executeAction('importar')" />
+            <p-button label="Exportar" icon="pi pi-download"
+              [outlined]="true" severity="secondary"
+              (onClick)="executeAction('exportar')" />
+            <p-button label="Validar selección" icon="pi pi-check-circle"
+              severity="warn"
+              [disabled]="!canValidate"
+              [pTooltip]="!canValidate ? 'Marque al menos un formulario para validar' : ''"
+              tooltipPosition="top"
+              (onClick)="executeAction('validar')" />
+            <p-button label="Generar protocolo de importación" icon="pi pi-file-pdf"
+              [outlined]="true" severity="info"
+              (onClick)="executeAction('generarProtocolo')" />
           </div>
 
-          <!-- Sub-sección: Listado de formularios disponibles -->
+          <!-- Sub-sección: Importar archivo (visible cuando se activa el panel) -->
+          @if (activePanel === 'importar') {
+            <div class="form-wizard__subsection form-wizard__subsection--panel">
+              <h3 class="form-wizard__subsection-title">
+                <i class="pi pi-upload" aria-hidden="true"></i>
+                Importar archivo
+                <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
+                  styleClass="form-wizard__subsection-close"
+                  ariaLabel="Cerrar panel de importación"
+                  (onClick)="closePanel()" />
+              </h3>
+              <div class="form-context-panel__upload">
+                <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
+                  (onClick)="wizImportInput.click()" />
+                <span class="form-context-panel__filename">{{ importFileName || 'Ningún archivo seleccionado' }}</span>
+                <input #wizImportInput type="file" accept=".xlsx,.csv" hidden
+                  (change)="importFileName = $any($event.target).files[0]?.name || ''" />
+                <p-button label="Importar" icon="pi pi-upload"
+                  [disabled]="!importFileName"
+                  (onClick)="confirmImport()" />
+              </div>
+            </div>
+          }
+
+          <!-- Sub-sección: Exportar (visible cuando se activa el panel) -->
+          @if (activePanel === 'exportar') {
+            <div class="form-wizard__subsection form-wizard__subsection--panel">
+              <h3 class="form-wizard__subsection-title">
+                <i class="pi pi-download" aria-hidden="true"></i>
+                Exportar formularios
+                <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
+                  styleClass="form-wizard__subsection-close"
+                  ariaLabel="Cerrar panel de exportación"
+                  (onClick)="closePanel()" />
+              </h3>
+              <div class="form-wizard__inline-form">
+                <p-select [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat"
+                  appendTo="body" inputId="wiz-export-fmt" />
+                <p-button label="Exportar" icon="pi pi-download"
+                  (onClick)="confirmExport()" />
+              </div>
+            </div>
+          }
+
+          <!-- Sub-sección: Listado de formularios -->
           <div class="form-wizard__subsection">
             <h3 class="form-wizard__subsection-title">
               <i class="pi pi-list" aria-hidden="true"></i>
@@ -710,27 +739,38 @@
             } @else {
               <p-table [value]="filteredFormularios" [stripedRows]="true" [rowHover]="true"
                 [paginator]="filteredFormularios.length > 5" [rows]="5" [rowsPerPageOptions]="[5, 10]"
-                dataKey="id">
+                [(selection)]="selectedFormularios" dataKey="id">
                 <ng-template #header>
                   <tr>
+                    <th style="width: 44px"><p-tableHeaderCheckbox /></th>
                     <th pSortableColumn="codigo" style="width: 140px">Código <p-sortIcon field="codigo" /></th>
                     <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
                     <th pSortableColumn="estadoValidacion" style="width: 200px">Estado <p-sortIcon field="estadoValidacion" /></th>
-                    <th style="width: 160px; text-align: center">Trabajar</th>
+                    <th style="width: 200px; text-align: center">Acciones</th>
                   </tr>
                 </ng-template>
                 <ng-template #body let-formItem>
                   <tr>
+                    <td><p-tableCheckbox [value]="formItem" /></td>
                     <td><span class="form-table__code">{{ formItem.codigo }}</span></td>
                     <td><span class="form-table__name">{{ formItem.nombre }}</span></td>
                     <td><p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" /></td>
                     <td style="text-align: center">
-                      <p-button label="Abrir" icon="pi pi-arrow-right" iconPos="right" size="small"
-                        (onClick)="abrirDetalle(formItem)" />
+                      <div class="form-table__row-actions">
+                        <p-button label="Editar" icon="pi pi-pencil" size="small"
+                          pTooltip="Editar formulario (registro manual)" tooltipPosition="top"
+                          (onClick)="abrirDetalle(formItem)" />
+                        <p-button icon="pi pi-ellipsis-v" [text]="true" [rounded]="true" size="small"
+                          severity="secondary"
+                          ariaLabel="Más acciones sobre el formulario"
+                          pTooltip="Más acciones" tooltipPosition="top"
+                          (onClick)="abrirMenuFormulario($event, formItem)" />
+                      </div>
                     </td>
                   </tr>
                 </ng-template>
               </p-table>
+              <p-menu #menuFormulario [model]="menuFormularioItems" [popup]="true" appendTo="body" />
             }
           </div>
 
@@ -739,46 +779,44 @@
               (onClick)="irAPaso(0)" />
             <span class="form-wizard__nav-hint">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
-              Use <strong>Abrir</strong> para trabajar sobre un formulario (paso 3)
-              o vaya directo al <strong>Envío</strong> (paso 4) si ya todo está validado.
+              Cuando todos los formularios estén <strong>Validados</strong> puede pasar a <strong>Envíos</strong>.
             </span>
-            <p-button label="Saltar a envío" icon="pi pi-send" iconPos="right"
-              severity="secondary" [outlined]="true"
+            <p-button label="Siguiente · Envíos" icon="pi pi-arrow-right" iconPos="right"
               [disabled]="!todosValidados"
               [pTooltip]="!todosValidados ? 'Todos los formularios deben estar Validados' : ''"
               tooltipPosition="top"
-              (onClick)="wizardStep = 3" />
+              (onClick)="wizardStep = 2" />
           </div>
         </section>
       }
 
-      <!-- Paso 3: Detalle / Acción (registro manual del formulario abierto) -->
-      @if (wizardStep === 2 && detalleAbierto) {
-        <section class="form-wizard__panel form-wizard__panel--detalle" aria-label="Paso 3: Trabajo sobre el formulario">
+      <!-- Paso 2 (sub-vista): Registro manual del formulario abierto -->
+      @if (wizardStep === 1 && detalleAbierto) {
+        <section class="form-wizard__panel form-wizard__panel--detalle" aria-label="Paso 2: Registro manual del formulario">
           <header class="form-wizard__panel-header">
-            <h2>Paso 3 · {{ detalleAbierto.nombre }}</h2>
+            <h2>Paso 2 · Registro manual · {{ detalleAbierto.nombre }}</h2>
             <p>
-              Edite, valide, exporte o genere el protocolo de importación.
-              Cuando termine, use <strong>Volver al listado</strong> para elegir otro formulario
-              o pase al paso 4 cuando todos estén validados.
+              Edite, valide o genere el protocolo de este formulario.
+              Use <strong>Volver al listado</strong> para elegir otro o avance a
+              <strong>Envíos</strong> cuando todos estén validados.
             </p>
           </header>
           <ng-container *ngTemplateOutlet="detalleTpl" />
         </section>
       }
 
-      <!-- Paso 4: Envío (acción terminal) -->
-      @if (wizardStep === 3) {
-        <section class="form-wizard__panel" aria-label="Paso 4: Envío">
+      <!-- Paso 3: Envíos (Adjunto + Entidades Agregadas + Enviar Categoría) -->
+      @if (wizardStep === 2) {
+        <section class="form-wizard__panel" aria-label="Paso 3: Envíos">
           <header class="form-wizard__panel-header">
-            <h2>Paso 4 · Envío de la categoría</h2>
+            <h2>Paso 3 · Envíos</h2>
             <p>
-              Envíe la categoría a validación central y, si aplica,
-              adjunte documentos de soporte. Esta es la acción final del flujo.
+              Adjunte soportes, revise las entidades que recibirán la categoría
+              y envíela a validación central. Esta es la acción final del flujo.
             </p>
           </header>
 
-          <!-- Estado del envío -->
+          <!-- Estado del envío + acción Enviar Categoría -->
           <div class="form-send-bar" [class.form-send-bar--ready]="todosValidados">
             <div class="form-send-bar__info">
               <i class="pi" [class.pi-send]="todosValidados" [class.pi-info-circle]="!todosValidados" aria-hidden="true"></i>
@@ -794,7 +832,7 @@
                   @if (todosValidados) {
                     Todos los formularios están en estado Validado. Al enviar, se ejecutan las validaciones centrales.
                   } @else {
-                    Vuelva al paso 3 para validar los formularios pendientes antes de enviar.
+                    Vuelva al paso 2 para validar los formularios pendientes antes de enviar.
                   }
                 </span>
               </div>
@@ -822,8 +860,24 @@
             </div>
           </div>
 
+          <!-- Entidades Agregadas -->
+          <div class="form-wizard__subsection">
+            <h3 class="form-wizard__subsection-title">
+              <i class="pi pi-sitemap" aria-hidden="true"></i>
+              Entidades agregadas
+              <small>· entidades que recibirán esta categoría</small>
+            </h3>
+            <p class="form-wizard__subsection-desc">
+              Revise o ajuste las entidades destino del envío. Si la categoría se
+              consolida con información de otras entidades, gestiónelas aquí.
+            </p>
+            <p-button label="Gestionar entidades agregadas" icon="pi pi-sitemap"
+              [outlined]="true" severity="secondary"
+              (onClick)="executeAction('entidadesAgregadas')" />
+          </div>
+
           <div class="form-wizard__nav">
-            <p-button label="Volver al trabajo" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
+            <p-button label="Volver a formularios" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
               (onClick)="irAPaso(1)" />
           </div>
         </section>

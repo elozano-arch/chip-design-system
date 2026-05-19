@@ -128,11 +128,11 @@ export class FormulariosComponent {
   ];
 
   /**
-   * Paso actual del wizard de Opción 2 (CRIS propone 4 pasos por fase del flujo):
-   *   0: Filtros (contexto + Consultar Envíos)
-   *   1: Datos (Importar + listado de formularios disponibles)
-   *   2: Trabajo sobre formulario (detalle / edición / validar / exportar / protocolo)
-   *   3: Envío (Enviar Categoría + Enviar Adjunto)
+   * Paso actual del wizard de Opción 2 — 3 pasos:
+   *   0: Filtros (contexto + Consultar Envíos previos)
+   *   1: Formularios (importar, exportar, validar, acciones, editar manual,
+   *      generar protocolo — y, al abrir un formulario, registro manual)
+   *   2: Envíos (Enviar Categoría + Entidades Agregadas + Enviar Adjunto)
    */
   wizardStep = 0;
 
@@ -271,10 +271,8 @@ export class FormulariosComponent {
     this.detalleAbierto = form;
     this.paginaColumnas = 0;
     this.conceptos.forEach(c => c.pagina = 0);
-    if (this.vistaActiva === 'opcion-2') {
-      // En el wizard de 4 pasos, abrir el detalle = entrar al paso 3 (Trabajo).
-      this.wizardStep = 2;
-    }
+    // En el wizard de 3 pasos, abrir un formulario NO cambia de paso:
+    // el registro manual vive dentro del paso "Formularios" (step 1).
     queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
@@ -317,11 +315,9 @@ export class FormulariosComponent {
     this.detalleAbierto = null;
     this.editandoCelda = null;
     this.modalEditar = null;
-    // En el wizard, "volver al listado" = paso 2 (Datos) — donde está la
-    // tabla de formularios disponibles.
-    if (this.vistaActiva === 'opcion-2') {
-      this.wizardStep = 1;
-    }
+    // En el wizard de 3 pasos, el listado y el registro manual viven en
+    // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
+    // el step se mantiene en 1.
   }
 
   // ── Edición inline (Opción 1) ──
