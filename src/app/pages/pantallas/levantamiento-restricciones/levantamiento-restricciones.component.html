@@ -187,6 +187,7 @@
             [(ngModel)]="selectedNoPermisibles"
             [multiple]="true"
             [checkbox]="true"
+            [showToggleAll]="false"
             optionLabel="codigo"
             dataKey="id"
             [listStyle]="{ 'max-height': '320px' }"
@@ -195,7 +196,17 @@
             ariaLabel="Lista de mensajes no permisibles">
             <ng-template let-msg pTemplate="item">
               <div class="lvr-item">
-                <span class="lvr-item__codigo">{{ msg.codigo }}</span>
+                <div class="lvr-item__head">
+                  <span class="lvr-item__codigo">{{ msg.codigo }}</span>
+                  @if (esModificado(msg.id)) {
+                    <p-tag
+                      value="Modificado"
+                      icon="pi pi-pencil"
+                      severity="info"
+                      styleClass="lvr-item__badge"
+                      [attr.aria-label]="'Mensaje ' + msg.codigo + ' modificado en esta consulta'" />
+                  }
+                </div>
                 <span class="lvr-item__desc">{{ msg.descripcion }}</span>
               </div>
             </ng-template>
@@ -247,6 +258,7 @@
             [(ngModel)]="selectedPermisibles"
             [multiple]="true"
             [checkbox]="true"
+            [showToggleAll]="false"
             optionLabel="codigo"
             dataKey="id"
             [listStyle]="{ 'max-height': '320px' }"
@@ -255,7 +267,17 @@
             ariaLabel="Lista de mensajes permisibles">
             <ng-template let-msg pTemplate="item">
               <div class="lvr-item">
-                <span class="lvr-item__codigo">{{ msg.codigo }}</span>
+                <div class="lvr-item__head">
+                  <span class="lvr-item__codigo">{{ msg.codigo }}</span>
+                  @if (esModificado(msg.id)) {
+                    <p-tag
+                      value="Modificado"
+                      icon="pi pi-pencil"
+                      severity="info"
+                      styleClass="lvr-item__badge"
+                      [attr.aria-label]="'Mensaje ' + msg.codigo + ' modificado en esta consulta'" />
+                  }
+                </div>
                 <span class="lvr-item__desc">{{ msg.descripcion }}</span>
               </div>
             </ng-template>

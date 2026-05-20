@@ -224,6 +224,13 @@
   gap: 2px;
   padding: 2px 0;
 
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
   &__codigo {
     font-family: var(--font-heading);
     font-size: 13px;
@@ -237,6 +244,26 @@
     font-size: 13px;
     color: var(--chip-grey-700);
     line-height: 1.35;
+  }
+}
+
+/* Badge "Modificado" — usa la paleta cobalto del DS para destacar movimientos
+   sobre los mensajes sin sobrecargar el listado. Se aplica vía ::ng-deep
+   porque PrimeNG renderiza el span interno fuera del component view. */
+:host ::ng-deep .lvr-item__badge {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--chip-cobalt-50);
+  color: var(--chip-cobalt-700);
+  text-transform: uppercase;
+
+  .p-tag-icon {
+    font-size: 10px;
+    margin-right: 4px;
   }
 }
 
