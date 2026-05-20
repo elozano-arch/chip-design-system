@@ -181,6 +181,8 @@ export class LevantamientoRestriccionesComponent {
     this.selectedPermisibles = [];
     this.busquedaNoPermisibles = '';
     this.busquedaPermisibles = '';
+    // Nueva consulta = nuevo estado base: ningún mensaje se considera modificado.
+    this.mensajesModificadosIds.clear();
   }
 
   limpiarFiltros() {
@@ -251,6 +253,17 @@ export class LevantamientoRestriccionesComponent {
   busquedaNoPermisibles = '';
   busquedaPermisibles = '';
 
+  /**
+   * IDs de mensajes que han sido movidos desde la interfaz al menos una vez
+   * durante la consulta actual. Alimenta el badge "Modificado" que se muestra
+   * junto al código en cada tarjeta. Se vacía al aplicar nuevos filtros.
+   */
+  private mensajesModificadosIds = new Set<string>();
+
+  esModificado(id: string): boolean {
+    return this.mensajesModificadosIds.has(id);
+  }
+
   get noPermisiblesFiltrados(): Mensaje[] {
     return this.filtrarMensajes(this.mensajesNoPermisibles, this.busquedaNoPermisibles);
   }
@@ -277,6 +290,7 @@ export class LevantamientoRestriccionesComponent {
     this.mensajesPermisibles = [...this.mensajesPermisibles, ...this.selectedNoPermisibles];
     const ids = new Set(this.selectedNoPermisibles.map(m => m.id));
     this.mensajesNoPermisibles = this.mensajesNoPermisibles.filter(m => !ids.has(m.id));
+    ids.forEach(id => this.mensajesModificadosIds.add(id));
     this.selectedNoPermisibles = [];
     this.messageService.add({
       severity: 'success',
@@ -292,6 +306,7 @@ export class LevantamientoRestriccionesComponent {
     this.mensajesNoPermisibles = [...this.mensajesNoPermisibles, ...this.selectedPermisibles];
     const ids = new Set(this.selectedPermisibles.map(m => m.id));
     this.mensajesPermisibles = this.mensajesPermisibles.filter(m => !ids.has(m.id));
+    ids.forEach(id => this.mensajesModificadosIds.add(id));
     this.selectedPermisibles = [];
     this.messageService.add({
       severity: 'info',
@@ -317,6 +332,7 @@ export class LevantamientoRestriccionesComponent {
 
   ejecutarTodosAPermisibles() {
     const cantidad = this.mensajesNoPermisibles.length;
+    this.mensajesNoPermisibles.forEach(m => this.mensajesModificadosIds.add(m.id));
     this.mensajesPermisibles = [...this.mensajesPermisibles, ...this.mensajesNoPermisibles];
     this.mensajesNoPermisibles = [];
     this.selectedNoPermisibles = [];
@@ -331,6 +347,7 @@ export class LevantamientoRestriccionesComponent {
 
   ejecutarTodosANoPermisibles() {
     const cantidad = this.mensajesPermisibles.length;
+    this.mensajesPermisibles.forEach(m => this.mensajesModificadosIds.add(m.id));
     this.mensajesNoPermisibles = [...this.mensajesNoPermisibles, ...this.mensajesPermisibles];
     this.mensajesPermisibles = [];
     this.selectedPermisibles = [];
