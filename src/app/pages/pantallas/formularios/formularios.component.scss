@@ -925,6 +925,26 @@
     }
   }
 
+  /* Toolbar de acciones globales (Step 2 Formularios)
+     · Contenedor con fondo y borde para separarse visualmente de la tabla
+     · Margin-bottom amplio para que la sección "Formularios disponibles" no quede pegada */
+  &__actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    margin-bottom: 24px;
+    background: var(--chip-bg-white-smoke);
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-md);
+
+    /* Asegura que cualquier p-button respete los 40px globales de inputs */
+    p-button .p-button {
+      min-height: var(--chip-input-height);
+    }
+  }
+
   &__nav {
     display: flex;
     justify-content: space-between;
@@ -1038,9 +1058,254 @@
     border-top: 1px dashed var(--chip-grey-200);
   }
 
+  /* Fila de acciones de filtros (Limpiar + Aplicar filtros) — paso 1 */
+  &__filters-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--chip-grey-100);
+  }
+
+  /* Bloque de "acciones disponibles" después de aplicar filtros */
+  &__context-actions {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--chip-grey-100);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    &--disabled .form-action-card {
+      opacity: 0.6;
+    }
+  }
+
+  &__context-actions-hint {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 14px;
+    background: var(--chip-bg-corn-silk);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--chip-grey-700);
+
+    i {
+      color: var(--chip-warning);
+      font-size: 16px;
+    }
+
+    strong {
+      color: var(--chip-grey-900);
+    }
+  }
+
   &__inline-panel {
-    margin-top: 12px;
+    margin-top: 4px;
+    padding: 16px 20px;
+    background: #fff;
+    border: 1px solid var(--chip-cobalt-50);
+    border-radius: var(--radius-md);
     animation: slideDown 0.2s ease;
+
+    /* Variante para paneles que llevan una tabla — sin padding extra abajo */
+    &--table {
+      padding-bottom: 8px;
+    }
+  }
+
+  &__inline-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+
+      i {
+        color: var(--chip-cobalt-700);
+        font-size: 16px;
+      }
+
+      small {
+        font-weight: 400;
+        font-size: 12px;
+        color: var(--chip-grey-500);
+      }
+    }
+  }
+
+  /* Empty state dentro de una celda de tabla (colspan) */
+  &__empty--inline {
+    border: none;
+    background: transparent;
+    padding: 24px 8px;
+
+    > i {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 13px;
+      color: var(--chip-grey-500);
+      margin: 0;
+    }
+  }
+}
+
+/* ============================================================
+   Cards de acción del paso 1 (Consultar envíos / Importar)
+   ============================================================ */
+.form-action-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-action-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+
+  &:hover:not([aria-disabled='true']) {
+    border-color: var(--chip-cobalt-300);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &--active {
+    border-color: var(--chip-cobalt-700);
+    background: var(--chip-bg-solitude);
+    box-shadow: var(--shadow-sm);
+  }
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 20px;
+    }
+  }
+
+  &--active &__icon {
+    background: var(--chip-cobalt-700);
+    color: #fff;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+  }
+
+  &__desc {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--chip-grey-600);
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+
+    p-button {
+      grid-column: 1 / -1;
+      justify-self: stretch;
+    }
+  }
+}
+
+/* ============================================================
+   Zona de importación (panel inline del paso 1)
+   ============================================================ */
+.form-import-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: var(--chip-bg-white-smoke);
+  border: 1px dashed var(--chip-grey-300);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+
+  &__pick {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__filename {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--chip-grey-800);
+
+    &--empty {
+      color: var(--chip-grey-500);
+      font-style: italic;
+    }
+  }
+
+  &__hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 12px 0 0;
+    font-size: 12px;
+    color: var(--chip-grey-600);
+    line-height: 1.45;
+
+    i {
+      color: var(--chip-cobalt-700);
+      font-size: 14px;
+      margin-top: 2px;
+    }
   }
 }
 
