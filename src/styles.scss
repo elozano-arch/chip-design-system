@@ -837,6 +837,15 @@ textarea.p-inputtext {
     color: var(--chip-grey-600);
     margin: 0 0 10px;
     line-height: 1.5;
+
+    /* Para una segunda sub-sección dentro del mismo panel (ej. accesos a
+       otras pantallas del flujo desde el panel de "Credenciales de prueba"
+       del login). Agrega separador visual claro. */
+    &--secondary {
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--chip-grey-200);
+    }
   }
 
   &__list {
