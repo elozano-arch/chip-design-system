@@ -152,6 +152,15 @@ export class UsuariosComponent {
   showEditDialog = false;
   showToggleDialog = false;
   showDeleteDialog = false;
+
+  // Modal: restablecer contraseña (acción admin desde Editar Usuario).
+  // Replica el flujo de olvide-clave pero invocado desde el panel de admin.
+  showRestablecerDialog = false;
+  correosAutorizadosRestablecer: string[] = [];
+  correoRestablecerSeleccionado = '';
+  /** Datos de la mesa de servicio CGN — mismos que olvide-clave. */
+  readonly MESA_SERVICIO_PBX = '4926400 Opción 2';
+  readonly MESA_SERVICIO_EMAIL = 'mesadeservicio@contaduria.gov.co';
   // CH-1371: confirmación por escrito para eliminar
   deleteConfirmText = '';
   readonly DELETE_CONFIRM_WORD = 'ELIMINAR';
@@ -844,6 +853,41 @@ export class UsuariosComponent {
     this.editTipoTouched = false;
     this.editEntidadTouched = false;
     this.showEditDialog = false;
+  }
+
+  /**
+   * Abre el modal de restablecer contraseña para el usuario que se está
+   * editando. Pre-carga los correos enmascarados autorizados (mock; en
+   * producción vienen del backend del usuario seleccionado).
+   */
+  abrirRestablecerDialog() {
+    if (!this.selectedUsuario) return;
+    this.correosAutorizadosRestablecer = this.obtenerCorreosEnmascarados(this.selectedUsuario);
+    this.correoRestablecerSeleccionado = '';
+    this.showRestablecerDialog = true;
+  }
+
+  cancelarRestablecer() {
+    this.showRestablecerDialog = false;
+    this.correoRestablecerSeleccionado = '';
+  }
+
+  confirmarRestablecer() {
+    if (!this.correoRestablecerSeleccionado) return;
+    const correo = this.correoRestablecerSeleccionado;
+    this.showRestablecerDialog = false;
+    this.correoRestablecerSeleccionado = '';
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Solicitud enviada',
+      detail: `Se envió el correo de restablecimiento a ${correo}.`,
+    });
+  }
+
+  /** Genera correos enmascarados de prueba — misma lógica que olvide-clave. */
+  private obtenerCorreosEnmascarados(u: Usuario): string[] {
+    const prefijo = u.codigo.toLowerCase().slice(0, 3);
+    return [`${prefijo}****@contaduria.gov.co`];
   }
 
   confirmToggleEstado() {
