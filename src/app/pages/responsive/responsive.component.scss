@@ -186,6 +186,11 @@
     font-family: 'Courier New', Consolas, monospace;
     font-size: 13px;
     font-weight: 600;
+    background: #E3EDFF;
+    border: 1px solid #B3CCFF;
+    border-radius: 6px;
+    color: #0943B5;
+    margin: 0 4px;
 
     > * {
       display: block;
@@ -195,12 +200,6 @@
     &::after {
       content: none;
     }
-
-    background: #E3EDFF;
-    border: 1px solid #B3CCFF;
-    border-radius: 6px;
-    color: #0943B5;
-    margin: 0 4px;
 
     &--12 { flex: 0 0 calc(100% - 8px); max-width: calc(100% - 8px); }
     &--6  { flex: 0 0 calc(50% - 8px);  max-width: calc(50% - 8px); }
