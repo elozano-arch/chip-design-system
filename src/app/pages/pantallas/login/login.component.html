@@ -158,6 +158,33 @@
         <span class="demo-help__result">Mensaje "usuario o contraseña incorrectos"</span>
       </li>
     </ul>
+
+    <!-- Atajos a estados de pantallas relacionadas (descubrimiento para CGN
+         en Vercel). Cambiar contraseña tiene su propio panel demo, pero
+         no es descubrible desde aquí sin estos accesos directos. -->
+    <p class="demo-help__intro demo-help__intro--secondary">
+      Probar pantalla de <strong>cambiar contraseña</strong> (flujos sin sesión):
+    </p>
+    <ul class="demo-help__list">
+      <li>
+        <span class="demo-help__creds"><strong>Activación</strong> desde correo</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">
+          <a [routerLink]="['/pantallas/seguridad/cambiar-contrasena']"
+             [queryParams]="{ sinSesion: true }"
+             class="demo-help__try">Ver pantalla limpia</a>
+        </span>
+      </li>
+      <li>
+        <span class="demo-help__creds"><strong>Enlace inválido</strong> (usado o caducado)</span>
+        <span class="demo-help__arrow" aria-hidden="true">→</span>
+        <span class="demo-help__result">
+          <a [routerLink]="['/pantallas/seguridad/cambiar-contrasena']"
+             [queryParams]="{ linkInvalido: true }"
+             class="demo-help__try">Ver modal de error</a>
+        </span>
+      </li>
+    </ul>
   </aside>
   </div>
 </div>
