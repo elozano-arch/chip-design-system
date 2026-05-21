@@ -921,3 +921,118 @@ textarea.p-inputtext {
     .demo-help__arrow { display: none; }
   }
 }
+
+/* ============================================================
+   Modal "Confirmación para restablecer contraseña" (.olv-correos)
+   Compartido entre olvide-clave y usuarios (acción admin "Cambiar
+   contraseña" desde Editar Usuario). Movido a global porque la
+   encapsulación de Angular impide reusar estilos componente-locales.
+   ============================================================ */
+.olv-correos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__intro {
+    margin: 0;
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+  }
+
+  /* Alerta cuando el usuario no existe o está bloqueado — patrón Kit UI rojo */
+  &__alerta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 18px;
+    background: #FFEBEE;
+    border: 1px solid #FFCDD2;
+    border-left: 4px solid var(--chip-danger, #F44336);
+    border-radius: var(--radius-sm);
+  }
+
+  &__alerta-titulo {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: #7F0000;
+
+    i {
+      font-size: 16px;
+      color: var(--chip-danger, #F44336);
+    }
+
+    strong {
+      color: #7F0000;
+    }
+  }
+
+  &__alerta-msg {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7F0000;
+    text-align: center;
+    padding: 8px 0 4px;
+  }
+
+  &__opciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 14px;
+    background: var(--chip-grey-50);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--chip-grey-200);
+  }
+
+  &__opcion {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+
+    &:hover {
+      background: var(--chip-cobalt-50);
+    }
+  }
+
+  &__email {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: var(--chip-grey-800);
+    word-break: break-all;
+  }
+
+  &__mesa-servicio {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--chip-bg-solitude, #EBF0FA);
+    border-left: 3px solid var(--chip-cobalt-700);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+
+    i {
+      font-size: 16px;
+      color: var(--chip-cobalt-700);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    strong {
+      color: var(--chip-cobalt-700);
+    }
+  }
+}
