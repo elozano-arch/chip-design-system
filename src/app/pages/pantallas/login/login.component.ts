@@ -42,17 +42,7 @@ export class LoginComponent {
   contrasenaTouched = false;
   loginFormSubmitted = false;
 
-  // ── Bloqueo de seguridad ──
-  /** Contador local de intentos fallidos en la sesión actual del navegador. */
-  intentosFallidos = 0;
-  /**
-   * Máximo de intentos fallidos antes de bloquear la cuenta.
-   * Variable parametrizable: viene del campo `intentos_fallidos` del rol
-   * asignado al usuario (ver pantalla 'Modificar Datos del Rol').
-   * En producción: `usuario.rol.intentos_fallidos`.
-   * Mock: 3, equivalente a la variable `{{intentos_fallidos}}`.
-   */
-  intentosFallidosMax = 3;
+  /** Se activa cuando el usuario está bloqueado (enabled = 0 en BD). */
   bloqueado = false;
 
   // Versión del sistema
@@ -121,25 +111,15 @@ export class LoginComponent {
   }
 
   /**
-   * Mock de usuarios para demostrar las 4 ramas del flujo de login (diagrama CGN).
-   * En producción esto vendría del backend.
-   *
-   * - JLMUNOZ + demo123  → ingreso exitoso normal.
-   * - VENCIDO + demo123  → contraseña caducada (last_password_change_date + duration < hoy).
-   * - PRIMER  + demo123  → primer ingreso (password_changed_required = 1).
-   * - BLOQUEADO + cualquier → usuario inactivo en BD (enabled = 0).
-   * - Cualquier otro → credenciales incorrectas (failed_logins +1, bloqueo al 3er intento).
+   * Mock de usuarios — versión simplificada para demo.
+   * Solo se consideran 3 escenarios:
+   * - JLMUNOZ + demo123     → ingreso exitoso.
+   * - BLOQUEADO + cualquier → cuenta bloqueada (enabled = 0).
+   * - Cualquier otro        → credenciales incorrectas.
    */
-  private readonly USUARIOS_MOCK: Record<string, {
-    password: string;
-    enabled: boolean;
-    passwordChangedRequired: boolean;
-    passwordExpired: boolean;
-  }> = {
-    JLMUNOZ: { password: 'demo123', enabled: true, passwordChangedRequired: false, passwordExpired: false },
-    VENCIDO: { password: 'demo123', enabled: true, passwordChangedRequired: false, passwordExpired: true },
-    PRIMER: { password: 'demo123', enabled: true, passwordChangedRequired: true, passwordExpired: false },
-    BLOQUEADO: { password: 'demo123', enabled: false, passwordChangedRequired: false, passwordExpired: false },
+  private readonly USUARIOS_MOCK: Record<string, { password: string; enabled: boolean }> = {
+    JLMUNOZ: { password: 'demo123', enabled: true },
+    BLOQUEADO: { password: 'demo123', enabled: false },
   };
 
   onSubmit() {
@@ -158,61 +138,20 @@ export class LoginComponent {
       const userKey = this.usuario.trim().toUpperCase();
       const user = this.USUARIOS_MOCK[userKey];
 
-      // Rama 1: enabled = 0 → bloqueado en BD (texto exacto solicitado)
+      // Caso 1: usuario bloqueado (enabled = 0)
       if (user && !user.enabled) {
         this.bloqueado = true;
         this.errorMsg = 'El usuario está bloqueado y no puede conectarse a la aplicación. Por favor contacte al administrador del sistema.';
         return;
       }
 
-      // Rama 2: contraseña incorrecta (usuario inexistente o pass mal)
+      // Caso 2: credenciales incorrectas (usuario inexistente o contraseña mal)
       if (!user || user.password !== this.contrasena) {
-        this.intentosFallidos++;
-        const restantes = this.intentosFallidosMax - this.intentosFallidos;
-        if (this.intentosFallidos >= this.intentosFallidosMax) {
-          // failed_logins >= max_failed_logins → set enabled = 0
-          this.bloqueado = true;
-          this.errorMsg = 'El usuario está bloqueado y no puede conectarse a la aplicación. Por favor contacte al administrador del sistema.';
-        } else {
-          this.errorMsg = `Usuario o contraseña incorrectos. Le quedan ${restantes} intento${restantes === 1 ? '' : 's'}.`;
-        }
+        this.errorMsg = 'Usuario o contraseña incorrectos.';
         return;
       }
 
-      // Credenciales correctas — reset contador
-      this.intentosFallidos = 0;
-
-      // Rama 3: password_changed_required = 1 → forzar cambio (primer ingreso)
-      if (user.passwordChangedRequired) {
-        this.messageService.add({
-          severity: 'info',
-          summary: 'Primer ingreso',
-          detail: 'Por seguridad, debe cambiar su contraseña antes de continuar.',
-          life: 4000,
-        });
-        setTimeout(() => this.router.navigate(
-          ['/pantallas/seguridad/cambiar-contrasena'],
-          { queryParams: { forzado: 'true', motivo: 'primer-ingreso' } },
-        ), 1200);
-        return;
-      }
-
-      // Rama 4: contraseña caducada (last_password_change_date + duration < hoy)
-      if (user.passwordExpired) {
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Contraseña vencida',
-          detail: 'Por motivos de seguridad, su contraseña del CHIP debe renovarse.',
-          life: 4000,
-        });
-        setTimeout(() => this.router.navigate(
-          ['/pantallas/seguridad/cambiar-contrasena'],
-          { queryParams: { forzado: 'true', motivo: 'caducidad' } },
-        ), 1200);
-        return;
-      }
-
-      // Rama final: ingreso exitoso
+      // Caso 3: ingreso exitoso
       this.messageService.add({
         severity: 'success',
         summary: 'Bienvenido',
