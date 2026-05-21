@@ -784,3 +784,138 @@ textarea.p-inputtext {
     color: var(--chip-cobalt-300) !important;
   }
 }
+
+/* ============================================================
+   Panel "DEMO" compartido (.demo-help)
+   Mock-only: ayuda visual para que los stakeholders descubran
+   y prueben los estados de una pantalla en el demo desplegado.
+   Usado hoy por: login (credenciales) y cambiar-contraseña (estados).
+   ============================================================ */
+.demo-help {
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--chip-grey-100);
+  border-left: 4px solid var(--chip-cobalt-700);
+  border-radius: var(--radius-md, 8px);
+  padding: 16px 20px 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+
+    i {
+      color: var(--chip-cobalt-700);
+      font-size: 16px;
+    }
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+    flex: 1;
+  }
+
+  &__badge {
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-700);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+  }
+
+  &__intro {
+    font-size: 12px;
+    color: var(--chip-grey-600);
+    margin: 0 0 10px;
+    line-height: 1.5;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--chip-grey-800);
+      line-height: 1.5;
+    }
+  }
+
+  &__creds {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+
+    code {
+      font-family: 'Courier New', monospace;
+      background: var(--chip-bg-solitude);
+      color: var(--chip-cobalt-700);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+  }
+
+  &__arrow {
+    color: var(--chip-grey-400);
+    font-weight: 700;
+  }
+
+  &__result {
+    color: var(--chip-grey-700);
+    flex: 1 1 auto;
+  }
+
+  /* Link visualmente discreto para "Ver estado" — usado en cambiar-contraseña */
+  &__try {
+    color: var(--chip-cobalt-700);
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 1px dashed var(--chip-cobalt-300);
+    padding-bottom: 1px;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--chip-cobalt-800);
+      border-bottom-color: var(--chip-cobalt-700);
+      outline: none;
+    }
+
+    &--current {
+      color: var(--chip-grey-500);
+      border-bottom-color: var(--chip-grey-300);
+      pointer-events: none;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .demo-help__list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+
+    .demo-help__arrow { display: none; }
+  }
+}

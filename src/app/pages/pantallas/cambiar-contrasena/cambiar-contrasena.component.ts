@@ -1,16 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DialogModule } from 'primeng/dialog';
-import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
-import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
@@ -34,9 +32,9 @@ interface DispositivoActivo {
   selector: 'app-cambiar-contrasena',
   standalone: true,
   imports: [
-    CommonModule, FormsModule,
+    CommonModule, FormsModule, RouterModule,
     ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
-    DialogModule, MessageModule, ToastModule, TagModule,
+    DialogModule, ToastModule,
     AppBreadcrumbComponent, FormErrorBannerComponent,
   ],
   providers: [MessageService],
@@ -44,8 +42,20 @@ interface DispositivoActivo {
   styleUrl: './cambiar-contrasena.component.scss',
 })
 export class CambiarContrasenaComponent implements OnInit {
-  // CH-1374: modo forzado tras login con contraseña vencida
-  modoForzado = false;
+  /**
+   * Indica que el usuario llegó a esta pantalla sin sesión iniciada
+   * (típicamente desde el link "Activar cuenta" del correo de creación).
+   * Cuando es true se oculta el breadcrumb porque no hay navegación
+   * contextual válida — el usuario no está dentro de la app.
+   */
+  sinSesion = false;
+
+  /**
+   * Se activa cuando el enlace del correo ya fue usado o caducó.
+   * Bloquea el formulario con un modal que pide al usuario solicitar
+   * un nuevo enlace de recuperación.
+   */
+  linkInvalido = false;
 
   showDialog = false;
   loading = false;
@@ -140,17 +150,22 @@ export class CambiarContrasenaComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // CH-1374: si se llega con ?forzado=true (desde login con caducidad o
-    // primer ingreso, o desde link de correo), activar modo forzado.
-    // En modo forzado el form se renderiza INLINE en la página, NO en modal
-    // (es una redirección, no un overlay sobre otra pantalla).
+    // Lee flags de la URL para distinguir los escenarios de entrada:
+    // - ?sinSesion=true    → activación desde correo (sin breadcrumb).
+    // - ?linkInvalido=true → link usado o caducado (modal bloqueante sobre la vista).
+    // - sin params         → entrada desde la app con sesión (con breadcrumb).
+    // Suscripción mantiene los flags sincronizados cuando se cambia de
+    // estado vía links del panel demo (sin recargar el componente).
     this.route.queryParamMap.subscribe(params => {
-      if (params.get('forzado') === 'true') {
-        this.modoForzado = true;
-        this.seguridadInfo.diasParaVencer = 0;
-        // No abrir el modal — el form está inline en la página.
-      }
+      this.linkInvalido = params.get('linkInvalido') === 'true';
+      this.sinSesion = params.get('sinSesion') === 'true' || this.linkInvalido;
     });
+  }
+
+  /** Cierra el modal de link inválido y manda al usuario al login. */
+  irALogin() {
+    this.linkInvalido = false;
+    this.router.navigate(['/pantallas/seguridad/login']);
   }
 
   get vencida(): boolean {
@@ -214,8 +229,6 @@ export class CambiarContrasenaComponent implements OnInit {
   }
 
   cerrarDialog() {
-    // CH-1374: en modo forzado el modal no se puede cerrar manualmente
-    if (this.modoForzado) return;
     this.showDialog = false;
     this.resetForm();
   }
@@ -254,9 +267,9 @@ export class CambiarContrasenaComponent implements OnInit {
       this.loading = false;
       this.messageService.add({
         severity: 'success',
-        summary: 'Contraseña actualizada',
-        detail: this.modoForzado
-          ? 'Su contraseña fue cambiada. Ingresando al sistema…'
+        summary: this.sinSesion ? 'Cuenta activada' : 'Contraseña actualizada',
+        detail: this.sinSesion
+          ? 'Su cuenta ha sido activada. Ya puede iniciar sesión.'
           : 'Su contraseña fue cambiada exitosamente.',
         life: 4000,
       });
@@ -264,15 +277,6 @@ export class CambiarContrasenaComponent implements OnInit {
       this.seguridadInfo.ultimoCambio = 'Hoy';
       this.seguridadInfo.diasDesdeUltimoCambio = 0;
       this.seguridadInfo.diasParaVencer = 90;
-
-      // CH-1374: si fue cambio forzado, liberar el modo y redirigir al home
-      if (this.modoForzado) {
-        this.modoForzado = false;
-        this.showDialog = false;
-        this.resetForm();
-        setTimeout(() => this.router.navigate(['/']), 1500);
-        return;
-      }
       this.cerrarDialog();
     }, 800);
   }
