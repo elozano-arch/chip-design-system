@@ -12,6 +12,41 @@
 
 ---
 
+## 🚦 Triage de pedidos visuales (obligatorio)
+
+**Cuándo aplica:** cualquier pedido que toque UI — pantalla nueva, ajuste de componente, cambio de estilo, propuesta traída por el analista desde la diseñadora, fix visual, etc. El hook `UserPromptSubmit` (`.claude/hooks/ui-triage.js`) inyecta este recordatorio automáticamente cuando detecta vocabulario visual en el prompt.
+
+**Antes de implementar nada, declara en respuesta breve los 4 puntos:**
+
+1. **Sección del Kit UI 9.2 que aplica** (`docs/kit-ui-9-2.pdf`). Si la pantalla/elemento no encaja en ninguna sección del Kit, dilo explícitamente — eso ya es una desviación que merece confirmación.
+2. **Componente PrimeNG que vas a usar.** Si no hay uno compatible, justifica por qué la alternativa (custom, otra librería de la allowlist, etc.) — no inventes ni cambies de librería sin discutirlo.
+3. **Desviaciones del DS que el pedido implica.** Lista cada una. Para cada desviación: propone la versión Kit-UI-aligned como default; **sólo** implementa la versión "desviada" si el usuario confirma explícitamente. Esto aplica especialmente cuando el pedido viene de la diseñadora — el rol del analista es traducir, no ratificar drift.
+4. **Dependencias npm nuevas necesarias.** Si requiere agregar un paquete fuera de la allowlist (ver siguiente sección), pide confirmación antes de tocar `package.json`.
+
+Este triage es obligatorio incluso si el pedido viene formulado como "agrega X" o "haz Y" — no implementes hasta haberlo declarado.
+
+---
+
+## 📦 Dependencias permitidas (allowlist)
+
+Stack cerrado. Cualquier paquete fuera de esta lista requiere confirmación explícita del usuario **antes** de agregarse a `package.json`.
+
+**Permitidos sin pedir confirmación:**
+- `@angular/*` (core, common, forms, router, animations, cli, etc.) alineado a la versión del proyecto (19.x).
+- `primeng` (versión del proyecto) y `primeicons`.
+- `rxjs`, `zone.js`, `tslib` — transitivas estándar de Angular.
+- DevDeps de Angular ya incluidas: `typescript`, `karma`, `jasmine-*`, `@types/*`.
+
+**Prohibidos (no proponer ni instalar):**
+- Otros frameworks UI: React, Vue, Svelte, Solid, jQuery.
+- CSS frameworks alternativos: Tailwind, Bootstrap (CSS o JS), Bulma.
+- Librerías de componentes paralelas a PrimeNG: ng-bootstrap, NG-ZORRO, Angular Material, Clarity, PrimeFlex visual override.
+- Librerías de animación pesadas: GSAP, Lottie, Framer Motion.
+
+**Caso especial — utilidades genuinamente útiles** (date-fns, lodash, zod, etc.): siempre confirmar primero y justificar por qué no se puede resolver con lo ya instalado. Preferir implementaciones cortas en TS antes que agregar dependencias.
+
+---
+
 ## 📐 Identidad visual (Kit UI 9.2 GOV.CO)
 
 ### Tipografías (obligatorio)
