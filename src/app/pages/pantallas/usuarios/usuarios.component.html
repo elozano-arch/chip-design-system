@@ -670,11 +670,72 @@
           [value]="editFechaUltimaModificacion"
           [disabled]="true" class="w-full" />
       </div>
+
+      <!-- Acción admin: forzar restablecimiento de contraseña.
+           Outlined cobalto: misma jerarquía secundaria (no compite con Guardar)
+           pero usa el color de marca para que sea descubrible. El gris pasa
+           muy discreto para una acción que el admin va a buscar. Sin label
+           (es acción, no dato), alineada al bottom para igualar al input vecino. -->
+      <div class="usr-dialog__field usr-dialog__action-cell">
+        <p-button label="Cambiar contraseña"
+          icon="pi pi-key"
+          [outlined]="true"
+          styleClass="w-full"
+          (onClick)="abrirRestablecerDialog()" />
+      </div>
     </div>
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showEditDialog = false" />
     <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEditUsuario()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Diálogo: Confirmación para restablecer contraseña (desde Editar Usuario).
+     Replica el patrón de olvide-clave para coherencia, pero acá siempre
+     hay un usuario válido (lo está editando un admin), así que omitimos
+     la rama de mesa-de-ayuda y mostramos directamente los correos. -->
+<p-dialog
+  header="Confirmación para restablecer contraseña"
+  [(visible)]="showRestablecerDialog"
+  [modal]="true"
+  [draggable]="false"
+  [closeOnEscape]="true"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  (onHide)="cancelarRestablecer()">
+  <div class="olv-correos">
+    <p class="olv-correos__intro">
+      Los siguientes son los correos autorizados en el Sistema CHIP para el cambio
+      de contraseña, seleccione uno de ellos:
+    </p>
+
+    <div class="olv-correos__opciones" role="radiogroup" aria-label="Correos autorizados">
+      @for (correo of correosAutorizadosRestablecer; track correo; let i = $index) {
+        <label class="olv-correos__opcion">
+          <p-radioButton name="correoRestablecer" [value]="correo"
+            [(ngModel)]="correoRestablecerSeleccionado"
+            [inputId]="'correo-restablecer-' + i" />
+          <span class="olv-correos__email">{{ correo }}</span>
+        </label>
+      }
+    </div>
+
+    <div class="olv-correos__mesa-servicio" role="note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <span>
+        Si los correos no corresponden, debe comunicarse con la mesa de servicio
+        de primer nivel de la Contaduría General de la Nación al correo
+        <strong>{{ MESA_SERVICIO_EMAIL }}</strong>
+        o al PBX <strong>{{ MESA_SERVICIO_PBX }}</strong>.
+      </span>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary"
+      (onClick)="cancelarRestablecer()" />
+    <p-button label="Restablecer" icon="pi pi-check"
+      [disabled]="!correoRestablecerSeleccionado"
+      (onClick)="confirmarRestablecer()" />
   </ng-template>
 </p-dialog>
 

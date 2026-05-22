@@ -260,101 +260,7 @@
   max-width: 480px;
 }
 
-/* --- Panel "Credenciales de prueba" (mock-only) --- */
-.demo-help {
-  width: 100%;
-  background: #fff;
-  border: 1px solid var(--chip-grey-100);
-  border-left: 4px solid var(--chip-cobalt-700);
-  border-radius: var(--radius-md, 8px);
-  padding: 16px 20px 18px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-
-    i {
-      color: var(--chip-cobalt-700);
-      font-size: 16px;
-    }
-  }
-
-  &__title {
-    font-family: var(--font-heading);
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--chip-grey-900);
-    margin: 0;
-    flex: 1;
-  }
-
-  &__badge {
-    background: var(--chip-cobalt-50);
-    color: var(--chip-cobalt-700);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.6px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    text-transform: uppercase;
-  }
-
-  &__intro {
-    font-size: 12px;
-    color: var(--chip-grey-600);
-    margin: 0 0 10px;
-    line-height: 1.5;
-  }
-
-  &__list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      font-size: 12px;
-      color: var(--chip-grey-800);
-      line-height: 1.5;
-    }
-  }
-
-  &__creds {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-
-    code {
-      font-family: 'Courier New', monospace;
-      background: var(--chip-bg-solitude);
-      color: var(--chip-cobalt-700);
-      font-size: 11px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-  }
-
-  &__arrow {
-    color: var(--chip-grey-400);
-    font-weight: 700;
-  }
-
-  &__result {
-    color: var(--chip-grey-700);
-    flex: 1 1 auto;
-  }
-}
+/* Estilos del panel .demo-help están en src/styles.scss (compartido con cambiar-contraseña). */
 
 /* --- Responsive --- */
 @media (max-width: 480px) {
@@ -368,13 +274,5 @@
 
   .login-card__title {
     font-size: 22px;
-  }
-
-  .demo-help__list li {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-
-    .demo-help__arrow { display: none; }
   }
 }

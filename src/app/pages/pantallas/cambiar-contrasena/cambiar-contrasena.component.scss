@@ -3,24 +3,14 @@
    Header usa estilos globales (.cpw-header, __title, __row, __desc)
    ============================================================ */
 
-/* CH-1374: banner de bloqueo cuando se llega forzado tras login con contraseña vencida */
-.cpw-forzado-banner {
-  display: block;
-  margin: 0 auto 16px;
-  max-width: 640px;
-}
-
-/* Header de la pantalla — centrado siempre (modo normal y modo forzado),
-   diseño unificado tipo "focused task". */
+/* Header de la pantalla — centrado, diseño "focused task". */
 .cpw-page > .cpw-header {
   max-width: 640px;
   margin: 0 auto 20px;
   text-align: center;
 }
 
-/* Formulario inline (NO modal) — siempre visible. En modo forzado oculta
-   la "Contraseña actual"; en modo normal la pide para autenticar el cambio.
-   Centrado horizontalmente, focused task UX. */
+/* Formulario inline (NO modal) — centrado horizontalmente, focused task UX. */
 .cpw-forzado-form {
   background: #fff;
   border: 1px solid var(--chip-grey-200);
@@ -388,5 +378,42 @@
     }
 
     strong { color: var(--chip-grey-700); }
+  }
+}
+
+/* Wrapper del panel .demo-help dentro de esta pantalla.
+   Override visual: panel más discreto que en login (acá vive debajo del form
+   como ayuda secundaria, no en paralelo). Quitamos el border-left cobalto
+   para que NO compita visualmente con el form que es la tarea principal. */
+.cpw-demo-help {
+  max-width: 640px;
+  margin: 24px auto 0;
+  border-left: none;
+  border: 1px dashed var(--chip-grey-300);
+  box-shadow: none;
+  background: var(--chip-bg-white-smoke, #fafafa);
+}
+
+// Modal "Enlace no válido" (link de recuperación usado o caducado)
+.cpw-link-invalido {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 4px 4px;
+  gap: 12px;
+
+  &__icon {
+    font-size: 44px;
+    color: var(--chip-warning);
+    line-height: 1;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+    font-family: var(--font-body);
   }
 }

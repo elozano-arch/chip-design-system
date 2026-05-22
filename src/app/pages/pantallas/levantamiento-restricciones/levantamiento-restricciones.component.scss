@@ -1,0 +1,348 @@
+.lvr-page {
+  padding: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.lvr-header__icon {
+  display: inline-block;
+  margin-right: 10px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: var(--radius-md);
+  background: var(--chip-cobalt-50);
+  color: var(--chip-cobalt-700);
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+/* ─── Filtros: row de acciones (Limpiar + Aplicar) ─── */
+.chip-filters__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--chip-grey-200);
+}
+
+/* ─── Entidad: input que abre el directorio (igual estética que usuarios) ─── */
+.lvr-entidad-iconfield {
+  cursor: pointer;
+}
+
+.lvr-entidad-trigger-input {
+  cursor: pointer;
+  background: #fff;
+
+  &:hover:not(:disabled) {
+    border-color: var(--chip-cobalt-500);
+  }
+}
+
+.lvr-entidad-clear,
+.lvr-entidad-search {
+  cursor: pointer;
+  color: var(--chip-grey-500);
+
+  &:hover {
+    color: var(--chip-cobalt-700);
+  }
+}
+
+/* ─── Estado vacío (antes de la primera consulta) ─── */
+.lvr-empty {
+  margin-top: 24px;
+  padding: 56px 24px;
+  border: 1px dashed var(--chip-grey-300);
+  border-radius: var(--radius-md);
+  background: #fff;
+  text-align: center;
+  color: var(--chip-grey-700);
+
+  i {
+    font-size: 2.5rem;
+    color: var(--chip-cobalt-700);
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 0 0 8px;
+  }
+
+  p {
+    margin: 0 auto;
+    max-width: 560px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--chip-grey-500);
+    line-height: 1.5;
+  }
+}
+
+/* ────────────────────────────────────────────────
+   Sección de gestión (dos listas + transferencias)
+   ──────────────────────────────────────────────── */
+.lvr-pick {
+  margin-top: 24px;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+  overflow: hidden;
+}
+
+.lvr-pick__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--chip-grey-100);
+  flex-wrap: wrap;
+}
+
+.lvr-pick__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  i {
+    font-size: 18px;
+    color: var(--chip-cobalt-700);
+  }
+
+  h2 {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+  }
+}
+
+.lvr-pick__counters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.lvr-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  i { font-size: 14px; }
+
+  &--danger {
+    color: var(--chip-danger);
+    background: rgba(244, 67, 54, 0.08);
+  }
+
+  &--success {
+    color: var(--chip-success);
+    background: rgba(76, 175, 80, 0.10);
+  }
+}
+
+.lvr-pick__layout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  padding: 20px;
+  align-items: stretch;
+}
+
+/* ─── Cada lista (No Permisibles / Permisibles) ─── */
+.lvr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 12px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  &__search {
+    width: 100%;
+
+    input.p-inputtext {
+      width: 100%;
+    }
+  }
+
+  &__box {
+    width: 100%;
+  }
+
+  &--danger {
+    .lvr-list__indicator { background: var(--chip-danger); }
+    .lvr-list__title { color: var(--chip-danger); }
+  }
+
+  &--success {
+    .lvr-list__indicator { background: var(--chip-success); }
+    .lvr-list__title { color: var(--chip-success); }
+  }
+}
+
+/* Ítems dentro del listbox: codigo en azul/bold + descripción */
+.lvr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 0;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__codigo {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__desc {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    line-height: 1.35;
+  }
+}
+
+/* Badge "Modificado" — usa la paleta cobalto del DS para destacar movimientos
+   sobre los mensajes sin sobrecargar el listado. Se aplica vía ::ng-deep
+   porque PrimeNG renderiza el span interno fuera del component view. */
+:host ::ng-deep .lvr-item__badge {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--chip-cobalt-50);
+  color: var(--chip-cobalt-700);
+  text-transform: uppercase;
+
+  .p-tag-icon {
+    font-size: 10px;
+    margin-right: 4px;
+  }
+}
+
+/* Anchos completos para p-iconField/inputs internos del search */
+:host ::ng-deep .lvr-list__search.p-iconfield,
+:host ::ng-deep .lvr-list__search .p-iconfield {
+  width: 100% !important;
+  display: flex !important;
+}
+:host ::ng-deep .lvr-list__search input.p-inputtext {
+  width: 100% !important;
+}
+
+/* Listbox: hace que el host crezca para ocupar el ancho */
+:host ::ng-deep .lvr-list .p-listbox {
+  width: 100%;
+}
+
+/* ─── Columna central de transferencias ─── */
+.lvr-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 4px;
+}
+
+/* ─── Ayuda al pie de la sección ─── */
+.lvr-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 20px 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--chip-grey-700);
+  line-height: 1.45;
+  background: var(--chip-bg-solitude);
+  border-top: 1px solid var(--chip-grey-100);
+
+  i {
+    font-size: 16px;
+    color: var(--chip-cobalt-700);
+    margin-top: 2px;
+  }
+}
+
+/* ─── Diálogo de confirmación ─── */
+.lvr-dialog-confirm {
+  text-align: center;
+  padding: 8px 0 4px;
+  font-family: var(--font-body);
+
+  &__icon {
+    display: block;
+    margin: 0 auto 12px;
+    font-size: 36px;
+    color: var(--chip-warning);
+  }
+
+  p {
+    margin: 0 0 10px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+
+    &:last-child { margin-bottom: 0; }
+  }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 992px) {
+  .lvr-pick__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .lvr-actions {
+    flex-direction: row;
+    justify-content: center;
+    padding: 4px 0;
+  }
+}

@@ -1,34 +1,21 @@
 <p-toast />
 
 <div class="cpw-page" role="main">
-  @if (!modoForzado) {
+  @if (!sinSesion) {
     <app-breadcrumb />
   }
 
   <div class="cpw-header">
-    @if (modoForzado) {
-      <p-message severity="warn" styleClass="w-full cpw-forzado-banner">
-        <ng-template #icon>
-          <i class="pi pi-lock"></i>
-        </ng-template>
-        <span>
-          <strong>Acceso bloqueado:</strong>
-          su contraseña ha vencido. Para continuar usando el sistema debe establecer una nueva.
-        </span>
-      </p-message>
-      <h1 class="cpw-header__title">Establecer nueva contraseña</h1>
-      <div class="cpw-header__row">
-        <p class="cpw-header__desc">Cree una nueva contraseña que cumpla con la política de seguridad para acceder al CHIP.</p>
-      </div>
-    } @else {
-      <h1 class="cpw-header__title">Cambiar contraseña</h1>
-      <div class="cpw-header__row">
-        <p class="cpw-header__desc">Mantenga su cuenta segura actualizando su contraseña periódicamente.</p>
-      </div>
-    }
+    <h1 class="cpw-header__title">Cambiar contraseña</h1>
+    <div class="cpw-header__row">
+      <p class="cpw-header__desc">Mantenga su cuenta segura actualizando su contraseña periódicamente.</p>
+    </div>
   </div>
 
-  <!-- Form inline siempre (no modal) — diseño unificado independiente del modo. -->
+  <!-- Form inline. Se oculta cuando linkInvalido=true porque el modal
+       bloquea la interacción y mostrar el form detrás genera confusión
+       ("¿el form sí funciona y solo tengo que cerrar el modal?"). -->
+  @if (!linkInvalido) {
   <section class="cpw-forzado-form" aria-labelledby="cpw-form-title">
     <h2 id="cpw-form-title" class="cpw-forzado-form__title">Nueva contraseña</h2>
 
@@ -111,13 +98,81 @@
       [errors]="cpwBannerErrors"
       [summary]="cpwBannerSummary" />
 
-    <!-- Acción final -->
+    <!-- Acción final. Label condicional: si el usuario entró desde un correo
+         de activación, está creando su primera contraseña, no actualizando. -->
     <div class="cpw-forzado-form__actions">
-      <p-button [label]="modoForzado ? 'Cambiar contraseña y continuar' : 'Guardar cambios'"
+      <p-button [label]="sinSesion ? 'Activar cuenta' : 'Guardar cambios'"
         icon="pi pi-check"
         (onClick)="guardar()"
         [loading]="loading"
         [disabled]="!formValido || loading" />
     </div>
   </section>
+  }
+
+  <!-- Panel demo (mock-only): permite a los stakeholders descubrir y probar
+       los estados de la pantalla cuando esté desplegada en Vercel.
+       Sólo se muestra en el estado por defecto, para no estorbar cuando
+       el usuario ya está dentro de un estado específico. -->
+  @if (!sinSesion) {
+    <aside class="cpw-demo-help demo-help" aria-label="Estados de la pantalla para el demo">
+      <div class="demo-help__header">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        <h2 class="demo-help__title">Estados de la pantalla</h2>
+        <span class="demo-help__badge">DEMO</span>
+      </div>
+      <p class="demo-help__intro">
+        Esta pantalla tiene varios estados según cómo llegue el usuario.
+        Haga clic en cada uno para verlo en acción:
+      </p>
+      <ul class="demo-help__list">
+        <li>
+          <span class="demo-help__creds"><strong>Con sesión</strong> (desde la app)</span>
+          <span class="demo-help__arrow" aria-hidden="true">→</span>
+          <span class="demo-help__result">
+            <span class="demo-help__try demo-help__try--current">Estado actual</span>
+          </span>
+        </li>
+        <li>
+          <span class="demo-help__creds"><strong>Activación</strong> desde correo</span>
+          <span class="demo-help__arrow" aria-hidden="true">→</span>
+          <span class="demo-help__result">
+            <a [routerLink]="[]" [queryParams]="{ sinSesion: true }" class="demo-help__try">Ver sin miga de pan</a>
+          </span>
+        </li>
+        <li>
+          <span class="demo-help__creds"><strong>Enlace inválido</strong> (usado o caducado)</span>
+          <span class="demo-help__arrow" aria-hidden="true">→</span>
+          <span class="demo-help__result">
+            <a [routerLink]="[]" [queryParams]="{ linkInvalido: true }" class="demo-help__try">Ver modal de error</a>
+          </span>
+        </li>
+      </ul>
+    </aside>
+  }
+
+  <!-- Modal: link de recuperación inválido (usado o caducado) -->
+  <p-dialog
+    [(visible)]="linkInvalido"
+    header="Enlace no válido"
+    [modal]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [closable]="false"
+    [closeOnEscape]="false"
+    [style]="{ width: '480px' }"
+    styleClass="cpw-link-invalido-dialog">
+    <div class="cpw-link-invalido">
+      <i class="pi pi-exclamation-triangle cpw-link-invalido__icon" aria-hidden="true"></i>
+      <p class="cpw-link-invalido__text">
+        El enlace de recuperación ya no es válido (puede que haya sido utilizado o que haya caducado).
+      </p>
+      <p class="cpw-link-invalido__text">
+        Para continuar, debe solicitar nuevamente un cambio de contraseña desde la pantalla de inicio de sesión.
+      </p>
+    </div>
+    <ng-template #footer>
+      <p-button label="Aceptar" icon="pi pi-check" (onClick)="irALogin()" />
+    </ng-template>
+  </p-dialog>
 </div>

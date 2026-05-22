@@ -165,6 +165,17 @@ export const routes: Routes = [
       import('./pages/pantallas/auditoria/auditoria.component').then(m => m.AuditoriaComponent),
   },
   {
+    path: 'pantallas/categorias/levantamiento-restricciones',
+    data: {
+      breadcrumb: [
+        { label: 'Categorías', icon: 'pi pi-tags', routerLink: '/pantallas/categorias/levantamiento-restricciones' },
+        { label: 'Levantamiento de Restricciones' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/levantamiento-restricciones/levantamiento-restricciones.component').then(m => m.LevantamientoRestriccionesComponent),
+  },
+  {
     path: 'pantallas/formularios/gestion',
     data: {
       breadcrumb: [

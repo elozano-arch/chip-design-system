@@ -233,6 +233,15 @@
     }
   }
 
+  /* Celda de acción (sin label) — alinea su botón al bottom para que
+     quede a la altura del input del campo vecino (no del label). */
+  &__action-cell {
+    justify-content: flex-end;
+
+    /* PrimeNG envuelve el botón en un <button>; el styleClass="w-full"
+       que pasamos lo hace ocupar todo el ancho de la celda. */
+  }
+
   &__help {
     font-size: 12px;
     color: var(--chip-grey-500);

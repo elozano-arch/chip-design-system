@@ -28,6 +28,7 @@ export class AppComponent {
   seguridadOpen = true;
   formulariosOpen = true;
   formulariosSubOpen = true;
+  categoriasOpen = true;
 
   constructor() {
     const saved = localStorage.getItem('chip-sidebar-collapsed');
