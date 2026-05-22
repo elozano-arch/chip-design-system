@@ -176,10 +176,10 @@ export const routes: Routes = [
       import('./pages/pantallas/levantamiento-restricciones/levantamiento-restricciones.component').then(m => m.LevantamientoRestriccionesComponent),
   },
   {
-    path: 'pantallas/formularios',
+    path: 'pantallas/formularios/gestion',
     data: {
       breadcrumb: [
-        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Formularios', icon: 'pi pi-file-edit', routerLink: '/pantallas/formularios/gestion' },
         { label: 'Gestión de Formularios' },
       ],
     },

@@ -26,6 +26,8 @@ export class AppComponent {
   sidebarCollapsed = false;
   darkMode = false;
   seguridadOpen = true;
+  formulariosOpen = true;
+  formulariosSubOpen = true;
   categoriasOpen = true;
 
   constructor() {

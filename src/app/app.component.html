@@ -148,9 +148,36 @@
       }
 
       <!-- ══ FORMULARIOS ══ -->
-      <a routerLink="/pantallas/formularios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Formularios' : ''" tooltipPosition="right">
+      <button class="app-sidebar__link app-sidebar__toggle-sub" (click)="formulariosOpen = !formulariosOpen"
+        [attr.aria-expanded]="formulariosOpen"
+        [pTooltip]="sidebarCollapsed ? 'Formularios' : ''" tooltipPosition="right">
         <i class="pi pi-file-edit"></i> <span class="app-sidebar__label">Formularios</span>
-      </a>
+        @if (!sidebarCollapsed) {
+          <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!formulariosOpen" [class.pi-chevron-up]="formulariosOpen"></i>
+        }
+      </button>
+      @if (formulariosOpen && !sidebarCollapsed) {
+        <div class="app-sidebar__submenu">
+          <!-- Nivel 2: Formularios (colapsable) -->
+          <button class="app-sidebar__sub-toggle" (click)="formulariosSubOpen = !formulariosSubOpen"
+            [attr.aria-expanded]="formulariosSubOpen">
+            <i class="pi pi-folder"></i> <span class="app-sidebar__label">Formularios</span>
+            <i class="pi app-sidebar__sub-chevron" [class.pi-chevron-down]="!formulariosSubOpen" [class.pi-chevron-up]="formulariosSubOpen"></i>
+          </button>
+          @if (formulariosSubOpen) {
+            <div class="app-sidebar__sub-children">
+              <a routerLink="/pantallas/formularios/gestion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sub-item" (click)="mobileMenuOpen = false">
+                <i class="pi pi-list"></i> <span class="app-sidebar__label">Gestión de Formularios</span>
+              </a>
+            </div>
+          }
+        </div>
+      }
+      @if (sidebarCollapsed) {
+        <a routerLink="/pantallas/formularios/gestion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Gestión de Formularios" tooltipPosition="right">
+          <i class="pi pi-list"></i> <span class="app-sidebar__label">Gestión de Formularios</span>
+        </a>
+      }
 
       <!-- ══ PLANTILLAS DE CORREO ══ -->
       <a routerLink="/pantallas/correos" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Plantillas de correo' : ''" tooltipPosition="right">

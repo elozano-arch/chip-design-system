@@ -114,7 +114,7 @@ export class PerfilUsuarioComponent {
       label: 'Formularios',
       descripcion: 'Cargue, valide y publique formularios contables.',
       icono: 'pi pi-file-edit',
-      routerLink: '/pantallas/formularios',
+      routerLink: '/pantallas/formularios/gestion',
       color: 'info',
     },
     {
