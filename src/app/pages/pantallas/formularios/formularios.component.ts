@@ -113,6 +113,17 @@ interface ProtocoloLista {
   valores: ProtocoloValorLista[];
 }
 
+/** Formatos soportados por el botón estándar "Descargar". */
+type DownloadFormatId = 'csv' | 'xlsx' | 'pdf' | 'txt';
+
+interface DownloadFormat {
+  label: string;
+  icon: string;
+  format: DownloadFormatId;
+  /** Texto de tooltip con restricciones/características del formato. */
+  info: string;
+}
+
 @Component({
   selector: 'app-formularios',
   standalone: true,
@@ -931,26 +942,17 @@ export class FormulariosComponent {
     );
   });
 
-  /** Descarga el catálogo CONCEPTOS como CSV (alias específico para el tab). */
-  descargarConceptos(): void {
-    const lista = this.listas['CONCEPTOS'];
-    const filas = [['Código', 'Nombre'], ...lista.valores.map(v => [v.codigo, v.nombre])];
-    const csv = filas
-      .map(fila => fila.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Lista_CONCEPTOS.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Archivo descargado',
-      detail: 'Lista_CONCEPTOS.csv',
-      life: 3000,
-    });
+  /**
+   * Descarga el catálogo CONCEPTOS en el formato indicado.
+   * CSV se genera en cliente (mock real). Excel/PDF/TXT muestran toast de simulación.
+   */
+  descargarConceptos(format: DownloadFormatId = 'csv'): void {
+    if (format === 'csv') {
+      const lista = this.listas['CONCEPTOS'];
+      this.descargarValoresCSV(lista.nombre, lista.valores);
+      return;
+    }
+    this.toastDescargaSimulada('CONCEPTOS', format);
   }
 
   /** Catálogos referenciados por las variables tipo Lista. */
@@ -1007,11 +1009,27 @@ export class FormulariosComponent {
     this.busquedaLista.set('');
   }
 
-  /** Descarga el catálogo activo como CSV con BOM UTF-8 (compatible Excel). */
-  descargarLista(): void {
+  /** Descarga el catálogo activo del modal Ver Lista en el formato indicado. */
+  descargarLista(format: DownloadFormatId = 'csv'): void {
     const lista = this.listaActiva();
     if (!lista) return;
-    const filas = [['Código', 'Nombre'], ...lista.valores.map(v => [v.codigo, v.nombre])];
+    if (format === 'csv') {
+      this.descargarValoresCSV(lista.nombre, lista.valores);
+      return;
+    }
+    this.toastDescargaSimulada(lista.nombre, format);
+  }
+
+  /** Descarga el protocolo (archivo plano) en el formato indicado. */
+  descargarProtocolo(format: DownloadFormatId = 'txt'): void {
+    this.toastDescargaSimulada('PROTOCOLO', format);
+  }
+
+  // ── Helpers de descarga reutilizables ──
+
+  /** Genera CSV con BOM UTF-8 (compatible Excel) y dispara la descarga. */
+  private descargarValoresCSV(nombre: string, valores: ProtocoloValorLista[]): void {
+    const filas = [['Código', 'Nombre'], ...valores.map(v => [v.codigo, v.nombre])];
     const csv = filas
       .map(fila => fila.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
       .join('\n');
@@ -1019,25 +1037,62 @@ export class FormulariosComponent {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Lista_${lista.nombre}.csv`;
+    a.download = `${nombre}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     this.messageService.add({
       severity: 'success',
       summary: 'Archivo descargado',
-      detail: `Lista_${lista.nombre}.csv`,
+      detail: `${nombre}.csv`,
       life: 3000,
     });
   }
 
-  descargarProtocolo(): void {
+  /** Toast informativo para formatos no implementados en cliente (XLSX/PDF/TXT). */
+  private toastDescargaSimulada(nombre: string, format: DownloadFormatId): void {
     this.messageService.add({
       severity: 'info',
-      summary: 'Descargando protocolo',
-      detail: 'Se está generando el archivo plano de importación.',
+      summary: 'Descarga en proceso',
+      detail: `Generando ${nombre} en formato ${format.toUpperCase()}…`,
       life: 3000,
     });
   }
+
+  // ── Botón "Descargar" estándar: formatos disponibles + menús por destino ──
+  readonly downloadFormats: DownloadFormat[] = [
+    { label: 'CSV — Valores separados por comas', icon: 'pi pi-file', format: 'csv',
+      info: 'Sin límite de filas. Encoding UTF-8. Encabezados incluidos.' },
+    { label: 'Excel (XLSX)', icon: 'pi pi-file-excel', format: 'xlsx',
+      info: 'Máximo 50 MB por archivo. Hasta 1.048.576 filas por hoja. Múltiples hojas permitidas.' },
+    { label: 'PDF', icon: 'pi pi-file-pdf', format: 'pdf',
+      info: 'Máximo 10.000 líneas por archivo. División automática si excede el límite.' },
+    { label: 'TXT', icon: 'pi pi-file', format: 'txt',
+      info: 'Sin límite de filas. Encoding UTF-8. Formato de texto plano.' },
+  ];
+
+  /** MenuItem[] para el botón "Descargar" del tab Conceptos. */
+  readonly downloadItemsConceptos: MenuItem[] = this.downloadFormats.map(f => ({
+    label: f.label,
+    icon: f.icon,
+    command: () => this.descargarConceptos(f.format),
+    tooltipOptions: { tooltipLabel: f.info, tooltipPosition: 'left' },
+  }));
+
+  /** MenuItem[] para el botón "Descargar" del modal Ver Lista. */
+  readonly downloadItemsLista: MenuItem[] = this.downloadFormats.map(f => ({
+    label: f.label,
+    icon: f.icon,
+    command: () => this.descargarLista(f.format),
+    tooltipOptions: { tooltipLabel: f.info, tooltipPosition: 'left' },
+  }));
+
+  /** MenuItem[] para el botón "Descargar protocolo" del header del protocolo. */
+  readonly downloadItemsProtocolo: MenuItem[] = this.downloadFormats.map(f => ({
+    label: f.label,
+    icon: f.icon,
+    command: () => this.descargarProtocolo(f.format),
+    tooltipOptions: { tooltipLabel: f.info, tooltipPosition: 'left' },
+  }));
 
   private generarConceptosProtocolo(): ProtocoloValorLista[] {
     return [

@@ -588,8 +588,29 @@
           </div>
 
           <div class="prot-info__actions">
-            <p-button label="Descargar protocolo" icon="pi pi-download" [outlined]="true"
-              severity="secondary" (onClick)="descargarProtocolo()" />
+            <p-button [outlined]="true" severity="secondary"
+              styleClass="prot-download-trigger"
+              ariaLabel="Descargar protocolo en distintos formatos"
+              (onClick)="dlMenuProtocolo.toggle($event)">
+              <ng-template #content>
+                <i class="pi pi-download" aria-hidden="true"></i>
+                <span>Descargar protocolo</span>
+                <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
+              </ng-template>
+            </p-button>
+            <p-menu #dlMenuProtocolo [model]="downloadItemsProtocolo" [popup]="true" appendTo="body"
+              styleClass="prot-download-menu">
+              <ng-template #item let-item>
+                <button type="button" class="prot-download-item" (click)="item.command()">
+                  <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
+                  <span class="prot-download-item__label">{{ item.label }}</span>
+                  <i class="pi pi-info-circle prot-download-item__info"
+                    [pTooltip]="item.tooltipOptions?.tooltipLabel"
+                    tooltipPosition="left"
+                    aria-hidden="true"></i>
+                </button>
+              </ng-template>
+            </p-menu>
           </div>
         </div>
 
@@ -677,9 +698,29 @@
                 <span class="prot-conceptos__count" aria-live="polite">
                   {{ conceptosFiltrados().length }} de {{ listas['CONCEPTOS'].valores.length }} conceptos
                 </span>
-                <p-button label="Descargar CSV" icon="pi pi-download" [outlined]="true"
-                  severity="secondary" size="small"
-                  (onClick)="descargarConceptos()" />
+                <p-button [outlined]="true" severity="secondary" size="small"
+                  styleClass="prot-download-trigger"
+                  ariaLabel="Descargar conceptos en distintos formatos"
+                  (onClick)="dlMenuConceptos.toggle($event)">
+                  <ng-template #content>
+                    <i class="pi pi-download" aria-hidden="true"></i>
+                    <span>Descargar</span>
+                    <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
+                  </ng-template>
+                </p-button>
+                <p-menu #dlMenuConceptos [model]="downloadItemsConceptos" [popup]="true" appendTo="body"
+                  styleClass="prot-download-menu">
+                  <ng-template #item let-item>
+                    <button type="button" class="prot-download-item" (click)="item.command()">
+                      <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
+                      <span class="prot-download-item__label">{{ item.label }}</span>
+                      <i class="pi pi-info-circle prot-download-item__info"
+                        [pTooltip]="item.tooltipOptions?.tooltipLabel"
+                        tooltipPosition="left"
+                        aria-hidden="true"></i>
+                    </button>
+                  </ng-template>
+                </p-menu>
               </div>
 
               <p-table [value]="conceptosFiltrados()"
@@ -1033,7 +1074,7 @@
     [modal]="true"
     [draggable]="false"
     [closeOnEscape]="true"
-    [style]="{ width: '720px', maxWidth: '95vw' }"
+    [style]="{ width: '820px', maxWidth: '96vw' }"
     [header]="listaActiva() ? 'Valores de la lista · ' + listaActiva()!.nombre : 'Valores de la lista'">
 
     @if (listaActiva(); as lista) {
@@ -1058,12 +1099,11 @@
           [stripedRows]="true"
           [rowHover]="true"
           [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50]"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 25]"
           [showCurrentPageReport]="true"
-          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} valores"
-          styleClass="prot-lista__table"
-          [scrollable]="true" scrollHeight="320px">
+          currentPageReportTemplate="{first}-{last} de {totalRecords}"
+          styleClass="prot-lista__table">
           <ng-template #caption>
             <span class="sr-only">Valores válidos para la variable tipo lista</span>
           </ng-template>
@@ -1094,8 +1134,28 @@
     <ng-template #footer>
       <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
         (onClick)="cerrarLista()" />
-      <p-button label="Descargar CSV" icon="pi pi-download"
-        (onClick)="descargarLista()" />
+      <p-button styleClass="prot-download-trigger"
+        ariaLabel="Descargar lista en distintos formatos"
+        (onClick)="dlMenuLista.toggle($event)">
+        <ng-template #content>
+          <i class="pi pi-download" aria-hidden="true"></i>
+          <span>Descargar</span>
+          <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
+        </ng-template>
+      </p-button>
+      <p-menu #dlMenuLista [model]="downloadItemsLista" [popup]="true" appendTo="body"
+        styleClass="prot-download-menu">
+        <ng-template #item let-item>
+          <button type="button" class="prot-download-item" (click)="item.command()">
+            <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
+            <span class="prot-download-item__label">{{ item.label }}</span>
+            <i class="pi pi-info-circle prot-download-item__info"
+              [pTooltip]="item.tooltipOptions?.tooltipLabel"
+              tooltipPosition="left"
+              aria-hidden="true"></i>
+          </button>
+        </ng-template>
+      </p-menu>
     </ng-template>
   </p-dialog>
 </div>
