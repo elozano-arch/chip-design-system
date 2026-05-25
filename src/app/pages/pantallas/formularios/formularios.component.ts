@@ -853,55 +853,105 @@ export class FormulariosComponent {
   // proviene del Paso 1 del wizard — no hay selects propios.
   // ──────────────────────────────────────────────────────────────────────
 
-  /** Variables del registro de cabecera (1 fila por archivo). */
-  readonly registrosCabecera: ProtocoloVariable[] = [
-    { numero: 1, tipoRegistro: 'Cabecera', nombre: 'Tipo de Registro',
-      tipoDato: 'Texto', longitud: 1, decimales: null, unidad: '—',
-      observaciones: 'C indicando que es tipo de registro cabecera' },
-    { numero: 2, tipoRegistro: 'Cabecera', nombre: 'AÑO',
-      tipoDato: 'Numérico', longitud: 4, decimales: 0, unidad: '—',
-      observaciones: 'Año del período a reportar (ej: 2025)' },
-    { numero: 3, tipoRegistro: 'Cabecera', nombre: 'PERIODO',
-      tipoDato: 'Lista', longitud: 2, decimales: null, unidad: '—',
-      observaciones: 'Período contable del reporte',
-      listaKey: 'PERIODOS' },
-    { numero: 4, tipoRegistro: 'Cabecera', nombre: 'ENTIDAD',
-      tipoDato: 'Texto', longitud: 14, decimales: null, unidad: '—',
-      observaciones: 'Código DANE de la entidad reportante' },
-    { numero: 5, tipoRegistro: 'Cabecera', nombre: 'CATEGORIA',
-      tipoDato: 'Texto', longitud: 50, decimales: null, unidad: '—',
-      observaciones: 'Nombre de la categoría a la que pertenece el formulario' },
-    { numero: 6, tipoRegistro: 'Cabecera', nombre: 'FORMULARIO',
-      tipoDato: 'Texto', longitud: 50, decimales: null, unidad: '—',
-      observaciones: 'Nombre del formulario que se está reportando' },
+  /**
+   * Tab "Registro de Encabezado" — estructura de la fila S (única por archivo).
+   * Formato del legacy CHIP: ejemplo destacado + lista descriptiva de campos.
+   */
+  readonly ejemploCabecera =
+    'S 210641006 10103 2025 CGN001_BALANCE_GENERAL Fecha de envío';
+
+  readonly camposCabecera: Array<{ token: string; nombre: string; desc: string }> = [
+    { token: 'S', nombre: 'Tipo de Registro',
+      desc: 'Marca de inicio. Indica que la fila corresponde al registro de cabecera.' },
+    { token: '210641006', nombre: 'Código de la Entidad',
+      desc: 'Identificador DANE de la entidad reportante.' },
+    { token: '10103', nombre: 'Periodo',
+      desc: 'Periodo contable del reporte. Ej: 10103 = trimestre Ene–Mar (mes inicial 01, mes final 03).' },
+    { token: '2025', nombre: 'Año',
+      desc: 'Año al que pertenece el periodo reportado.' },
+    { token: 'CGN001_BALANCE_GENERAL', nombre: 'Nombre del Formulario',
+      desc: 'Identificador único del formulario que se está reportando.' },
+    { token: 'Fecha de envío', nombre: 'Fecha de Envío',
+      desc: 'Fecha de generación de la información en formato dd-mm-aaaa.' },
   ];
 
-  /** Variables del registro de detalle (1 fila por concepto reportado). */
-  readonly registrosDetalle: ProtocoloVariable[] = [
-    { numero: 1, tipoRegistro: 'Detalle', nombre: 'Tipo de Registro',
-      tipoDato: 'Texto', longitud: 1, decimales: null, unidad: '—',
-      observaciones: 'D indicando que es tipo de registro detalle' },
-    { numero: 2, tipoRegistro: 'Detalle', nombre: 'CONCEPTO',
-      tipoDato: 'Lista', longitud: 25, decimales: null, unidad: '—',
-      observaciones: 'Código del concepto contable a reportar',
-      listaKey: 'CONCEPTOS' },
-    { numero: 3, tipoRegistro: 'Detalle', nombre: 'SLDO_INC',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Saldo inicial del concepto' },
-    { numero: 4, tipoRegistro: 'Detalle', nombre: 'MOV_DB',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Movimiento débito del período' },
-    { numero: 5, tipoRegistro: 'Detalle', nombre: 'MOV_CR',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Movimiento crédito del período' },
-    { numero: 6, tipoRegistro: 'Detalle', nombre: 'ENT_RECIP',
-      tipoDato: 'Lista', longitud: 14, decimales: null, unidad: '—',
-      observaciones: 'Entidad recíproca asociada al movimiento',
-      listaKey: 'ENTIDADES_RECIPROCAS' },
-    { numero: 7, tipoRegistro: 'Detalle', nombre: 'VR_CTE',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Valor corriente del movimiento' },
+  /**
+   * Tab "Registro de Detalle" — estructura de las filas D (una por concepto).
+   * Las variables concretas (SLDO_INC, MOV_DB, ENT_RECIP, etc.) se documentan
+   * en el tab "Variables".
+   */
+  readonly ejemploDetalle = 'D Concepto Variables';
+
+  readonly camposDetalle: Array<{ token: string; nombre: string; desc: string }> = [
+    { token: 'D', nombre: 'Tipo de Registro',
+      desc: 'Marca de inicio. Indica que la fila corresponde al registro de detalle.' },
+    { token: 'Concepto', nombre: 'Código del Concepto',
+      desc: 'Código contable del concepto a reportar. Ver tab "Conceptos" para los valores válidos.' },
+    { token: 'Variables', nombre: 'Valores de las Variables',
+      desc: 'Valores de las variables específicas del formulario. Ver tab "Variables" para su definición.' },
   ];
+
+  /**
+   * Tab "Variables" — variables técnicas del registro de detalle.
+   * No incluye "Tipo de Registro" (D) ni "Concepto" (ya documentados en el tab Detalle).
+   */
+  readonly variables: ProtocoloVariable[] = [
+    { numero: 1, tipoRegistro: 'Detalle', nombre: 'SLDO_INC',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Saldo inicial del concepto.' },
+    { numero: 2, tipoRegistro: 'Detalle', nombre: 'MOV_DB',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Movimiento débito del período.' },
+    { numero: 3, tipoRegistro: 'Detalle', nombre: 'MOV_CR',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Movimiento crédito del período.' },
+    { numero: 4, tipoRegistro: 'Detalle', nombre: 'ENT_RECIP',
+      tipoDato: 'Lista', longitud: 14, decimales: null, unidad: '—',
+      observaciones: 'Entidad recíproca asociada al movimiento.',
+      listaKey: 'ENTIDADES_RECIPROCAS' },
+    { numero: 5, tipoRegistro: 'Detalle', nombre: 'VR_CTE',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Valor corriente del movimiento.' },
+  ];
+
+  /** Conteo total de variables (para el chip del header del protocolo). */
+  get totalVariables(): number {
+    return this.camposCabecera.length + this.camposDetalle.length + this.variables.length;
+  }
+
+  /** Buscador del tab Conceptos (filtrado en memoria sobre listas.CONCEPTOS.valores). */
+  busquedaConceptos = signal('');
+
+  conceptosFiltrados = computed<ProtocoloValorLista[]>(() => {
+    const q = this.busquedaConceptos().trim().toLowerCase();
+    const todos = this.listas['CONCEPTOS'].valores;
+    if (!q) return todos;
+    return todos.filter(c =>
+      c.codigo.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q),
+    );
+  });
+
+  /** Descarga el catálogo CONCEPTOS como CSV (alias específico para el tab). */
+  descargarConceptos(): void {
+    const lista = this.listas['CONCEPTOS'];
+    const filas = [['Código', 'Nombre'], ...lista.valores.map(v => [v.codigo, v.nombre])];
+    const csv = filas
+      .map(fila => fila.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Lista_CONCEPTOS.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Archivo descargado',
+      detail: 'Lista_CONCEPTOS.csv',
+      life: 3000,
+    });
+  }
 
   /** Catálogos referenciados por las variables tipo Lista. */
   readonly listas: Record<string, ProtocoloLista> = {

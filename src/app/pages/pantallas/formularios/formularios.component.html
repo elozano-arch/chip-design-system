@@ -564,10 +564,10 @@
               <h3 class="prot-info__title">Estructura del archivo plano</h3>
               <p class="prot-info__desc">
                 El archivo de importación contiene dos tipos de registros separados por el carácter
-                <strong>TAB</strong>. Cada fila inicia con <code>C</code> (cabecera) o <code>D</code>
-                (detalle). Las variables tipo <strong>Lista</strong> solo aceptan los códigos
-                definidos en el catálogo correspondiente — consúltalos haciendo clic en el enlace de
-                la columna <em>Observaciones</em>.
+                <strong>TAB</strong>. Cada fila inicia con <code>S</code> (cabecera) o <code>D</code>
+                (detalle). La existencia de dos TABs consecutivos se interpreta como nulo, lo cual
+                invalida el registro por completitud (excepto si corresponde a una variable
+                calculada).
               </p>
             </div>
           </div>
@@ -583,7 +583,7 @@
             </span>
             <span class="prot-chip">
               <i class="pi pi-list" aria-hidden="true"></i>
-              {{ registrosCabecera.length + registrosDetalle.length }} variables
+              {{ totalVariables }} campos en total
             </span>
           </div>
 
@@ -593,34 +593,126 @@
           </div>
         </div>
 
-        <!-- Tabs: Cabecera | Detalle -->
-        <p-tabs value="detalle" styleClass="prot-tabs">
+        <!-- Tabs: Encabezado | Detalle | Variables | Conceptos -->
+        <p-tabs value="encabezado" styleClass="prot-tabs">
           <p-tablist>
-            <p-tab value="cabecera">
-              <i class="pi pi-folder" aria-hidden="true"></i>
-              Registro de Cabecera ({{ registrosCabecera.length }})
+            <p-tab value="encabezado">
+              <i class="pi pi-tag" aria-hidden="true"></i>
+              Registro de Encabezado
             </p-tab>
             <p-tab value="detalle">
               <i class="pi pi-list" aria-hidden="true"></i>
-              Registro de Detalle ({{ registrosDetalle.length }})
+              Registro de Detalle
+            </p-tab>
+            <p-tab value="variables">
+              <i class="pi pi-database" aria-hidden="true"></i>
+              Variables ({{ variables.length }})
+            </p-tab>
+            <p-tab value="conceptos">
+              <i class="pi pi-book" aria-hidden="true"></i>
+              Conceptos ({{ listas['CONCEPTOS'].valores.length }})
             </p-tab>
           </p-tablist>
 
           <p-tabpanels>
-            <p-tabpanel value="cabecera">
+            <!-- ───── Tab 1: Registro de Encabezado ───── -->
+            <p-tabpanel value="encabezado">
               <p class="prot-tabs__desc">
-                Una sola fila por archivo. Identifica el contexto general del envío (entidad,
-                período, formulario).
+                Una sola fila al inicio del archivo. Identifica el contexto general del envío
+                (entidad reportante, periodo, año y formulario).
               </p>
-              <ng-container *ngTemplateOutlet="tablaVariables; context: { $implicit: registrosCabecera, tipo: 'cabecera' }"></ng-container>
+
+              <div class="prot-example" role="region" aria-label="Ejemplo de fila de encabezado">
+                <span class="prot-example__label">Ejemplo</span>
+                <code class="prot-example__line">{{ ejemploCabecera }}</code>
+              </div>
+
+              <ng-container
+                *ngTemplateOutlet="camposList; context: { $implicit: camposCabecera, ariaLabel: 'Campos del encabezado' }"></ng-container>
             </p-tabpanel>
 
+            <!-- ───── Tab 2: Registro de Detalle ───── -->
             <p-tabpanel value="detalle">
               <p class="prot-tabs__desc">
-                Una fila por cada concepto contable a reportar. Contiene los valores específicos del
-                formulario.
+                Una fila por cada concepto contable a reportar. Cada detalle contiene un código de
+                concepto y los valores de las variables específicas del formulario.
               </p>
-              <ng-container *ngTemplateOutlet="tablaVariables; context: { $implicit: registrosDetalle, tipo: 'detalle' }"></ng-container>
+
+              <div class="prot-example" role="region" aria-label="Ejemplo de fila de detalle">
+                <span class="prot-example__label">Ejemplo</span>
+                <code class="prot-example__line">{{ ejemploDetalle }}</code>
+              </div>
+
+              <ng-container
+                *ngTemplateOutlet="camposList; context: { $implicit: camposDetalle, ariaLabel: 'Campos del detalle' }"></ng-container>
+            </p-tabpanel>
+
+            <!-- ───── Tab 3: Variables ───── -->
+            <p-tabpanel value="variables">
+              <p class="prot-tabs__desc">
+                Variables técnicas que componen cada fila de detalle. Las variables tipo
+                <strong>Lista</strong> solo aceptan los códigos del catálogo correspondiente —
+                consúltalos haciendo clic en el enlace de la columna <em>Observaciones</em>.
+              </p>
+              <ng-container
+                *ngTemplateOutlet="tablaVariables; context: { $implicit: variables, tipo: 'variables' }"></ng-container>
+            </p-tabpanel>
+
+            <!-- ───── Tab 4: Conceptos ───── -->
+            <p-tabpanel value="conceptos">
+              <p class="prot-tabs__desc">
+                Catálogo de conceptos contables válidos para la variable <code>Concepto</code> del
+                registro de detalle.
+              </p>
+
+              <div class="prot-conceptos__toolbar">
+                <p-iconfield iconPosition="left" styleClass="prot-conceptos__search">
+                  <p-inputicon styleClass="pi pi-search" />
+                  <input pInputText type="text"
+                    [ngModel]="busquedaConceptos()"
+                    (ngModelChange)="busquedaConceptos.set($event)"
+                    placeholder="Buscar por código o nombre del concepto…"
+                    aria-label="Buscar concepto" />
+                </p-iconfield>
+                <span class="prot-conceptos__count" aria-live="polite">
+                  {{ conceptosFiltrados().length }} de {{ listas['CONCEPTOS'].valores.length }} conceptos
+                </span>
+                <p-button label="Descargar CSV" icon="pi pi-download" [outlined]="true"
+                  severity="secondary" size="small"
+                  (onClick)="descargarConceptos()" />
+              </div>
+
+              <p-table [value]="conceptosFiltrados()"
+                [stripedRows]="true" [rowHover]="true"
+                [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} conceptos"
+                styleClass="prot-table"
+                [tableStyle]="{ 'min-width': '480px' }">
+                <ng-template #caption>
+                  <span class="sr-only">Catálogo de conceptos contables válidos</span>
+                </ng-template>
+                <ng-template #header>
+                  <tr>
+                    <th style="width: 180px" scope="col">Código</th>
+                    <th scope="col">Nombre</th>
+                  </tr>
+                </ng-template>
+                <ng-template #body let-c>
+                  <tr>
+                    <td><code class="prot-table__code">{{ c.codigo }}</code></td>
+                    <td>{{ c.nombre }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                  <tr>
+                    <td colspan="2" class="prot-lista__empty">
+                      <i class="pi pi-inbox" aria-hidden="true"></i>
+                      <p>No se encontraron conceptos con ese criterio de búsqueda.</p>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
             </p-tabpanel>
           </p-tabpanels>
         </p-tabs>
@@ -850,6 +942,24 @@
         (onClick)="confirmarAsignacionEntidades()" />
     </ng-template>
   </p-dialog>
+
+  <!-- ============================================================= -->
+  <!-- TEMPLATE: lista de campos del protocolo (tokens + descripción) -->
+  <!-- Usado en los tabs 'Registro de Encabezado' y 'Registro de Detalle' -->
+  <!-- ============================================================= -->
+  <ng-template #camposList let-campos let-ariaLabel="ariaLabel">
+    <ul class="prot-fields" [attr.aria-label]="ariaLabel">
+      @for (campo of campos; track campo.token) {
+        <li class="prot-fields__item">
+          <code class="prot-fields__token">{{ campo.token }}</code>
+          <div class="prot-fields__body">
+            <strong class="prot-fields__name">{{ campo.nombre }}</strong>
+            <p class="prot-fields__desc">{{ campo.desc }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+  </ng-template>
 
   <!-- ============================================================= -->
   <!-- TEMPLATE: tabla horizontal de variables del protocolo          -->
