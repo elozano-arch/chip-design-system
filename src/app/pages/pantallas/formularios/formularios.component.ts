@@ -149,6 +149,7 @@ export class FormulariosComponent {
       this.cerrarPanelesPaso1();
     }
     this.cerrarDetalle();
+    this.cerrarProtocolo();
     this.wizardStep = step;
   }
 
@@ -342,6 +343,24 @@ export class FormulariosComponent {
     // el step se mantiene en 1.
   }
 
+  // ──────────────────────────────────────────────────────────────────────
+  // Sub-vista "Generar protocolo de importación" — pertenece al Paso 2.
+  // Se abre desde la toolbar global (categoría completa) y se navega
+  // como detalleAbierto: el listado se oculta, vuelve con "Volver al listado".
+  // El contexto (entidad/categoría/año/periodo) proviene del Paso 1 (context bar).
+  // ──────────────────────────────────────────────────────────────────────
+  protocoloAbierto = false;
+
+  abrirProtocolo() {
+    this.cerrarDetalle();
+    this.protocoloAbierto = true;
+    queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
+  cerrarProtocolo() {
+    this.protocoloAbierto = false;
+  }
+
   // ── Edición modal del registro ──
   modalEditar: { concepto: ConceptoPadre; variable: Variable } | null = null;
   abrirModalEditar(concepto: ConceptoPadre, variable: Variable) {
@@ -494,7 +513,7 @@ export class FormulariosComponent {
       return;
     }
     if (key === 'generarProtocolo') {
-      this.messageService.add({ severity: 'info', summary: 'Protocolo de Importación', detail: 'Generando protocolo para la categoría seleccionada...' });
+      this.abrirProtocolo();
       return;
     }
     if (key === 'enviarAdjunto') {
