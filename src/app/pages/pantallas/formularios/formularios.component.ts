@@ -375,20 +375,21 @@ export class FormulariosComponent {
 
   // ──────────────────────────────────────────────────────────────────────
   // Sub-vista "Generar protocolo de importación" — pertenece al Paso 2.
-  // Se abre desde la toolbar global (categoría completa) y se navega
-  // como detalleAbierto: el listado se oculta, vuelve con "Volver al listado".
-  // El contexto (entidad/categoría/año/periodo) proviene del Paso 1 (context bar).
+  // Se abre desde el menú ⋮ de cada fila (por formulario). El listado se
+  // oculta y se vuelve con "Volver al listado". El contexto del wizard
+  // (entidad/categoría/año/periodo) sigue visible en el context bar.
   // ──────────────────────────────────────────────────────────────────────
-  protocoloAbierto = false;
+  protocoloAbierto: Formulario | null = null;
 
-  abrirProtocolo() {
+  abrirProtocolo(form: Formulario | null) {
+    if (!form) return;
     this.cerrarDetalle();
-    this.protocoloAbierto = true;
+    this.protocoloAbierto = form;
     queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
   cerrarProtocolo() {
-    this.protocoloAbierto = false;
+    this.protocoloAbierto = null;
   }
 
   // ── Edición modal del registro ──
@@ -417,8 +418,8 @@ export class FormulariosComponent {
     { separator: true },
     {
       label: 'Generar protocolo de importación',
-      icon: 'pi pi-file-pdf',
-      command: () => this.messageService.add({ severity: 'info', summary: 'Protocolo', detail: `Generando protocolo de "${this.selectedFormularioForMenu?.codigo}"` }),
+      icon: 'pi pi-file-export',
+      command: () => this.abrirProtocolo(this.selectedFormularioForMenu),
     },
   ];
 
@@ -477,7 +478,6 @@ export class FormulariosComponent {
     { key: 'importar', label: 'Importar', icon: 'pi pi-upload', enabled: true },
     { key: 'enviarAdjunto', label: 'Enviar Adjunto', icon: 'pi pi-paperclip', enabled: true },
     { key: 'entidadesAgregadas', label: 'Entidades Agregadas', icon: 'pi pi-sitemap', enabled: true },
-    { key: 'generarProtocolo', label: 'Generar protocolo', icon: 'pi pi-file-pdf', enabled: true },
     { key: 'exportar', label: 'Exportar', icon: 'pi pi-download', enabled: true },
     { key: 'consultarEnvios', label: 'Consultar Envíos', icon: 'pi pi-inbox', enabled: true },
   ];
@@ -540,10 +540,6 @@ export class FormulariosComponent {
     // Entidades Agregadas — abre modal de selección múltiple
     if (key === 'entidadesAgregadas') {
       this.abrirEntidadesModal();
-      return;
-    }
-    if (key === 'generarProtocolo') {
-      this.abrirProtocolo();
       return;
     }
     if (key === 'enviarAdjunto') {

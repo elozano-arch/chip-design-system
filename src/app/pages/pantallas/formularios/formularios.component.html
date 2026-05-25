@@ -427,11 +427,10 @@
           </p>
         </header>
 
-        <!-- Toolbar de acciones globales — operan sobre la categoría/selección
+        <!-- Toolbar de acciones globales — operan sobre la selección
              · Importar vive en el paso 1 (Contexto)
-             · Registro manual vive en el menú ⋮ de cada fila
-             · Exportar y Validar se habilitan al marcar al menos un formulario
-             · Generar protocolo abre la sub-vista del protocolo de importación -->
+             · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
+             · Exportar y Validar se habilitan al marcar al menos un formulario -->
         <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
           <p-button label="Exportar" icon="pi pi-download"
             [disabled]="selectedFormularios.length === 0"
@@ -443,11 +442,6 @@
             [pTooltip]="!canValidate ? 'Marque al menos un formulario para validar' : ''"
             tooltipPosition="top"
             (onClick)="confirmValidation()" />
-          <p-button label="Generar protocolo de importación" icon="pi pi-file-export"
-            [outlined]="true" severity="secondary"
-            pTooltip="Abre el protocolo de importación de la categoría"
-            tooltipPosition="top"
-            (onClick)="executeAction('generarProtocolo')" />
         </div>
 
         <!-- Sub-sección: Exportar (visible cuando se activa el panel) -->
@@ -545,20 +539,20 @@
     }
 
     <!-- Paso 2 (sub-vista): Protocolo de importación
-         Se abre desde la toolbar global del Paso 2. Reemplaza el listado
+         Se abre desde el menú ⋮ de cada formulario. Reemplaza el listado
          temporalmente; el stepper y el context bar siguen visibles. -->
-    @if (wizardStep === 1 && protocoloAbierto) {
+    @if (wizardStep === 1 && protocoloAbierto; as protocolo) {
       <section class="form-wizard__panel form-wizard__panel--protocolo" aria-label="Paso 2: Protocolo de importación">
         <p-button label="Volver al listado" icon="pi pi-arrow-left"
           [text]="true" severity="secondary"
           styleClass="form-wizard__panel-back"
           (onClick)="cerrarProtocolo()" />
         <header class="form-wizard__panel-header">
-          <h2>Paso 2 · Protocolo de importación</h2>
+          <h2>Paso 2 · Protocolo de importación · {{ protocolo.nombre }}</h2>
           <p>
             Estructura del archivo plano que la entidad debe diligenciar para
-            importar los formularios de la categoría. Use los filtros del Paso 1
-            (visibles arriba) para definir el alcance.
+            importar el formulario <strong>{{ protocolo.codigo }}</strong>.
+            Use los filtros del Paso 1 (visibles arriba) para definir el alcance.
           </p>
         </header>
 
