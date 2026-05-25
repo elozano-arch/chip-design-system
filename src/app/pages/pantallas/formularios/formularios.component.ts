@@ -109,7 +109,6 @@ interface ProtocoloValorLista {
 interface ProtocoloLista {
   key: string;
   nombre: string;
-  descripcion: string;
   valores: ProtocoloValorLista[];
 }
 
@@ -960,7 +959,6 @@ export class FormulariosComponent {
     PERIODOS: {
       key: 'PERIODOS',
       nombre: 'PERIODOS',
-      descripcion: 'Períodos contables válidos para el reporte trimestral.',
       valores: [
         { codigo: '01', nombre: 'Ene-Mar' },
         { codigo: '02', nombre: 'Abr-Jun' },
@@ -971,13 +969,11 @@ export class FormulariosComponent {
     CONCEPTOS: {
       key: 'CONCEPTOS',
       nombre: 'CONCEPTOS',
-      descripcion: 'Catálogo de conceptos contables del formulario.',
       valores: this.generarConceptosProtocolo(),
     },
     ENTIDADES_RECIPROCAS: {
       key: 'ENTIDADES_RECIPROCAS',
       nombre: 'ENTIDADES_RECIPROCAS',
-      descripcion: 'Listado de entidades públicas con las que se realizan operaciones recíprocas.',
       valores: this.generarEntidadesReciprocasProtocolo(),
     },
   };

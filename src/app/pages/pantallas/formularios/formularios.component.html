@@ -189,9 +189,11 @@
       </li>
     </ol>
 
-    <!-- Contexto: filtros aplicados visibles en los 3 pasos (read-only).
-         Para modificar, regresar al Paso 1 vía el stepper de arriba. -->
-    @if (filtersApplied && activeFilters.length > 0) {
+    <!-- Contexto: filtros aplicados visibles a partir del Paso 2 (read-only).
+         En el Paso 1 los filtros son los inputs editables del propio paso,
+         mostrar el contexto ahí sería redundante. Para modificar desde Paso
+         2 o 3, regresar al Paso 1 vía el stepper de arriba. -->
+    @if (wizardStep > 0 && filtersApplied && activeFilters.length > 0) {
       <div class="form-wizard__context" role="region" aria-label="Filtros aplicados a la consulta">
         <i class="pi pi-filter" aria-hidden="true"></i>
         <span class="form-wizard__context-label">Filtros aplicados:</span>
@@ -1079,7 +1081,10 @@
 
     @if (listaActiva(); as lista) {
       <div class="prot-lista">
-        <p class="prot-lista__desc">{{ lista.descripcion }}</p>
+        <p class="prot-lista__desc">
+          Valores válidos para la variable tipo Lista <strong>{{ lista.nombre }}</strong>.
+          Sólo estos códigos son aceptados en el archivo de importación.
+        </p>
 
         <div class="prot-lista__search">
           <p-iconfield iconPosition="left">
