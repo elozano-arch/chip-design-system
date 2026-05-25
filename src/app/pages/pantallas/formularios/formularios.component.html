@@ -565,6 +565,20 @@
         </li>
       </ol>
 
+      <!-- Contexto: filtros aplicados visibles en los 3 pasos (read-only).
+           Para modificar, regresar al Paso 1 vía el stepper de arriba. -->
+      @if (filtersApplied && activeFilters.length > 0) {
+        <div class="form-wizard__context" role="region" aria-label="Filtros aplicados a la consulta">
+          <i class="pi pi-filter" aria-hidden="true"></i>
+          <span class="form-wizard__context-label">Filtros aplicados:</span>
+          <div class="form-wizard__context-chips">
+            @for (filter of activeFilters; track filter.field) {
+              <p-chip [label]="filter.label" />
+            }
+          </div>
+        </div>
+      }
+
       <!-- Paso 1: Contexto (filtros + consultar envíos + importar) -->
       @if (wizardStep === 0) {
         <section class="form-wizard__panel" aria-label="Paso 1: Contexto">
@@ -932,10 +946,18 @@
               pTooltip="Adjuntar archivo de soporte (memorando, certificado, etc.)"
               tooltipPosition="top"
               (onClick)="executeAction('enviarAdjunto')" />
-            <p-button label="Entidades agregadas" icon="pi pi-sitemap"
-              pTooltip="Revisar o ajustar las entidades destino del envío"
-              tooltipPosition="top"
-              (onClick)="executeAction('entidadesAgregadas')" />
+            <span class="form-action-badge-wrap">
+              <p-button label="Entidades agregadas" icon="pi pi-sitemap"
+                pTooltip="Revisar o ajustar las entidades destino del envío"
+                tooltipPosition="top"
+                (onClick)="executeAction('entidadesAgregadas')" />
+              @if (selectedEntidades.length > 0) {
+                <span class="form-action-badge"
+                  [attr.aria-label]="selectedEntidades.length + ' entidades seleccionadas'">
+                  {{ selectedEntidades.length }}
+                </span>
+              }
+            </span>
           </div>
 
           <!-- Estado del envío + acción Enviar Categoría -->
@@ -1017,6 +1039,103 @@
         (onClick)="cerrarModalEditar()" />
       <p-button label="Guardar" icon="pi pi-check"
         (onClick)="guardarModalEditar()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- ============================================================= -->
+  <!-- MODAL ENTIDADES AGREGADAS (paso Envíos)                        -->
+  <!-- ============================================================= -->
+  <p-dialog
+    [(visible)]="showEntidadesModal"
+    [modal]="true"
+    [draggable]="false"
+    [closeOnEscape]="true"
+    [style]="{ width: '640px', maxWidth: '95vw' }"
+    header="Entidades Agregadas"
+    styleClass="form-entidades-dialog"
+    (onHide)="cerrarEntidadesModal()">
+
+    <div class="form-entidades">
+      <p class="form-entidades__desc">
+        Seleccione las entidades a asignar para la categoría
+        @if (selectedCategoria) {
+          <strong>{{ selectedCategoria }}</strong>.
+        } @else {
+          seleccionada.
+        }
+      </p>
+
+      <p-iconField iconPosition="left" styleClass="form-entidades__search">
+        <p-inputIcon styleClass="pi pi-search" />
+        <input pInputText type="text"
+          [(ngModel)]="entidadesBusqueda"
+          placeholder="Buscar por código, NIT o razón social…"
+          aria-label="Buscar entidad por código, NIT o razón social" />
+      </p-iconField>
+
+      <div class="form-entidades__toolbar">
+        <p-checkbox
+          inputId="entidades-select-all"
+          [binary]="true"
+          [ngModel]="allFilteredSelected"
+          [disabled]="entidadesFiltradas.length === 0"
+          (onChange)="toggleAllEntidades()" />
+        <label for="entidades-select-all">
+          Seleccionar todas
+          @if (entidadesBusqueda) {
+            <span class="form-entidades__hint">(filtradas)</span>
+          }
+        </label>
+        <span class="form-entidades__counter" aria-live="polite">
+          {{ selectedEntidades.length }} de {{ entidadesDisponibles.length }} seleccionadas
+        </span>
+      </div>
+
+      <p-table
+        [value]="entidadesFiltradas"
+        [(selection)]="selectedEntidades"
+        dataKey="id"
+        [scrollable]="true"
+        scrollHeight="320px"
+        [virtualScroll]="true"
+        [virtualScrollItemSize]="48"
+        styleClass="form-entidades__table"
+        ariaLabel="Lista de entidades disponibles para asignar">
+        <ng-template pTemplate="header">
+          <tr>
+            <th scope="col" style="width: 3rem"></th>
+            <th scope="col" style="width: 7rem">Código</th>
+            <th scope="col" style="width: 9.5rem">NIT</th>
+            <th scope="col">Razón social</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-entidad>
+          <tr [style.height.px]="48">
+            <td><p-tableCheckbox [value]="entidad" /></td>
+            <td class="form-entidades__id">{{ entidad.id }}</td>
+            <td class="form-entidades__nit">{{ entidad.nit }}</td>
+            <td class="form-entidades__name">{{ entidad.nombre }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="form-entidades__empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>No se encontraron entidades para "{{ entidadesBusqueda }}".</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <ng-template #footer>
+      <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="cerrarEntidadesModal()" />
+      <p-button
+        [label]="'Asignar (' + selectedEntidades.length + ')'"
+        icon="pi pi-check"
+        [disabled]="selectedEntidades.length === 0"
+        (onClick)="confirmarAsignacionEntidades()" />
     </ng-template>
   </p-dialog>
 </div>
