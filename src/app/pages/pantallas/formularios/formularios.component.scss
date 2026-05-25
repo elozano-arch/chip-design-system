@@ -414,53 +414,6 @@
   }
 }
 
-/* ============================================================
-   Selector de propuesta (Opción 1 / Opción 2)
-   ============================================================ */
-.form-vista-selector {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 14px 18px;
-  margin-bottom: 24px;
-  background: var(--chip-bg-solitude);
-  border-left: 4px solid var(--chip-cobalt-700);
-  border-radius: var(--radius-md);
-  flex-wrap: wrap;
-
-  &__info {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    flex: 1;
-    min-width: 280px;
-
-    > i {
-      font-size: 20px;
-      color: var(--chip-cobalt-700);
-      margin-top: 2px;
-    }
-
-    > div {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-
-      strong {
-        font-family: var(--font-heading);
-        font-size: 14px;
-        color: var(--chip-grey-800);
-      }
-      span {
-        font-size: 13px;
-        color: var(--chip-grey-600);
-        line-height: 1.4;
-      }
-    }
-  }
-}
-
 /* Hacer clicable el nombre del formulario (sin look de link feo) */
 .form-table__name-link {
   background: none;
@@ -714,40 +667,8 @@
     text-align: center;
   }
 
-  &__val-btn {
-    background: transparent;
-    border: 1px dashed transparent;
-    padding: 4px 8px;
-    font: inherit;
-    cursor: pointer;
-    width: 100%;
-    text-align: right;
-    border-radius: var(--radius-sm);
-    color: inherit;
-    font-variant-numeric: tabular-nums;
-    transition: background 0.15s, border-color 0.15s;
-
-    &:hover {
-      background: var(--chip-cobalt-50);
-      border-color: var(--chip-cobalt-200);
-    }
-    &:focus-visible {
-      outline: 2px solid var(--chip-cobalt-700);
-      outline-offset: 1px;
-    }
-  }
-
   &__val-empty {
     color: var(--chip-grey-400);
-  }
-
-  &__inline-input {
-    width: 110px;
-    ::ng-deep input {
-      text-align: right;
-      padding: 4px 8px;
-      font-size: 13px;
-    }
   }
 
   &__footer {
@@ -781,7 +702,7 @@
 }
 
 /* ============================================================
-   Wizard (Opción 2)
+   Wizard — Paso a paso
    ============================================================ */
 .form-wizard {
   display: flex;
@@ -1310,7 +1231,7 @@
 }
 
 /* ============================================================
-   Modal de edición (Opción 2)
+   Modal de edición inline de registro
    ============================================================ */
 .form-modal-edit {
   display: flex;

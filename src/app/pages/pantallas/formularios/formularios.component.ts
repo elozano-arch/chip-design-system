@@ -18,7 +18,6 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { StepperModule } from 'primeng/stepper';
 import { DialogModule } from 'primeng/dialog';
 import { PaginatorModule } from 'primeng/paginator';
@@ -100,7 +99,6 @@ interface ColumnaRegistro {
     CheckboxModule,
     MenuModule,
     ChipModule,
-    SelectButtonModule,
     StepperModule,
     DialogModule,
     PaginatorModule,
@@ -116,19 +114,8 @@ export class FormulariosComponent {
 
   constructor(private messageService: MessageService) {}
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Selector "Opción 1 / Opción 2" — propuesta a aprobar por CRIS.
-  // Opción 1: vista única + edición inline (como el video / POC actual).
-  // Opción 2: paso a paso (wizard 3 pasos) + edición en modal.
-  // ─────────────────────────────────────────────────────────────────────────
-  vistaActiva: 'opcion-1' | 'opcion-2' = 'opcion-1';
-  readonly vistaOptions = [
-    { label: 'Opción 1 · Vista única', value: 'opcion-1' },
-    { label: 'Opción 2 · Paso a paso', value: 'opcion-2' },
-  ];
-
   /**
-   * Paso actual del wizard de Opción 2 — 3 pasos:
+   * Paso actual del wizard — 3 pasos:
    *   0: Filtros (contexto + Consultar Envíos previos)
    *   1: Formularios (importar, exportar, validar, acciones, editar manual,
    *      generar protocolo — y, al abrir un formulario, registro manual)
@@ -141,14 +128,6 @@ export class FormulariosComponent {
 
   /** Panel "Importar" desplegable en el paso 1 (Contexto). */
   wizardImportarAbierto = false;
-
-  cambiarVista(v: 'opcion-1' | 'opcion-2') {
-    this.vistaActiva = v;
-    this.cerrarDetalle();
-    this.wizardStep = 0;
-    this.wizardConsultarEnviosAbierto = false;
-    this.wizardImportarAbierto = false;
-  }
 
   /**
    * Permite navegar a un paso anterior (o al actual) haciendo clic en el indicador.
@@ -350,30 +329,13 @@ export class FormulariosComponent {
   }
   cerrarDetalle() {
     this.detalleAbierto = null;
-    this.editandoCelda = null;
     this.modalEditar = null;
     // En el wizard de 3 pasos, el listado y el registro manual viven en
     // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
     // el step se mantiene en 1.
   }
 
-  // ── Edición inline (Opción 1) ──
-  editandoCelda: { conceptoId: string; variableId: string; columna: string } | null = null;
-  iniciarEdicionInline(concepto: ConceptoPadre, variable: Variable, columna: string) {
-    this.editandoCelda = { conceptoId: concepto.id, variableId: variable.id, columna };
-  }
-  esEditandoCelda(concepto: ConceptoPadre, variable: Variable, columna: string): boolean {
-    return !!this.editandoCelda
-      && this.editandoCelda.conceptoId === concepto.id
-      && this.editandoCelda.variableId === variable.id
-      && this.editandoCelda.columna === columna;
-  }
-  guardarEdicionInline() {
-    this.editandoCelda = null;
-    this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Valor actualizado correctamente.', life: 2000 });
-  }
-
-  // ── Edición modal (Opción 2) ──
+  // ── Edición modal del registro ──
   modalEditar: { concepto: ConceptoPadre; variable: Variable } | null = null;
   abrirModalEditar(concepto: ConceptoPadre, variable: Variable) {
     this.modalEditar = { concepto, variable };
