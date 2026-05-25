@@ -1066,12 +1066,16 @@ export class FormulariosComponent {
       info: 'Sin límite de filas. Encoding UTF-8. Formato de texto plano.' },
   ];
 
+  // Para evitar que PrimeNG renderice un tooltip nativo sobre el item entero
+  // y duplique al del icono `?`, el texto del info viaja en `data` (campo
+  // libre del MenuItem) y se enlaza con [pTooltip] sólo sobre el icono.
+
   /** MenuItem[] para el botón "Descargar" del tab Conceptos. */
   readonly downloadItemsConceptos: MenuItem[] = this.downloadFormats.map(f => ({
     label: f.label,
     icon: f.icon,
     command: () => this.descargarConceptos(f.format),
-    tooltipOptions: { tooltipLabel: f.info, tooltipPosition: 'left' },
+    data: { info: f.info },
   }));
 
   /** MenuItem[] para el botón "Descargar" del modal Ver Lista. */
@@ -1079,7 +1083,7 @@ export class FormulariosComponent {
     label: f.label,
     icon: f.icon,
     command: () => this.descargarLista(f.format),
-    tooltipOptions: { tooltipLabel: f.info, tooltipPosition: 'left' },
+    data: { info: f.info },
   }));
 
   /** MenuItem[] para el botón "Descargar protocolo" del header del protocolo. */
@@ -1087,7 +1091,7 @@ export class FormulariosComponent {
     label: f.label,
     icon: f.icon,
     command: () => this.descargarProtocolo(f.format),
-    tooltipOptions: { tooltipLabel: f.info, tooltipPosition: 'left' },
+    data: { info: f.info },
   }));
 
   private generarConceptosProtocolo(): ProtocoloValorLista[] {

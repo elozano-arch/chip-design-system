@@ -607,7 +607,7 @@
                   <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
                   <span class="prot-download-item__label">{{ item.label }}</span>
                   <i class="pi pi-info-circle prot-download-item__info"
-                    [pTooltip]="item.tooltipOptions?.tooltipLabel"
+                    [pTooltip]="item.data?.info"
                     tooltipPosition="left"
                     aria-hidden="true"></i>
                 </button>
@@ -717,7 +717,7 @@
                       <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
                       <span class="prot-download-item__label">{{ item.label }}</span>
                       <i class="pi pi-info-circle prot-download-item__info"
-                        [pTooltip]="item.tooltipOptions?.tooltipLabel"
+                        [pTooltip]="item.data?.info"
                         tooltipPosition="left"
                         aria-hidden="true"></i>
                     </button>
@@ -1155,7 +1155,7 @@
             <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
             <span class="prot-download-item__label">{{ item.label }}</span>
             <i class="pi pi-info-circle prot-download-item__info"
-              [pTooltip]="item.tooltipOptions?.tooltipLabel"
+              [pTooltip]="item.data?.info"
               tooltipPosition="left"
               aria-hidden="true"></i>
           </button>
