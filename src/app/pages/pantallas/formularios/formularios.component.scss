@@ -1367,3 +1367,166 @@
     }
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   Context bar del wizard — filtros aplicados read-only visibles en
+   los 3 steps. Sólo se editan desde el Paso 1 (botón "Editar filtros").
+   ───────────────────────────────────────────────────────────────── */
+.form-wizard__context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin: 16px 0;
+  background: var(--chip-bg-solitude);
+  border: 1px solid var(--chip-cobalt-50);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+
+  > i {
+    font-size: 16px;
+    color: var(--chip-cobalt-700);
+  }
+
+  &-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+  }
+
+  &-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Botón con badge de conteo (toolbar de Envíos)
+   ───────────────────────────────────────────────────────────────── */
+.form-action-badge-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.form-action-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--chip-cobalt-700);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Modal "Entidades Agregadas"
+   ───────────────────────────────────────────────────────────────── */
+.form-entidades {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: var(--font-body);
+
+  &__desc {
+    margin: 0;
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    line-height: 1.45;
+  }
+
+  &__search {
+    width: 100%;
+
+    input.p-inputtext {
+      width: 100%;
+    }
+  }
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--chip-bg-white-smoke);
+    border-radius: var(--radius-sm);
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--chip-grey-900);
+      cursor: pointer;
+    }
+  }
+
+  &__hint {
+    margin-left: 4px;
+    font-weight: 400;
+    color: var(--chip-grey-500);
+  }
+
+  &__counter {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--chip-cobalt-700);
+  }
+
+  &__table {
+    width: 100%;
+  }
+
+  &__id {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    letter-spacing: 0.3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__nit {
+    font-variant-numeric: tabular-nums;
+    color: var(--chip-grey-700);
+    font-size: 13px;
+  }
+
+  &__name {
+    font-size: 13px;
+    color: var(--chip-grey-900);
+    line-height: 1.35;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--chip-grey-500);
+
+    i {
+      display: block;
+      font-size: 28px;
+      color: var(--chip-cobalt-700);
+      margin-bottom: 8px;
+    }
+
+    p { margin: 0; font-size: 13px; }
+  }
+}
+
+/* Anchos completos del p-iconfield interno del buscador */
+:host ::ng-deep .form-entidades__search.p-iconfield,
+:host ::ng-deep .form-entidades__search .p-iconfield {
+  width: 100% !important;
+  display: flex !important;
+}

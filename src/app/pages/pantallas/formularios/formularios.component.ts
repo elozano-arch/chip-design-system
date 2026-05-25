@@ -78,6 +78,13 @@ interface ColumnaRegistro {
   label: string;
 }
 
+/** Entidad disponible para asignar a la categoría desde el modal "Entidades Agregadas". */
+interface EntidadAgregada {
+  id: string;
+  nombre: string;
+  nit: string;
+}
+
 @Component({
   selector: 'app-formularios',
   standalone: true,
@@ -519,9 +526,9 @@ export class FormulariosComponent {
       return;
     }
 
-    // Acciones directas (sin panel) — toasts informativos
+    // Entidades Agregadas — abre modal de selección múltiple
     if (key === 'entidadesAgregadas') {
-      this.messageService.add({ severity: 'info', summary: 'Entidades Agregadas', detail: 'Abriendo gestión de entidades agregadas para esta categoría.' });
+      this.abrirEntidadesModal();
       return;
     }
     if (key === 'generarProtocolo') {
@@ -711,6 +718,126 @@ export class FormulariosComponent {
     this.selectedPeriodo = '';
     this.filtersApplied = false;
     this.searchFormulario = '';
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Modal "Entidades Agregadas" — selección múltiple para asignar entidades
+  // destino a la categoría. Lista virtualizada con buscador y select-all.
+  // Ubicado en el paso "Envíos" del wizard. La selección persiste entre
+  // aperturas dentro de la misma sesión del componente.
+  // ──────────────────────────────────────────────────────────────────────
+  showEntidadesModal = false;
+  entidadesBusqueda = '';
+  selectedEntidades: EntidadAgregada[] = [];
+
+  /** Catálogo mock de entidades disponibles (~300, combinatorias tipo×municipio). */
+  readonly entidadesDisponibles: EntidadAgregada[] = this.generarEntidadesMock();
+
+  abrirEntidadesModal() {
+    this.entidadesBusqueda = '';
+    this.showEntidadesModal = true;
+  }
+
+  cerrarEntidadesModal() {
+    this.entidadesBusqueda = '';
+    this.showEntidadesModal = false;
+  }
+
+  /** Filtrado por código, NIT o razón social — los 3 campos visibles en la tabla. */
+  get entidadesFiltradas(): EntidadAgregada[] {
+    const q = this.entidadesBusqueda.trim().toLowerCase();
+    if (!q) return this.entidadesDisponibles;
+    return this.entidadesDisponibles.filter(e =>
+      e.id.toLowerCase().includes(q)
+      || e.nit.toLowerCase().includes(q)
+      || e.nombre.toLowerCase().includes(q),
+    );
+  }
+
+  /** True cuando todas las entidades filtradas están seleccionadas. */
+  get allFilteredSelected(): boolean {
+    const filtradas = this.entidadesFiltradas;
+    if (filtradas.length === 0) return false;
+    const seleccionadasIds = new Set(this.selectedEntidades.map(e => e.id));
+    return filtradas.every(e => seleccionadasIds.has(e.id));
+  }
+
+  /** Toggle del checkbox "Seleccionar todas" — aplica sólo a las filtradas. */
+  toggleAllEntidades() {
+    const filtradas = this.entidadesFiltradas;
+    if (filtradas.length === 0) return;
+    if (this.allFilteredSelected) {
+      const filtradasIds = new Set(filtradas.map(e => e.id));
+      this.selectedEntidades = this.selectedEntidades.filter(e => !filtradasIds.has(e.id));
+    } else {
+      const seleccionadasIds = new Set(this.selectedEntidades.map(e => e.id));
+      const nuevas = filtradas.filter(e => !seleccionadasIds.has(e.id));
+      this.selectedEntidades = [...this.selectedEntidades, ...nuevas];
+    }
+  }
+
+  confirmarAsignacionEntidades() {
+    const count = this.selectedEntidades.length;
+    this.showEntidadesModal = false;
+    this.entidadesBusqueda = '';
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Entidades asignadas',
+      detail: `${count} entidad${count === 1 ? '' : 'es'} asignada${count === 1 ? '' : 's'} a la categoría.`,
+      life: 3500,
+    });
+  }
+
+  /**
+   * Genera el catálogo mock combinando tipos de entidad con municipios.
+   * 15 tipos × 20 municipios ≈ 300 entidades — suficiente para demostrar
+   * virtualización del listado sin inflar el bundle.
+   */
+  private generarEntidadesMock(): EntidadAgregada[] {
+    const tipos = [
+      'Alcaldía Municipal de',
+      'Gobernación de',
+      'Hospital Regional de',
+      'Instituto de Desarrollo de',
+      'Universidad Pública de',
+      'Empresa de Servicios Públicos de',
+      'Secretaría de Salud de',
+      'Secretaría de Educación de',
+      'Personería Municipal de',
+      'Contraloría Departamental de',
+      'Cámara de Comercio de',
+      'Empresa Social del Estado de',
+      'Corporación Autónoma Regional de',
+      'Instituto de Cultura y Turismo de',
+      'Caja de Compensación Familiar de',
+    ];
+    const municipios = [
+      'Bogotá', 'Medellín', 'Cali', 'Barranquilla', 'Cartagena',
+      'Cúcuta', 'Bucaramanga', 'Pereira', 'Manizales', 'Ibagué',
+      'Santa Marta', 'Villavicencio', 'Pasto', 'Neiva', 'Armenia',
+      'Popayán', 'Tunja', 'Sincelejo', 'Riohacha', 'Quibdó',
+    ];
+    const lista: EntidadAgregada[] = [];
+    let counter = 1;
+    for (const tipo of tipos) {
+      for (const muni of municipios) {
+        lista.push({
+          id: `ENT-${String(counter).padStart(4, '0')}`,
+          nombre: `${tipo} ${muni}`,
+          nit: this.generarNit(counter),
+        });
+        counter++;
+      }
+    }
+    return lista;
+  }
+
+  /** NIT mock con formato 800.xxx.xxx-d, dígito de verificación pseudo-aleatorio. */
+  private generarNit(seed: number): string {
+    const base = 800000000 + seed * 13;
+    const s = String(base);
+    const dv = seed % 10;
+    return `${s.slice(0, 3)}.${s.slice(3, 6)}.${s.slice(6, 9)}-${dv}`;
   }
 
   getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
