@@ -128,22 +128,26 @@ export class FormulariosComponent {
   ];
 
   /**
-   * Paso actual del wizard de Opción 2 (CRIS propone 4 pasos por fase del flujo):
-   *   0: Filtros (contexto + Consultar Envíos)
-   *   1: Datos (Importar + listado de formularios disponibles)
-   *   2: Trabajo sobre formulario (detalle / edición / validar / exportar / protocolo)
-   *   3: Envío (Enviar Categoría + Enviar Adjunto)
+   * Paso actual del wizard de Opción 2 — 3 pasos:
+   *   0: Filtros (contexto + Consultar Envíos previos)
+   *   1: Formularios (importar, exportar, validar, acciones, editar manual,
+   *      generar protocolo — y, al abrir un formulario, registro manual)
+   *   2: Envíos (Enviar Categoría + Entidades Agregadas + Enviar Adjunto)
    */
   wizardStep = 0;
 
-  /** Panel de "Consultar Envíos" desplegable en el paso 1. */
+  /** Panel "Consultar envíos" desplegable en el paso 1 (Contexto). */
   wizardConsultarEnviosAbierto = false;
+
+  /** Panel "Importar" desplegable en el paso 1 (Contexto). */
+  wizardImportarAbierto = false;
 
   cambiarVista(v: 'opcion-1' | 'opcion-2') {
     this.vistaActiva = v;
     this.cerrarDetalle();
     this.wizardStep = 0;
     this.wizardConsultarEnviosAbierto = false;
+    this.wizardImportarAbierto = false;
   }
 
   /**
@@ -156,6 +160,7 @@ export class FormulariosComponent {
     // Volver al paso de filtros desde cualquier punto reabre la edición de filtros.
     if (step === 0) {
       this.filtersApplied = false;
+      this.cerrarPanelesPaso1();
     }
     this.cerrarDetalle();
     this.wizardStep = step;
@@ -165,10 +170,42 @@ export class FormulariosComponent {
     return step <= this.wizardStep;
   }
 
-  /** Toggle del panel "Consultar Envíos" dentro del paso 1 del wizard. */
+  /**
+   * Toggle del panel "Consultar envíos" en el paso 1.
+   * Ambos paneles del paso 1 son mutuamente excluyentes para que el usuario
+   * vea una sola pieza de información a la vez (UX: foco).
+   */
   toggleConsultarEnviosWizard() {
     this.wizardConsultarEnviosAbierto = !this.wizardConsultarEnviosAbierto;
+    if (this.wizardConsultarEnviosAbierto) this.wizardImportarAbierto = false;
   }
+
+  /** Toggle del panel "Importar" en el paso 1. */
+  toggleImportarWizard() {
+    this.wizardImportarAbierto = !this.wizardImportarAbierto;
+    if (this.wizardImportarAbierto) this.wizardConsultarEnviosAbierto = false;
+  }
+
+  /** Cierra ambos paneles (al cambiar de paso). */
+  private cerrarPanelesPaso1() {
+    this.wizardConsultarEnviosAbierto = false;
+    this.wizardImportarAbierto = false;
+  }
+
+  // Mock de envíos previos — tabla del paso 1 "Consultar envíos".
+  enviosPrevios: Array<{
+    numero: string;
+    fecha: string;
+    formularios: number;
+    usuario: string;
+    estado: 'Aceptado' | 'Rechazado' | 'En proceso' | 'Pendiente';
+  }> = [
+    { numero: '2024-1105', fecha: '05/11/2024', formularios: 4, usuario: 'olozada@cgn.gov.co', estado: 'Aceptado' },
+    { numero: '2024-1028', fecha: '28/10/2024', formularios: 6, usuario: 'olozada@cgn.gov.co', estado: 'Rechazado' },
+    { numero: '2024-1015', fecha: '15/10/2024', formularios: 6, usuario: 'jmgallo@cgn.gov.co', estado: 'Aceptado' },
+    { numero: '2024-0930', fecha: '30/09/2024', formularios: 5, usuario: 'olozada@cgn.gov.co', estado: 'En proceso' },
+    { numero: '2024-0915', fecha: '15/09/2024', formularios: 4, usuario: 'cplascu@cgn.gov.co', estado: 'Aceptado' },
+  ];
 
   // ─────────────────────────────────────────────────────────────────────────
   // Vista Registro Manual (detalle del formulario)
@@ -271,10 +308,8 @@ export class FormulariosComponent {
     this.detalleAbierto = form;
     this.paginaColumnas = 0;
     this.conceptos.forEach(c => c.pagina = 0);
-    if (this.vistaActiva === 'opcion-2') {
-      // En el wizard de 4 pasos, abrir el detalle = entrar al paso 3 (Trabajo).
-      this.wizardStep = 2;
-    }
+    // En el wizard de 3 pasos, abrir un formulario NO cambia de paso:
+    // el registro manual vive dentro del paso "Formularios" (step 1).
     queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
@@ -317,11 +352,9 @@ export class FormulariosComponent {
     this.detalleAbierto = null;
     this.editandoCelda = null;
     this.modalEditar = null;
-    // En el wizard, "volver al listado" = paso 2 (Datos) — donde está la
-    // tabla de formularios disponibles.
-    if (this.vistaActiva === 'opcion-2') {
-      this.wizardStep = 1;
-    }
+    // En el wizard de 3 pasos, el listado y el registro manual viven en
+    // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
+    // el step se mantiene en 1.
   }
 
   // ── Edición inline (Opción 1) ──
@@ -353,12 +386,22 @@ export class FormulariosComponent {
     this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Registro actualizado correctamente.', life: 2500 });
   }
 
+  /**
+   * Menú ⋮ por fila — sólo acciones que NO se pueden aplicar masivamente desde
+   * la toolbar (Exportar y Validar viven en la toolbar y operan sobre la selección).
+   */
   menuFormularioItems: MenuItem[] = [
-    { label: 'Registro Manual', icon: 'pi pi-table', command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); } },
-    { label: 'Generar protocolo de importación', icon: 'pi pi-file-pdf', command: () => this.messageService.add({ severity: 'info', summary: 'Protocolo', detail: `Generando protocolo de "${this.selectedFormularioForMenu?.codigo}"` }) },
-    { label: 'Exportar', icon: 'pi pi-download', command: () => this.messageService.add({ severity: 'info', summary: 'Exportar', detail: `Exportando "${this.selectedFormularioForMenu?.codigo}"` }) },
+    {
+      label: 'Registro manual',
+      icon: 'pi pi-table',
+      command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
+    },
     { separator: true },
-    { label: 'Validar', icon: 'pi pi-check-circle', command: () => this.messageService.add({ severity: 'success', summary: 'Validación', detail: `Formulario "${this.selectedFormularioForMenu?.codigo}" enviado a validación.` }) },
+    {
+      label: 'Generar protocolo de importación',
+      icon: 'pi pi-file-pdf',
+      command: () => this.messageService.add({ severity: 'info', summary: 'Protocolo', detail: `Generando protocolo de "${this.selectedFormularioForMenu?.codigo}"` }),
+    },
   ];
 
   abrirMenuFormulario(event: Event, form: Formulario) {
@@ -544,14 +587,27 @@ export class FormulariosComponent {
     this._formulariosBase = this._formulariosBase.map(f =>
       seleccionadosIds.has(f.id) ? { ...f, estadoValidacion: 'Validado' } : f,
     );
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Validación exitosa',
-      detail: `${count} formulario(s) validado(s) localmente. Cuando todos estén validados podrá enviar la categoría.`,
-      life: 4500,
-    });
     this.selectedFormularios = [];
     this.activePanel = null;
+
+    // Mensaje contextual: si todos quedaron validados, el botón "Siguiente"
+    // se habilita y se invita a continuar al paso Envíos.
+    if (this.todosValidados) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Todos los formularios validados',
+        detail: `${count} formulario(s) marcados como Validado. Puede continuar al paso Envíos.`,
+        life: 5000,
+      });
+    } else {
+      const pendientes = this.filteredFormularios.filter(f => f.estadoValidacion !== 'Validado').length;
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Validación exitosa',
+        detail: `${count} formulario(s) validado(s). Quedan ${pendientes} pendiente(s) por validar antes de avanzar a Envíos.`,
+        life: 4500,
+      });
+    }
   }
 
   get canValidate(): boolean {

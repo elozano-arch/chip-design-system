@@ -219,6 +219,72 @@ body > [class*='p-popover'] {
   font-size: 14px;
 }
 
+/* Los links del p-menu nunca llevan subrayado (heredarían el de <a> global) */
+.p-menu .p-menu-item-link {
+  text-decoration: none !important;
+}
+
+/* ==========================================================================
+   Menú de acciones contextual (p-menu styleClass="form-actions-menu")
+   Mismo formato visual que los submenús del sidebar: icono cobalto + label
+   grey-700 sobre hover cobalt-50, sin subrayados ni elementos visualmente
+   "elevados". Aplica a cualquier pantalla que use styleClass="form-actions-menu".
+   ========================================================================== */
+.p-menu.form-actions-menu,
+.form-actions-menu.p-menu {
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 6px;
+  min-width: 240px;
+
+  .p-menu-list { padding: 0; }
+
+  .p-menu-item-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--chip-grey-700);
+    text-decoration: none;
+    transition: background 0.12s, color 0.12s;
+
+    .p-menu-item-icon,
+    > .p-icon-wrapper,
+    > i {
+      color: var(--chip-cobalt-700);
+      font-size: 14px;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .p-menu-item-label {
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: inherit;
+      line-height: 1.3;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--chip-cobalt-50);
+      color: var(--chip-cobalt-700);
+      outline: none;
+
+      .p-menu-item-icon,
+      > .p-icon-wrapper,
+      > i { color: var(--chip-cobalt-700); }
+    }
+  }
+
+  .p-menu-separator {
+    margin: 4px 6px;
+    border-top: 1px solid var(--chip-grey-100);
+  }
+}
+
 /* --- Desplegables (p-select): 15px Verdana --- */
 .p-select-label,
 .p-select-option,
@@ -285,7 +351,8 @@ p-breadcrumb .p-breadcrumb {
 .cor-header,
 .prot-header,
 .flj-header,
-.ttr-header {
+.ttr-header,
+.lvr-header {
   margin-bottom: 28px;
 }
 
@@ -298,7 +365,8 @@ p-breadcrumb .p-breadcrumb {
 .cor-header__title,
 .prot-header__title,
 .flj-header__title,
-.ttr-header__title {
+.ttr-header__title,
+.lvr-header__title {
   font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 800;
@@ -313,7 +381,8 @@ p-breadcrumb .p-breadcrumb {
 .cpw-header__row,
 .prot-header__row,
 .flj-header__row,
-.ttr-header__row {
+.ttr-header__row,
+.lvr-header__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,7 +398,8 @@ p-breadcrumb .p-breadcrumb {
 .cor-header__desc,
 .prot-header__desc,
 .flj-header__desc,
-.ttr-header__desc {
+.ttr-header__desc,
+.lvr-header__desc {
   font-size: 15px;
   color: var(--chip-grey-500);
   margin: 0;
@@ -496,13 +566,15 @@ textarea.p-inputtext {
   .form-page,
   .aud-page,
   .roles-page,
-  .flt-page {
+  .flt-page,
+  .lvr-page {
     padding: 16px;
   }
 
   .usr-header,
   .form-header,
-  .roles-header {
+  .roles-header,
+  .lvr-header {
     flex-direction: column;
   }
 
@@ -510,7 +582,8 @@ textarea.p-inputtext {
   .form-header__title,
   .aud-header__title,
   .roles-header__title,
-  .flt-header__title {
+  .flt-header__title,
+  .lvr-header__title {
     font-size: 24px;
   }
 

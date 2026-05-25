@@ -40,11 +40,13 @@
           <p-select inputId="dir-ent-mun" [options]="municipioOptions" [(ngModel)]="fMunicipio"
             placeholder="Todos" appendTo="body" class="w-full" />
         </div>
-        <div class="dir-ent__field">
-          <label for="dir-ent-estado">Estado</label>
-          <p-select inputId="dir-ent-estado" [options]="estadoOptions" [(ngModel)]="fEstado"
-            placeholder="Todos" appendTo="body" class="w-full" />
-        </div>
+        @if (showEstadoFilter) {
+          <div class="dir-ent__field">
+            <label for="dir-ent-estado">Estado</label>
+            <p-select inputId="dir-ent-estado" [options]="estadoOptions" [(ngModel)]="fEstado"
+              placeholder="Todos" appendTo="body" class="w-full" />
+          </div>
+        }
       </div>
 
       <div class="dir-ent__filtros-actions">

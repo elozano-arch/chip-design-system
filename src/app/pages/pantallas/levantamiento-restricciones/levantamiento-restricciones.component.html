@@ -1,0 +1,354 @@
+<div class="lvr-page" role="main">
+  <p-toast />
+  <app-breadcrumb />
+
+  <div class="lvr-header">
+    <h1 class="lvr-header__title">
+      <i class="pi pi-unlock lvr-header__icon" aria-hidden="true"></i>
+      Levantamiento de Restricciones
+    </h1>
+    <p class="lvr-header__desc">
+      Gestione los mensajes y conviértalos entre
+      <strong>permisibles</strong> y <strong>no permisibles</strong> según corresponda.
+    </p>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       Filtros colapsables
+       ════════════════════════════════════════════ -->
+  <div class="chip-filters" role="region" aria-label="Filtros de consulta">
+    <div class="chip-filters__header">
+      <div class="chip-filters__header-left">
+        <p-button
+          [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
+          [label]="'Filtros de búsqueda' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
+          [outlined]="true" severity="secondary" size="small"
+          [attr.aria-expanded]="!filtersCollapsed"
+          aria-controls="lvr-filters-body"
+          (onClick)="filtersCollapsed = !filtersCollapsed" />
+
+        @if (filtersCollapsed && filtrosAplicados) {
+          <div class="chip-filters__chips" aria-live="polite">
+            <p-chip [label]="'Entidad: ' + resumenEntidad" />
+            <p-chip [label]="'Año: ' + filtrosAplicados.anio" />
+            <p-chip [label]="'Categoría: ' + filtrosAplicados.categoria.nombre" />
+            <p-chip [label]="'Período: ' + resumenPeriodoLabel" />
+            <p-chip [label]="'Tipo deficiencia: ' + (filtrosAplicados.tipo === 'local' ? 'Local' : 'Central')" />
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (!filtersCollapsed) {
+      <div class="chip-filters__body" id="lvr-filters-body">
+        <div class="chip-filters__fields chip-filters__fields--3col">
+
+          <!-- Entidad (obligatorio, abre directorio) -->
+          <div class="chip-filters__field">
+            <label for="lvr-f-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
+            <p-iconField iconPosition="right" styleClass="w-full lvr-entidad-iconfield">
+              <input pInputText id="lvr-f-entidad"
+                class="w-full lvr-entidad-trigger-input"
+                [value]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
+                readonly
+                placeholder="Seleccionar entidad"
+                role="combobox" aria-haspopup="dialog"
+                aria-required="true"
+                [attr.aria-expanded]="mostrarDirectorioEntidades"
+                [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+                [pTooltip]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
+                tooltipPosition="top" [showDelay]="500"
+                (click)="abrirDirectorioEntidades()"
+                (keydown.enter)="abrirDirectorioEntidades()"
+                (keydown.space)="abrirDirectorioEntidades(); $event.preventDefault()" />
+              @if (filterEntidad) {
+                <p-inputIcon
+                  styleClass="pi pi-times-circle lvr-entidad-clear"
+                  role="button" tabindex="0"
+                  pTooltip="Limpiar selección" tooltipPosition="top"
+                  aria-label="Limpiar entidad seleccionada"
+                  (click)="limpiarEntidad(); $event.stopPropagation()"
+                  (keydown.enter)="limpiarEntidad(); $event.stopPropagation()"
+                  (keydown.space)="limpiarEntidad(); $event.stopPropagation(); $event.preventDefault()" />
+              } @else {
+                <p-inputIcon styleClass="pi pi-search lvr-entidad-search" />
+              }
+            </p-iconField>
+          </div>
+
+          <!-- Año (obligatorio) -->
+          <div class="chip-filters__field">
+            <label for="lvr-f-anio">Año <span class="field-required" aria-hidden="true">*</span></label>
+            <p-select inputId="lvr-f-anio"
+              [options]="anioOptions" optionLabel="label" optionValue="value"
+              [(ngModel)]="filterAnio" placeholder="Seleccione el año"
+              styleClass="w-full" aria-required="true" />
+          </div>
+
+          <!-- Categoría (obligatorio) -->
+          <div class="chip-filters__field">
+            <label for="lvr-f-categoria">Categoría <span class="field-required" aria-hidden="true">*</span></label>
+            <p-select inputId="lvr-f-categoria"
+              [options]="categoriaOptions" optionLabel="label" optionValue="value"
+              [(ngModel)]="filterCategoria" (onChange)="onCategoriaChange()"
+              placeholder="Seleccione una categoría"
+              styleClass="w-full" aria-required="true" />
+          </div>
+
+          <!-- Período (obligatorio, depende de categoría) -->
+          <div class="chip-filters__field">
+            <label for="lvr-f-periodo">Período <span class="field-required" aria-hidden="true">*</span></label>
+            <p-select inputId="lvr-f-periodo"
+              [options]="periodoOptions" optionLabel="label" optionValue="value"
+              [(ngModel)]="filterPeriodo"
+              [placeholder]="filterCategoria ? 'Seleccione el período' : 'Seleccione una categoría primero'"
+              [disabled]="!filterCategoria"
+              styleClass="w-full" aria-required="true" />
+          </div>
+
+          <!-- Tipo deficiencia (obligatorio, último porque depende de los demás) -->
+          <div class="chip-filters__field">
+            <label for="lvr-f-tipo">Tipo deficiencia <span class="field-required" aria-hidden="true">*</span></label>
+            <p-select inputId="lvr-f-tipo"
+              [options]="tipoOptions" optionLabel="label" optionValue="value"
+              [(ngModel)]="filterTipo"
+              [placeholder]="tipoHabilitado ? 'Seleccione el tipo de deficiencia' : 'Complete los filtros previos'"
+              [disabled]="!tipoHabilitado"
+              styleClass="w-full" aria-required="true" />
+          </div>
+        </div>
+
+        <div class="chip-filters__actions">
+          <p-button label="Limpiar" icon="pi pi-refresh"
+            [text]="true" severity="secondary"
+            (onClick)="limpiarFiltros()" />
+          <p-button label="Aplicar filtros" icon="pi pi-search"
+            [disabled]="!filtrosValidos"
+            (onClick)="aplicarFiltros()" />
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       Estado vacío (antes de la primera consulta)
+       ════════════════════════════════════════════ -->
+  @if (!busquedaRealizada) {
+    <section class="lvr-empty" role="region" aria-label="Estado inicial">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <h2>Realice una consulta</h2>
+      <p>
+        Complete los filtros obligatorios y haga clic en
+        <strong>Aplicar Filtros</strong> para visualizar los mensajes de validación
+        asociados a la entidad y período seleccionados.
+      </p>
+    </section>
+  }
+
+  <!-- ════════════════════════════════════════════
+       Gestión de restricciones (dos listas + transferencias)
+       ════════════════════════════════════════════ -->
+  @if (busquedaRealizada) {
+    <section class="lvr-pick" role="region" aria-label="Gestión de restricciones">
+      <header class="lvr-pick__header">
+        <div class="lvr-pick__title">
+          <i class="pi pi-list" aria-hidden="true"></i>
+          <h2>Gestión de restricciones</h2>
+        </div>
+        <div class="lvr-pick__counters" aria-live="polite">
+          <span class="lvr-counter lvr-counter--danger">
+            <i class="pi pi-times-circle" aria-hidden="true"></i>
+            No permisibles: {{ mensajesNoPermisibles.length }}
+          </span>
+          <span class="lvr-counter lvr-counter--success">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            Permisibles: {{ mensajesPermisibles.length }}
+          </span>
+        </div>
+      </header>
+
+      <div class="lvr-pick__layout">
+
+        <!-- Lista izquierda: No Permisibles -->
+        <div class="lvr-list lvr-list--danger">
+          <div class="lvr-list__header">
+            <span class="lvr-list__indicator" aria-hidden="true"></span>
+            <h3 class="lvr-list__title">No permisibles</h3>
+          </div>
+          <p-iconField iconPosition="left" styleClass="lvr-list__search">
+            <p-inputIcon styleClass="pi pi-search" />
+            <input pInputText type="text"
+              placeholder="Buscar en no permisibles..."
+              aria-label="Buscar mensajes no permisibles"
+              [(ngModel)]="busquedaNoPermisibles" />
+          </p-iconField>
+          <p-listbox
+            [options]="noPermisiblesFiltrados"
+            [(ngModel)]="selectedNoPermisibles"
+            [multiple]="true"
+            [checkbox]="true"
+            [showToggleAll]="false"
+            optionLabel="codigo"
+            dataKey="id"
+            [listStyle]="{ 'max-height': '320px' }"
+            emptyMessage="No hay mensajes no permisibles."
+            styleClass="lvr-list__box"
+            ariaLabel="Lista de mensajes no permisibles">
+            <ng-template let-msg pTemplate="item">
+              <div class="lvr-item">
+                <div class="lvr-item__head">
+                  <span class="lvr-item__codigo">{{ msg.codigo }}</span>
+                  @if (esModificado(msg.id)) {
+                    <p-tag
+                      value="Modificado"
+                      icon="pi pi-pencil"
+                      severity="info"
+                      styleClass="lvr-item__badge"
+                      [attr.aria-label]="'Mensaje ' + msg.codigo + ' modificado en esta consulta'" />
+                  }
+                </div>
+                <span class="lvr-item__desc">{{ msg.descripcion }}</span>
+              </div>
+            </ng-template>
+          </p-listbox>
+        </div>
+
+        <!-- Botones de transferencia (centro) -->
+        <div class="lvr-actions" role="group" aria-label="Transferir mensajes entre listas">
+          <p-button icon="pi pi-angle-right"
+            [disabled]="selectedNoPermisibles.length === 0"
+            (onClick)="moverSeleccionadosAPermisibles()"
+            pTooltip="Convertir seleccionados a permisibles" tooltipPosition="left"
+            ariaLabel="Convertir mensajes seleccionados a permisibles" />
+          <p-button icon="pi pi-angle-double-right"
+            [outlined]="true"
+            [disabled]="mensajesNoPermisibles.length === 0"
+            (onClick)="confirmarTodosAPermisibles()"
+            pTooltip="Convertir todos a permisibles" tooltipPosition="left"
+            ariaLabel="Convertir todos los mensajes a permisibles" />
+          <p-button icon="pi pi-angle-left"
+            [outlined]="true" severity="danger"
+            [disabled]="selectedPermisibles.length === 0"
+            (onClick)="moverSeleccionadosANoPermisibles()"
+            pTooltip="Revertir seleccionados a no permisibles" tooltipPosition="left"
+            ariaLabel="Revertir mensajes seleccionados a no permisibles" />
+          <p-button icon="pi pi-angle-double-left"
+            severity="danger"
+            [disabled]="mensajesPermisibles.length === 0"
+            (onClick)="confirmarTodosANoPermisibles()"
+            pTooltip="Revertir todos a no permisibles" tooltipPosition="left"
+            ariaLabel="Revertir todos los mensajes a no permisibles" />
+        </div>
+
+        <!-- Lista derecha: Permisibles -->
+        <div class="lvr-list lvr-list--success">
+          <div class="lvr-list__header">
+            <span class="lvr-list__indicator" aria-hidden="true"></span>
+            <h3 class="lvr-list__title">Permisibles</h3>
+          </div>
+          <p-iconField iconPosition="left" styleClass="lvr-list__search">
+            <p-inputIcon styleClass="pi pi-search" />
+            <input pInputText type="text"
+              placeholder="Buscar en permisibles..."
+              aria-label="Buscar mensajes permisibles"
+              [(ngModel)]="busquedaPermisibles" />
+          </p-iconField>
+          <p-listbox
+            [options]="permisiblesFiltrados"
+            [(ngModel)]="selectedPermisibles"
+            [multiple]="true"
+            [checkbox]="true"
+            [showToggleAll]="false"
+            optionLabel="codigo"
+            dataKey="id"
+            [listStyle]="{ 'max-height': '320px' }"
+            emptyMessage="No hay mensajes permisibles."
+            styleClass="lvr-list__box"
+            ariaLabel="Lista de mensajes permisibles">
+            <ng-template let-msg pTemplate="item">
+              <div class="lvr-item">
+                <div class="lvr-item__head">
+                  <span class="lvr-item__codigo">{{ msg.codigo }}</span>
+                  @if (esModificado(msg.id)) {
+                    <p-tag
+                      value="Modificado"
+                      icon="pi pi-pencil"
+                      severity="info"
+                      styleClass="lvr-item__badge"
+                      [attr.aria-label]="'Mensaje ' + msg.codigo + ' modificado en esta consulta'" />
+                  }
+                </div>
+                <span class="lvr-item__desc">{{ msg.descripcion }}</span>
+              </div>
+            </ng-template>
+          </p-listbox>
+        </div>
+      </div>
+
+      <p class="lvr-help">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Seleccione uno o varios mensajes en cualquier lista y use las flechas centrales
+        para convertirlos. Las flechas dobles transfieren todos los mensajes y solicitan
+        confirmación antes de aplicar el cambio.
+      </p>
+    </section>
+  }
+
+  <!-- ════════════════════════════════════════════
+       Modal: Directorio de Entidades (reutilizable)
+       ════════════════════════════════════════════ -->
+  <app-directorio-entidades
+    [(visible)]="mostrarDirectorioEntidades"
+    [showEstadoFilter]="false"
+    (seleccionar)="onEntidadSeleccionada($event)" />
+
+  <!-- ════════════════════════════════════════════
+       Confirmación: convertir todos a Permisibles
+       ════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showConfirmTodosAPermisibles"
+    [modal]="true" [draggable]="false" [closeOnEscape]="true"
+    [style]="{ width: '480px' }"
+    header="Convertir todos los mensajes a permisibles">
+    <div class="lvr-dialog-confirm">
+      <i class="pi pi-exclamation-triangle lvr-dialog-confirm__icon" aria-hidden="true"></i>
+      <p>
+        Esta acción convertirá los <strong>{{ mensajesNoPermisibles.length }}</strong>
+        mensaje{{ mensajesNoPermisibles.length === 1 ? '' : 's' }} actualmente en la lista
+        de <strong>no permisibles</strong> a la lista de <strong>permisibles</strong>.
+      </p>
+      <p>¿Desea continuar?</p>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" [text]="true" severity="secondary"
+        (onClick)="showConfirmTodosAPermisibles = false" />
+      <p-button label="Sí, convertir todos" icon="pi pi-check"
+        (onClick)="ejecutarTodosAPermisibles()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- ════════════════════════════════════════════
+       Confirmación: revertir todos a No Permisibles
+       ════════════════════════════════════════════ -->
+  <p-dialog
+    [(visible)]="showConfirmTodosANoPermisibles"
+    [modal]="true" [draggable]="false" [closeOnEscape]="true"
+    [style]="{ width: '480px' }"
+    header="Revertir todos los mensajes a no permisibles">
+    <div class="lvr-dialog-confirm">
+      <i class="pi pi-exclamation-triangle lvr-dialog-confirm__icon" aria-hidden="true"></i>
+      <p>
+        Esta acción enviará los <strong>{{ mensajesPermisibles.length }}</strong>
+        mensaje{{ mensajesPermisibles.length === 1 ? '' : 's' }} actualmente en la lista
+        de <strong>permisibles</strong> a la lista de <strong>no permisibles</strong>.
+      </p>
+      <p>¿Desea continuar?</p>
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" [text]="true" severity="secondary"
+        (onClick)="showConfirmTodosANoPermisibles = false" />
+      <p-button label="Sí, revertir todos" icon="pi pi-replay" severity="danger"
+        (onClick)="ejecutarTodosANoPermisibles()" />
+    </ng-template>
+  </p-dialog>
+</div>

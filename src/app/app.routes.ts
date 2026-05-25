@@ -165,10 +165,21 @@ export const routes: Routes = [
       import('./pages/pantallas/auditoria/auditoria.component').then(m => m.AuditoriaComponent),
   },
   {
-    path: 'pantallas/formularios',
+    path: 'pantallas/categorias/levantamiento-restricciones',
     data: {
       breadcrumb: [
-        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Categorías', icon: 'pi pi-tags', routerLink: '/pantallas/categorias/levantamiento-restricciones' },
+        { label: 'Levantamiento de Restricciones' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/levantamiento-restricciones/levantamiento-restricciones.component').then(m => m.LevantamientoRestriccionesComponent),
+  },
+  {
+    path: 'pantallas/formularios/gestion',
+    data: {
+      breadcrumb: [
+        { label: 'Formularios', icon: 'pi pi-file-edit', routerLink: '/pantallas/formularios/gestion' },
         { label: 'Gestión de Formularios' },
       ],
     },

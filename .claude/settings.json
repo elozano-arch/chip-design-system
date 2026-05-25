@@ -6,5 +6,27 @@
       "Bash(python3 -c ' *)",
       "Read(//Applications/Cursor.app/Contents/Resources/app/resources/helpers/**)"
     ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/ui-triage.js"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/ui-done-check.js"
+          }
+        ]
+      }
+    ]
   }
 }
