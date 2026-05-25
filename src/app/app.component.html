@@ -130,6 +130,21 @@
         <i class="pi pi-file-edit"></i> <span class="app-sidebar__label">Formularios</span>
       </a>
 
+      <!-- ══ PROTOCOLO DE IMPORTACIÓN ══ -->
+      <a routerLink="/pantallas/protocolo-importacion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Protocolo de Importación' : ''" tooltipPosition="right">
+        <i class="pi pi-file-import"></i> <span class="app-sidebar__label">Protocolo de Importación</span>
+      </a>
+
+      <!-- ══ FLUJO DE ENVÍO ══ -->
+      <a routerLink="/pantallas/flujo-envio" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Flujo de Envío' : ''" tooltipPosition="right">
+        <i class="pi pi-send"></i> <span class="app-sidebar__label">Flujo de Envío</span>
+      </a>
+
+      <!-- ══ TREE-TABLE ESTÁNDAR ══ -->
+      <a routerLink="/pantallas/tree-table-estandar" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Tree-table Estándar' : ''" tooltipPosition="right">
+        <i class="pi pi-sitemap"></i> <span class="app-sidebar__label">Tree-table Estándar</span>
+      </a>
+
       <!-- ══ PLANTILLAS DE CORREO ══ -->
       <a routerLink="/pantallas/correos" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Plantillas de correo' : ''" tooltipPosition="right">
         <i class="pi pi-envelope"></i> <span class="app-sidebar__label">Plantillas de correo</span>

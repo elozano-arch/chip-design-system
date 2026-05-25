@@ -255,7 +255,10 @@ p-breadcrumb .p-breadcrumb {
 .roles-page,
 .flt-page,
 .cpw-page,
-.cor-page {
+.cor-page,
+.prot-page,
+.flj-page,
+.ttr-page {
   max-width: 1200px;
   margin: 0 auto;
   padding: 24px;
@@ -263,10 +266,12 @@ p-breadcrumb .p-breadcrumb {
 
 /**
  * Modificador para pantallas que necesitan más espacio horizontal
- * (formularios con muchas variables/columnas, tipo Registro Manual).
+ * (formularios con muchas variables/columnas, tipo Registro Manual,
+ * tree-table con columnas paginadas).
  * Aplica solo a la pantalla que lo declara, no rompe el resto del DS.
  */
-.form-page--wide {
+.form-page--wide,
+.ttr-page {
   max-width: min(1680px, calc(100vw - 280px));
 }
 
@@ -277,7 +282,10 @@ p-breadcrumb .p-breadcrumb {
 .roles-header,
 .flt-header,
 .cpw-header,
-.cor-header {
+.cor-header,
+.prot-header,
+.flj-header,
+.ttr-header {
   margin-bottom: 28px;
 }
 
@@ -287,7 +295,10 @@ p-breadcrumb .p-breadcrumb {
 .roles-header__title,
 .flt-header__title,
 .cpw-header__title,
-.cor-header__title {
+.cor-header__title,
+.prot-header__title,
+.flj-header__title,
+.ttr-header__title {
   font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 800;
@@ -299,7 +310,10 @@ p-breadcrumb .p-breadcrumb {
 .form-header__row,
 .aud-header__row,
 .roles-header__row,
-.cpw-header__row {
+.cpw-header__row,
+.prot-header__row,
+.flj-header__row,
+.ttr-header__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -312,7 +326,10 @@ p-breadcrumb .p-breadcrumb {
 .roles-header__desc,
 .flt-header__desc,
 .cpw-header__desc,
-.cor-header__desc {
+.cor-header__desc,
+.prot-header__desc,
+.flj-header__desc,
+.ttr-header__desc {
   font-size: 15px;
   color: var(--chip-grey-500);
   margin: 0;

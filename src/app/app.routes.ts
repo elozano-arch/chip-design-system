@@ -176,6 +176,39 @@ export const routes: Routes = [
       import('./pages/pantallas/formularios/formularios.component').then(m => m.FormulariosComponent),
   },
   {
+    path: 'pantallas/protocolo-importacion',
+    data: {
+      breadcrumb: [
+        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Protocolo de Importación' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/protocolo-importacion/protocolo-importacion.component').then(m => m.ProtocoloImportacionComponent),
+  },
+  {
+    path: 'pantallas/flujo-envio',
+    data: {
+      breadcrumb: [
+        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Flujo de Envío' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/flujo-envio/flujo-envio.component').then(m => m.FlujoEnvioComponent),
+  },
+  {
+    path: 'pantallas/tree-table-estandar',
+    data: {
+      breadcrumb: [
+        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Tree-table Estándar' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/tree-table-estandar/tree-table-estandar.component').then(m => m.TreeTableEstandarComponent),
+  },
+  {
     path: 'pantallas/filtros',
     data: {
       breadcrumb: [

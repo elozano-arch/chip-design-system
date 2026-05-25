@@ -1,0 +1,519 @@
+<p-toast />
+
+<div class="flj-page" role="main">
+  <app-breadcrumb />
+
+  <div class="flj-header">
+    <h1 class="flj-header__title">Flujo de Envío de Categoría</h1>
+    <div class="flj-header__row">
+      <p class="flj-header__desc">
+        Realiza el envío de una categoría al CHIP central en tres pasos: define el contexto,
+        valida tus formularios y envía la información. Tu progreso se guarda automáticamente.
+      </p>
+      @if (pasoActivo() > 1 || contextoCompleto()) {
+        <p-button label="Reiniciar flujo" icon="pi pi-refresh" [text]="true" severity="secondary"
+          (onClick)="reiniciarFlujo()" />
+      }
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════
+       Stepper visual con 3 pasos
+       ════════════════════════════════════════════════════════════ -->
+  <p-stepper [value]="pasoActivo()" [linear]="true" styleClass="flj-stepper">
+    <p-step-list>
+      <p-step [value]="1">Contexto</p-step>
+      <p-step [value]="2">Validar formularios</p-step>
+      <p-step [value]="3">Enviar categoría</p-step>
+    </p-step-list>
+
+    <p-step-panels>
+      <!-- ──────────────────────────────────────────────
+           PASO 1 — Contexto y consulta/importación
+           ────────────────────────────────────────────── -->
+      <p-step-panel [value]="1">
+        <ng-template #content let-activate="activateCallback">
+          <section class="flj-step" aria-label="Paso 1: Contexto">
+            <header class="flj-step__head">
+              <h2 class="flj-step__title">1. Define el contexto del envío</h2>
+              <p class="flj-step__desc">
+                Selecciona los cuatro filtros para identificar qué categoría vas a enviar. Sobre
+                este contexto podrás <strong>consultar envíos previos</strong> o
+                <strong>importar un archivo nuevo</strong>.
+              </p>
+            </header>
+
+            <div class="flj-mode">
+              <button type="button" class="flj-mode__btn"
+                [class.flj-mode__btn--active]="modoPaso1() === 'consultar'"
+                (click)="cambiarModo('consultar')"
+                [attr.aria-pressed]="modoPaso1() === 'consultar'">
+                <i class="pi pi-search" aria-hidden="true"></i>
+                <span>
+                  <strong>Consultar envíos</strong>
+                  <small>Revisa los envíos cargados en CHIP local</small>
+                </span>
+              </button>
+              <button type="button" class="flj-mode__btn"
+                [class.flj-mode__btn--active]="modoPaso1() === 'importar'"
+                (click)="cambiarModo('importar')"
+                [attr.aria-pressed]="modoPaso1() === 'importar'">
+                <i class="pi pi-upload" aria-hidden="true"></i>
+                <span>
+                  <strong>Importar</strong>
+                  <small>Sube un archivo plano siguiendo el protocolo</small>
+                </span>
+              </button>
+            </div>
+
+            <div class="flj-form">
+              <div class="flj-form__field">
+                <label for="flj-anio" class="flj-form__label">
+                  Año <span class="field-required" aria-hidden="true">*</span>
+                </label>
+                <p-select inputId="flj-anio"
+                  [options]="anios"
+                  [ngModel]="anio()" (ngModelChange)="anio.set($event)"
+                  optionLabel="label" optionValue="value"
+                  placeholder="Selecciona el año"
+                  appendTo="body" [style]="{ width: '100%' }" />
+              </div>
+              <div class="flj-form__field">
+                <label for="flj-entidad" class="flj-form__label">
+                  Entidad <span class="field-required" aria-hidden="true">*</span>
+                </label>
+                <p-select inputId="flj-entidad"
+                  [options]="entidades"
+                  [ngModel]="entidad()" (ngModelChange)="entidad.set($event)"
+                  optionLabel="label" optionValue="value"
+                  placeholder="Selecciona la entidad"
+                  [filter]="true" filterBy="label"
+                  appendTo="body" [style]="{ width: '100%' }" />
+              </div>
+              <div class="flj-form__field">
+                <label for="flj-categoria" class="flj-form__label">
+                  Categoría <span class="field-required" aria-hidden="true">*</span>
+                </label>
+                <p-select inputId="flj-categoria"
+                  [options]="categorias"
+                  [ngModel]="categoria()" (ngModelChange)="categoria.set($event)"
+                  optionLabel="label" optionValue="value"
+                  placeholder="Selecciona la categoría"
+                  appendTo="body" [style]="{ width: '100%' }" />
+              </div>
+              <div class="flj-form__field">
+                <label for="flj-periodo" class="flj-form__label">
+                  Período <span class="field-required" aria-hidden="true">*</span>
+                </label>
+                <p-select inputId="flj-periodo"
+                  [options]="periodos"
+                  [ngModel]="periodo()" (ngModelChange)="periodo.set($event)"
+                  optionLabel="label" optionValue="value"
+                  placeholder="Selecciona el período"
+                  appendTo="body" [style]="{ width: '100%' }" />
+              </div>
+            </div>
+
+            @if (modoPaso1() === 'importar' && contextoCompleto()) {
+              <div class="flj-import">
+                <i class="pi pi-cloud-upload" aria-hidden="true"></i>
+                <div>
+                  <strong>Importar archivo plano para esta categoría</strong>
+                  <p>El archivo debe seguir la estructura del protocolo de importación.</p>
+                </div>
+                <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
+                  (onClick)="importarArchivo()" />
+              </div>
+            }
+
+            <footer class="flj-step__footer">
+              <span class="flj-step__hint">
+                @if (contextoCompleto()) {
+                  <i class="pi pi-check-circle" aria-hidden="true"></i>
+                  Contexto completo. Puedes continuar.
+                } @else {
+                  <i class="pi pi-info-circle" aria-hidden="true"></i>
+                  Completa los 4 campos para continuar.
+                }
+              </span>
+              <p-button label="Siguiente: Validar formularios" icon="pi pi-arrow-right" iconPos="right"
+                [disabled]="!contextoCompleto()"
+                (onClick)="irAValidacion(); activate(2)" />
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ──────────────────────────────────────────────
+           PASO 2 — Validar formularios
+           ────────────────────────────────────────────── -->
+      <p-step-panel [value]="2">
+        <ng-template #content let-activate="activateCallback">
+          <section class="flj-step" aria-label="Paso 2: Validar formularios">
+            <header class="flj-step__head">
+              <h2 class="flj-step__title">2. Valida los formularios de la categoría</h2>
+              <p class="flj-step__desc">
+                Todos los formularios deben estar en estado <strong>Validado</strong> para enviar
+                la categoría. Revisa las deficiencias y corrígelas antes de avanzar.
+              </p>
+            </header>
+
+            <!-- Chips de contexto -->
+            <div class="flj-context-chips" role="region" aria-label="Contexto seleccionado">
+              <span class="flj-chip"><i class="pi pi-calendar" aria-hidden="true"></i> {{ anio() }}</span>
+              <span class="flj-chip"><i class="pi pi-building" aria-hidden="true"></i> {{ labelEntidad() }}</span>
+              <span class="flj-chip"><i class="pi pi-tag" aria-hidden="true"></i> {{ labelCategoria() }}</span>
+              <span class="flj-chip"><i class="pi pi-clock" aria-hidden="true"></i> {{ labelPeriodo() }} {{ anio() }}</span>
+            </div>
+
+            <!-- Resumen -->
+            <div class="flj-summary">
+              <div class="flj-summary__progress">
+                <div class="flj-summary__progress-head">
+                  <span class="flj-summary__progress-label">Progreso de validación</span>
+                  <strong>{{ totalValidados() }} / {{ totalFormularios() }}</strong>
+                </div>
+                <p-progressBar [value]="progresoValidacion()" [showValue]="false"
+                  styleClass="flj-summary__progress-bar" />
+              </div>
+              <div class="flj-summary__stats">
+                <div class="flj-stat flj-stat--success">
+                  <i class="pi pi-check-circle" aria-hidden="true"></i>
+                  <span>{{ totalValidados() }} validados</span>
+                </div>
+                <div class="flj-stat flj-stat--warn">
+                  <i class="pi pi-clock" aria-hidden="true"></i>
+                  <span>{{ formularios().length - totalValidados() - totalConErrores() - totalPendientes() }} sin validar</span>
+                </div>
+                <div class="flj-stat flj-stat--danger">
+                  <i class="pi pi-times-circle" aria-hidden="true"></i>
+                  <span>{{ totalConErrores() }} con errores</span>
+                </div>
+                <div class="flj-stat flj-stat--info">
+                  <i class="pi pi-info-circle" aria-hidden="true"></i>
+                  <span>{{ totalPendientes() }} pendientes</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Banner sticky con errores -->
+            @if (totalConErrores() > 0) {
+              <div class="flj-banner flj-banner--danger" role="alert" aria-live="polite">
+                <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                <div class="flj-banner__text">
+                  <strong>{{ totalConErrores() }} formularios con deficiencias.</strong>
+                  Descarga el archivo de errores para revisarlos en detalle y corregirlos.
+                </div>
+                <p-button label="Descargar deficiencias" icon="pi pi-download" severity="danger" [outlined]="true"
+                  (onClick)="descargarDeficiencias()" />
+              </div>
+            }
+
+            <!-- Tabla de formularios -->
+            <div class="flj-table-actions">
+              <p-button label="Validar todos" icon="pi pi-verified" [outlined]="true"
+                [disabled]="todosValidados()"
+                (onClick)="validarTodos()" />
+            </div>
+
+            <p-table [value]="formularios()"
+              [stripedRows]="true" [rowHover]="true"
+              styleClass="flj-table">
+              <ng-template #caption>
+                <span class="sr-only">Listado de formularios a validar</span>
+              </ng-template>
+              <ng-template #header>
+                <tr>
+                  <th scope="col" style="width: 110px">Código</th>
+                  <th scope="col">Formulario</th>
+                  <th scope="col" style="width: 120px; text-align: right">Registros</th>
+                  <th scope="col" style="width: 110px">Origen</th>
+                  <th scope="col" style="width: 150px">Última carga</th>
+                  <th scope="col" style="width: 150px">Estado</th>
+                  <th scope="col" style="width: 220px; text-align: center">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-f>
+                <tr>
+                  <td><code class="flj-code">{{ f.codigo }}</code></td>
+                  <td class="flj-table__nombre">{{ f.nombre }}</td>
+                  <td class="flj-table__num">
+                    @if (f.registros > 0) {
+                      {{ f.registros }}
+                    } @else {
+                      <span class="flj-muted">—</span>
+                    }
+                  </td>
+                  <td>{{ f.origen }}</td>
+                  <td>{{ f.ultimaCarga ?? '—' }}</td>
+                  <td>
+                    <span class="flj-status flj-status--{{ f.estado }}">
+                      <i [class]="iconoEstado(f.estado)" aria-hidden="true"></i>
+                      {{ labelEstado(f.estado) }}
+                    </span>
+                  </td>
+                  <td class="flj-table__actions">
+                    @if (f.estado !== 'validado') {
+                      <p-button label="Validar" icon="pi pi-verified"
+                        [text]="true" size="small"
+                        [disabled]="f.estado === 'pendiente'"
+                        (onClick)="validar(f)" />
+                    }
+                    @if (f.estado === 'con-errores') {
+                      <p-button label="Ver errores" icon="pi pi-list"
+                        [text]="true" severity="danger" size="small"
+                        (onClick)="verDeficiencias(f)" />
+                    }
+                    @if (f.estado === 'validado' || f.estado === 'con-errores') {
+                      <p-button icon="pi pi-refresh" [text]="true" severity="secondary" size="small"
+                        pTooltip="Recargar formulario" tooltipPosition="top"
+                        [attr.aria-label]="'Recargar ' + f.codigo"
+                        (onClick)="recargar(f)" />
+                    }
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="7" class="flj-table__empty">
+                    <i class="pi pi-inbox" aria-hidden="true"></i>
+                    <p>No hay formularios cargados para esta categoría.</p>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+
+            <footer class="flj-step__footer">
+              <p-button label="Atrás" icon="pi pi-arrow-left" [text]="true" severity="secondary"
+                (onClick)="pasoActivo.set(1); activate(1)" />
+              <div class="flj-step__footer-right">
+                <span class="flj-step__hint">
+                  @if (todosValidados()) {
+                    <i class="pi pi-check-circle" aria-hidden="true"></i>
+                    Todos los formularios están validados.
+                  } @else {
+                    <i class="pi pi-info-circle" aria-hidden="true"></i>
+                    Faltan {{ totalFormularios() - totalValidados() }} formularios por validar.
+                  }
+                </span>
+                <p-button label="Siguiente: Enviar categoría" icon="pi pi-arrow-right" iconPos="right"
+                  [disabled]="!todosValidados()"
+                  (onClick)="irAEnvio(); activate(3)" />
+              </div>
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ──────────────────────────────────────────────
+           PASO 3 — Enviar categoría
+           ────────────────────────────────────────────── -->
+      <p-step-panel [value]="3">
+        <ng-template #content let-activate="activateCallback">
+          <section class="flj-step" aria-label="Paso 3: Enviar categoría">
+            @if (!envioCompletado()) {
+              <header class="flj-step__head">
+                <h2 class="flj-step__title">3. Envía la categoría al CHIP central</h2>
+                <p class="flj-step__desc">
+                  Revisa el resumen, adjunta el soporte del envío y confirma. Una vez enviada, la
+                  categoría queda cerrada para este período.
+                </p>
+              </header>
+
+              <!-- Resumen -->
+              <div class="flj-resumen">
+                <div class="flj-resumen__row">
+                  <span class="flj-resumen__label">Entidad</span>
+                  <strong>{{ labelEntidad() }}</strong>
+                </div>
+                <div class="flj-resumen__row">
+                  <span class="flj-resumen__label">Categoría</span>
+                  <strong>{{ labelCategoria() }}</strong>
+                </div>
+                <div class="flj-resumen__row">
+                  <span class="flj-resumen__label">Período</span>
+                  <strong>{{ labelPeriodo() }} {{ anio() }}</strong>
+                </div>
+                <div class="flj-resumen__row">
+                  <span class="flj-resumen__label">Formularios</span>
+                  <strong>{{ totalFormularios() }} validados</strong>
+                </div>
+              </div>
+
+              <!-- Adjunto -->
+              <div class="flj-field">
+                <label class="flj-field__label">
+                  Soporte del envío <span class="field-required" aria-hidden="true">*</span>
+                </label>
+                @if (!adjuntoNombre()) {
+                  <button type="button" class="flj-dropzone" (click)="seleccionarAdjunto()">
+                    <i class="pi pi-cloud-upload" aria-hidden="true"></i>
+                    <span>
+                      <strong>Adjuntar soporte (PDF)</strong>
+                      <small>Haz clic para seleccionar el archivo</small>
+                    </span>
+                  </button>
+                } @else {
+                  <div class="flj-attachment">
+                    <i class="pi pi-file-pdf" aria-hidden="true"></i>
+                    <span class="flj-attachment__name">{{ adjuntoNombre() }}</span>
+                    <button type="button" class="flj-attachment__remove" (click)="quitarAdjunto()"
+                      aria-label="Quitar adjunto">
+                      <i class="pi pi-times" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <!-- Entidades agregadas -->
+              <div class="flj-field">
+                <label class="flj-field__label">Entidades agregadas (opcional)</label>
+                <p class="flj-field__hint">
+                  Marca las entidades que se incluyen en el envío como agregación adicional.
+                </p>
+                <div class="flj-checks">
+                  @for (op of opcionesEntidadesAgregadas; track op.value) {
+                    <label class="flj-check">
+                      <p-checkbox [binary]="true"
+                        [ngModel]="entidadesAgregadas().includes(op.value)"
+                        (ngModelChange)="toggleEntidadAgregada(op.value)" />
+                      <span>{{ op.label }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+
+              <!-- Observaciones -->
+              <div class="flj-field">
+                <label for="flj-obs" class="flj-field__label">Observaciones (opcional)</label>
+                <textarea pTextarea id="flj-obs" rows="3"
+                  [ngModel]="observacionesEnvio()" (ngModelChange)="observacionesEnvio.set($event)"
+                  placeholder="Agrega notas o aclaraciones sobre el envío"></textarea>
+              </div>
+
+              <!-- Términos -->
+              <label class="flj-check flj-check--terms">
+                <p-checkbox [binary]="true"
+                  [ngModel]="aceptaTerminos()" (ngModelChange)="aceptaTerminos.set($event)"
+                  inputId="flj-terms" />
+                <span>
+                  Confirmo que la información reportada es <strong>veraz y completa</strong>, y
+                  que el envío es definitivo para este período.
+                </span>
+              </label>
+
+              <footer class="flj-step__footer">
+                <p-button label="Atrás" icon="pi pi-arrow-left" [text]="true" severity="secondary"
+                  [disabled]="enviando()"
+                  (onClick)="pasoActivo.set(2); activate(2)" />
+                <p-button [label]="enviando() ? 'Enviando…' : 'Enviar al CHIP central'"
+                  [icon]="enviando() ? 'pi pi-spin pi-spinner' : 'pi pi-send'"
+                  iconPos="right"
+                  [disabled]="!puedeEnviar()"
+                  (onClick)="enviarCategoria()" />
+              </footer>
+            } @else {
+              <!-- Confirmación post-envío -->
+              <div class="flj-success">
+                <div class="flj-success__icon">
+                  <i class="pi pi-check" aria-hidden="true"></i>
+                </div>
+                <h2>Envío realizado con éxito</h2>
+                <p>
+                  La categoría <strong>{{ labelCategoria() }}</strong> del período
+                  <strong>{{ labelPeriodo() }} {{ anio() }}</strong> fue enviada correctamente al
+                  CHIP central. Recibirás el acuse de recibo por correo en los próximos minutos.
+                </p>
+                <div class="flj-success__actions">
+                  <p-button label="Iniciar nuevo envío" icon="pi pi-refresh"
+                    (onClick)="reiniciarFlujo(); activate(1)" />
+                </div>
+              </div>
+            }
+          </section>
+        </ng-template>
+      </p-step-panel>
+    </p-step-panels>
+  </p-stepper>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     Modal de deficiencias
+     ════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [visible]="!!formularioDeficienciasAbierto()"
+  (visibleChange)="$event === false && cerrarDeficiencias()"
+  [modal]="true"
+  [draggable]="false"
+  [closeOnEscape]="true"
+  [style]="{ width: '880px', maxWidth: '95vw' }"
+  [header]="formularioDeficienciasAbierto() ? 'Deficiencias · ' + formularioDeficienciasAbierto()!.codigo : 'Deficiencias'">
+
+  @if (formularioDeficienciasAbierto(); as form) {
+    <div class="flj-deficiencias">
+      <div class="flj-deficiencias__head">
+        <p class="flj-deficiencias__desc">
+          <strong>{{ form.deficiencias.length }} errores</strong> encontrados en
+          <code>{{ form.nombre }}</code>. Corrige el archivo origen y vuelve a cargarlo.
+        </p>
+        <p-iconfield iconPosition="left">
+          <p-inputicon styleClass="pi pi-search" />
+          <input pInputText type="text"
+            [ngModel]="busquedaDeficiencias()"
+            (ngModelChange)="busquedaDeficiencias.set($event)"
+            placeholder="Buscar por campo, regla o fila…"
+            aria-label="Buscar dentro de deficiencias" />
+        </p-iconfield>
+      </div>
+
+      <p-table [value]="deficienciasFiltradas()"
+        [stripedRows]="true" [rowHover]="true"
+        [paginator]="true" [rows]="5"
+        [rowsPerPageOptions]="[5, 10, 25]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} deficiencias"
+        styleClass="flj-deficiencias__table"
+        [scrollable]="true" scrollHeight="320px">
+        <ng-template #caption>
+          <span class="sr-only">Listado de deficiencias del formulario</span>
+        </ng-template>
+        <ng-template #header>
+          <tr>
+            <th scope="col" style="width: 70px">Fila</th>
+            <th scope="col" style="width: 130px">Campo</th>
+            <th scope="col" style="width: 170px">Valor</th>
+            <th scope="col">Regla violada</th>
+            <th scope="col">Sugerencia</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-d>
+          <tr>
+            <td><strong>{{ d.fila }}</strong></td>
+            <td><code class="flj-code">{{ d.campo }}</code></td>
+            <td><span class="flj-deficiencias__val">{{ d.valor }}</span></td>
+            <td>{{ d.regla }}</td>
+            <td class="flj-deficiencias__sug">
+              <i class="pi pi-lightbulb" aria-hidden="true"></i>
+              {{ d.sugerencia }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="5" class="flj-table__empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>No se encontraron deficiencias con ese criterio.</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <ng-template #footer>
+    <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
+      (onClick)="cerrarDeficiencias()" />
+    <p-button label="Descargar deficiencias" icon="pi pi-download" severity="danger"
+      (onClick)="descargarDeficiencias()" />
+  </ng-template>
+</p-dialog>
