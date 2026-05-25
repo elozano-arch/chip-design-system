@@ -562,14 +562,74 @@
           </p>
         </header>
 
-        <!-- Placeholder: el contenido real (tabs Cabecera/Detalle + modal Ver Lista
-             + botón Descargar protocolo) se migra del componente standalone en el
-             siguiente commit. -->
-        <div class="form-wizard__empty">
-          <i class="pi pi-file-export" aria-hidden="true"></i>
-          <h3>Protocolo de importación</h3>
-          <p>Contenido en migración desde la pantalla standalone.</p>
+        <!-- Info general del archivo plano + acción descargar -->
+        <div class="prot-info">
+          <div class="prot-info__head">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            <div>
+              <h3 class="prot-info__title">Estructura del archivo plano</h3>
+              <p class="prot-info__desc">
+                El archivo de importación contiene dos tipos de registros separados por el carácter
+                <strong>TAB</strong>. Cada fila inicia con <code>C</code> (cabecera) o <code>D</code>
+                (detalle). Las variables tipo <strong>Lista</strong> solo aceptan los códigos
+                definidos en el catálogo correspondiente — consúltalos haciendo clic en el enlace de
+                la columna <em>Observaciones</em>.
+              </p>
+            </div>
+          </div>
+
+          <div class="prot-info__chips">
+            <span class="prot-chip">
+              <i class="pi pi-tag" aria-hidden="true"></i>
+              Separador: <strong>TAB</strong>
+            </span>
+            <span class="prot-chip">
+              <i class="pi pi-file" aria-hidden="true"></i>
+              Codificación: <strong>UTF-8</strong>
+            </span>
+            <span class="prot-chip">
+              <i class="pi pi-list" aria-hidden="true"></i>
+              {{ registrosCabecera.length + registrosDetalle.length }} variables
+            </span>
+          </div>
+
+          <div class="prot-info__actions">
+            <p-button label="Descargar protocolo" icon="pi pi-download" [outlined]="true"
+              severity="secondary" (onClick)="descargarProtocolo()" />
+          </div>
         </div>
+
+        <!-- Tabs: Cabecera | Detalle -->
+        <p-tabs value="detalle" styleClass="prot-tabs">
+          <p-tablist>
+            <p-tab value="cabecera">
+              <i class="pi pi-folder" aria-hidden="true"></i>
+              Registro de Cabecera ({{ registrosCabecera.length }})
+            </p-tab>
+            <p-tab value="detalle">
+              <i class="pi pi-list" aria-hidden="true"></i>
+              Registro de Detalle ({{ registrosDetalle.length }})
+            </p-tab>
+          </p-tablist>
+
+          <p-tabpanels>
+            <p-tabpanel value="cabecera">
+              <p class="prot-tabs__desc">
+                Una sola fila por archivo. Identifica el contexto general del envío (entidad,
+                período, formulario).
+              </p>
+              <ng-container *ngTemplateOutlet="tablaVariables; context: { $implicit: registrosCabecera, tipo: 'cabecera' }"></ng-container>
+            </p-tabpanel>
+
+            <p-tabpanel value="detalle">
+              <p class="prot-tabs__desc">
+                Una fila por cada concepto contable a reportar. Contiene los valores específicos del
+                formulario.
+              </p>
+              <ng-container *ngTemplateOutlet="tablaVariables; context: { $implicit: registrosDetalle, tipo: 'detalle' }"></ng-container>
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
       </section>
     }
 
@@ -794,6 +854,144 @@
         icon="pi pi-check"
         [disabled]="selectedEntidades.length === 0"
         (onClick)="confirmarAsignacionEntidades()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- ============================================================= -->
+  <!-- TEMPLATE: tabla horizontal de variables del protocolo          -->
+  <!-- ============================================================= -->
+  <ng-template #tablaVariables let-variables let-tipo="tipo">
+    <p-table [value]="variables"
+      [stripedRows]="true"
+      [rowHover]="true"
+      [tableStyle]="{ 'min-width': '960px' }"
+      styleClass="prot-table">
+      <ng-template #caption>
+        <span class="sr-only">Variables del registro de {{ tipo }}</span>
+      </ng-template>
+      <ng-template #header>
+        <tr>
+          <th class="prot-table__th-num" scope="col">#</th>
+          <th scope="col">Nombre del campo</th>
+          <th scope="col">Tipo de dato</th>
+          <th class="prot-table__th-num" scope="col">Longitud</th>
+          <th class="prot-table__th-num" scope="col">Decimales</th>
+          <th scope="col">Unidad</th>
+          <th scope="col">Observaciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-v>
+        <tr>
+          <td class="prot-table__td-num">{{ v.numero }}</td>
+          <td><code class="prot-table__code">{{ v.nombre }}</code></td>
+          <td>
+            @switch (v.tipoDato) {
+              @case ('Numérico') {
+                <p-tag value="Numérico" severity="info" [rounded]="true" />
+              }
+              @case ('Lista') {
+                <p-tag value="Lista" severity="warn" [rounded]="true" />
+              }
+              @case ('Fecha') {
+                <p-tag value="Fecha" severity="success" [rounded]="true" />
+              }
+              @default {
+                <p-tag value="Texto" severity="secondary" [rounded]="true" />
+              }
+            }
+          </td>
+          <td class="prot-table__td-num">{{ v.longitud }}</td>
+          <td class="prot-table__td-num">{{ v.decimales ?? '—' }}</td>
+          <td>{{ v.unidad }}</td>
+          <td class="prot-table__td-obs">
+            <span>{{ v.observaciones }}</span>
+            @if (v.tipoDato === 'Lista' && v.listaKey) {
+              <button type="button" class="prot-link"
+                (click)="abrirLista(v.listaKey)"
+                [attr.aria-label]="'Ver lista de valores válidos para ' + v.nombre">
+                <i class="pi pi-external-link" aria-hidden="true"></i>
+                Ver lista <strong>{{ listas[v.listaKey].nombre }}</strong>
+                <span class="prot-link__count">({{ listas[v.listaKey].valores.length }})</span>
+              </button>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ng-template>
+
+  <!-- ============================================================= -->
+  <!-- MODAL "VER LISTA" — valores válidos del catálogo seleccionado  -->
+  <!-- ============================================================= -->
+  <p-dialog
+    [visible]="!!listaActiva()"
+    (visibleChange)="$event === false && cerrarLista()"
+    [modal]="true"
+    [draggable]="false"
+    [closeOnEscape]="true"
+    [style]="{ width: '720px', maxWidth: '95vw' }"
+    [header]="listaActiva() ? 'Valores de la lista · ' + listaActiva()!.nombre : 'Valores de la lista'">
+
+    @if (listaActiva(); as lista) {
+      <div class="prot-lista">
+        <p class="prot-lista__desc">{{ lista.descripcion }}</p>
+
+        <div class="prot-lista__search">
+          <p-iconfield iconPosition="left">
+            <p-inputicon styleClass="pi pi-search" />
+            <input pInputText type="text"
+              [ngModel]="busquedaLista()"
+              (ngModelChange)="busquedaLista.set($event)"
+              placeholder="Buscar por código o nombre…"
+              aria-label="Buscar dentro de la lista" />
+          </p-iconfield>
+          <span class="prot-lista__count" aria-live="polite">
+            {{ valoresFiltrados().length }} de {{ lista.valores.length }} valores
+          </span>
+        </div>
+
+        <p-table [value]="valoresFiltrados()"
+          [stripedRows]="true"
+          [rowHover]="true"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} valores"
+          styleClass="prot-lista__table"
+          [scrollable]="true" scrollHeight="320px">
+          <ng-template #caption>
+            <span class="sr-only">Valores válidos para la variable tipo lista</span>
+          </ng-template>
+          <ng-template #header>
+            <tr>
+              <th style="width: 200px" scope="col">Código</th>
+              <th scope="col">Nombre</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-valor>
+            <tr>
+              <td><code class="prot-table__code">{{ valor.codigo }}</code></td>
+              <td>{{ valor.nombre }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="2" class="prot-lista__empty">
+                <i class="pi pi-inbox" aria-hidden="true"></i>
+                <p>No se encontraron valores con ese criterio de búsqueda.</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+
+    <ng-template #footer>
+      <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="cerrarLista()" />
+      <p-button label="Descargar CSV" icon="pi pi-download"
+        (onClick)="descargarLista()" />
     </ng-template>
   </p-dialog>
 </div>

@@ -1451,3 +1451,306 @@
   width: 100% !important;
   display: flex !important;
 }
+
+/* ============================================================
+   Protocolo de Importación — sub-vista del Paso 2
+   ============================================================ */
+
+/* Botón "Volver al listado" arriba del panel del protocolo. */
+:host ::ng-deep .form-wizard__panel-back {
+  margin-bottom: 8px;
+}
+
+.form-wizard__panel--protocolo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Info general del archivo plano + acción descargar */
+.prot-info {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+
+    > i {
+      color: var(--chip-cobalt-700);
+      font-size: 20px;
+      margin-top: 2px;
+    }
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0 0 4px;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: 0;
+    line-height: 1.55;
+
+    code {
+      background: var(--chip-bg-white-smoke);
+      border: 1px solid var(--chip-grey-200);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 13px;
+      font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--chip-grey-100);
+  }
+}
+
+.prot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--chip-bg-solitude);
+  color: var(--chip-cobalt-700);
+  border: 1px solid var(--chip-cobalt-100);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+
+  i { font-size: 12px; }
+  strong { font-weight: 700; }
+}
+
+/* Tabs Cabecera/Detalle */
+.prot-tabs {
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: var(--space-4) 0;
+    padding: 0 var(--space-2);
+  }
+}
+
+:host ::ng-deep .prot-tabs {
+  .p-tablist {
+    border-bottom: 2px solid var(--chip-grey-200);
+  }
+
+  .p-tab {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    padding: var(--space-3) var(--space-5);
+    color: var(--chip-grey-600);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    i { font-size: 14px; }
+
+    &[data-p-active="true"] {
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  .p-tabpanels {
+    padding: 0;
+    background: transparent;
+  }
+}
+
+/* Tabla horizontal de variables */
+:host ::ng-deep .prot-table {
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+
+  .p-datatable-thead > tr > th {
+    background: var(--chip-bg-solitude);
+    color: var(--chip-cobalt-800);
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--chip-cobalt-100);
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: var(--space-3) var(--space-4);
+    font-size: 14px;
+    color: var(--chip-grey-800);
+    vertical-align: middle;
+  }
+}
+
+.prot-table {
+  &__th-num,
+  &__td-num {
+    text-align: center;
+    width: 90px;
+  }
+
+  &__code {
+    display: inline-block;
+    background: var(--chip-bg-white-smoke);
+    border: 1px solid var(--chip-grey-200);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+    font-size: 13px;
+    color: var(--chip-cobalt-700);
+    font-weight: 600;
+  }
+
+  &__td-obs {
+    color: var(--chip-grey-700);
+    line-height: 1.45;
+
+    span {
+      display: block;
+      margin-bottom: 6px;
+    }
+  }
+}
+
+/* Hipervínculo para abrir el modal de la lista */
+.prot-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--chip-cobalt-200);
+  color: var(--chip-cobalt-700);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: var(--font-body);
+
+  i { font-size: 12px; }
+  strong {
+    font-weight: 700;
+    font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+  }
+
+  &__count {
+    color: var(--chip-grey-500);
+    font-weight: 400;
+  }
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    border-color: var(--chip-cobalt-400);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+  }
+}
+
+/* Modal "Ver Lista" */
+.prot-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--chip-bg-solitude);
+    border-left: 3px solid var(--chip-cobalt-500);
+    border-radius: var(--radius-sm);
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+
+    p-iconfield {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    input { width: 100%; }
+  }
+
+  &__count {
+    font-size: 13px;
+    color: var(--chip-grey-500);
+    white-space: nowrap;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--space-7);
+    color: var(--chip-grey-500);
+
+    i {
+      font-size: 32px;
+      display: block;
+      margin-bottom: var(--space-2);
+      color: var(--chip-grey-300);
+    }
+
+    p { margin: 0; font-size: 14px; }
+  }
+}
+
+:host ::ng-deep .prot-lista__table {
+  .p-datatable-thead > tr > th {
+    background: var(--chip-bg-white-smoke);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--chip-grey-700);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: var(--space-2) var(--space-3);
+    font-size: 13px;
+  }
+
+  .p-paginator {
+    border-top: 1px solid var(--chip-grey-100);
+    background: transparent;
+    padding: var(--space-2);
+  }
+}
