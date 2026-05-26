@@ -10,27 +10,6 @@
     </div>
   </div>
 
-  <!-- ────────────────────────────────────────────────────────────── -->
-  <!-- Selector de propuesta a aprobar (Opción 1 vs Opción 2)        -->
-  <!-- ────────────────────────────────────────────────────────────── -->
-  <div class="form-vista-selector" role="region" aria-label="Selector de propuesta de visualización">
-    <div class="form-vista-selector__info">
-      <i class="pi pi-info-circle" aria-hidden="true"></i>
-      <div>
-        <strong>Propuestas alternativas de visualización</strong>
-        <span>Estas son dos formas distintas de gestionar formularios. Seleccione la que prefiera aprobar.</span>
-      </div>
-    </div>
-    <p-selectButton
-      [options]="vistaOptions"
-      [ngModel]="vistaActiva"
-      (ngModelChange)="cambiarVista($event)"
-      optionLabel="label"
-      optionValue="value"
-      [allowEmpty]="false"
-      aria-label="Seleccionar opción de visualización" />
-  </div>
-
   <!-- ============================================================= -->
   <!-- VISTA DETALLE "REGISTRO MANUAL" (template reutilizable)         -->
   <!-- ============================================================= -->
@@ -80,15 +59,9 @@
           aria-label="Periodos siguientes" />
       </div>
 
-      @if (vistaActiva === 'opcion-1') {
-        <p-message severity="info" class="form-detalle__edit-hint">
-          <strong>Edición inline:</strong> haga clic en cualquier celda para editar el valor directamente.
-        </p-message>
-      } @else {
-        <p-message severity="info" class="form-detalle__edit-hint">
-          <strong>Edición en modal:</strong> use el botón <i class="pi pi-pencil" aria-hidden="true"></i> de cada fila para abrir la ventana de edición.
-        </p-message>
-      }
+      <p-message severity="info" class="form-detalle__edit-hint">
+        <strong>Edición en modal:</strong> use el botón <i class="pi pi-pencil" aria-hidden="true"></i> de cada fila para abrir la ventana de edición.
+      </p-message>
 
       <!-- Conceptos padres — cada uno con su propio paginador interno -->
       @for (concepto of conceptos; track concepto.id) {
@@ -110,9 +83,7 @@
                   @for (col of columnasVisibles; track col.key) {
                     <th class="form-concepto__th-val">{{ col.label }}</th>
                   }
-                  @if (vistaActiva === 'opcion-2') {
-                    <th class="form-concepto__th-actions">Acciones</th>
-                  }
+                  <th class="form-concepto__th-actions">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,43 +93,19 @@
                     <td class="form-concepto__td-nombre" [pTooltip]="variable.nombre" tooltipPosition="top">{{ variable.nombre }}</td>
                     @for (col of columnasVisibles; track col.key) {
                       <td class="form-concepto__td-val">
-                        @if (vistaActiva === 'opcion-1' && esEditandoCelda(concepto, variable, col.key)) {
-                          <p-inputNumber
-                            [(ngModel)]="variable.valores[col.key]"
-                            (onBlur)="guardarEdicionInline()"
-                            (keydown.enter)="guardarEdicionInline()"
-                            [showButtons]="false"
-                            mode="decimal"
-                            [useGrouping]="true"
-                            styleClass="form-concepto__inline-input"
-                            [autofocus]="true" />
-                        } @else if (vistaActiva === 'opcion-1') {
-                          <button type="button" class="form-concepto__val-btn"
-                            (click)="iniciarEdicionInline(concepto, variable, col.key)"
-                            [attr.aria-label]="'Editar ' + variable.nombre + ' ' + col.label">
-                            @if (variable.valores[col.key] !== null) {
-                              {{ variable.valores[col.key] | number:'1.0-0' }}
-                            } @else {
-                              <span class="form-concepto__val-empty">—</span>
-                            }
-                          </button>
+                        @if (variable.valores[col.key] !== null) {
+                          {{ variable.valores[col.key] | number:'1.0-0' }}
                         } @else {
-                          @if (variable.valores[col.key] !== null) {
-                            {{ variable.valores[col.key] | number:'1.0-0' }}
-                          } @else {
-                            <span class="form-concepto__val-empty">—</span>
-                          }
+                          <span class="form-concepto__val-empty">—</span>
                         }
                       </td>
                     }
-                    @if (vistaActiva === 'opcion-2') {
-                      <td class="form-concepto__td-actions">
-                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small"
-                          severity="secondary"
-                          [attr.aria-label]="'Editar registro ' + variable.nombre"
-                          (onClick)="abrirModalEditar(concepto, variable)" />
-                      </td>
-                    }
+                    <td class="form-concepto__td-actions">
+                      <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small"
+                        severity="secondary"
+                        [attr.aria-label]="'Editar registro ' + variable.nombre"
+                        (onClick)="abrirModalEditar(concepto, variable)" />
+                    </td>
                   </tr>
                 }
               </tbody>
@@ -190,814 +137,714 @@
     }
   </ng-template>
 
-  <!-- Opción 1: el detalle reemplaza la lista completa (vista simple). -->
-  @if (detalleAbierto && vistaActiva === 'opcion-1') {
-    <ng-container *ngTemplateOutlet="detalleTpl" />
-  }
-
   <!-- ============================================================= -->
-  <!-- OPCIÓN 1 — VISTA ÚNICA                                         -->
+  <!-- WIZARD — PASO A PASO                                           -->
   <!-- ============================================================= -->
-  @if (!detalleAbierto && vistaActiva === 'opcion-1') {
-    <!-- Filtros colapsables con chips -->
-    <div class="chip-filters" role="region" aria-label="Filtros de búsqueda">
-      <div class="chip-filters__header">
-        <div class="chip-filters__header-left">
-          <p-button
-            [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
-            [label]="'Filtros' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
-            [outlined]="true" severity="secondary" size="small"
-            [attr.aria-expanded]="!filtersCollapsed" aria-controls="form-filters-body"
-            (onClick)="filtersCollapsed = !filtersCollapsed" />
-          @if (filtersCollapsed && activeFilters.length > 0) {
-            <div class="chip-filters__chips" aria-live="polite">
-              @for (f of activeFilters; track f.field) {
-                <p-chip [label]="f.label" [removable]="true" (onRemove)="removeFilter(f.field)" />
-              }
-            </div>
-          }
-        </div>
-        <div class="chip-filters__header-right">
-          @if (activeFilterCount > 0) {
-            <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary" size="small" (onClick)="clearFilters()" />
-          }
-          <p-button label="Aplicar Filtros" icon="pi pi-search" size="small" (onClick)="applyFilters()" [disabled]="!canApplyFilters" />
-        </div>
-      </div>
-
-      @if (!filtersCollapsed) {
-        <div class="chip-filters__body" id="form-filters-body">
-          <div class="chip-filters__fields chip-filters__fields--4col">
-            <div class="chip-filters__field">
-              <label for="form-entidad">Entidad</label>
-              <input pInputText [value]="entidad" [disabled]="true" class="w-full" id="form-entidad" />
-            </div>
-            <div class="chip-filters__field">
-              <label for="form-categoria">Categoría <span class="chip-filters__required">*</span></label>
-              <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="form-categoria" aria-required="true" />
-            </div>
-            <div class="chip-filters__field">
-              <label for="form-anio">Año <span class="chip-filters__required">*</span></label>
-              <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="form-anio" aria-required="true" />
-            </div>
-            <div class="chip-filters__field">
-              <label for="form-periodo">Periodo</label>
-              <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" class="w-full" inputId="form-periodo" />
-            </div>
+  <div class="form-wizard" role="region" aria-label="Asistente paso a paso de gestión de formularios">
+    <!-- Indicador de pasos (3 fases del flujo) -->
+    <ol class="form-wizard__steps" aria-label="Pasos del asistente">
+      <li>
+        <button type="button" class="form-wizard__step"
+          [class.form-wizard__step--active]="wizardStep === 0"
+          [class.form-wizard__step--done]="wizardStep > 0"
+          [class.form-wizard__step--clickable]="pasoNavegable(0)"
+          [disabled]="!pasoNavegable(0)"
+          [attr.aria-current]="wizardStep === 0 ? 'step' : null"
+          (click)="irAPaso(0)">
+          <span class="form-wizard__step-num">1</span>
+          <div class="form-wizard__step-info">
+            <strong>Contexto</strong>
+            <span>Filtros + consultar envíos + importar</span>
           </div>
-        </div>
-      }
-    </div>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="form-wizard__step"
+          [class.form-wizard__step--active]="wizardStep === 1"
+          [class.form-wizard__step--done]="wizardStep > 1"
+          [class.form-wizard__step--clickable]="pasoNavegable(1)"
+          [disabled]="!pasoNavegable(1)"
+          [attr.aria-current]="wizardStep === 1 ? 'step' : null"
+          (click)="irAPaso(1)">
+          <span class="form-wizard__step-num">2</span>
+          <div class="form-wizard__step-info">
+            <strong>Formularios</strong>
+            <span>Importar, exportar, validar, editar, protocolo</span>
+          </div>
+        </button>
+      </li>
+      <li>
+        <button type="button" class="form-wizard__step"
+          [class.form-wizard__step--active]="wizardStep === 2"
+          [class.form-wizard__step--clickable]="pasoNavegable(2)"
+          [disabled]="!pasoNavegable(2)"
+          [attr.aria-current]="wizardStep === 2 ? 'step' : null"
+          (click)="irAPaso(2)">
+          <span class="form-wizard__step-num">3</span>
+          <div class="form-wizard__step-info">
+            <strong>Envíos</strong>
+            <span>Adjunto + entidades + enviar categoría</span>
+          </div>
+        </button>
+      </li>
+    </ol>
 
-    <!-- Estado vacío -->
-    @if (!filtersApplied) {
-      <div class="form-empty">
+    <!-- Contexto: filtros aplicados visibles a partir del Paso 2 (read-only).
+         En el Paso 1 los filtros son los inputs editables del propio paso,
+         mostrar el contexto ahí sería redundante. Para modificar desde Paso
+         2 o 3, regresar al Paso 1 vía el stepper de arriba. -->
+    @if (wizardStep > 0 && filtersApplied && activeFilters.length > 0) {
+      <div class="form-wizard__context" role="region" aria-label="Filtros aplicados a la consulta">
         <i class="pi pi-filter" aria-hidden="true"></i>
-        <h3>Seleccione los filtros de búsqueda</h3>
-        <p>Para visualizar los formularios disponibles, debe seleccionar Categoría, Año y Periodo.</p>
+        <span class="form-wizard__context-label">Filtros aplicados:</span>
+        <div class="form-wizard__context-chips">
+          @for (filter of activeFilters; track filter.field) {
+            <p-chip [label]="filter.label" />
+          }
+        </div>
       </div>
     }
 
-    <!-- Resultados -->
-    @if (filtersApplied) {
-      <!-- ── Barra de gestión global (sobre toda la categoría) ── -->
-      <div class="form-actions-group">
-        <header class="form-actions-group__header">
-          <i class="pi pi-cog" aria-hidden="true"></i>
-          <span>Gestión de la categoría</span>
-          <small>Acciones globales sobre la categoría seleccionada</small>
+    <!-- Paso 1: Contexto (filtros + consultar envíos + importar) -->
+    @if (wizardStep === 0) {
+      <section class="form-wizard__panel" aria-label="Paso 1: Contexto">
+        <header class="form-wizard__panel-header">
+          <h2>Paso 1 · Defina el contexto</h2>
+          <p>
+            Seleccione la entidad, categoría, año y periodo. Al aplicar los filtros
+            podrá consultar los envíos previos o importar un archivo nuevo.
+          </p>
         </header>
-        <div class="form-actions-group__buttons">
-          @for (accion of accionesGlobales; track accion.key) {
-            <p-button [label]="accion.label" [icon]="accion.icon" size="small"
-              [outlined]="activePanel !== accion.key"
-              [severity]="accion.enabled ? 'primary' : 'secondary'"
-              [pTooltip]="accion.enabled ? '' : 'Sin permisos — contacte al administrador'"
-              tooltipPosition="top"
-              (onClick)="executeAction(accion.key)" />
-          }
-          <div class="form-actions-group__spacer"></div>
-          <p-iconfield>
-            <p-inputicon styleClass="pi pi-search" />
-            <input pInputText placeholder="Buscar código o nombre..." [(ngModel)]="searchFormulario" />
-          </p-iconfield>
-        </div>
-      </div>
-
-      <!-- ── Acciones sobre formularios seleccionados ── -->
-      <div class="form-actions-group form-actions-group--selection">
-        <header class="form-actions-group__header">
-          <i class="pi pi-check-square" aria-hidden="true"></i>
-          <span>Sobre formularios seleccionados</span>
-          <small>
-            @if (selectedFormularios.length === 0) {
-              Marque uno o más formularios en la tabla para activar estas acciones.
-            } @else {
-              {{ selectedFormularios.length }} formulario(s) seleccionado(s).
-            }
-          </small>
-        </header>
-        <div class="form-actions-group__buttons">
-          @for (accion of accionesSeleccion; track accion.key) {
-            <p-button [label]="accion.label" [icon]="accion.icon" size="small"
-              [outlined]="activePanel !== accion.key"
-              [severity]="accion.enabled ? 'primary' : 'secondary'"
-              [disabled]="selectedFormularios.length === 0"
-              [pTooltip]="selectedFormularios.length === 0 ? 'Seleccione formularios primero' : ''"
-              tooltipPosition="top"
-              (onClick)="executeAction(accion.key)" />
-          }
-          @if (selectedFormularios.length > 0) {
-            <p-button label="Limpiar selección" icon="pi pi-times" [text]="true" severity="secondary" size="small"
-              (onClick)="selectedFormularios = []" />
-          }
-        </div>
-      </div>
-
-      <!-- ── PANEL: Importar ── -->
-      @if (activePanel === 'importar') {
-        <div class="form-context-panel">
-          <div class="form-context-panel__header">
-            <i class="pi pi-upload" aria-hidden="true"></i>
-            <span>Importar Formularios</span>
-            <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
+        <div class="chip-filters__fields chip-filters__fields--4col">
+          <div class="chip-filters__field">
+            <label for="wiz-entidad">Entidad</label>
+            <input pInputText [value]="entidad" [disabled]="true" class="w-full" id="wiz-entidad" />
           </div>
-          <div class="form-context-panel__body">
-            <p>Seleccione el archivo con los datos del formulario para importar. Formatos aceptados: .xlsx, .csv</p>
-            <div class="form-context-panel__upload">
-              <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true" (onClick)="importInput.click()" />
-              <span class="form-context-panel__filename">{{ importFileName || 'Ningún archivo seleccionado' }}</span>
-              <input #importInput type="file" accept=".xlsx,.csv" hidden (change)="importFileName = $any($event.target).files[0]?.name || ''" />
-            </div>
-            <div class="form-context-panel__footer">
-              <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closePanel()" />
-              <p-button label="Importar" icon="pi pi-upload" (onClick)="confirmImport()" [disabled]="!importFileName" />
-            </div>
+          <div class="chip-filters__field">
+            <label for="wiz-categoria">Categoría <span class="chip-filters__required">*</span></label>
+            <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="wiz-categoria" aria-required="true" />
+          </div>
+          <div class="chip-filters__field">
+            <label for="wiz-anio">Año <span class="chip-filters__required">*</span></label>
+            <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="wiz-anio" aria-required="true" />
+          </div>
+          <div class="chip-filters__field">
+            <label for="wiz-periodo">Periodo <span class="chip-filters__required">*</span></label>
+            <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" class="w-full" inputId="wiz-periodo" aria-required="true" />
           </div>
         </div>
-      }
 
-      <!-- ── PANEL: Exportar ── -->
-      @if (activePanel === 'exportar') {
-        <div class="form-context-panel">
-          <div class="form-context-panel__header">
-            <i class="pi pi-download" aria-hidden="true"></i>
-            <span>Exportar Formularios</span>
-            <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
-          </div>
-          <div class="form-context-panel__body">
-            <p>Se exportarán {{ filteredFormularios.length }} formulario(s) del listado actual.</p>
-            <div class="form-context-panel__row">
-              <label>Formato de exportación</label>
-              <p-select [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat" appendTo="body" />
-            </div>
-            <div class="form-context-panel__footer">
-              <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closePanel()" />
-              <p-button label="Exportar" icon="pi pi-download" (onClick)="confirmExport()" />
-            </div>
-          </div>
+        <!-- Aplicar filtros para habilitar las acciones del paso -->
+        <div class="form-wizard__filters-actions">
+          <p-button label="Limpiar" icon="pi pi-refresh"
+            [text]="true" severity="secondary"
+            (onClick)="clearFilters()" />
+          <p-button [label]="filtersApplied ? 'Filtros aplicados' : 'Aplicar filtros'"
+            [icon]="filtersApplied ? 'pi pi-check' : 'pi pi-filter'"
+            [outlined]="filtersApplied"
+            [severity]="filtersApplied ? 'success' : 'primary'"
+            [disabled]="!canApplyFilters"
+            (onClick)="applyFilters()" />
         </div>
-      }
 
-      <!-- ── PANEL: Consultar Envíos ── -->
-      @if (activePanel === 'consultarEnvios') {
-        <div class="form-context-panel">
-          <div class="form-context-panel__header">
-            <i class="pi pi-inbox" aria-hidden="true"></i>
-            <span>Historial de Envíos</span>
-            <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
-          </div>
-          <div class="form-context-panel__body">
-            <div class="form-envio">
-              <div class="form-envio__item">
-                <div class="form-envio__info">
-                  <strong>Envío #2024-1105</strong>
-                  <span>05/11/2024 — 4 formularios</span>
-                </div>
-                <p-tag value="Recibido" severity="success" />
-              </div>
-              <div class="form-envio__item">
-                <div class="form-envio__info">
-                  <strong>Envío #2024-1028</strong>
-                  <span>28/10/2024 — 6 formularios</span>
-                </div>
-                <p-tag value="Rechazado" severity="danger" />
-              </div>
-              <div class="form-envio__item">
-                <div class="form-envio__info">
-                  <strong>Envío #2024-0915</strong>
-                  <span>15/09/2024 — 5 formularios</span>
-                </div>
-                <p-tag value="Recibido" severity="success" />
-              </div>
-            </div>
-          </div>
-        </div>
-      }
+        <!-- Sección de acciones disponibles tras aplicar filtros -->
+        <div class="form-wizard__context-actions"
+          role="group"
+          aria-label="Acciones disponibles para el contexto"
+          [class.form-wizard__context-actions--disabled]="!filtersApplied">
 
-      <!-- ── PANEL: Validar ── -->
-      @if (activePanel === 'validar') {
-        <div class="form-context-panel">
-          <div class="form-context-panel__header">
-            <i class="pi pi-check-circle" aria-hidden="true"></i>
-            <span>Validar Formularios</span>
-            <p-button icon="pi pi-times" [rounded]="true" [text]="true" size="small" aria-label="Cerrar panel" (onClick)="closePanel()" />
-          </div>
-          <div class="form-context-panel__body">
-            @if (selectedFormularios.length === 0) {
-              <p-message severity="warn">
-                Seleccione los formularios que desea validar usando los checkboxes en la tabla.
-              </p-message>
-            } @else {
-              <p>Se validarán los siguientes {{ selectedFormularios.length }} formulario(s):</p>
-              <ul class="form-context-panel__list">
-                @for (f of selectedFormularios; track f.id) {
-                  <li><strong>{{ f.codigo }}</strong> — {{ f.nombre }}</li>
-                }
-              </ul>
-              <div class="form-context-panel__footer">
-                <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="closePanel()" />
-                <p-button label="Confirmar Validación" icon="pi pi-check-circle" (onClick)="confirmValidation()" />
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- Tabla -->
-      <p-table [value]="filteredFormularios" [stripedRows]="true" [rowHover]="true"
-        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
-        [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-        [(selection)]="selectedFormularios" dataKey="id">
-        <ng-template #caption><span class="sr-only">Listado de formularios</span></ng-template>
-        <ng-template #header>
-          <tr>
-            <th style="width: 40px">
-              <p-tableHeaderCheckbox />
-            </th>
-            <th pSortableColumn="codigo" style="width: 130px">Código <p-sortIcon field="codigo" /></th>
-            <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
-            <th style="width: 90px">Tipo</th>
-            <th pSortableColumn="estadoValidacion" style="width: 200px">Estado de Validación <p-sortIcon field="estadoValidacion" /></th>
-            <th pSortableColumn="ultimaModificacion" style="width: 140px">Última Modificación <p-sortIcon field="ultimaModificacion" /></th>
-            <th style="width: 80px; text-align: center">Acciones</th>
-          </tr>
-        </ng-template>
-        <ng-template #body let-form>
-          <tr>
-            <td>
-              <p-tableCheckbox [value]="form" />
-            </td>
-            <td><span class="form-table__code">{{ form.codigo }}</span></td>
-            <td>
-              <button type="button" class="form-table__name-link" (click)="abrirDetalle(form)">
-                {{ form.nombre }}
-              </button>
-            </td>
-            <td class="form-table__tipo">{{ form.tipo }}</td>
-            <td><p-tag [value]="form.estadoValidacion" [severity]="getEstadoSeverity(form.estadoValidacion)" /></td>
-            <td class="form-table__date">{{ form.ultimaModificacion }}</td>
-            <td>
-              <div class="form-table__actions">
-                <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true"
-                  severity="secondary" size="small"
-                  [attr.aria-label]="'Acciones para ' + form.nombre"
-                  (onClick)="abrirMenuFormulario($event, form)" />
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template #emptymessage>
-          <tr>
-            <td colspan="7" class="form-table__empty">
-              <i class="pi pi-inbox" aria-hidden="true"></i>
-              <p>No se encontraron resultados para los filtros aplicados.</p>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-
-      <p-menu #menuFormulario [model]="menuFormularioItems" [popup]="true" appendTo="body" />
-
-      <!-- ── Acción terminal: Enviar Categoría ── -->
-      <div class="form-send-bar" [class.form-send-bar--ready]="todosValidados">
-        <div class="form-send-bar__info">
-          <i class="pi" [class.pi-send]="todosValidados" [class.pi-info-circle]="!todosValidados" aria-hidden="true"></i>
-          <div>
-            <strong>
-              @if (todosValidados) {
-                Categoría lista para enviar
-              } @else {
-                Envío de categoría
-              }
-            </strong>
-            <span>
-              @if (todosValidados) {
-                Todos los formularios están validados. Puede enviarlos a validación central.
-              } @else {
-                Cuando todos los formularios estén en estado <em>Validado</em>, se habilitará el envío central.
-              }
-            </span>
-          </div>
-        </div>
-        <p-button label="Enviar Categoría" icon="pi pi-send" iconPos="right"
-          [disabled]="!todosValidados"
-          (onClick)="enviarCategoria()" />
-      </div>
-
-      <!-- Nota de permisos -->
-      <p-message severity="info" class="form-permisos-note">
-        Las acciones disponibles dependen de los permisos asignados a su perfil. Los botones sin permisos mostrarán una alerta al hacer clic.
-      </p-message>
-    }
-  }
-
-  <!-- ============================================================= -->
-  <!-- OPCIÓN 2 — PASO A PASO (WIZARD)                                -->
-  <!-- ============================================================= -->
-  @if (vistaActiva === 'opcion-2') {
-    <div class="form-wizard" role="region" aria-label="Asistente paso a paso de gestión de formularios">
-      <!-- Indicador de pasos (3 fases del flujo) -->
-      <ol class="form-wizard__steps" aria-label="Pasos del asistente">
-        <li>
-          <button type="button" class="form-wizard__step"
-            [class.form-wizard__step--active]="wizardStep === 0"
-            [class.form-wizard__step--done]="wizardStep > 0"
-            [class.form-wizard__step--clickable]="pasoNavegable(0)"
-            [disabled]="!pasoNavegable(0)"
-            [attr.aria-current]="wizardStep === 0 ? 'step' : null"
-            (click)="irAPaso(0)">
-            <span class="form-wizard__step-num">1</span>
-            <div class="form-wizard__step-info">
-              <strong>Contexto</strong>
-              <span>Filtros + consultar envíos + importar</span>
-            </div>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="form-wizard__step"
-            [class.form-wizard__step--active]="wizardStep === 1"
-            [class.form-wizard__step--done]="wizardStep > 1"
-            [class.form-wizard__step--clickable]="pasoNavegable(1)"
-            [disabled]="!pasoNavegable(1)"
-            [attr.aria-current]="wizardStep === 1 ? 'step' : null"
-            (click)="irAPaso(1)">
-            <span class="form-wizard__step-num">2</span>
-            <div class="form-wizard__step-info">
-              <strong>Formularios</strong>
-              <span>Importar, exportar, validar, editar, protocolo</span>
-            </div>
-          </button>
-        </li>
-        <li>
-          <button type="button" class="form-wizard__step"
-            [class.form-wizard__step--active]="wizardStep === 2"
-            [class.form-wizard__step--clickable]="pasoNavegable(2)"
-            [disabled]="!pasoNavegable(2)"
-            [attr.aria-current]="wizardStep === 2 ? 'step' : null"
-            (click)="irAPaso(2)">
-            <span class="form-wizard__step-num">3</span>
-            <div class="form-wizard__step-info">
-              <strong>Envíos</strong>
-              <span>Adjunto + entidades + enviar categoría</span>
-            </div>
-          </button>
-        </li>
-      </ol>
-
-      <!-- Contexto: filtros aplicados visibles en los 3 pasos (read-only).
-           Para modificar, regresar al Paso 1 vía el stepper de arriba. -->
-      @if (filtersApplied && activeFilters.length > 0) {
-        <div class="form-wizard__context" role="region" aria-label="Filtros aplicados a la consulta">
-          <i class="pi pi-filter" aria-hidden="true"></i>
-          <span class="form-wizard__context-label">Filtros aplicados:</span>
-          <div class="form-wizard__context-chips">
-            @for (filter of activeFilters; track filter.field) {
-              <p-chip [label]="filter.label" />
-            }
-          </div>
-        </div>
-      }
-
-      <!-- Paso 1: Contexto (filtros + consultar envíos + importar) -->
-      @if (wizardStep === 0) {
-        <section class="form-wizard__panel" aria-label="Paso 1: Contexto">
-          <header class="form-wizard__panel-header">
-            <h2>Paso 1 · Defina el contexto</h2>
-            <p>
-              Seleccione la entidad, categoría, año y periodo. Al aplicar los filtros
-              podrá consultar los envíos previos o importar un archivo nuevo.
+          @if (!filtersApplied) {
+            <p class="form-wizard__context-actions-hint" aria-live="polite">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              Aplique los filtros para habilitar <strong>Consultar envíos</strong> e <strong>Importar</strong>.
             </p>
-          </header>
-          <div class="chip-filters__fields chip-filters__fields--4col">
-            <div class="chip-filters__field">
-              <label for="wiz-entidad">Entidad</label>
-              <input pInputText [value]="entidad" [disabled]="true" class="w-full" id="wiz-entidad" />
-            </div>
-            <div class="chip-filters__field">
-              <label for="wiz-categoria">Categoría <span class="chip-filters__required">*</span></label>
-              <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="wiz-categoria" aria-required="true" />
-            </div>
-            <div class="chip-filters__field">
-              <label for="wiz-anio">Año <span class="chip-filters__required">*</span></label>
-              <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="wiz-anio" aria-required="true" />
-            </div>
-            <div class="chip-filters__field">
-              <label for="wiz-periodo">Periodo <span class="chip-filters__required">*</span></label>
-              <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" class="w-full" inputId="wiz-periodo" aria-required="true" />
-            </div>
-          </div>
+          }
 
-          <!-- Aplicar filtros para habilitar las acciones del paso -->
-          <div class="form-wizard__filters-actions">
-            <p-button label="Limpiar" icon="pi pi-refresh"
-              [text]="true" severity="secondary"
-              (onClick)="clearFilters()" />
-            <p-button [label]="filtersApplied ? 'Filtros aplicados' : 'Aplicar filtros'"
-              [icon]="filtersApplied ? 'pi pi-check' : 'pi pi-filter'"
-              [outlined]="filtersApplied"
-              [severity]="filtersApplied ? 'success' : 'primary'"
-              [disabled]="!canApplyFilters"
-              (onClick)="applyFilters()" />
-          </div>
-
-          <!-- Sección de acciones disponibles tras aplicar filtros -->
-          <div class="form-wizard__context-actions"
-            role="group"
-            aria-label="Acciones disponibles para el contexto"
-            [class.form-wizard__context-actions--disabled]="!filtersApplied">
-
-            @if (!filtersApplied) {
-              <p class="form-wizard__context-actions-hint" aria-live="polite">
-                <i class="pi pi-info-circle" aria-hidden="true"></i>
-                Aplique los filtros para habilitar <strong>Consultar envíos</strong> e <strong>Importar</strong>.
-              </p>
-            }
-
-            <div class="form-action-cards">
-              <!-- Card: Consultar envíos -->
-              <article class="form-action-card"
-                [class.form-action-card--active]="wizardConsultarEnviosAbierto"
-                [attr.aria-disabled]="!filtersApplied">
-                <div class="form-action-card__icon" aria-hidden="true">
-                  <i class="pi pi-inbox"></i>
-                </div>
-                <div class="form-action-card__body">
-                  <h3 class="form-action-card__title">Consultar envíos</h3>
-                  <p class="form-action-card__desc">
-                    Revise los envíos previos de esta categoría con su estado, fecha y usuario.
-                  </p>
-                </div>
-                <p-button
-                  [label]="wizardConsultarEnviosAbierto ? 'Cerrar' : 'Abrir'"
-                  [icon]="wizardConsultarEnviosAbierto ? 'pi pi-times' : 'pi pi-arrow-right'"
-                  [iconPos]="wizardConsultarEnviosAbierto ? 'left' : 'right'"
-                  size="small"
-                  [outlined]="!wizardConsultarEnviosAbierto"
-                  [disabled]="!filtersApplied"
-                  [attr.aria-expanded]="wizardConsultarEnviosAbierto"
-                  aria-controls="paso1-consultar-panel"
-                  (onClick)="toggleConsultarEnviosWizard()" />
-              </article>
-
-              <!-- Card: Importar -->
-              <article class="form-action-card"
-                [class.form-action-card--active]="wizardImportarAbierto"
-                [attr.aria-disabled]="!filtersApplied">
-                <div class="form-action-card__icon" aria-hidden="true">
-                  <i class="pi pi-upload"></i>
-                </div>
-                <div class="form-action-card__body">
-                  <h3 class="form-action-card__title">Importar</h3>
-                  <p class="form-action-card__desc">
-                    Cargue un archivo .xlsx o .csv para alimentar los formularios de la categoría.
-                  </p>
-                </div>
-                <p-button
-                  [label]="wizardImportarAbierto ? 'Cerrar' : 'Abrir'"
-                  [icon]="wizardImportarAbierto ? 'pi pi-times' : 'pi pi-arrow-right'"
-                  [iconPos]="wizardImportarAbierto ? 'left' : 'right'"
-                  size="small"
-                  [outlined]="!wizardImportarAbierto"
-                  [disabled]="!filtersApplied"
-                  [attr.aria-expanded]="wizardImportarAbierto"
-                  aria-controls="paso1-importar-panel"
-                  (onClick)="toggleImportarWizard()" />
-              </article>
-            </div>
-
-            <!-- Panel: Consultar envíos (tabla) -->
-            @if (wizardConsultarEnviosAbierto && filtersApplied) {
-              <section id="paso1-consultar-panel"
-                class="form-wizard__inline-panel form-wizard__inline-panel--table"
-                aria-label="Tabla de envíos previos">
-                <header class="form-wizard__inline-panel-header">
-                  <h4>
-                    <i class="pi pi-inbox" aria-hidden="true"></i>
-                    Envíos previos
-                    <small>· {{ enviosPrevios.length }} registros para los filtros aplicados</small>
-                  </h4>
-                  <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
-                    ariaLabel="Cerrar tabla de envíos"
-                    (onClick)="toggleConsultarEnviosWizard()" />
-                </header>
-                <p-table [value]="enviosPrevios" [stripedRows]="true" [rowHover]="true"
-                  [paginator]="enviosPrevios.length > 5" [rows]="5"
-                  [rowsPerPageOptions]="[5, 10]"
-                  [showCurrentPageReport]="enviosPrevios.length > 5"
-                  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} envíos">
-                  <ng-template #caption>
-                    <span class="sr-only">Listado de envíos previos para el contexto aplicado</span>
-                  </ng-template>
-                  <ng-template #header>
-                    <tr>
-                      <th pSortableColumn="numero" style="width: 140px">Número <p-sortIcon field="numero" /></th>
-                      <th pSortableColumn="fecha" style="width: 130px">Fecha <p-sortIcon field="fecha" /></th>
-                      <th pSortableColumn="formularios" style="width: 130px">Formularios <p-sortIcon field="formularios" /></th>
-                      <th pSortableColumn="usuario">Usuario <p-sortIcon field="usuario" /></th>
-                      <th pSortableColumn="estado" style="width: 140px">Estado <p-sortIcon field="estado" /></th>
-                    </tr>
-                  </ng-template>
-                  <ng-template #body let-envio>
-                    <tr>
-                      <td><span class="form-table__code">#{{ envio.numero }}</span></td>
-                      <td>{{ envio.fecha }}</td>
-                      <td>{{ envio.formularios }}</td>
-                      <td>{{ envio.usuario }}</td>
-                      <td><p-tag [value]="envio.estado" [severity]="getEstadoSeverity(envio.estado)" /></td>
-                    </tr>
-                  </ng-template>
-                  <ng-template #emptymessage>
-                    <tr>
-                      <td colspan="5" class="form-wizard__empty form-wizard__empty--inline">
-                        <i class="pi pi-inbox" aria-hidden="true"></i>
-                        <p>No hay envíos previos para los filtros aplicados.</p>
-                      </td>
-                    </tr>
-                  </ng-template>
-                </p-table>
-              </section>
-            }
-
-            <!-- Panel: Importar -->
-            @if (wizardImportarAbierto && filtersApplied) {
-              <section id="paso1-importar-panel"
-                class="form-wizard__inline-panel"
-                aria-label="Importar archivo">
-                <header class="form-wizard__inline-panel-header">
-                  <h4>
-                    <i class="pi pi-upload" aria-hidden="true"></i>
-                    Importar archivo
-                    <small>· formatos aceptados .xlsx, .csv</small>
-                  </h4>
-                  <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
-                    ariaLabel="Cerrar panel de importación"
-                    (onClick)="toggleImportarWizard()" />
-                </header>
-                <div class="form-import-zone"
-                  role="region" aria-label="Carga de archivo">
-                  <div class="form-import-zone__pick">
-                    <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
-                      (onClick)="wizImportInputCtx.click()" />
-                    <input #wizImportInputCtx type="file" accept=".xlsx,.csv" hidden
-                      (change)="importFileName = $any($event.target).files[0]?.name || ''" />
-                    <span class="form-import-zone__filename"
-                      [class.form-import-zone__filename--empty]="!importFileName">
-                      {{ importFileName || 'Ningún archivo seleccionado' }}
-                    </span>
-                  </div>
-                  <p-button label="Importar" icon="pi pi-upload"
-                    [disabled]="!importFileName"
-                    [pTooltip]="!importFileName ? 'Seleccione un archivo primero' : ''"
-                    tooltipPosition="top"
-                    (onClick)="confirmImport()" />
-                </div>
-                <p class="form-import-zone__hint">
-                  <i class="pi pi-info-circle" aria-hidden="true"></i>
-                  La importación reemplaza los datos no validados de los formularios para el contexto definido.
+          <div class="form-action-cards">
+            <!-- Card: Consultar envíos -->
+            <article class="form-action-card"
+              [class.form-action-card--active]="wizardConsultarEnviosAbierto"
+              [attr.aria-disabled]="!filtersApplied">
+              <div class="form-action-card__icon" aria-hidden="true">
+                <i class="pi pi-inbox"></i>
+              </div>
+              <div class="form-action-card__body">
+                <h3 class="form-action-card__title">Consultar envíos</h3>
+                <p class="form-action-card__desc">
+                  Revise los envíos previos de esta categoría con su estado, fecha y usuario.
                 </p>
-              </section>
-            }
+              </div>
+              <p-button
+                [label]="wizardConsultarEnviosAbierto ? 'Cerrar' : 'Abrir'"
+                [icon]="wizardConsultarEnviosAbierto ? 'pi pi-times' : 'pi pi-arrow-right'"
+                [iconPos]="wizardConsultarEnviosAbierto ? 'left' : 'right'"
+                size="small"
+                [outlined]="!wizardConsultarEnviosAbierto"
+                [disabled]="!filtersApplied"
+                [attr.aria-expanded]="wizardConsultarEnviosAbierto"
+                aria-controls="paso1-consultar-panel"
+                (onClick)="toggleConsultarEnviosWizard()" />
+            </article>
+
+            <!-- Card: Importar -->
+            <article class="form-action-card"
+              [class.form-action-card--active]="wizardImportarAbierto"
+              [attr.aria-disabled]="!filtersApplied">
+              <div class="form-action-card__icon" aria-hidden="true">
+                <i class="pi pi-upload"></i>
+              </div>
+              <div class="form-action-card__body">
+                <h3 class="form-action-card__title">Importar</h3>
+                <p class="form-action-card__desc">
+                  Cargue un archivo .xlsx o .csv para alimentar los formularios de la categoría.
+                </p>
+              </div>
+              <p-button
+                [label]="wizardImportarAbierto ? 'Cerrar' : 'Abrir'"
+                [icon]="wizardImportarAbierto ? 'pi pi-times' : 'pi pi-arrow-right'"
+                [iconPos]="wizardImportarAbierto ? 'left' : 'right'"
+                size="small"
+                [outlined]="!wizardImportarAbierto"
+                [disabled]="!filtersApplied"
+                [attr.aria-expanded]="wizardImportarAbierto"
+                aria-controls="paso1-importar-panel"
+                (onClick)="toggleImportarWizard()" />
+            </article>
           </div>
 
-          <div class="form-wizard__nav">
-            <span aria-hidden="true"></span>
-            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
-              [disabled]="!filtersApplied"
-              [pTooltip]="!filtersApplied ? 'Aplique los filtros antes de continuar' : ''"
-              tooltipPosition="top"
-              (onClick)="wizardStep = 1" />
-          </div>
-        </section>
-      }
-
-      <!-- Paso 2: Formularios (importar, exportar, validar, acciones, editar, protocolo) -->
-      @if (wizardStep === 1 && !detalleAbierto) {
-        <section class="form-wizard__panel" aria-label="Paso 2: Formularios">
-          <header class="form-wizard__panel-header">
-            <h2>Paso 2 · Formularios</h2>
-            <p>
-              Importe, exporte, valide o genere protocolos sobre los formularios
-              de esta categoría. Use <strong>Editar</strong> en una fila para diligenciar
-              el registro manual.
-            </p>
-          </header>
-
-          <!-- Toolbar de acciones globales — operan sobre la selección
-               · Importar vive en el paso 1 (Contexto)
-               · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
-               · Exportar y Validar se habilitan al marcar al menos un formulario -->
-          <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
-            <p-button label="Exportar" icon="pi pi-download"
-              [disabled]="selectedFormularios.length === 0"
-              [pTooltip]="selectedFormularios.length === 0 ? 'Marque al menos un formulario para exportar' : ''"
-              tooltipPosition="top"
-              (onClick)="executeAction('exportar')" />
-            <p-button label="Validar formulario" icon="pi pi-check-circle"
-              [disabled]="!canValidate"
-              [pTooltip]="!canValidate ? 'Marque al menos un formulario para validar' : ''"
-              tooltipPosition="top"
-              (onClick)="confirmValidation()" />
-          </div>
-
-          <!-- Sub-sección: Exportar (visible cuando se activa el panel) -->
-          @if (activePanel === 'exportar') {
-            <div class="form-wizard__subsection form-wizard__subsection--panel">
-              <h3 class="form-wizard__subsection-title">
-                <i class="pi pi-download" aria-hidden="true"></i>
-                Exportar formularios
+          <!-- Panel: Consultar envíos (tabla) -->
+          @if (wizardConsultarEnviosAbierto && filtersApplied) {
+            <section id="paso1-consultar-panel"
+              class="form-wizard__inline-panel form-wizard__inline-panel--table"
+              aria-label="Tabla de envíos previos">
+              <header class="form-wizard__inline-panel-header">
+                <h4>
+                  <i class="pi pi-inbox" aria-hidden="true"></i>
+                  Envíos previos
+                  <small>· {{ enviosPrevios.length }} registros para los filtros aplicados</small>
+                </h4>
                 <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
-                  styleClass="form-wizard__subsection-close"
-                  ariaLabel="Cerrar panel de exportación"
-                  (onClick)="closePanel()" />
-              </h3>
-              <div class="form-wizard__inline-form">
-                <p-select [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat"
-                  appendTo="body" inputId="wiz-export-fmt" />
-                <p-button label="Exportar" icon="pi pi-download"
-                  (onClick)="confirmExport()" />
-              </div>
-            </div>
-          }
-
-          <!-- Sub-sección: Listado de formularios -->
-          <div class="form-wizard__subsection">
-            <h3 class="form-wizard__subsection-title">
-              <i class="pi pi-list" aria-hidden="true"></i>
-              Formularios disponibles
-              <small>· {{ filteredFormularios.length }} resultado(s) para los filtros aplicados</small>
-            </h3>
-
-            @if (filteredFormularios.length === 0) {
-              <div class="form-wizard__empty">
-                <i class="pi pi-search" aria-hidden="true"></i>
-                <h3>Sin formularios para los filtros aplicados</h3>
-                <p>
-                  No hay formularios activos para la combinación de
-                  <strong>{{ activeFilters.length }}</strong>
-                  {{ activeFilters.length === 1 ? 'criterio seleccionado' : 'criterios seleccionados' }}.
-                  Importe uno arriba o vuelva al paso anterior para ajustar los filtros.
-                </p>
-                <p-button label="Volver a filtros" icon="pi pi-arrow-left"
-                  (onClick)="irAPaso(0)" />
-              </div>
-            } @else {
-              <p-table [value]="filteredFormularios" [stripedRows]="true" [rowHover]="true"
-                [paginator]="filteredFormularios.length > 5" [rows]="5" [rowsPerPageOptions]="[5, 10]"
-                [(selection)]="selectedFormularios" dataKey="id">
+                  ariaLabel="Cerrar tabla de envíos"
+                  (onClick)="toggleConsultarEnviosWizard()" />
+              </header>
+              <p-table [value]="enviosPrevios" [stripedRows]="true" [rowHover]="true"
+                [paginator]="enviosPrevios.length > 5" [rows]="5"
+                [rowsPerPageOptions]="[5, 10]"
+                [showCurrentPageReport]="enviosPrevios.length > 5"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} envíos">
+                <ng-template #caption>
+                  <span class="sr-only">Listado de envíos previos para el contexto aplicado</span>
+                </ng-template>
                 <ng-template #header>
                   <tr>
-                    <th style="width: 44px"><p-tableHeaderCheckbox /></th>
-                    <th pSortableColumn="codigo" style="width: 140px">Código <p-sortIcon field="codigo" /></th>
-                    <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
-                    <th pSortableColumn="estadoValidacion" style="width: 200px">Estado <p-sortIcon field="estadoValidacion" /></th>
-                    <th style="width: 110px; text-align: center">Acciones</th>
+                    <th pSortableColumn="numero" style="width: 140px">Número <p-sortIcon field="numero" /></th>
+                    <th pSortableColumn="fecha" style="width: 130px">Fecha <p-sortIcon field="fecha" /></th>
+                    <th pSortableColumn="formularios" style="width: 130px">Formularios <p-sortIcon field="formularios" /></th>
+                    <th pSortableColumn="usuario">Usuario <p-sortIcon field="usuario" /></th>
+                    <th pSortableColumn="estado" style="width: 140px">Estado <p-sortIcon field="estado" /></th>
                   </tr>
                 </ng-template>
-                <ng-template #body let-formItem>
+                <ng-template #body let-envio>
                   <tr>
-                    <td><p-tableCheckbox [value]="formItem" /></td>
-                    <td><span class="form-table__code">{{ formItem.codigo }}</span></td>
-                    <td><span class="form-table__name">{{ formItem.nombre }}</span></td>
-                    <td><p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" /></td>
-                    <td style="text-align: center">
-                      <p-button icon="pi pi-ellipsis-v"
-                        [text]="true" [rounded]="true" size="small"
-                        severity="secondary"
-                        ariaLabel="Acciones sobre el formulario"
-                        pTooltip="Acciones"
-                        tooltipPosition="top"
-                        (onClick)="abrirMenuFormulario($event, formItem)" />
+                    <td><span class="form-table__code">#{{ envio.numero }}</span></td>
+                    <td>{{ envio.fecha }}</td>
+                    <td>{{ envio.formularios }}</td>
+                    <td>{{ envio.usuario }}</td>
+                    <td><p-tag [value]="envio.estado" [severity]="getEstadoSeverity(envio.estado)" /></td>
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                  <tr>
+                    <td colspan="5" class="form-wizard__empty form-wizard__empty--inline">
+                      <i class="pi pi-inbox" aria-hidden="true"></i>
+                      <p>No hay envíos previos para los filtros aplicados.</p>
                     </td>
                   </tr>
                 </ng-template>
               </p-table>
-              <p-menu #menuFormulario [model]="menuFormularioItems"
-                [popup]="true" appendTo="body"
-                styleClass="form-actions-menu" />
-            }
-          </div>
+            </section>
+          }
 
-          <div class="form-wizard__nav">
-            <p-button label="Volver" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
-              (onClick)="irAPaso(0)" />
-            <span class="form-wizard__nav-hint">
-              <i class="pi pi-info-circle" aria-hidden="true"></i>
-              Cuando todos los formularios estén <strong>Validados</strong> puede pasar a <strong>Envíos</strong>.
-            </span>
-            <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
-              [disabled]="!todosValidados"
-              [pTooltip]="!todosValidados ? 'Todos los formularios deben estar Validados' : ''"
-              tooltipPosition="top"
-              (onClick)="wizardStep = 2" />
-          </div>
-        </section>
-      }
-
-      <!-- Paso 2 (sub-vista): Registro manual del formulario abierto -->
-      @if (wizardStep === 1 && detalleAbierto) {
-        <section class="form-wizard__panel form-wizard__panel--detalle" aria-label="Paso 2: Registro manual del formulario">
-          <header class="form-wizard__panel-header">
-            <h2>Paso 2 · Registro manual · {{ detalleAbierto.nombre }}</h2>
-            <p>
-              Edite, valide o genere el protocolo de este formulario.
-              Use <strong>Volver al listado</strong> para elegir otro o avance a
-              <strong>Envíos</strong> cuando todos estén validados.
-            </p>
-          </header>
-          <ng-container *ngTemplateOutlet="detalleTpl" />
-        </section>
-      }
-
-      <!-- Paso 3: Envíos (Toolbar con adjunto + entidades, luego Enviar Categoría) -->
-      @if (wizardStep === 2) {
-        <section class="form-wizard__panel" aria-label="Paso 3: Envíos">
-          <header class="form-wizard__panel-header">
-            <h2>Paso 3 · Envíos</h2>
-            <p>
-              Adjunte soportes, revise las entidades que recibirán la categoría
-              y envíela a validación central. Esta es la acción final del flujo.
-            </p>
-          </header>
-
-          <!-- Toolbar de acciones del envío (mismo formato que el toolbar de Paso 2) -->
-          <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones del envío">
-            <p-button label="Enviar adjunto" icon="pi pi-paperclip"
-              pTooltip="Adjuntar archivo de soporte (memorando, certificado, etc.)"
-              tooltipPosition="top"
-              (onClick)="executeAction('enviarAdjunto')" />
-            <span class="form-action-badge-wrap">
-              <p-button label="Entidades agregadas" icon="pi pi-sitemap"
-                pTooltip="Revisar o ajustar las entidades destino del envío"
-                tooltipPosition="top"
-                (onClick)="executeAction('entidadesAgregadas')" />
-              @if (selectedEntidades.length > 0) {
-                <span class="form-action-badge"
-                  [attr.aria-label]="selectedEntidades.length + ' entidades seleccionadas'">
-                  {{ selectedEntidades.length }}
-                </span>
-              }
-            </span>
-          </div>
-
-          <!-- Estado del envío + acción Enviar Categoría -->
-          <div class="form-send-bar" [class.form-send-bar--ready]="todosValidados">
-            <div class="form-send-bar__info">
-              <i class="pi" [class.pi-send]="todosValidados" [class.pi-info-circle]="!todosValidados" aria-hidden="true"></i>
-              <div>
-                <strong>
-                  @if (todosValidados) {
-                    Categoría lista para enviar
-                  } @else {
-                    Aún hay formularios sin validar
-                  }
-                </strong>
-                <span>
-                  @if (todosValidados) {
-                    Todos los formularios están en estado Validado. Al enviar, se ejecutan las validaciones centrales.
-                  } @else {
-                    Vuelva al paso 2 para validar los formularios pendientes antes de enviar.
-                  }
-                </span>
+          <!-- Panel: Importar -->
+          @if (wizardImportarAbierto && filtersApplied) {
+            <section id="paso1-importar-panel"
+              class="form-wizard__inline-panel"
+              aria-label="Importar archivo">
+              <header class="form-wizard__inline-panel-header">
+                <h4>
+                  <i class="pi pi-upload" aria-hidden="true"></i>
+                  Importar archivo
+                  <small>· formatos aceptados .xlsx, .csv</small>
+                </h4>
+                <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
+                  ariaLabel="Cerrar panel de importación"
+                  (onClick)="toggleImportarWizard()" />
+              </header>
+              <div class="form-import-zone"
+                role="region" aria-label="Carga de archivo">
+                <div class="form-import-zone__pick">
+                  <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
+                    (onClick)="wizImportInputCtx.click()" />
+                  <input #wizImportInputCtx type="file" accept=".xlsx,.csv" hidden
+                    (change)="importFileName = $any($event.target).files[0]?.name || ''" />
+                  <span class="form-import-zone__filename"
+                    [class.form-import-zone__filename--empty]="!importFileName">
+                    {{ importFileName || 'Ningún archivo seleccionado' }}
+                  </span>
+                </div>
+                <p-button label="Importar" icon="pi pi-upload"
+                  [disabled]="!importFileName"
+                  [pTooltip]="!importFileName ? 'Seleccione un archivo primero' : ''"
+                  tooltipPosition="top"
+                  (onClick)="confirmImport()" />
               </div>
+              <p class="form-import-zone__hint">
+                <i class="pi pi-info-circle" aria-hidden="true"></i>
+                La importación reemplaza los datos no validados de los formularios para el contexto definido.
+              </p>
+            </section>
+          }
+        </div>
+
+        <div class="form-wizard__nav">
+          <span aria-hidden="true"></span>
+          <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
+            [disabled]="!filtersApplied"
+            [pTooltip]="!filtersApplied ? 'Aplique los filtros antes de continuar' : ''"
+            tooltipPosition="top"
+            (onClick)="wizardStep = 1" />
+        </div>
+      </section>
+    }
+
+    <!-- Paso 2: Formularios (importar, exportar, validar, acciones, editar, protocolo) -->
+    @if (wizardStep === 1 && !detalleAbierto && !protocoloAbierto) {
+      <section class="form-wizard__panel" aria-label="Paso 2: Formularios">
+        <header class="form-wizard__panel-header">
+          <h2>Paso 2 · Formularios</h2>
+          <p>
+            Importe, exporte, valide o genere protocolos sobre los formularios
+            de esta categoría. Use <strong>Editar</strong> en una fila para diligenciar
+            el registro manual.
+          </p>
+        </header>
+
+        <!-- Toolbar de acciones globales — operan sobre la selección
+             · Importar vive en el paso 1 (Contexto)
+             · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
+             · Exportar y Validar se habilitan al marcar al menos un formulario -->
+        <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
+          <p-button label="Exportar" icon="pi pi-download"
+            [disabled]="selectedFormularios.length === 0"
+            [pTooltip]="selectedFormularios.length === 0 ? 'Marque al menos un formulario para exportar' : ''"
+            tooltipPosition="top"
+            (onClick)="executeAction('exportar')" />
+          <p-button label="Validar formulario" icon="pi pi-check-circle"
+            [disabled]="!canValidate"
+            [pTooltip]="!canValidate ? 'Marque al menos un formulario para validar' : ''"
+            tooltipPosition="top"
+            (onClick)="confirmValidation()" />
+        </div>
+
+        <!-- Sub-sección: Exportar (visible cuando se activa el panel) -->
+        @if (activePanel === 'exportar') {
+          <div class="form-wizard__subsection form-wizard__subsection--panel">
+            <h3 class="form-wizard__subsection-title">
+              <i class="pi pi-download" aria-hidden="true"></i>
+              Exportar formularios
+              <p-button icon="pi pi-times" [text]="true" [rounded]="true" size="small"
+                styleClass="form-wizard__subsection-close"
+                ariaLabel="Cerrar panel de exportación"
+                (onClick)="closePanel()" />
+            </h3>
+            <div class="form-wizard__inline-form">
+              <p-select [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat"
+                appendTo="body" inputId="wiz-export-fmt" />
+              <p-button label="Exportar" icon="pi pi-download"
+                (onClick)="confirmExport()" />
             </div>
-            <p-button label="Enviar Categoría" icon="pi pi-send" iconPos="right"
-              [disabled]="!todosValidados"
-              (onClick)="enviarCategoria()" />
+          </div>
+        }
+
+        <!-- Sub-sección: Listado de formularios -->
+        <div class="form-wizard__subsection">
+          <h3 class="form-wizard__subsection-title">
+            <i class="pi pi-list" aria-hidden="true"></i>
+            Formularios disponibles
+            <small>· {{ filteredFormularios.length }} resultado(s) para los filtros aplicados</small>
+          </h3>
+
+          @if (filteredFormularios.length === 0) {
+            <div class="form-wizard__empty">
+              <i class="pi pi-search" aria-hidden="true"></i>
+              <h3>Sin formularios para los filtros aplicados</h3>
+              <p>
+                No hay formularios activos para la combinación de
+                <strong>{{ activeFilters.length }}</strong>
+                {{ activeFilters.length === 1 ? 'criterio seleccionado' : 'criterios seleccionados' }}.
+                Importe uno arriba o vuelva al paso anterior para ajustar los filtros.
+              </p>
+              <p-button label="Volver a filtros" icon="pi pi-arrow-left"
+                (onClick)="irAPaso(0)" />
+            </div>
+          } @else {
+            <p-table [value]="filteredFormularios" [stripedRows]="true" [rowHover]="true"
+              [paginator]="filteredFormularios.length > 5" [rows]="5" [rowsPerPageOptions]="[5, 10]"
+              [(selection)]="selectedFormularios" dataKey="id">
+              <ng-template #header>
+                <tr>
+                  <th style="width: 44px"><p-tableHeaderCheckbox /></th>
+                  <th pSortableColumn="codigo" style="width: 140px">Código <p-sortIcon field="codigo" /></th>
+                  <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
+                  <th pSortableColumn="estadoValidacion" style="width: 200px">Estado <p-sortIcon field="estadoValidacion" /></th>
+                  <th style="width: 110px; text-align: center">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template #body let-formItem>
+                <tr>
+                  <td><p-tableCheckbox [value]="formItem" /></td>
+                  <td><span class="form-table__code">{{ formItem.codigo }}</span></td>
+                  <td><span class="form-table__name">{{ formItem.nombre }}</span></td>
+                  <td><p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" /></td>
+                  <td style="text-align: center">
+                    <p-button icon="pi pi-ellipsis-v"
+                      [text]="true" [rounded]="true" size="small"
+                      severity="secondary"
+                      ariaLabel="Acciones sobre el formulario"
+                      pTooltip="Acciones"
+                      tooltipPosition="top"
+                      (onClick)="abrirMenuFormulario($event, formItem)" />
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+            <p-menu #menuFormulario [model]="menuFormularioItems"
+              [popup]="true" appendTo="body"
+              styleClass="form-actions-menu" />
+          }
+        </div>
+
+        <div class="form-wizard__nav">
+          <p-button label="Volver" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
+            (onClick)="irAPaso(0)" />
+          <span class="form-wizard__nav-hint">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            Cuando todos los formularios estén <strong>Validados</strong> puede pasar a <strong>Envíos</strong>.
+          </span>
+          <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right"
+            [disabled]="!todosValidados"
+            [pTooltip]="!todosValidados ? 'Todos los formularios deben estar Validados' : ''"
+            tooltipPosition="top"
+            (onClick)="wizardStep = 2" />
+        </div>
+      </section>
+    }
+
+    <!-- Paso 2 (sub-vista): Protocolo de importación
+         Se abre desde el menú ⋮ de cada formulario. Reemplaza el listado
+         temporalmente; el stepper y el context bar siguen visibles. -->
+    @if (wizardStep === 1 && protocoloAbierto; as protocolo) {
+      <section class="form-wizard__panel form-wizard__panel--protocolo" aria-label="Paso 2: Protocolo de importación">
+        <p-button label="Volver al listado" icon="pi pi-arrow-left"
+          [text]="true" severity="secondary"
+          styleClass="form-wizard__panel-back"
+          (onClick)="cerrarProtocolo()" />
+        <header class="form-wizard__panel-header">
+          <h2>Paso 2 · Protocolo de importación · {{ protocolo.nombre }}</h2>
+          <p>
+            Estructura del archivo plano que la entidad debe diligenciar para
+            importar el formulario <strong>{{ protocolo.codigo }}</strong>.
+            Use los filtros del Paso 1 (visibles arriba) para definir el alcance.
+          </p>
+        </header>
+
+        <!-- Info general del archivo plano + acción descargar -->
+        <div class="prot-info">
+          <div class="prot-info__head">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            <div>
+              <h3 class="prot-info__title">Estructura del archivo plano</h3>
+              <p class="prot-info__desc">
+                El archivo de importación contiene dos tipos de registros separados por el carácter
+                <strong>TAB</strong>. Cada fila inicia con <code>S</code> (cabecera) o <code>D</code>
+                (detalle). La existencia de dos TABs consecutivos se interpreta como nulo, lo cual
+                invalida el registro por completitud (excepto si corresponde a una variable
+                calculada).
+              </p>
+            </div>
           </div>
 
-          <div class="form-wizard__nav">
-            <p-button label="Volver" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
-              (onClick)="irAPaso(1)" />
-            <span aria-hidden="true"></span>
+          <div class="prot-info__chips">
+            <span class="prot-chip">
+              <i class="pi pi-tag" aria-hidden="true"></i>
+              Separador: <strong>TAB</strong>
+            </span>
+            <span class="prot-chip">
+              <i class="pi pi-file" aria-hidden="true"></i>
+              Codificación: <strong>UTF-8</strong>
+            </span>
+            <span class="prot-chip">
+              <i class="pi pi-list" aria-hidden="true"></i>
+              {{ totalVariables }} campos en total
+            </span>
           </div>
-        </section>
-      }
-    </div>
-  }
+
+          <div class="prot-info__actions">
+            <p-button [outlined]="true" severity="secondary"
+              styleClass="prot-download-trigger"
+              ariaLabel="Descargar protocolo en distintos formatos"
+              (onClick)="dlMenuProtocolo.toggle($event)">
+              <ng-template #content>
+                <i class="pi pi-download" aria-hidden="true"></i>
+                <span>Descargar protocolo</span>
+                <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
+              </ng-template>
+            </p-button>
+            <p-menu #dlMenuProtocolo [model]="downloadItemsProtocolo" [popup]="true" appendTo="body"
+              styleClass="prot-download-menu">
+              <ng-template #item let-item>
+                <button type="button" class="prot-download-item" (click)="item.command()">
+                  <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
+                  <span class="prot-download-item__label">{{ item.label }}</span>
+                  <i class="pi pi-info-circle prot-download-item__info"
+                    [pTooltip]="item.data?.info"
+                    tooltipPosition="left"
+                    aria-hidden="true"></i>
+                </button>
+              </ng-template>
+            </p-menu>
+          </div>
+        </div>
+
+        <!-- Tabs: Encabezado | Detalle | Variables | Conceptos -->
+        <p-tabs value="encabezado" styleClass="prot-tabs">
+          <p-tablist>
+            <p-tab value="encabezado">
+              <i class="pi pi-tag" aria-hidden="true"></i>
+              Registro de Encabezado
+            </p-tab>
+            <p-tab value="detalle">
+              <i class="pi pi-list" aria-hidden="true"></i>
+              Registro de Detalle
+            </p-tab>
+            <p-tab value="variables">
+              <i class="pi pi-database" aria-hidden="true"></i>
+              Variables ({{ variables.length }})
+            </p-tab>
+            <p-tab value="conceptos">
+              <i class="pi pi-book" aria-hidden="true"></i>
+              Conceptos ({{ listas['CONCEPTOS'].valores.length }})
+            </p-tab>
+          </p-tablist>
+
+          <p-tabpanels>
+            <!-- ───── Tab 1: Registro de Encabezado ───── -->
+            <p-tabpanel value="encabezado">
+              <p class="prot-tabs__desc">
+                Una sola fila al inicio del archivo. Identifica el contexto general del envío
+                (entidad reportante, periodo, año y formulario).
+              </p>
+
+              <div class="prot-example" role="region" aria-label="Ejemplo de fila de encabezado">
+                <span class="prot-example__label">Ejemplo</span>
+                <code class="prot-example__line">{{ ejemploCabecera }}</code>
+              </div>
+
+              <ng-container
+                *ngTemplateOutlet="camposList; context: { $implicit: camposCabecera, ariaLabel: 'Campos del encabezado' }"></ng-container>
+            </p-tabpanel>
+
+            <!-- ───── Tab 2: Registro de Detalle ───── -->
+            <p-tabpanel value="detalle">
+              <p class="prot-tabs__desc">
+                Una fila por cada concepto contable a reportar. Cada detalle contiene un código de
+                concepto y los valores de las variables específicas del formulario.
+              </p>
+
+              <div class="prot-example" role="region" aria-label="Ejemplo de fila de detalle">
+                <span class="prot-example__label">Ejemplo</span>
+                <code class="prot-example__line">{{ ejemploDetalle }}</code>
+              </div>
+
+              <ng-container
+                *ngTemplateOutlet="camposList; context: { $implicit: camposDetalle, ariaLabel: 'Campos del detalle' }"></ng-container>
+            </p-tabpanel>
+
+            <!-- ───── Tab 3: Variables ───── -->
+            <p-tabpanel value="variables">
+              <p class="prot-tabs__desc">
+                Variables técnicas que componen cada fila de detalle. Las variables tipo
+                <strong>Lista</strong> solo aceptan los códigos del catálogo correspondiente —
+                consúltalos haciendo clic en el enlace de la columna <em>Observaciones</em>.
+              </p>
+              <ng-container
+                *ngTemplateOutlet="tablaVariables; context: { $implicit: variables, tipo: 'variables' }"></ng-container>
+            </p-tabpanel>
+
+            <!-- ───── Tab 4: Conceptos ───── -->
+            <p-tabpanel value="conceptos">
+              <p class="prot-tabs__desc">
+                Catálogo de conceptos contables válidos para la variable <code>Concepto</code> del
+                registro de detalle.
+              </p>
+
+              <div class="prot-conceptos__toolbar">
+                <p-iconfield iconPosition="left" styleClass="prot-conceptos__search">
+                  <p-inputicon styleClass="pi pi-search" />
+                  <input pInputText type="text"
+                    [ngModel]="busquedaConceptos()"
+                    (ngModelChange)="busquedaConceptos.set($event)"
+                    placeholder="Buscar por código o nombre del concepto…"
+                    aria-label="Buscar concepto" />
+                </p-iconfield>
+                <span class="prot-conceptos__count" aria-live="polite">
+                  {{ conceptosFiltrados().length }} de {{ listas['CONCEPTOS'].valores.length }} conceptos
+                </span>
+                <p-button [outlined]="true" severity="secondary" size="small"
+                  styleClass="prot-download-trigger"
+                  ariaLabel="Descargar conceptos en distintos formatos"
+                  (onClick)="dlMenuConceptos.toggle($event)">
+                  <ng-template #content>
+                    <i class="pi pi-download" aria-hidden="true"></i>
+                    <span>Descargar</span>
+                    <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
+                  </ng-template>
+                </p-button>
+                <p-menu #dlMenuConceptos [model]="downloadItemsConceptos" [popup]="true" appendTo="body"
+                  styleClass="prot-download-menu">
+                  <ng-template #item let-item>
+                    <button type="button" class="prot-download-item" (click)="item.command()">
+                      <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
+                      <span class="prot-download-item__label">{{ item.label }}</span>
+                      <i class="pi pi-info-circle prot-download-item__info"
+                        [pTooltip]="item.data?.info"
+                        tooltipPosition="left"
+                        aria-hidden="true"></i>
+                    </button>
+                  </ng-template>
+                </p-menu>
+              </div>
+
+              <p-table [value]="conceptosFiltrados()"
+                [stripedRows]="true" [rowHover]="true"
+                [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} conceptos"
+                styleClass="prot-table"
+                [tableStyle]="{ 'min-width': '480px' }">
+                <ng-template #caption>
+                  <span class="sr-only">Catálogo de conceptos contables válidos</span>
+                </ng-template>
+                <ng-template #header>
+                  <tr>
+                    <th style="width: 180px" scope="col">Código</th>
+                    <th scope="col">Nombre</th>
+                  </tr>
+                </ng-template>
+                <ng-template #body let-c>
+                  <tr>
+                    <td><code class="prot-table__code">{{ c.codigo }}</code></td>
+                    <td>{{ c.nombre }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                  <tr>
+                    <td colspan="2" class="prot-lista__empty">
+                      <i class="pi pi-inbox" aria-hidden="true"></i>
+                      <p>No se encontraron conceptos con ese criterio de búsqueda.</p>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </p-tabpanel>
+          </p-tabpanels>
+        </p-tabs>
+      </section>
+    }
+
+    <!-- Paso 2 (sub-vista): Registro manual del formulario abierto -->
+    @if (wizardStep === 1 && detalleAbierto) {
+      <section class="form-wizard__panel form-wizard__panel--detalle" aria-label="Paso 2: Registro manual del formulario">
+        <header class="form-wizard__panel-header">
+          <h2>Paso 2 · Registro manual · {{ detalleAbierto.nombre }}</h2>
+          <p>
+            Edite, valide o genere el protocolo de este formulario.
+            Use <strong>Volver al listado</strong> para elegir otro o avance a
+            <strong>Envíos</strong> cuando todos estén validados.
+          </p>
+        </header>
+        <ng-container *ngTemplateOutlet="detalleTpl" />
+      </section>
+    }
+
+    <!-- Paso 3: Envíos (Toolbar con adjunto + entidades, luego Enviar Categoría) -->
+    @if (wizardStep === 2) {
+      <section class="form-wizard__panel" aria-label="Paso 3: Envíos">
+        <header class="form-wizard__panel-header">
+          <h2>Paso 3 · Envíos</h2>
+          <p>
+            Adjunte soportes, revise las entidades que recibirán la categoría
+            y envíela a validación central. Esta es la acción final del flujo.
+          </p>
+        </header>
+
+        <!-- Toolbar de acciones del envío (mismo formato que el toolbar de Paso 2) -->
+        <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones del envío">
+          <p-button label="Enviar adjunto" icon="pi pi-paperclip"
+            pTooltip="Adjuntar archivo de soporte (memorando, certificado, etc.)"
+            tooltipPosition="top"
+            (onClick)="executeAction('enviarAdjunto')" />
+          <span class="form-action-badge-wrap">
+            <p-button label="Entidades agregadas" icon="pi pi-sitemap"
+              pTooltip="Revisar o ajustar las entidades destino del envío"
+              tooltipPosition="top"
+              (onClick)="executeAction('entidadesAgregadas')" />
+            @if (selectedEntidades.length > 0) {
+              <span class="form-action-badge"
+                [attr.aria-label]="selectedEntidades.length + ' entidades seleccionadas'">
+                {{ selectedEntidades.length }}
+              </span>
+            }
+          </span>
+        </div>
+
+        <!-- Estado del envío + acción Enviar Categoría -->
+        <div class="form-send-bar" [class.form-send-bar--ready]="todosValidados">
+          <div class="form-send-bar__info">
+            <i class="pi" [class.pi-send]="todosValidados" [class.pi-info-circle]="!todosValidados" aria-hidden="true"></i>
+            <div>
+              <strong>
+                @if (todosValidados) {
+                  Categoría lista para enviar
+                } @else {
+                  Aún hay formularios sin validar
+                }
+              </strong>
+              <span>
+                @if (todosValidados) {
+                  Todos los formularios están en estado Validado. Al enviar, se ejecutan las validaciones centrales.
+                } @else {
+                  Vuelva al paso 2 para validar los formularios pendientes antes de enviar.
+                }
+              </span>
+            </div>
+          </div>
+          <p-button label="Enviar Categoría" icon="pi pi-send" iconPos="right"
+            [disabled]="!todosValidados"
+            (onClick)="enviarCategoria()" />
+        </div>
+
+        <div class="form-wizard__nav">
+          <p-button label="Volver" icon="pi pi-arrow-left" [outlined]="true" severity="secondary"
+            (onClick)="irAPaso(1)" />
+          <span aria-hidden="true"></span>
+        </div>
+      </section>
+    }
+  </div>
 
   <!-- ============================================================= -->
-  <!-- MODAL DE EDICIÓN (Opción 2)                                    -->
+  <!-- MODAL DE EDICIÓN INLINE DE REGISTRO                            -->
   <!-- ============================================================= -->
   <p-dialog
     [visible]="!!modalEditar"
@@ -1136,6 +983,184 @@
         icon="pi pi-check"
         [disabled]="selectedEntidades.length === 0"
         (onClick)="confirmarAsignacionEntidades()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- ============================================================= -->
+  <!-- TEMPLATE: lista de campos del protocolo (tokens + descripción) -->
+  <!-- Usado en los tabs 'Registro de Encabezado' y 'Registro de Detalle' -->
+  <!-- ============================================================= -->
+  <ng-template #camposList let-campos let-ariaLabel="ariaLabel">
+    <ul class="prot-fields" [attr.aria-label]="ariaLabel">
+      @for (campo of campos; track campo.token) {
+        <li class="prot-fields__item">
+          <code class="prot-fields__token">{{ campo.token }}</code>
+          <div class="prot-fields__body">
+            <strong class="prot-fields__name">{{ campo.nombre }}</strong>
+            <p class="prot-fields__desc">{{ campo.desc }}</p>
+          </div>
+        </li>
+      }
+    </ul>
+  </ng-template>
+
+  <!-- ============================================================= -->
+  <!-- TEMPLATE: tabla horizontal de variables del protocolo          -->
+  <!-- ============================================================= -->
+  <ng-template #tablaVariables let-variables let-tipo="tipo">
+    <p-table [value]="variables"
+      [stripedRows]="true"
+      [rowHover]="true"
+      [tableStyle]="{ 'min-width': '960px' }"
+      styleClass="prot-table">
+      <ng-template #caption>
+        <span class="sr-only">Variables del registro de {{ tipo }}</span>
+      </ng-template>
+      <ng-template #header>
+        <tr>
+          <th class="prot-table__th-num" scope="col">#</th>
+          <th scope="col">Nombre del campo</th>
+          <th scope="col">Tipo de dato</th>
+          <th class="prot-table__th-num" scope="col">Longitud</th>
+          <th class="prot-table__th-num" scope="col">Decimales</th>
+          <th scope="col">Unidad</th>
+          <th scope="col">Observaciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-v>
+        <tr>
+          <td class="prot-table__td-num">{{ v.numero }}</td>
+          <td><code class="prot-table__code">{{ v.nombre }}</code></td>
+          <td>
+            @switch (v.tipoDato) {
+              @case ('Numérico') {
+                <p-tag value="Numérico" severity="info" [rounded]="true" />
+              }
+              @case ('Lista') {
+                <p-tag value="Lista" severity="warn" [rounded]="true" />
+              }
+              @case ('Fecha') {
+                <p-tag value="Fecha" severity="success" [rounded]="true" />
+              }
+              @default {
+                <p-tag value="Texto" severity="secondary" [rounded]="true" />
+              }
+            }
+          </td>
+          <td class="prot-table__td-num">{{ v.longitud }}</td>
+          <td class="prot-table__td-num">{{ v.decimales ?? '—' }}</td>
+          <td>{{ v.unidad }}</td>
+          <td class="prot-table__td-obs">
+            <span>{{ v.observaciones }}</span>
+            @if (v.tipoDato === 'Lista' && v.listaKey) {
+              <button type="button" class="prot-link"
+                (click)="abrirLista(v.listaKey)"
+                [attr.aria-label]="'Ver lista de valores válidos para ' + v.nombre">
+                <i class="pi pi-external-link" aria-hidden="true"></i>
+                Ver lista <strong>{{ listas[v.listaKey].nombre }}</strong>
+                <span class="prot-link__count">({{ listas[v.listaKey].valores.length }})</span>
+              </button>
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ng-template>
+
+  <!-- ============================================================= -->
+  <!-- MODAL "VER LISTA" — valores válidos del catálogo seleccionado  -->
+  <!-- ============================================================= -->
+  <p-dialog
+    [visible]="!!listaActiva()"
+    (visibleChange)="$event === false && cerrarLista()"
+    [modal]="true"
+    [draggable]="false"
+    [closeOnEscape]="true"
+    [style]="{ width: '820px', maxWidth: '96vw' }"
+    [header]="listaActiva() ? 'Valores de la lista · ' + listaActiva()!.nombre : 'Valores de la lista'">
+
+    @if (listaActiva(); as lista) {
+      <div class="prot-lista">
+        <p class="prot-lista__desc">
+          Valores válidos para la variable tipo Lista <strong>{{ lista.nombre }}</strong>.
+          Sólo estos códigos son aceptados en el archivo de importación.
+        </p>
+
+        <div class="prot-lista__search">
+          <p-iconfield iconPosition="left">
+            <p-inputicon styleClass="pi pi-search" />
+            <input pInputText type="text"
+              [ngModel]="busquedaLista()"
+              (ngModelChange)="busquedaLista.set($event)"
+              placeholder="Buscar por código o nombre…"
+              aria-label="Buscar dentro de la lista" />
+          </p-iconfield>
+          <span class="prot-lista__count" aria-live="polite">
+            {{ valoresFiltrados().length }} de {{ lista.valores.length }} valores
+          </span>
+        </div>
+
+        <p-table [value]="valoresFiltrados()"
+          [stripedRows]="true"
+          [rowHover]="true"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 25]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}-{last} de {totalRecords}"
+          styleClass="prot-lista__table">
+          <ng-template #caption>
+            <span class="sr-only">Valores válidos para la variable tipo lista</span>
+          </ng-template>
+          <ng-template #header>
+            <tr>
+              <th style="width: 200px" scope="col">Código</th>
+              <th scope="col">Nombre</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-valor>
+            <tr>
+              <td><code class="prot-table__code">{{ valor.codigo }}</code></td>
+              <td>{{ valor.nombre }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr>
+              <td colspan="2" class="prot-lista__empty">
+                <i class="pi pi-inbox" aria-hidden="true"></i>
+                <p>No se encontraron valores con ese criterio de búsqueda.</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+
+    <ng-template #footer>
+      <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="cerrarLista()" />
+      <p-button styleClass="prot-download-trigger"
+        ariaLabel="Descargar lista en distintos formatos"
+        (onClick)="dlMenuLista.toggle($event)">
+        <ng-template #content>
+          <i class="pi pi-download" aria-hidden="true"></i>
+          <span>Descargar</span>
+          <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
+        </ng-template>
+      </p-button>
+      <p-menu #dlMenuLista [model]="downloadItemsLista" [popup]="true" appendTo="body"
+        styleClass="prot-download-menu">
+        <ng-template #item let-item>
+          <button type="button" class="prot-download-item" (click)="item.command()">
+            <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
+            <span class="prot-download-item__label">{{ item.label }}</span>
+            <i class="pi pi-info-circle prot-download-item__info"
+              [pTooltip]="item.data?.info"
+              tooltipPosition="left"
+              aria-hidden="true"></i>
+          </button>
+        </ng-template>
+      </p-menu>
     </ng-template>
   </p-dialog>
 </div>

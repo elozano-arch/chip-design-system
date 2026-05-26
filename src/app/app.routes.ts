@@ -187,17 +187,6 @@ export const routes: Routes = [
       import('./pages/pantallas/formularios/formularios.component').then(m => m.FormulariosComponent),
   },
   {
-    path: 'pantallas/protocolo-importacion',
-    data: {
-      breadcrumb: [
-        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
-        { label: 'Protocolo de Importación' },
-      ],
-    },
-    loadComponent: () =>
-      import('./pages/pantallas/protocolo-importacion/protocolo-importacion.component').then(m => m.ProtocoloImportacionComponent),
-  },
-  {
     path: 'pantallas/flujo-envio',
     data: {
       breadcrumb: [

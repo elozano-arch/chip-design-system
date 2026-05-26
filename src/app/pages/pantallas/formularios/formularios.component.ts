@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -18,8 +18,8 @@ import { ProgressBarModule } from 'primeng/progressbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { StepperModule } from 'primeng/stepper';
+import { TabsModule } from 'primeng/tabs';
 import { DialogModule } from 'primeng/dialog';
 import { PaginatorModule } from 'primeng/paginator';
 import { MessageService, MenuItem } from 'primeng/api';
@@ -85,6 +85,44 @@ interface EntidadAgregada {
   nit: string;
 }
 
+/* ── Protocolo de Importación — sub-vista del Paso 2 ── */
+type ProtocoloTipoDato = 'Numérico' | 'Texto' | 'Fecha' | 'Lista';
+type ProtocoloTipoRegistro = 'Cabecera' | 'Detalle';
+
+interface ProtocoloVariable {
+  numero: number;
+  tipoRegistro: ProtocoloTipoRegistro;
+  nombre: string;
+  tipoDato: ProtocoloTipoDato;
+  longitud: number;
+  decimales: number | null;
+  unidad: string;
+  observaciones: string;
+  listaKey?: string;
+}
+
+interface ProtocoloValorLista {
+  codigo: string;
+  nombre: string;
+}
+
+interface ProtocoloLista {
+  key: string;
+  nombre: string;
+  valores: ProtocoloValorLista[];
+}
+
+/** Formatos soportados por el botón estándar "Descargar". */
+type DownloadFormatId = 'csv' | 'xlsx' | 'pdf' | 'txt';
+
+interface DownloadFormat {
+  label: string;
+  icon: string;
+  format: DownloadFormatId;
+  /** Texto de tooltip con restricciones/características del formato. */
+  info: string;
+}
+
 @Component({
   selector: 'app-formularios',
   standalone: true,
@@ -107,8 +145,8 @@ interface EntidadAgregada {
     CheckboxModule,
     MenuModule,
     ChipModule,
-    SelectButtonModule,
     StepperModule,
+    TabsModule,
     DialogModule,
     PaginatorModule,
     AppBreadcrumbComponent,
@@ -123,19 +161,8 @@ export class FormulariosComponent {
 
   constructor(private messageService: MessageService) {}
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // Selector "Opción 1 / Opción 2" — propuesta a aprobar por CRIS.
-  // Opción 1: vista única + edición inline (como el video / POC actual).
-  // Opción 2: paso a paso (wizard 3 pasos) + edición en modal.
-  // ─────────────────────────────────────────────────────────────────────────
-  vistaActiva: 'opcion-1' | 'opcion-2' = 'opcion-1';
-  readonly vistaOptions = [
-    { label: 'Opción 1 · Vista única', value: 'opcion-1' },
-    { label: 'Opción 2 · Paso a paso', value: 'opcion-2' },
-  ];
-
   /**
-   * Paso actual del wizard de Opción 2 — 3 pasos:
+   * Paso actual del wizard — 3 pasos:
    *   0: Filtros (contexto + Consultar Envíos previos)
    *   1: Formularios (importar, exportar, validar, acciones, editar manual,
    *      generar protocolo — y, al abrir un formulario, registro manual)
@@ -148,14 +175,6 @@ export class FormulariosComponent {
 
   /** Panel "Importar" desplegable en el paso 1 (Contexto). */
   wizardImportarAbierto = false;
-
-  cambiarVista(v: 'opcion-1' | 'opcion-2') {
-    this.vistaActiva = v;
-    this.cerrarDetalle();
-    this.wizardStep = 0;
-    this.wizardConsultarEnviosAbierto = false;
-    this.wizardImportarAbierto = false;
-  }
 
   /**
    * Permite navegar a un paso anterior (o al actual) haciendo clic en el indicador.
@@ -170,6 +189,7 @@ export class FormulariosComponent {
       this.cerrarPanelesPaso1();
     }
     this.cerrarDetalle();
+    this.cerrarProtocolo();
     this.wizardStep = step;
   }
 
@@ -357,30 +377,32 @@ export class FormulariosComponent {
   }
   cerrarDetalle() {
     this.detalleAbierto = null;
-    this.editandoCelda = null;
     this.modalEditar = null;
     // En el wizard de 3 pasos, el listado y el registro manual viven en
     // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
     // el step se mantiene en 1.
   }
 
-  // ── Edición inline (Opción 1) ──
-  editandoCelda: { conceptoId: string; variableId: string; columna: string } | null = null;
-  iniciarEdicionInline(concepto: ConceptoPadre, variable: Variable, columna: string) {
-    this.editandoCelda = { conceptoId: concepto.id, variableId: variable.id, columna };
-  }
-  esEditandoCelda(concepto: ConceptoPadre, variable: Variable, columna: string): boolean {
-    return !!this.editandoCelda
-      && this.editandoCelda.conceptoId === concepto.id
-      && this.editandoCelda.variableId === variable.id
-      && this.editandoCelda.columna === columna;
-  }
-  guardarEdicionInline() {
-    this.editandoCelda = null;
-    this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Valor actualizado correctamente.', life: 2000 });
+  // ──────────────────────────────────────────────────────────────────────
+  // Sub-vista "Generar protocolo de importación" — pertenece al Paso 2.
+  // Se abre desde el menú ⋮ de cada fila (por formulario). El listado se
+  // oculta y se vuelve con "Volver al listado". El contexto del wizard
+  // (entidad/categoría/año/periodo) sigue visible en el context bar.
+  // ──────────────────────────────────────────────────────────────────────
+  protocoloAbierto: Formulario | null = null;
+
+  abrirProtocolo(form: Formulario | null) {
+    if (!form) return;
+    this.cerrarDetalle();
+    this.protocoloAbierto = form;
+    queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
-  // ── Edición modal (Opción 2) ──
+  cerrarProtocolo() {
+    this.protocoloAbierto = null;
+  }
+
+  // ── Edición modal del registro ──
   modalEditar: { concepto: ConceptoPadre; variable: Variable } | null = null;
   abrirModalEditar(concepto: ConceptoPadre, variable: Variable) {
     this.modalEditar = { concepto, variable };
@@ -406,8 +428,8 @@ export class FormulariosComponent {
     { separator: true },
     {
       label: 'Generar protocolo de importación',
-      icon: 'pi pi-file-pdf',
-      command: () => this.messageService.add({ severity: 'info', summary: 'Protocolo', detail: `Generando protocolo de "${this.selectedFormularioForMenu?.codigo}"` }),
+      icon: 'pi pi-file-export',
+      command: () => this.abrirProtocolo(this.selectedFormularioForMenu),
     },
   ];
 
@@ -466,7 +488,6 @@ export class FormulariosComponent {
     { key: 'importar', label: 'Importar', icon: 'pi pi-upload', enabled: true },
     { key: 'enviarAdjunto', label: 'Enviar Adjunto', icon: 'pi pi-paperclip', enabled: true },
     { key: 'entidadesAgregadas', label: 'Entidades Agregadas', icon: 'pi pi-sitemap', enabled: true },
-    { key: 'generarProtocolo', label: 'Generar protocolo', icon: 'pi pi-file-pdf', enabled: true },
     { key: 'exportar', label: 'Exportar', icon: 'pi pi-download', enabled: true },
     { key: 'consultarEnvios', label: 'Consultar Envíos', icon: 'pi pi-inbox', enabled: true },
   ];
@@ -529,10 +550,6 @@ export class FormulariosComponent {
     // Entidades Agregadas — abre modal de selección múltiple
     if (key === 'entidadesAgregadas') {
       this.abrirEntidadesModal();
-      return;
-    }
-    if (key === 'generarProtocolo') {
-      this.messageService.add({ severity: 'info', summary: 'Protocolo de Importación', detail: 'Generando protocolo para la categoría seleccionada...' });
       return;
     }
     if (key === 'enviarAdjunto') {
@@ -838,6 +855,305 @@ export class FormulariosComponent {
     const s = String(base);
     const dv = seed % 10;
     return `${s.slice(0, 3)}.${s.slice(3, 6)}.${s.slice(6, 9)}-${dv}`;
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Protocolo de Importación — datos, modal Ver Lista y descargas.
+  // El contexto (entidad/categoría/año/periodo + formulario seleccionado)
+  // proviene del Paso 1 del wizard — no hay selects propios.
+  // ──────────────────────────────────────────────────────────────────────
+
+  /**
+   * Tab "Registro de Encabezado" — estructura de la fila S (única por archivo).
+   * Formato del legacy CHIP: ejemplo destacado + lista descriptiva de campos.
+   */
+  readonly ejemploCabecera =
+    'S 210641006 10103 2025 CGN001_BALANCE_GENERAL Fecha de envío';
+
+  readonly camposCabecera: Array<{ token: string; nombre: string; desc: string }> = [
+    { token: 'S', nombre: 'Tipo de Registro',
+      desc: 'Marca de inicio. Indica que la fila corresponde al registro de cabecera.' },
+    { token: '210641006', nombre: 'Código de la Entidad',
+      desc: 'Identificador DANE de la entidad reportante.' },
+    { token: '10103', nombre: 'Periodo',
+      desc: 'Periodo contable del reporte. Ej: 10103 = trimestre Ene–Mar (mes inicial 01, mes final 03).' },
+    { token: '2025', nombre: 'Año',
+      desc: 'Año al que pertenece el periodo reportado.' },
+    { token: 'CGN001_BALANCE_GENERAL', nombre: 'Nombre del Formulario',
+      desc: 'Identificador único del formulario que se está reportando.' },
+    { token: 'Fecha de envío', nombre: 'Fecha de Envío',
+      desc: 'Fecha de generación de la información en formato dd-mm-aaaa.' },
+  ];
+
+  /**
+   * Tab "Registro de Detalle" — estructura de las filas D (una por concepto).
+   * Las variables concretas (SLDO_INC, MOV_DB, ENT_RECIP, etc.) se documentan
+   * en el tab "Variables".
+   */
+  readonly ejemploDetalle = 'D Concepto Variables';
+
+  readonly camposDetalle: Array<{ token: string; nombre: string; desc: string }> = [
+    { token: 'D', nombre: 'Tipo de Registro',
+      desc: 'Marca de inicio. Indica que la fila corresponde al registro de detalle.' },
+    { token: 'Concepto', nombre: 'Código del Concepto',
+      desc: 'Código contable del concepto a reportar. Ver tab "Conceptos" para los valores válidos.' },
+    { token: 'Variables', nombre: 'Valores de las Variables',
+      desc: 'Valores de las variables específicas del formulario. Ver tab "Variables" para su definición.' },
+  ];
+
+  /**
+   * Tab "Variables" — variables técnicas del registro de detalle.
+   * No incluye "Tipo de Registro" (D) ni "Concepto" (ya documentados en el tab Detalle).
+   */
+  readonly variables: ProtocoloVariable[] = [
+    { numero: 1, tipoRegistro: 'Detalle', nombre: 'SLDO_INC',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Saldo inicial del concepto.' },
+    { numero: 2, tipoRegistro: 'Detalle', nombre: 'MOV_DB',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Movimiento débito del período.' },
+    { numero: 3, tipoRegistro: 'Detalle', nombre: 'MOV_CR',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Movimiento crédito del período.' },
+    { numero: 4, tipoRegistro: 'Detalle', nombre: 'ENT_RECIP',
+      tipoDato: 'Lista', longitud: 14, decimales: null, unidad: '—',
+      observaciones: 'Entidad recíproca asociada al movimiento.',
+      listaKey: 'ENTIDADES_RECIPROCAS' },
+    { numero: 5, tipoRegistro: 'Detalle', nombre: 'VR_CTE',
+      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
+      observaciones: 'Valor corriente del movimiento.' },
+  ];
+
+  /** Conteo total de variables (para el chip del header del protocolo). */
+  get totalVariables(): number {
+    return this.camposCabecera.length + this.camposDetalle.length + this.variables.length;
+  }
+
+  /** Buscador del tab Conceptos (filtrado en memoria sobre listas.CONCEPTOS.valores). */
+  busquedaConceptos = signal('');
+
+  conceptosFiltrados = computed<ProtocoloValorLista[]>(() => {
+    const q = this.busquedaConceptos().trim().toLowerCase();
+    const todos = this.listas['CONCEPTOS'].valores;
+    if (!q) return todos;
+    return todos.filter(c =>
+      c.codigo.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q),
+    );
+  });
+
+  /**
+   * Descarga el catálogo CONCEPTOS en el formato indicado.
+   * CSV se genera en cliente (mock real). Excel/PDF/TXT muestran toast de simulación.
+   */
+  descargarConceptos(format: DownloadFormatId = 'csv'): void {
+    if (format === 'csv') {
+      const lista = this.listas['CONCEPTOS'];
+      this.descargarValoresCSV(lista.nombre, lista.valores);
+      return;
+    }
+    this.toastDescargaSimulada('CONCEPTOS', format);
+  }
+
+  /** Catálogos referenciados por las variables tipo Lista. */
+  readonly listas: Record<string, ProtocoloLista> = {
+    PERIODOS: {
+      key: 'PERIODOS',
+      nombre: 'PERIODOS',
+      valores: [
+        { codigo: '01', nombre: 'Ene-Mar' },
+        { codigo: '02', nombre: 'Abr-Jun' },
+        { codigo: '03', nombre: 'Jul-Sep' },
+        { codigo: '04', nombre: 'Oct-Dic' },
+      ],
+    },
+    CONCEPTOS: {
+      key: 'CONCEPTOS',
+      nombre: 'CONCEPTOS',
+      valores: this.generarConceptosProtocolo(),
+    },
+    ENTIDADES_RECIPROCAS: {
+      key: 'ENTIDADES_RECIPROCAS',
+      nombre: 'ENTIDADES_RECIPROCAS',
+      valores: this.generarEntidadesReciprocasProtocolo(),
+    },
+  };
+
+  /** Modal "Ver Lista" — signal para reaccionar al filtro de búsqueda. */
+  listaActiva = signal<ProtocoloLista | null>(null);
+  busquedaLista = signal('');
+
+  valoresFiltrados = computed<ProtocoloValorLista[]>(() => {
+    const lista = this.listaActiva();
+    if (!lista) return [];
+    const q = this.busquedaLista().trim().toLowerCase();
+    if (!q) return lista.valores;
+    return lista.valores.filter(v =>
+      v.codigo.toLowerCase().includes(q) || v.nombre.toLowerCase().includes(q),
+    );
+  });
+
+  abrirLista(listaKey: string | undefined): void {
+    if (!listaKey) return;
+    const lista = this.listas[listaKey];
+    if (!lista) return;
+    this.busquedaLista.set('');
+    this.listaActiva.set(lista);
+  }
+
+  cerrarLista(): void {
+    this.listaActiva.set(null);
+    this.busquedaLista.set('');
+  }
+
+  /** Descarga el catálogo activo del modal Ver Lista en el formato indicado. */
+  descargarLista(format: DownloadFormatId = 'csv'): void {
+    const lista = this.listaActiva();
+    if (!lista) return;
+    if (format === 'csv') {
+      this.descargarValoresCSV(lista.nombre, lista.valores);
+      return;
+    }
+    this.toastDescargaSimulada(lista.nombre, format);
+  }
+
+  /** Descarga el protocolo (archivo plano) en el formato indicado. */
+  descargarProtocolo(format: DownloadFormatId = 'txt'): void {
+    this.toastDescargaSimulada('PROTOCOLO', format);
+  }
+
+  // ── Helpers de descarga reutilizables ──
+
+  /** Genera CSV con BOM UTF-8 (compatible Excel) y dispara la descarga. */
+  private descargarValoresCSV(nombre: string, valores: ProtocoloValorLista[]): void {
+    const filas = [['Código', 'Nombre'], ...valores.map(v => [v.codigo, v.nombre])];
+    const csv = filas
+      .map(fila => fila.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${nombre}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Archivo descargado',
+      detail: `${nombre}.csv`,
+      life: 3000,
+    });
+  }
+
+  /** Toast informativo para formatos no implementados en cliente (XLSX/PDF/TXT). */
+  private toastDescargaSimulada(nombre: string, format: DownloadFormatId): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Descarga en proceso',
+      detail: `Generando ${nombre} en formato ${format.toUpperCase()}…`,
+      life: 3000,
+    });
+  }
+
+  // ── Botón "Descargar" estándar: formatos disponibles + menús por destino ──
+  readonly downloadFormats: DownloadFormat[] = [
+    { label: 'CSV — Valores separados por comas', icon: 'pi pi-file', format: 'csv',
+      info: 'Sin límite de filas. Encoding UTF-8. Encabezados incluidos.' },
+    { label: 'Excel (XLSX)', icon: 'pi pi-file-excel', format: 'xlsx',
+      info: 'Máximo 50 MB por archivo. Hasta 1.048.576 filas por hoja. Múltiples hojas permitidas.' },
+    { label: 'PDF', icon: 'pi pi-file-pdf', format: 'pdf',
+      info: 'Máximo 10.000 líneas por archivo. División automática si excede el límite.' },
+    { label: 'TXT', icon: 'pi pi-file', format: 'txt',
+      info: 'Sin límite de filas. Encoding UTF-8. Formato de texto plano.' },
+  ];
+
+  // Para evitar que PrimeNG renderice un tooltip nativo sobre el item entero
+  // y duplique al del icono `?`, el texto del info viaja en `data` (campo
+  // libre del MenuItem) y se enlaza con [pTooltip] sólo sobre el icono.
+
+  /** MenuItem[] para el botón "Descargar" del tab Conceptos. */
+  readonly downloadItemsConceptos: MenuItem[] = this.downloadFormats.map(f => ({
+    label: f.label,
+    icon: f.icon,
+    command: () => this.descargarConceptos(f.format),
+    data: { info: f.info },
+  }));
+
+  /** MenuItem[] para el botón "Descargar" del modal Ver Lista. */
+  readonly downloadItemsLista: MenuItem[] = this.downloadFormats.map(f => ({
+    label: f.label,
+    icon: f.icon,
+    command: () => this.descargarLista(f.format),
+    data: { info: f.info },
+  }));
+
+  /** MenuItem[] para el botón "Descargar protocolo" del header del protocolo. */
+  readonly downloadItemsProtocolo: MenuItem[] = this.downloadFormats.map(f => ({
+    label: f.label,
+    icon: f.icon,
+    command: () => this.descargarProtocolo(f.format),
+    data: { info: f.info },
+  }));
+
+  private generarConceptosProtocolo(): ProtocoloValorLista[] {
+    return [
+      { codigo: '1.1.05', nombre: 'CAJA' },
+      { codigo: '1.1.10', nombre: 'BANCOS' },
+      { codigo: '1.1.20', nombre: 'INVERSIONES' },
+      { codigo: '1.4.07', nombre: 'PRESTACIÓN DE SERVICIOS' },
+      { codigo: '1.4.13', nombre: 'TRANSFERENCIAS POR COBRAR' },
+      { codigo: '2.4.01', nombre: 'ADQUISICIÓN DE BIENES Y SERVICIOS' },
+      { codigo: '2.4.36', nombre: 'RETENCIÓN EN LA FUENTE' },
+      { codigo: '3.1.05', nombre: 'CAPITAL FISCAL' },
+      { codigo: '3.1.10', nombre: 'RESULTADO DEL EJERCICIO' },
+      { codigo: '4.4.08', nombre: 'INGRESOS FINANCIEROS' },
+      { codigo: '5.1.01', nombre: 'SUELDOS Y SALARIOS' },
+      { codigo: '5.1.11', nombre: 'GENERALES' },
+    ];
+  }
+
+  private generarEntidadesReciprocasProtocolo(): ProtocoloValorLista[] {
+    return [
+      { codigo: '102000000', nombre: 'CONTRALORÍA GENERAL DE LA REPÚBLICA' },
+      { codigo: '104500000', nombre: 'DEPARTAMENTO ADMINISTRATIVO NACIONAL DE ESTADÍSTICA' },
+      { codigo: '105000000', nombre: 'DEPARTAMENTO NACIONAL DE PLANEACIÓN' },
+      { codigo: '106000000', nombre: 'DEPARTAMENTO ADMINISTRATIVO DE LA PRESIDENCIA DE LA REPÚBLICA' },
+      { codigo: '106500000', nombre: 'DEPARTAMENTO ADMINISTRATIVO DE LA FUNCIÓN PÚBLICA' },
+      { codigo: '110000000', nombre: 'MINISTERIO DE AGRICULTURA Y DESARROLLO RURAL' },
+      { codigo: '110500000', nombre: 'MINISTERIO DE TECNOLOGÍAS DE LA INFORMACIÓN Y LAS COMUNICACIONES' },
+      { codigo: '111000000', nombre: 'MINISTERIO DE DEFENSA NACIONAL' },
+      { codigo: '111500000', nombre: 'GOBERNACIÓN DE ANTIOQUIA' },
+      { codigo: '111600000', nombre: 'GOBERNACIÓN DEL ATLÁNTICO' },
+      { codigo: '111700000', nombre: 'GOBERNACIÓN DE BOLÍVAR' },
+      { codigo: '111800000', nombre: 'GOBERNACIÓN DE BOYACÁ' },
+      { codigo: '111900000', nombre: 'GOBERNACIÓN DE CALDAS' },
+      { codigo: '112000000', nombre: 'GOBERNACIÓN DEL CAQUETÁ' },
+      { codigo: '112100000', nombre: 'GOBERNACIÓN DEL CAUCA' },
+      { codigo: '112200000', nombre: 'GOBERNACIÓN DEL CESAR' },
+      { codigo: '112300000', nombre: 'GOBERNACIÓN DE CÓRDOBA' },
+      { codigo: '112400000', nombre: 'GOBERNACIÓN DE CUNDINAMARCA' },
+      { codigo: '112500000', nombre: 'GOBERNACIÓN DEL CHOCÓ' },
+      { codigo: '112600000', nombre: 'GOBERNACIÓN DEL HUILA' },
+      { codigo: '112700000', nombre: 'GOBERNACIÓN DE LA GUAJIRA' },
+      { codigo: '112800000', nombre: 'GOBERNACIÓN DEL MAGDALENA' },
+      { codigo: '112900000', nombre: 'GOBERNACIÓN DEL META' },
+      { codigo: '113000000', nombre: 'GOBERNACIÓN DE NARIÑO' },
+      { codigo: '113100000', nombre: 'GOBERNACIÓN DE NORTE DE SANTANDER' },
+      { codigo: '113200000', nombre: 'GOBERNACIÓN DEL PUTUMAYO' },
+      { codigo: '113300000', nombre: 'GOBERNACIÓN DEL QUINDÍO' },
+      { codigo: '113400000', nombre: 'GOBERNACIÓN DE RISARALDA' },
+      { codigo: '113500000', nombre: 'GOBERNACIÓN DE SANTANDER' },
+      { codigo: '113600000', nombre: 'GOBERNACIÓN DE SUCRE' },
+      { codigo: '113700000', nombre: 'GOBERNACIÓN DEL TOLIMA' },
+      { codigo: '113800000', nombre: 'GOBERNACIÓN DEL VALLE DEL CAUCA' },
+      { codigo: '113900000', nombre: 'GOBERNACIÓN DEL VAUPÉS' },
+      { codigo: '114000000', nombre: 'GOBERNACIÓN DEL VICHADA' },
+      { codigo: '114100000', nombre: 'ALCALDÍA MAYOR DE BOGOTÁ' },
+      { codigo: '114200000', nombre: 'ALCALDÍA DE MEDELLÍN' },
+      { codigo: '114300000', nombre: 'ALCALDÍA DE CALI' },
+      { codigo: '114400000', nombre: 'ALCALDÍA DE BARRANQUILLA' },
+      { codigo: '114500000', nombre: 'ALCALDÍA DE CARTAGENA' },
+      { codigo: '114600000', nombre: 'ALCALDÍA DE BUCARAMANGA' },
+    ];
   }
 
   getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
