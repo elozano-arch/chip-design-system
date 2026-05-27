@@ -260,6 +260,26 @@
       }
     </div>
     <div class="dialog-form__field">
+      <label for="new-roleTipo">Tipo de rol <span class="field-required">*</span></label>
+      <p-select inputId="new-roleTipo"
+        [options]="roleTypeOptions"
+        [(ngModel)]="newRoleTipo"
+        (onChange)="newRoleTipoTouched = true"
+        (onBlur)="newRoleTipoTouched = true"
+        placeholder="Seleccionar tipo de rol"
+        appendTo="body"
+        [style]="{ width: '100%' }"
+        styleClass="w-full"
+        [class.ng-invalid]="newRoleTipoInvalid"
+        [class.ng-dirty]="newRoleTipoTouched"
+        aria-required="true"
+        [attr.aria-invalid]="newRoleTipoInvalid"
+        aria-describedby="new-roleTipo-error" />
+      @if (newRoleTipoInvalid) {
+        <small id="new-roleTipo-error" class="dialog-form__error">Seleccione el tipo de rol.</small>
+      }
+    </div>
+    <div class="dialog-form__field">
       <label for="roleName">Nombre <span class="field-required">*</span></label>
       <input pInputText id="roleName"
         [(ngModel)]="newRoleName"
@@ -288,16 +308,104 @@
 
     <h4 class="dialog-form__section">Política de Contraseña</h4>
 
-    <div class="dialog-form__row">
+    <div class="dialog-form__grid dialog-form__grid--2col">
       <div class="dialog-form__field">
-        <label for="vigencia">Periodo de Vigencia (Días)</label>
-        <input pInputText id="vigencia" [(ngModel)]="newRoleVigencia" type="number" placeholder="90" min="0" style="width: 140px" />
+        <label for="new-passwordType">Tipo de Contraseña <span class="field-required">*</span></label>
+        <p-select inputId="new-passwordType"
+          [options]="passwordTypeOptions"
+          [(ngModel)]="newRolePasswordType"
+          (onChange)="newRolePasswordTypeTouched = true"
+          (onBlur)="newRolePasswordTypeTouched = true"
+          placeholder="Seleccionar"
+          appendTo="body"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"
+          [class.ng-invalid]="newRolePasswordTypeInvalid"
+          [class.ng-dirty]="newRolePasswordTypeTouched"
+          aria-required="true"
+          [attr.aria-invalid]="newRolePasswordTypeInvalid"
+          aria-describedby="new-passwordType-error" />
+        @if (newRolePasswordTypeInvalid) {
+          <small id="new-passwordType-error" class="dialog-form__error">Seleccione el tipo de contraseña.</small>
+        }
       </div>
+
       <div class="dialog-form__field">
-        <label for="intentos">Intentos Fallidos</label>
-        <input pInputText id="intentos" [(ngModel)]="newRoleIntentos" type="number" placeholder="3" min="0" style="width: 140px" />
+        <label for="new-vigencia">Periodo de Vigencia (Días) <span class="field-required">*</span></label>
+        <input pInputText id="new-vigencia"
+          [(ngModel)]="newRoleVigencia"
+          (blur)="newRoleVigenciaTouched = true"
+          [class.ng-invalid]="newRoleVigenciaInvalid"
+          [class.ng-dirty]="newRoleVigenciaTouched"
+          type="number" placeholder="90" min="1" [attr.max]="MAX_PASSWORD_DURATION"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="newRoleVigenciaInvalid"
+          aria-describedby="new-vigencia-error" />
+        @if (newRoleVigenciaInvalid) {
+          <small id="new-vigencia-error" class="dialog-form__error">Ingrese un valor entre 1 y {{ MAX_PASSWORD_DURATION }} días.</small>
+        }
+      </div>
+
+      <div class="dialog-form__field">
+        <label for="new-minPassword">Longitud Mínima <span class="field-required">*</span></label>
+        <input pInputText id="new-minPassword"
+          [(ngModel)]="newRoleMinPassword"
+          (blur)="newRoleMinPasswordTouched = true"
+          [class.ng-invalid]="newRoleMinPasswordInvalid"
+          [class.ng-dirty]="newRoleMinPasswordTouched"
+          type="number" [attr.min]="MIN_PASSWORD_LENGTH" [attr.max]="MAX_PASSWORD_LENGTH"
+          placeholder="{{ MIN_PASSWORD_LENGTH }}"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="newRoleMinPasswordInvalid"
+          aria-describedby="new-minPassword-error" />
+        @if (newRoleMinPasswordInvalid) {
+          <small id="new-minPassword-error" class="dialog-form__error">Debe ser mayor o igual a {{ MIN_PASSWORD_LENGTH }}.</small>
+        }
+      </div>
+
+      <div class="dialog-form__field">
+        <label for="new-maxPassword">Longitud Máxima <span class="field-required">*</span></label>
+        <input pInputText id="new-maxPassword"
+          [(ngModel)]="newRoleMaxPassword"
+          (blur)="newRoleMaxPasswordTouched = true"
+          [class.ng-invalid]="newRoleMaxPasswordInvalid"
+          [class.ng-dirty]="newRoleMaxPasswordTouched"
+          type="number" [attr.min]="MIN_PASSWORD_LENGTH" [attr.max]="MAX_PASSWORD_LENGTH"
+          placeholder="{{ MAX_PASSWORD_LENGTH }}"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="newRoleMaxPasswordInvalid"
+          aria-describedby="new-maxPassword-error" />
+        @if (newRoleMaxPasswordInvalid) {
+          <small id="new-maxPassword-error" class="dialog-form__error">Debe ser menor o igual a {{ MAX_PASSWORD_LENGTH }}.</small>
+        }
+      </div>
+
+      <div class="dialog-form__field">
+        <label for="new-intentos">Intentos Fallidos <span class="field-required">*</span></label>
+        <input pInputText id="new-intentos"
+          [(ngModel)]="newRoleIntentos"
+          (blur)="newRoleIntentosTouched = true"
+          [class.ng-invalid]="newRoleIntentosInvalid"
+          [class.ng-dirty]="newRoleIntentosTouched"
+          type="number" placeholder="3" min="1" [attr.max]="MAX_FAILED_LOGINS"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="newRoleIntentosInvalid"
+          aria-describedby="new-intentos-error" />
+        @if (newRoleIntentosInvalid) {
+          <small id="new-intentos-error" class="dialog-form__error">Ingrese un valor entre 1 y {{ MAX_FAILED_LOGINS }}.</small>
+        }
       </div>
     </div>
+
+    @if (newRolePasswordRangeInvalid) {
+      <small class="dialog-form__error" role="alert">
+        La longitud mínima debe ser menor que la longitud máxima.
+      </small>
+    }
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" (onClick)="showNewRoleDialog = false" />
@@ -326,6 +434,28 @@
         <small class="dialog-form__help">El código del rol no se puede modificar.</small>
       </div>
 
+      <!-- Tipo de rol -->
+      <div class="dialog-form__field">
+        <label for="edit-role-tipo">Tipo de rol <span class="field-required">*</span></label>
+        <p-select inputId="edit-role-tipo"
+          [options]="roleTypeOptions"
+          [(ngModel)]="editRoleTipo"
+          (onChange)="editRoleTipoTouched = true"
+          (onBlur)="editRoleTipoTouched = true"
+          placeholder="Seleccionar tipo de rol"
+          appendTo="body"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"
+          [class.ng-invalid]="editRoleTipoInvalid"
+          [class.ng-dirty]="editRoleTipoTouched"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleTipoInvalid"
+          aria-describedby="edit-role-tipo-error" />
+        @if (editRoleTipoInvalid) {
+          <small id="edit-role-tipo-error" class="dialog-form__error">Seleccione el tipo de rol.</small>
+        }
+      </div>
+
       <!-- Nombre Rol -->
       <div class="dialog-form__field">
         <label for="edit-role-nombre">Nombre Rol <span class="field-required">*</span></label>
@@ -344,21 +474,25 @@
         }
       </div>
 
-      <!-- Número de Intentos Fallidos -->
+      <!-- Tipo de Contraseña -->
       <div class="dialog-form__field">
-        <label for="edit-role-intentos">Número de Intentos Fallidos <span class="field-required">*</span></label>
-        <input pInputText id="edit-role-intentos"
-          [(ngModel)]="editRoleIntentos"
-          (blur)="editRoleIntentosTouched = true"
-          [class.ng-invalid]="editRoleIntentosInvalid"
-          [class.ng-dirty]="editRoleIntentosTouched"
-          type="number" placeholder="3" min="1"
-          class="w-full"
+        <label for="edit-role-passwordType">Tipo de Contraseña <span class="field-required">*</span></label>
+        <p-select inputId="edit-role-passwordType"
+          [options]="passwordTypeOptions"
+          [(ngModel)]="editRolePasswordType"
+          (onChange)="editRolePasswordTypeTouched = true"
+          (onBlur)="editRolePasswordTypeTouched = true"
+          placeholder="Seleccionar"
+          appendTo="body"
+          [style]="{ width: '100%' }"
+          styleClass="w-full"
+          [class.ng-invalid]="editRolePasswordTypeInvalid"
+          [class.ng-dirty]="editRolePasswordTypeTouched"
           aria-required="true"
-          [attr.aria-invalid]="editRoleIntentosInvalid"
-          aria-describedby="edit-role-intentos-error" />
-        @if (editRoleIntentosInvalid) {
-          <small id="edit-role-intentos-error" class="dialog-form__error">Debe ingresar un valor mayor o igual a 1.</small>
+          [attr.aria-invalid]="editRolePasswordTypeInvalid"
+          aria-describedby="edit-role-passwordType-error" />
+        @if (editRolePasswordTypeInvalid) {
+          <small id="edit-role-passwordType-error" class="dialog-form__error">Seleccione el tipo de contraseña.</small>
         }
       </div>
 
@@ -370,16 +504,78 @@
           (blur)="editRoleVigenciaTouched = true"
           [class.ng-invalid]="editRoleVigenciaInvalid"
           [class.ng-dirty]="editRoleVigenciaTouched"
-          type="number" placeholder="90" min="1"
+          type="number" placeholder="90" min="1" [attr.max]="MAX_PASSWORD_DURATION"
           class="w-full"
           aria-required="true"
           [attr.aria-invalid]="editRoleVigenciaInvalid"
           aria-describedby="edit-role-vigencia-error" />
         @if (editRoleVigenciaInvalid) {
-          <small id="edit-role-vigencia-error" class="dialog-form__error">Debe ingresar un valor mayor o igual a 1.</small>
+          <small id="edit-role-vigencia-error" class="dialog-form__error">Ingrese un valor entre 1 y {{ MAX_PASSWORD_DURATION }} días.</small>
+        }
+      </div>
+
+      <!-- Longitud Mínima -->
+      <div class="dialog-form__field">
+        <label for="edit-role-minPassword">Longitud Mínima <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-minPassword"
+          [(ngModel)]="editRoleMinPassword"
+          (blur)="editRoleMinPasswordTouched = true"
+          [class.ng-invalid]="editRoleMinPasswordInvalid"
+          [class.ng-dirty]="editRoleMinPasswordTouched"
+          type="number" [attr.min]="MIN_PASSWORD_LENGTH" [attr.max]="MAX_PASSWORD_LENGTH"
+          placeholder="{{ MIN_PASSWORD_LENGTH }}"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleMinPasswordInvalid"
+          aria-describedby="edit-role-minPassword-error" />
+        @if (editRoleMinPasswordInvalid) {
+          <small id="edit-role-minPassword-error" class="dialog-form__error">Debe ser mayor o igual a {{ MIN_PASSWORD_LENGTH }}.</small>
+        }
+      </div>
+
+      <!-- Longitud Máxima -->
+      <div class="dialog-form__field">
+        <label for="edit-role-maxPassword">Longitud Máxima <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-maxPassword"
+          [(ngModel)]="editRoleMaxPassword"
+          (blur)="editRoleMaxPasswordTouched = true"
+          [class.ng-invalid]="editRoleMaxPasswordInvalid"
+          [class.ng-dirty]="editRoleMaxPasswordTouched"
+          type="number" [attr.min]="MIN_PASSWORD_LENGTH" [attr.max]="MAX_PASSWORD_LENGTH"
+          placeholder="{{ MAX_PASSWORD_LENGTH }}"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleMaxPasswordInvalid"
+          aria-describedby="edit-role-maxPassword-error" />
+        @if (editRoleMaxPasswordInvalid) {
+          <small id="edit-role-maxPassword-error" class="dialog-form__error">Debe ser menor o igual a {{ MAX_PASSWORD_LENGTH }}.</small>
+        }
+      </div>
+
+      <!-- Número de Intentos Fallidos -->
+      <div class="dialog-form__field">
+        <label for="edit-role-intentos">Número de Intentos Fallidos <span class="field-required">*</span></label>
+        <input pInputText id="edit-role-intentos"
+          [(ngModel)]="editRoleIntentos"
+          (blur)="editRoleIntentosTouched = true"
+          [class.ng-invalid]="editRoleIntentosInvalid"
+          [class.ng-dirty]="editRoleIntentosTouched"
+          type="number" placeholder="3" min="1" [attr.max]="MAX_FAILED_LOGINS"
+          class="w-full"
+          aria-required="true"
+          [attr.aria-invalid]="editRoleIntentosInvalid"
+          aria-describedby="edit-role-intentos-error" />
+        @if (editRoleIntentosInvalid) {
+          <small id="edit-role-intentos-error" class="dialog-form__error">Ingrese un valor entre 1 y {{ MAX_FAILED_LOGINS }}.</small>
         }
       </div>
     </div>
+
+    @if (editRolePasswordRangeInvalid) {
+      <small class="dialog-form__error" role="alert">
+        La longitud mínima debe ser menor que la longitud máxima.
+      </small>
+    }
 
     <!-- Descripción (full width) -->
     <div class="dialog-form__field">

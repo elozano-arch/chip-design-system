@@ -32,15 +32,22 @@ interface PermisoData {
   nombre: string;
 }
 
+type PasswordType = 'ALFANUMERICO' | 'NUMERICO' | 'ALFABETICO';
+type RoleType = 'ENTIDAD_REPORTANTE' | 'CENTRAL' | 'ANALISTA' | 'ENTIDAD_ADMINISTRADORA';
+
 interface Role {
   id: number;
   codigo: string;
   nombre: string;
+  tipoRol: RoleType | null;
   descripcion: string;
   usuarios: number;
   permisos: number;
   vigencia: number | null;
   intentos: number | null;
+  passwordType: PasswordType | null;
+  minPasswordLength: number | null;
+  maxPasswordLength: number | null;
   fechaModificacion: string;
   activo: boolean;
   /**
@@ -185,34 +192,81 @@ export class RolesComponent {
   }
   editingRole: Role | null = null;
   editRoleName = '';
+  editRoleTipo: RoleType | null = null;
   editRoleDesc = '';
   editRoleVigencia: number | null = null;
   editRoleIntentos: number | null = null;
+  editRolePasswordType: PasswordType | null = null;
+  editRoleMinPassword: number | null = null;
+  editRoleMaxPassword: number | null = null;
   editRoleNameTouched = false;
+  editRoleTipoTouched = false;
   editRoleVigenciaTouched = false;
   editRoleIntentosTouched = false;
+  editRolePasswordTypeTouched = false;
+  editRoleMinPasswordTouched = false;
+  editRoleMaxPasswordTouched = false;
   newRoleCode = '';
   newRoleName = '';
+  newRoleTipo: RoleType | null = null;
   newRoleDesc = '';
   newRoleVigencia: number | null = null;
   newRoleIntentos: number | null = null;
+  newRolePasswordType: PasswordType | null = null;
+  newRoleMinPassword: number | null = null;
+  newRoleMaxPassword: number | null = null;
   newRoleCodeTouched = false;
   newRoleNameTouched = false;
+  newRoleTipoTouched = false;
+  newRoleVigenciaTouched = false;
+  newRoleIntentosTouched = false;
+  newRolePasswordTypeTouched = false;
+  newRoleMinPasswordTouched = false;
+  newRoleMaxPasswordTouched = false;
   // Submitted flags — controlan los banners de errores
   newRoleFormSubmitted = false;
   editRoleFormSubmitted = false;
   deleteRoleFormSubmitted = false;
   private readonly ROLE_CODE_REGEX = /^ROL[0-9]{3,4}$/;
 
+  // Política de Contraseña — límites del sistema
+  readonly MIN_PASSWORD_LENGTH = 12;
+  readonly MAX_PASSWORD_LENGTH = 30;
+  readonly MAX_PASSWORD_DURATION = 365;
+  readonly MAX_FAILED_LOGINS = 5;
+
+  readonly passwordTypeOptions: { label: string; value: PasswordType }[] = [
+    { label: 'Alfanumérico', value: 'ALFANUMERICO' },
+    { label: 'Numérico', value: 'NUMERICO' },
+    { label: 'Alfabético', value: 'ALFABETICO' },
+  ];
+
+  private readonly passwordTypeLabels: Record<PasswordType, string> = {
+    ALFANUMERICO: 'Alfanumérico',
+    NUMERICO: 'Numérico',
+    ALFABETICO: 'Alfabético',
+  };
+
+  passwordTypeLabel(value: PasswordType | null): string {
+    return value ? this.passwordTypeLabels[value] : '—';
+  }
+
+  readonly roleTypeOptions: { label: string; value: RoleType }[] = [
+    { label: 'Entidad reportante', value: 'ENTIDAD_REPORTANTE' },
+    { label: 'Central', value: 'CENTRAL' },
+    { label: 'Analista', value: 'ANALISTA' },
+    { label: 'Entidad administradora', value: 'ENTIDAD_ADMINISTRADORA' },
+  ];
+
   // ── Roles (perfiles reales del sistema CHIP) ──
   roles: Role[] = [
-    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-12', activo: true, funcionalidades: ['Menú de Aplicación', 'Tablas de Parámetros', 'Categorías', 'Consolidación', 'Seguridad', 'Entidades'] },
-    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-10', activo: true, funcionalidades: ['Categorías', 'Tablas de Parámetros', 'Menú de Aplicación'] },
-    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, fechaModificacion: '2026-04-08', activo: true, funcionalidades: ['Categorías', 'Entidades', 'Menú de Aplicación'] },
-    { id: 4, codigo: 'ROL004', nombre: 'Consulta', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, fechaModificacion: '2026-03-25', activo: true, funcionalidades: ['Consultas', 'Categorías'] },
-    { id: 5, codigo: 'ROL005', nombre: 'Auditor', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, fechaModificacion: '2026-04-01', activo: true, funcionalidades: ['Seguridad', 'Consultas', 'Categorías'] },
-    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, fechaModificacion: '2026-03-18', activo: true, funcionalidades: ['Seguridad', 'Entidades'] },
-    { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', descripcion: 'Rol recién creado, pendiente de configuración', usuarios: 0, permisos: 0, vigencia: null, intentos: null, fechaModificacion: '2026-02-14', activo: false, funcionalidades: [] },
+    { id: 1, codigo: 'ADM_CHIP', nombre: 'Administrador General', tipoRol: 'CENTRAL', descripcion: 'Acceso completo a todos los módulos del sistema CHIP', usuarios: 3, permisos: 120, vigencia: 90, intentos: 3, passwordType: 'ALFANUMERICO', minPasswordLength: 12, maxPasswordLength: 30, fechaModificacion: '2026-04-12', activo: true, funcionalidades: ['Menú de Aplicación', 'Tablas de Parámetros', 'Categorías', 'Consolidación', 'Seguridad', 'Entidades'] },
+    { id: 2, codigo: 'ROL002', nombre: 'Administrador Categorización', tipoRol: 'ENTIDAD_ADMINISTRADORA', descripcion: 'Administración de categorías, formularios y parametrización del sistema', usuarios: 5, permisos: 48, vigencia: 90, intentos: 3, passwordType: 'ALFANUMERICO', minPasswordLength: 12, maxPasswordLength: 24, fechaModificacion: '2026-04-10', activo: true, funcionalidades: ['Categorías', 'Tablas de Parámetros', 'Menú de Aplicación'] },
+    { id: 3, codigo: 'ROL003', nombre: 'Operador de Entidad', tipoRol: 'ENTIDAD_REPORTANTE', descripcion: 'Carga de información, edición de formularios y exportación de datos', usuarios: 48, permisos: 32, vigencia: 60, intentos: 5, passwordType: 'ALFANUMERICO', minPasswordLength: 12, maxPasswordLength: 20, fechaModificacion: '2026-04-08', activo: true, funcionalidades: ['Categorías', 'Entidades', 'Menú de Aplicación'] },
+    { id: 4, codigo: 'ROL004', nombre: 'Consulta', tipoRol: 'ANALISTA', descripcion: 'Solo lectura de información, reportes y exportaciones', usuarios: 120, permisos: 12, vigencia: 180, intentos: 5, passwordType: 'NUMERICO', minPasswordLength: 12, maxPasswordLength: 16, fechaModificacion: '2026-03-25', activo: true, funcionalidades: ['Consultas', 'Categorías'] },
+    { id: 5, codigo: 'ROL005', nombre: 'Auditor', tipoRol: 'ANALISTA', descripcion: 'Acceso a reportes, consistencias y log de auditoría', usuarios: 8, permisos: 18, vigencia: 90, intentos: 3, passwordType: 'ALFANUMERICO', minPasswordLength: 14, maxPasswordLength: 30, fechaModificacion: '2026-04-01', activo: true, funcionalidades: ['Seguridad', 'Consultas', 'Categorías'] },
+    { id: 6, codigo: 'ROL006', nombre: 'Usuario Propietario', tipoRol: 'ENTIDAD_ADMINISTRADORA', descripcion: 'Gestión de usuarios propietarios de la entidad', usuarios: 0, permisos: 25, vigencia: 90, intentos: 3, passwordType: 'ALFABETICO', minPasswordLength: 12, maxPasswordLength: 20, fechaModificacion: '2026-03-18', activo: true, funcionalidades: ['Seguridad', 'Entidades'] },
+    { id: 7, codigo: 'ROL007', nombre: 'Soporte Técnico', tipoRol: null, descripcion: 'Rol recién creado, pendiente de configuración', usuarios: 0, permisos: 0, vigencia: null, intentos: null, passwordType: null, minPasswordLength: null, maxPasswordLength: null, fechaModificacion: '2026-02-14', activo: false, funcionalidades: [] },
   ];
 
   /**
@@ -521,41 +575,67 @@ export class RolesComponent {
   openEditDialog(role: Role) {
     this.editingRole = role;
     this.editRoleName = role.nombre;
+    this.editRoleTipo = role.tipoRol;
     this.editRoleDesc = role.descripcion;
     this.editRoleVigencia = role.vigencia;
     this.editRoleIntentos = role.intentos;
+    this.editRolePasswordType = role.passwordType;
+    this.editRoleMinPassword = role.minPasswordLength;
+    this.editRoleMaxPassword = role.maxPasswordLength;
     this.editRoleFormSubmitted = false;
     this.editRoleNameTouched = false;
+    this.editRoleTipoTouched = false;
     this.editRoleVigenciaTouched = false;
     this.editRoleIntentosTouched = false;
+    this.editRolePasswordTypeTouched = false;
+    this.editRoleMinPasswordTouched = false;
+    this.editRoleMaxPasswordTouched = false;
     this.showEditRoleDialog = true;
   }
 
   openNewRoleDialog() {
     this.newRoleCode = '';
     this.newRoleName = '';
+    this.newRoleTipo = null;
     this.newRoleDesc = '';
     this.newRoleVigencia = null;
     this.newRoleIntentos = null;
+    this.newRolePasswordType = null;
+    this.newRoleMinPassword = null;
+    this.newRoleMaxPassword = null;
     this.newRoleFormSubmitted = false;
     this.newRoleCodeTouched = false;
     this.newRoleNameTouched = false;
+    this.newRoleTipoTouched = false;
+    this.newRoleVigenciaTouched = false;
+    this.newRoleIntentosTouched = false;
+    this.newRolePasswordTypeTouched = false;
+    this.newRoleMinPasswordTouched = false;
+    this.newRoleMaxPasswordTouched = false;
     this.showNewRoleDialog = true;
   }
 
   saveEditRole() {
     this.editRoleFormSubmitted = true;
     this.editRoleNameTouched = true;
+    this.editRoleTipoTouched = true;
     this.editRoleVigenciaTouched = true;
     this.editRoleIntentosTouched = true;
+    this.editRolePasswordTypeTouched = true;
+    this.editRoleMinPasswordTouched = true;
+    this.editRoleMaxPasswordTouched = true;
     if (!this.editingRole || !this.editRoleFormValido) {
       // Banner de errores asume el feedback.
       return;
     }
     this.editingRole.nombre = this.editRoleName.trim();
+    this.editingRole.tipoRol = this.editRoleTipo;
     this.editingRole.descripcion = this.editRoleDesc.trim();
     this.editingRole.vigencia = this.editRoleVigencia;
     this.editingRole.intentos = this.editRoleIntentos;
+    this.editingRole.passwordType = this.editRolePasswordType;
+    this.editingRole.minPasswordLength = this.editRoleMinPassword;
+    this.editingRole.maxPasswordLength = this.editRoleMaxPassword;
     this.editingRole.fechaModificacion = this.fechaHoy();
     this.messageService.add({
       severity: 'success',
@@ -563,8 +643,12 @@ export class RolesComponent {
       detail: `El perfil "${this.editRoleName}" fue actualizado exitosamente.`,
     });
     this.editRoleNameTouched = false;
+    this.editRoleTipoTouched = false;
     this.editRoleVigenciaTouched = false;
     this.editRoleIntentosTouched = false;
+    this.editRolePasswordTypeTouched = false;
+    this.editRoleMinPasswordTouched = false;
+    this.editRoleMaxPasswordTouched = false;
     this.editRoleFormSubmitted = false;
     this.showEditRoleDialog = false;
     this.editingRole = null;
@@ -640,27 +724,109 @@ export class RolesComponent {
     if (!this.newRoleNameTouched || !this.newRoleName.trim()) return false;
     return this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase());
   }
+  get newRoleTipoInvalid(): boolean {
+    return this.newRoleTipoTouched && !this.newRoleTipo;
+  }
   get newRoleFormValido(): boolean {
     return !!this.newRoleCode.trim()
       && this.ROLE_CODE_REGEX.test(this.newRoleCode.trim().toUpperCase())
       && !this.roles.some(r => r.codigo.toUpperCase() === this.newRoleCode.trim().toUpperCase())
       && !!this.newRoleName.trim()
-      && !this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase());
+      && !this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase())
+      && !!this.newRoleTipo
+      && this.newRoleVigencia != null
+      && this.newRoleVigencia >= 1
+      && this.newRoleVigencia <= this.MAX_PASSWORD_DURATION
+      && this.newRoleIntentos != null
+      && this.newRoleIntentos >= 1
+      && this.newRoleIntentos <= this.MAX_FAILED_LOGINS
+      && !!this.newRolePasswordType
+      && this.newRoleMinPassword != null
+      && this.newRoleMinPassword >= this.MIN_PASSWORD_LENGTH
+      && this.newRoleMaxPassword != null
+      && this.newRoleMaxPassword <= this.MAX_PASSWORD_LENGTH
+      && this.newRoleMinPassword < this.newRoleMaxPassword;
   }
 
   get editRoleNameInvalid(): boolean {
     return this.editRoleNameTouched && !this.editRoleName.trim();
   }
+  get editRoleTipoInvalid(): boolean {
+    return this.editRoleTipoTouched && !this.editRoleTipo;
+  }
   get editRoleVigenciaInvalid(): boolean {
-    return this.editRoleVigenciaTouched && (this.editRoleVigencia == null || this.editRoleVigencia < 1);
+    if (!this.editRoleVigenciaTouched) return false;
+    return this.editRoleVigencia == null
+      || this.editRoleVigencia < 1
+      || this.editRoleVigencia > this.MAX_PASSWORD_DURATION;
   }
   get editRoleIntentosInvalid(): boolean {
-    return this.editRoleIntentosTouched && (this.editRoleIntentos == null || this.editRoleIntentos < 1);
+    if (!this.editRoleIntentosTouched) return false;
+    return this.editRoleIntentos == null
+      || this.editRoleIntentos < 1
+      || this.editRoleIntentos > this.MAX_FAILED_LOGINS;
+  }
+  get editRolePasswordTypeInvalid(): boolean {
+    return this.editRolePasswordTypeTouched && !this.editRolePasswordType;
+  }
+  get editRoleMinPasswordInvalid(): boolean {
+    if (!this.editRoleMinPasswordTouched) return false;
+    return this.editRoleMinPassword == null || this.editRoleMinPassword < this.MIN_PASSWORD_LENGTH;
+  }
+  get editRoleMaxPasswordInvalid(): boolean {
+    if (!this.editRoleMaxPasswordTouched) return false;
+    return this.editRoleMaxPassword == null || this.editRoleMaxPassword > this.MAX_PASSWORD_LENGTH;
+  }
+  get editRolePasswordRangeInvalid(): boolean {
+    if (!this.editRoleMinPasswordTouched && !this.editRoleMaxPasswordTouched) return false;
+    if (this.editRoleMinPassword == null || this.editRoleMaxPassword == null) return false;
+    return this.editRoleMinPassword >= this.editRoleMaxPassword;
   }
   get editRoleFormValido(): boolean {
     return !!this.editRoleName.trim()
-      && this.editRoleVigencia != null && this.editRoleVigencia >= 1
-      && this.editRoleIntentos != null && this.editRoleIntentos >= 1;
+      && !!this.editRoleTipo
+      && this.editRoleVigencia != null
+      && this.editRoleVigencia >= 1
+      && this.editRoleVigencia <= this.MAX_PASSWORD_DURATION
+      && this.editRoleIntentos != null
+      && this.editRoleIntentos >= 1
+      && this.editRoleIntentos <= this.MAX_FAILED_LOGINS
+      && !!this.editRolePasswordType
+      && this.editRoleMinPassword != null
+      && this.editRoleMinPassword >= this.MIN_PASSWORD_LENGTH
+      && this.editRoleMaxPassword != null
+      && this.editRoleMaxPassword <= this.MAX_PASSWORD_LENGTH
+      && this.editRoleMinPassword < this.editRoleMaxPassword;
+  }
+
+  // ── Validaciones Política de Contraseña — Nuevo Perfil ──
+  get newRoleVigenciaInvalid(): boolean {
+    if (!this.newRoleVigenciaTouched) return false;
+    return this.newRoleVigencia == null
+      || this.newRoleVigencia < 1
+      || this.newRoleVigencia > this.MAX_PASSWORD_DURATION;
+  }
+  get newRoleIntentosInvalid(): boolean {
+    if (!this.newRoleIntentosTouched) return false;
+    return this.newRoleIntentos == null
+      || this.newRoleIntentos < 1
+      || this.newRoleIntentos > this.MAX_FAILED_LOGINS;
+  }
+  get newRolePasswordTypeInvalid(): boolean {
+    return this.newRolePasswordTypeTouched && !this.newRolePasswordType;
+  }
+  get newRoleMinPasswordInvalid(): boolean {
+    if (!this.newRoleMinPasswordTouched) return false;
+    return this.newRoleMinPassword == null || this.newRoleMinPassword < this.MIN_PASSWORD_LENGTH;
+  }
+  get newRoleMaxPasswordInvalid(): boolean {
+    if (!this.newRoleMaxPasswordTouched) return false;
+    return this.newRoleMaxPassword == null || this.newRoleMaxPassword > this.MAX_PASSWORD_LENGTH;
+  }
+  get newRolePasswordRangeInvalid(): boolean {
+    if (!this.newRoleMinPasswordTouched && !this.newRoleMaxPasswordTouched) return false;
+    if (this.newRoleMinPassword == null || this.newRoleMaxPassword == null) return false;
+    return this.newRoleMinPassword >= this.newRoleMaxPassword;
   }
 
   /** Errores del formulario Crear Rol (alimenta el banner). */
@@ -678,6 +844,16 @@ export class RolesComponent {
     } else if (this.roles.some(r => r.nombre.toLowerCase() === this.newRoleName.trim().toLowerCase())) {
       errors.push('Ya existe un rol con este nombre.');
     }
+    if (!this.newRoleTipo) {
+      errors.push('Tipo de rol: seleccione una opción.');
+    }
+    errors.push(...this.passwordPolicyErrors(
+      this.newRolePasswordType,
+      this.newRoleMinPassword,
+      this.newRoleMaxPassword,
+      this.newRoleVigencia,
+      this.newRoleIntentos,
+    ));
     return errors;
   }
 
@@ -685,11 +861,60 @@ export class RolesComponent {
   get editRoleFormErrors(): string[] {
     const errors: string[] = [];
     if (!this.editRoleName.trim()) errors.push('El nombre del rol es obligatorio.');
-    if (this.editRoleIntentos == null || this.editRoleIntentos < 1) {
-      errors.push('Número de intentos fallidos: debe ser mayor o igual a 1.');
+    if (!this.editRoleTipo) errors.push('Tipo de rol: seleccione una opción.');
+    errors.push(...this.passwordPolicyErrors(
+      this.editRolePasswordType,
+      this.editRoleMinPassword,
+      this.editRoleMaxPassword,
+      this.editRoleVigencia,
+      this.editRoleIntentos,
+    ));
+    return errors;
+  }
+
+  /**
+   * Errores de la sección Política de Contraseña, compartidos entre crear/editar.
+   * Reglas:
+   *  - passwordType ∈ {Alfanumérico, Numérico, Alfabético}
+   *  - MIN_PASSWORD_LENGTH ≤ minPasswordLength
+   *  - maxPasswordLength ≤ MAX_PASSWORD_LENGTH
+   *  - minPasswordLength < maxPasswordLength
+   *  - 1 ≤ passwordDuration ≤ MAX_PASSWORD_DURATION
+   *  - 1 ≤ maxFailedLogins ≤ MAX_FAILED_LOGINS
+   */
+  private passwordPolicyErrors(
+    passwordType: PasswordType | null,
+    min: number | null,
+    max: number | null,
+    duration: number | null,
+    failed: number | null,
+  ): string[] {
+    const errors: string[] = [];
+    if (!passwordType) {
+      errors.push('Tipo de contraseña: seleccione una opción.');
     }
-    if (this.editRoleVigencia == null || this.editRoleVigencia < 1) {
+    if (min == null) {
+      errors.push('Longitud mínima: campo obligatorio.');
+    } else if (min < this.MIN_PASSWORD_LENGTH) {
+      errors.push(`Longitud mínima: debe ser mayor o igual a ${this.MIN_PASSWORD_LENGTH}.`);
+    }
+    if (max == null) {
+      errors.push('Longitud máxima: campo obligatorio.');
+    } else if (max > this.MAX_PASSWORD_LENGTH) {
+      errors.push(`Longitud máxima: debe ser menor o igual a ${this.MAX_PASSWORD_LENGTH}.`);
+    }
+    if (min != null && max != null && min >= max) {
+      errors.push('Longitud mínima debe ser menor que la longitud máxima.');
+    }
+    if (duration == null || duration < 1) {
       errors.push('Periodo de vigencia: debe ser mayor o igual a 1 día.');
+    } else if (duration > this.MAX_PASSWORD_DURATION) {
+      errors.push(`Periodo de vigencia: debe ser menor o igual a ${this.MAX_PASSWORD_DURATION} días.`);
+    }
+    if (failed == null || failed < 1) {
+      errors.push('Número de intentos fallidos: debe ser mayor o igual a 1.');
+    } else if (failed > this.MAX_FAILED_LOGINS) {
+      errors.push(`Número de intentos fallidos: debe ser menor o igual a ${this.MAX_FAILED_LOGINS}.`);
     }
     return errors;
   }
@@ -725,6 +950,12 @@ export class RolesComponent {
     this.newRoleFormSubmitted = true;
     this.newRoleCodeTouched = true;
     this.newRoleNameTouched = true;
+    this.newRoleTipoTouched = true;
+    this.newRoleVigenciaTouched = true;
+    this.newRoleIntentosTouched = true;
+    this.newRolePasswordTypeTouched = true;
+    this.newRoleMinPasswordTouched = true;
+    this.newRoleMaxPasswordTouched = true;
 
     if (!this.newRoleFormValido) {
       // Banner de errores asume el feedback.
@@ -737,11 +968,15 @@ export class RolesComponent {
       id: nextId,
       codigo: this.newRoleCode || `ROL${String(nextId).padStart(3, '0')}`,
       nombre: this.newRoleName,
+      tipoRol: this.newRoleTipo,
       descripcion: this.newRoleDesc,
       usuarios: 0,
       permisos: 0,
       vigencia: this.newRoleVigencia,
       intentos: this.newRoleIntentos,
+      passwordType: this.newRolePasswordType,
+      minPasswordLength: this.newRoleMinPassword,
+      maxPasswordLength: this.newRoleMaxPassword,
       fechaModificacion: this.fechaHoy(),
       activo: true,
       funcionalidades: [],
@@ -754,12 +989,22 @@ export class RolesComponent {
     });
     this.newRoleCode = '';
     this.newRoleName = '';
+    this.newRoleTipo = null;
     this.newRoleDesc = '';
     this.newRoleVigencia = null;
     this.newRoleIntentos = null;
+    this.newRolePasswordType = null;
+    this.newRoleMinPassword = null;
+    this.newRoleMaxPassword = null;
     this.newRoleFormSubmitted = false;
     this.newRoleCodeTouched = false;
     this.newRoleNameTouched = false;
+    this.newRoleTipoTouched = false;
+    this.newRoleVigenciaTouched = false;
+    this.newRoleIntentosTouched = false;
+    this.newRolePasswordTypeTouched = false;
+    this.newRoleMinPasswordTouched = false;
+    this.newRoleMaxPasswordTouched = false;
     this.showNewRoleDialog = false;
   }
 
