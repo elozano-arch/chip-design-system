@@ -1,0 +1,590 @@
+<main class="btn-main" role="main">
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <div class="btn-page-header">
+    <i class="pi pi-stop-circle btn-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="btn-page-header__title">Botones</h1>
+      <p class="btn-page-header__subtitle">
+        Catálogo de botones del sistema agrupados en 14 familias funcionales. Cada familia
+        define su severity, label, icono y ubicación canónicos. Construido sobre
+        <code>p-button</code> de PrimeNG, alineado con el Kit UI 9.2 GOV.CO.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       BUENAS PRÁCTICAS (Kit UI v9.2)
+       ============================================================ -->
+  <section class="btn-section" aria-labelledby="bp-title">
+    <h2 id="bp-title" class="btn-section__title">Buenas prácticas (Kit UI v9.2)</h2>
+    <div class="best-practices">
+      <div class="bp-card">
+        <i class="pi pi-palette bp-card__icon" aria-hidden="true"></i>
+        <h4>Color por importancia, no por verbo</h4>
+        <p>El color comunica jerarquía y riesgo (cobalto = primaria, rojo = destructiva), no la acción literal del verbo.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-bookmark bp-card__icon" aria-hidden="true"></i>
+        <h4>Label e icono canónicos</h4>
+        <p>Usar siempre los mismos labels/iconos para una misma acción (Guardar + <code>pi-save</code>, Eliminar + <code>pi-trash</code>).</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-th-large bp-card__icon" aria-hidden="true"></i>
+        <h4>Ubicación estándar</h4>
+        <p>Crear/Descargar en header derecha. Limpiar+Buscar al pie de filtros. Acciones por fila en columna "Acciones".</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-eye bp-card__icon" aria-hidden="true"></i>
+        <h4>Accesibilidad obligatoria</h4>
+        <p>Icon-only siempre con <code>pTooltip</code> + <code>aria-label</code>. Focus visible. Navegación por teclado.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-shield bp-card__icon" aria-hidden="true"></i>
+        <h4>Una sola acción primaria</h4>
+        <p>Por contexto sólo hay una primaria. Si hay dos botones en cobalto sólido juntos, alguno está mal clasificado.</p>
+      </div>
+      <div class="bp-card">
+        <i class="pi pi-exclamation-triangle bp-card__icon" aria-hidden="true"></i>
+        <h4>Confirmación para destructivas</h4>
+        <p>Eliminar / revertir siempre con modal de confirmación. El label en el modal debe ser explícito ("Sí, eliminar").</p>
+      </div>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       MODO DE USO
+       ============================================================ -->
+  <section class="btn-section" aria-labelledby="modes-title">
+    <h2 id="modes-title" class="btn-section__title">Cómo usar este catálogo</h2>
+    <div class="usage-modes">
+      <div class="usage-mode">
+        <span class="usage-mode__tag usage-mode__tag--a">Modo A</span>
+        <h4>Pantalla nueva</h4>
+        <p>Eliges la familia que necesitas y aplicas el canon directamente. La función la decides tú al crear el botón — no hay nada que "clasificar".</p>
+      </div>
+      <div class="usage-mode">
+        <span class="usage-mode__tag usage-mode__tag--b">Modo B</span>
+        <h4>Normalización de pantalla existente</h4>
+        <p>Identifica la función real de cada botón antes de tocar (Paso 0). Lista las excepciones legítimas para validar con un dev del equipo.</p>
+      </div>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       F1 · ACCIÓN PRIMARIA
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f1-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F1</span>
+      <h2 id="f1-title" class="btn-family__title">Acción primaria</h2>
+    </header>
+    <p class="btn-family__desc">Ejecuta la acción principal del flujo: cierra modal con éxito, guarda formulario, confirma decisión. <strong>Una sola por contexto.</strong></p>
+
+    <div class="btn-family__examples">
+      <p-button label="Guardar" icon="pi pi-save" />
+      <p-button label="Confirmar" icon="pi pi-check" />
+      <p-button label="Crear" icon="pi pi-plus" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd>Cobalto sólido (default)</dd>
+        <dt>Labels</dt><dd>Guardar · Confirmar · Crear · Aceptar</dd>
+        <dt>Iconos</dt><dd><code>pi-save</code> · <code>pi-check</code> · <code>pi-plus</code></dd>
+        <dt>Ubicación</dt><dd>Header derecha · Footer modal derecha</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F1')" [attr.aria-label]="copied['F1'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F1'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F1'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F1'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F2 · ACCIÓN SECUNDARIA
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f2-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F2</span>
+      <h2 id="f2-title" class="btn-family__title">Acción secundaria</h2>
+    </header>
+    <p class="btn-family__desc">Abandonar / cancelar el flujo. <strong>Siempre acompaña a una primaria</strong> — la primaria a la derecha, la secundaria a la izquierda.</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Cancelar" severity="secondary" [text]="true" />
+      <p-button label="Cerrar" severity="secondary" [outlined]="true" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd><code>secondary</code> + <code>[text]</code> o <code>[outlined]</code></dd>
+        <dt>Labels</dt><dd>Cancelar · Cerrar</dd>
+        <dt>Iconos</dt><dd>Sin icono · <code>pi-times</code></dd>
+        <dt>Ubicación</dt><dd>Footer modal izquierda · Pie de formulario izquierda</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F2')" [attr.aria-label]="copied['F2'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F2'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F2'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F2'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F3 · DESTRUCTIVA
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f3-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F3</span>
+      <h2 id="f3-title" class="btn-family__title">Destructiva</h2>
+    </header>
+    <p class="btn-family__desc">Elimina, revierte, borra definitivamente. <strong>Siempre con confirmación explícita</strong> (modal). En modales, el label debe ser largo y claro ("Sí, eliminar").</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Eliminar" icon="pi pi-trash" severity="danger" />
+      <p-button label="Sí, revertir todos" icon="pi pi-undo" severity="danger" />
+      <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar fila" aria-label="Eliminar fila" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd><code>severity="danger"</code></dd>
+        <dt>Labels</dt><dd>Eliminar · Sí, eliminar · Sí, revertir todos</dd>
+        <dt>Iconos</dt><dd><code>pi-trash</code> · <code>pi-undo</code> (revertir)</dd>
+        <dt>Ubicación</dt><dd>Fila tabla (icon-only) · Footer modal confirmación</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F3')" [attr.aria-label]="copied['F3'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F3'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F3'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F3'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F4 · NAVEGACIÓN WIZARD
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f4-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F4</span>
+      <h2 id="f4-title" class="btn-family__title">Navegación de wizard</h2>
+    </header>
+    <p class="btn-family__desc">Avanza / retrocede en flujos multietapa. <strong>No es una acción primaria</strong> — es navegación. El último paso suele cambiar "Siguiente" por "Finalizar" o "Enviar".</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" [outlined]="true" />
+      <p-button label="Siguiente" icon="pi pi-arrow-right" iconPos="right" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Siguiente</dt><dd>Default cobalto · <code>iconPos="right"</code></dd>
+        <dt>Anterior</dt><dd><code>secondary [outlined]</code></dd>
+        <dt>Iconos</dt><dd><code>pi-arrow-right</code> · <code>pi-arrow-left</code></dd>
+        <dt>Ubicación</dt><dd>Footer del paso · Anterior izquierda · Siguiente derecha</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F4')" [attr.aria-label]="copied['F4'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F4'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F4'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F4'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F5 · FILTROS (Limpiar + Buscar)
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f5-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F5</span>
+      <h2 id="f5-title" class="btn-family__title">Filtros (Limpiar + Buscar)</h2>
+    </header>
+    <p class="btn-family__desc">Par específico al pie del panel de filtros. "Buscar" en cobalto sólido, "Limpiar" en estilo más liviano para no competir visualmente.</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Limpiar filtros" icon="pi pi-filter-slash" severity="secondary" [outlined]="true" />
+      <p-button label="Buscar" icon="pi pi-search" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Buscar</dt><dd>Default cobalto</dd>
+        <dt>Limpiar</dt><dd><code>secondary [outlined]</code> o <code>[text]</code></dd>
+        <dt>Iconos</dt><dd><code>pi-search</code> · <code>pi-filter-slash</code></dd>
+        <dt>Ubicación</dt><dd>Pie del panel de filtros (no en header)</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F5')" [attr.aria-label]="copied['F5'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F5'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F5'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F5'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F6 · DESCARGA / EXPORTACIÓN
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f6-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F6</span>
+      <h2 id="f6-title" class="btn-family__title">Descarga / exportación</h2>
+    </header>
+    <p class="btn-family__desc">Descarga un archivo (PDF, Excel, CSV, plantilla) o exporta datos. Cuando el formato es ambiguo, el label lo aclara ("Descargar PDF" mejor que "Descargar").</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Descargar PDF" icon="pi pi-file-pdf" severity="success" />
+      <p-button label="Exportar Excel" icon="pi pi-file-excel" severity="secondary" [outlined]="true" />
+      <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" pTooltip="Descargar archivo" aria-label="Descargar archivo" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd><code>success</code> · <code>secondary [outlined]</code> · icon-only en tabla</dd>
+        <dt>Labels</dt><dd>Descargar PDF/XLSX · Exportar</dd>
+        <dt>Iconos</dt><dd><code>pi-download</code> · <code>pi-file-pdf</code> · <code>pi-file-excel</code></dd>
+        <dt>Ubicación</dt><dd>Header derecha · Toolbar tabla · Fila tabla</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F6')" [attr.aria-label]="copied['F6'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F6'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F6'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F6'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F7 · ICON-ONLY EN TABLA
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f7-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F7</span>
+      <h2 id="f7-title" class="btn-family__title">Icon-only en tabla</h2>
+    </header>
+    <p class="btn-family__desc">Acciones rápidas por fila. <strong>Tooltip y <code>aria-label</code> obligatorios</strong> — sin label visible, el tooltip es lo único que comunica la acción. Orden: Ver → Editar → especiales → Eliminar.</p>
+
+    <div class="btn-family__examples">
+      <p-button icon="pi pi-eye" [rounded]="true" [text]="true" pTooltip="Ver detalle" aria-label="Ver detalle" />
+      <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="success" pTooltip="Editar" aria-label="Editar" />
+      <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" pTooltip="Descargar" aria-label="Descargar" />
+      <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" pTooltip="Eliminar" aria-label="Eliminar" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Estilo</dt><dd><code>[rounded] [text]</code> siempre</dd>
+        <dt>Severity</dt><dd>Default (Ver) · <code>success</code> (Editar) · <code>danger</code> (Eliminar) · <code>secondary</code> (Descargar)</dd>
+        <dt>Iconos</dt><dd><code>pi-eye</code> · <code>pi-pencil</code> · <code>pi-trash</code> · <code>pi-download</code></dd>
+        <dt>Ubicación</dt><dd>Columna "Acciones" — última columna de la tabla</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F7')" [attr.aria-label]="copied['F7'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F7'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F7'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F7'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F8 · MENÚ CONTEXTUAL (ellipsis)
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f8-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F8</span>
+      <h2 id="f8-title" class="btn-family__title">Menú contextual</h2>
+    </header>
+    <p class="btn-family__desc">Abre un dropdown de acciones secundarias. Útil cuando hay más de 3-4 acciones por fila y los icon-only saturarían. Orden interno: principal → especiales → separador → destructiva.</p>
+
+    <div class="btn-family__examples">
+      <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" pTooltip="Más acciones" aria-label="Más acciones" (onClick)="menuDemo.toggle($event)" />
+      <p-menu #menuDemo [model]="menuItems" [popup]="true" appendTo="body" />
+      <p-button label="Acciones" icon="pi pi-ellipsis-v" severity="secondary" [outlined]="true" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Estilo</dt><dd><code>[rounded] [text] secondary</code> · o con label</dd>
+        <dt>Icono</dt><dd><code>pi-ellipsis-v</code></dd>
+        <dt>Asociación</dt><dd>Dispara <code>p-menu</code> con <code>aria-haspopup="menu"</code></dd>
+        <dt>Ubicación</dt><dd>Fila tabla · Header de panel · Toolbar</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F8')" [attr.aria-label]="copied['F8'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F8'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F8'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F8'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F9 · ADJUNTAR / CARGAR ARCHIVO
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f9-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F9</span>
+      <h2 id="f9-title" class="btn-family__title">Adjuntar / cargar archivo</h2>
+    </header>
+    <p class="btn-family__desc">Abre el selector de archivos para subir un documento. El label especifica qué archivo se espera ("Adjuntar RUT" mejor que "Adjuntar").</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Adjuntar RUT" icon="pi pi-upload" [outlined]="true" />
+      <p-button label="Seleccionar archivo" icon="pi pi-folder-open" severity="secondary" [outlined]="true" />
+      <p-button label="Importar" icon="pi pi-file-import" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd><code>[outlined]</code> default · <code>secondary [outlined]</code> opcional</dd>
+        <dt>Labels</dt><dd>Adjuntar [tipo] · Seleccionar archivo · Importar</dd>
+        <dt>Iconos</dt><dd><code>pi-upload</code> · <code>pi-folder-open</code> · <code>pi-paperclip</code></dd>
+        <dt>Ubicación</dt><dd>Sección de carga · Paso de wizard</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F9')" [attr.aria-label]="copied['F9'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F9'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F9'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F9'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F10 · ENVIAR / CONFIRMACIÓN
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f10-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F10</span>
+      <h2 id="f10-title" class="btn-family__title">Enviar / confirmación de acción</h2>
+    </header>
+    <p class="btn-family__desc"><strong>Distinto de F1 "Guardar"</strong>. Guardar es local (mantiene el flujo); Enviar dispara la transacción y cierra el flujo. Si es irreversible, advertir en modal previo.</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Enviar" icon="pi pi-send" />
+      <p-button label="Enviar reporte" icon="pi pi-send" severity="success" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd>Default cobalto · <code>success</code> (refuerza completitud)</dd>
+        <dt>Labels</dt><dd>Enviar · Enviar reporte · Enviar al CHIP central</dd>
+        <dt>Iconos</dt><dd><code>pi-send</code> · <code>pi-paperclip</code> (con adjunto)</dd>
+        <dt>Ubicación</dt><dd>Footer modal confirmación · Último paso de wizard</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F10')" [attr.aria-label]="copied['F10'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F10'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F10'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F10'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F11 · COPIAR
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f11-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F11</span>
+      <h2 id="f11-title" class="btn-family__title">Copiar al portapapeles</h2>
+    </header>
+    <p class="btn-family__desc">Acción auxiliar para copiar contenido técnico (código, HTML, ID). Estilo más liviano para no robar protagonismo del contenido que acompaña. Tras copiar, dar feedback visual (icono <code>pi-check</code> 2s o toast corto).</p>
+
+    <div class="btn-family__examples">
+      <p-button label="Copiar código" icon="pi pi-copy" severity="secondary" [outlined]="true" />
+      <p-button icon="pi pi-copy" [rounded]="true" [text]="true" severity="secondary" pTooltip="Copiar al portapapeles" aria-label="Copiar al portapapeles" />
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Severity</dt><dd><code>secondary [outlined]</code></dd>
+        <dt>Labels</dt><dd>Copiar código · Copiar HTML · Copiar enlace</dd>
+        <dt>Icono</dt><dd><code>pi-copy</code></dd>
+        <dt>Ubicación</dt><dd>Junto al bloque de contenido (esquina superior derecha)</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F11')" [attr.aria-label]="copied['F11'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F11'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F11'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F11'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F12 · ACCESIBILIDAD
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f12-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F12</span>
+      <h2 id="f12-title" class="btn-family__title">Accesibilidad (controles a11y)</h2>
+      <span class="btn-family__badge">Fuera del canon PrimeNG</span>
+    </header>
+    <p class="btn-family__desc">Ajustan parámetros globales de accesibilidad. <strong>Son <code>&lt;button&gt;</code> nativos</strong>, no <code>p-button</code> — son parte del chrome global, no del flujo de la pantalla. Se rigen por WCAG 2.1 AA (Resolución 1519/2020).</p>
+
+    <div class="btn-family__examples">
+      <button type="button" class="a11y-demo-btn" aria-label="Aumentar tamaño de letra">
+        <i class="pi pi-search-plus" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="a11y-demo-btn" aria-label="Reducir tamaño de letra">
+        <i class="pi pi-search-minus" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="a11y-demo-btn" aria-label="Cambiar contraste" aria-pressed="false">
+        <i class="pi pi-sun" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Estilo</dt><dd><code>&lt;button&gt;</code> nativo · clase <code>.a11y-btn</code></dd>
+        <dt>Labels</dt><dd>Sin label visible · <code>aria-label</code> obligatorio</dd>
+        <dt>Estado</dt><dd><code>aria-pressed</code> en toggles</dd>
+        <dt>Ubicación</dt><dd>Toolbar superior del header · Panel a11y flotante</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F12')" [attr.aria-label]="copied['F12'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F12'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F12'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F12'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F13 · FLOATING BUTTONS
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f13-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F13</span>
+      <h2 id="f13-title" class="btn-family__title">Floating buttons (servicio)</h2>
+      <span class="btn-family__badge">Fuera del canon PrimeNG</span>
+    </header>
+    <p class="btn-family__desc">Acceso flotante a features auxiliares (chat, contacto, "volver arriba", panel a11y). Esquina inferior derecha, <code>position: fixed</code>. También <code>&lt;button&gt;</code> nativo.</p>
+
+    <div class="btn-family__examples">
+      <button type="button" class="floating-demo-btn" aria-label="Chat de ayuda">
+        <i class="pi pi-comments" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="floating-demo-btn" aria-label="Contacto por correo">
+        <i class="pi pi-envelope" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="floating-demo-btn" aria-label="Volver arriba">
+        <i class="pi pi-arrow-up" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Estilo</dt><dd><code>&lt;button&gt;</code> nativo · clases <code>floating-btn</code></dd>
+        <dt>Posición</dt><dd><code>position: fixed</code> · esquina inferior derecha</dd>
+        <dt>Iconos</dt><dd><code>pi-comments</code> · <code>pi-envelope</code> · <code>pi-arrow-up</code></dd>
+        <dt>Accesibilidad</dt><dd><code>aria-label</code> obligatorio · respetar orden focal</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F13')" [attr.aria-label]="copied['F13'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F13'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F13'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F13'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       F14 · TOGGLES DE ESTADO
+       ============================================================ -->
+  <section class="btn-family" aria-labelledby="f14-title">
+    <header class="btn-family__header">
+      <span class="btn-family__id">F14</span>
+      <h2 id="f14-title" class="btn-family__title">Toggles de estado</h2>
+    </header>
+    <p class="btn-family__desc">Cambian entre dos estados. <strong><code>aria-pressed</code> obligatorio</strong> para que screen readers comuniquen el estado. Label puede ser dinámico (Activar/Desactivar) o sólo icono (grid/lista).</p>
+
+    <div class="btn-family__examples">
+      <p-button
+        [label]="isActive ? 'Desactivar' : 'Activar'"
+        [icon]="isActive ? 'pi pi-times' : 'pi pi-check'"
+        [severity]="isActive ? 'secondary' : 'success'"
+        [outlined]="!isActive"
+        [attr.aria-pressed]="isActive"
+        (onClick)="isActive = !isActive" />
+      <span class="layout-toggle" role="group" aria-label="Vista de datos">
+        <p-button
+          icon="pi pi-th-large"
+          [outlined]="!layoutGrid"
+          severity="secondary"
+          (onClick)="layoutGrid = true"
+          [attr.aria-pressed]="layoutGrid"
+          pTooltip="Vista cuadrícula"
+          aria-label="Vista cuadrícula" />
+        <p-button
+          icon="pi pi-list"
+          [outlined]="layoutGrid"
+          severity="secondary"
+          (onClick)="layoutGrid = false"
+          [attr.aria-pressed]="!layoutGrid"
+          pTooltip="Vista lista"
+          aria-label="Vista lista" />
+      </span>
+    </div>
+
+    <div class="btn-family__detail">
+      <dl class="spec-list">
+        <dt>Estilo</dt><dd>Activo sólido · inactivo <code>[outlined]</code> · severity según contexto</dd>
+        <dt>Labels</dt><dd>Dinámicos (Activar/Desactivar) · sin label (layout)</dd>
+        <dt>Estado</dt><dd><code>aria-pressed</code> obligatorio</dd>
+        <dt>Ubicación</dt><dd>Panel detalle · Toolbar de vista · Headers expandibles</dd>
+      </dl>
+      <div class="code-block">
+        <button type="button" class="copy-btn" (click)="copySnippet('F14')" [attr.aria-label]="copied['F14'] ? 'Copiado' : 'Copiar código'">
+          <i [class]="copied['F14'] ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>
+          <span>{{ copied['F14'] ? 'Copiado' : 'Copiar' }}</span>
+        </button>
+        <pre><code>{{ snippets['F14'] }}</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       NOTA FINAL
+       ============================================================ -->
+  <section class="btn-section btn-section--note">
+    <h2 class="btn-section__title">Excepciones legítimas</h2>
+    <p class="btn-section__desc">
+      Al normalizar pantallas existentes, hay botones intencionalmente distintos del patrón general — wizards,
+      confirmaciones destructivas con label largo, pares primaria+secundaria intencionales, botones nativos
+      de accesibilidad y floating. <strong>No tocarlos sin validar con un dev</strong>. El catálogo completo
+      de excepciones legítimas está en
+      <code>.claude/skills/chip-ui-rules/references/canon-botones.md</code>.
+    </p>
+  </section>
+
+</main>
