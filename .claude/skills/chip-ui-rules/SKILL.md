@@ -1,6 +1,6 @@
 ---
 name: chip-ui-rules
-description: Reglas obligatorias de diseño e implementación UI para el proyecto CHIP 2.0 (Angular 19 + PrimeNG + Kit UI 9.2 GOV.CO). Activar SIEMPRE que se vaya a crear, modificar o ajustar visualmente cualquier pantalla, componente, formulario, botón, tabla, header, modal, card, icono u otro elemento de interfaz, incluso si el usuario no menciona explícitamente "diseño", "UI" o "estilos" — cualquier trabajo visual del proyecto debe pasar por estas reglas. Cubre Kit UI 9.2 GOV.CO, co-branding corporativo (sólo en cabezote), consistencia de componentes (altura de inputs, prioridad de PrimeNG), criterios UX y preparación para despliegue en Vercel. Úsala también cuando se revise código existente buscando consistencia visual o cuando se pregunte si una pantalla está "lista".
+description: Reglas obligatorias de diseño e implementación UI para el proyecto CHIP 2.0 (Angular 19 + PrimeNG + Kit UI 9.2 GOV.CO). Activar SIEMPRE que se vaya a crear, modificar, auditar o ajustar visualmente cualquier pantalla, componente, formulario, botón, lista desplegable, dropdown, select, multiselect, tabla, header, modal, card, icono u otro elemento de interfaz, incluso si el usuario no menciona explícitamente "diseño", "UI" o "estilos" — cualquier trabajo visual del proyecto debe pasar por estas reglas. Incluye el canon de botones por familia funcional (acción primaria, secundaria, destructiva, navegación de wizard, filtros, descarga, icon-only en tabla, menú contextual, adjuntar, enviar, copiar, accesibilidad, floating, toggles) y el canon de listas desplegables (p-select / p-select [filter] / p-multiSelect, con búsqueda obligatoria a partir de 10 opciones). Cubre Kit UI 9.2 GOV.CO, co-branding corporativo (sólo en cabezote), consistencia de componentes (altura de inputs, prioridad de PrimeNG), criterios UX y preparación para despliegue en Vercel. Úsala también cuando se revise código existente buscando consistencia visual, cuando se normalicen botones o dropdowns en pantallas existentes, o cuando se pregunte si una pantalla está "lista".
 metadata:
   type: project
 ---
@@ -90,6 +90,104 @@ Una pantalla que funciona técnicamente pero no es clara o agradable **no está 
 
 ---
 
+## Canon de botones y listas desplegables
+
+Esta sección funciona en **dos modos**. Identifica primero cuál aplica al contexto — la forma de trabajar es distinta:
+
+| Modo | Cuándo aplica | Cómo se trabaja |
+|---|---|---|
+| **A — Pantalla nueva** | Estás creando los botones/dropdowns desde cero | Eliges la familia que necesitas y aplicas el canon directamente. Sin clasificación ni lista de excepciones — tú estás decidiendo la función. |
+| **B — Normalización de pantalla existente** | Estás auditando o ajustando botones/dropdowns que ya están en el código | Paso 0 obligatorio: clasifica antes de tocar. Entregable: lista de excepciones detectadas para validar con un dev del equipo. |
+
+El detalle completo vive en los reference files; aquí abajo está lo mínimo para arrancar en cada modo.
+
+### Modo A — Pantalla nueva (flujo directo)
+
+Cuando creas un botón o dropdown nuevo, **ya sabes qué función tendrá** porque tú lo estás eligiendo. La skill funciona como manual de referencia, no como cuestionario:
+
+1. **Identifica la familia que vas a crear.** "Voy a poner un Crear" → F1 Primaria. "Necesito el par Limpiar+Buscar al pie de los filtros" → F5 Filtros. "Icon-only de Editar en fila de tabla" → F7. Si dudas entre dos familias, mira la tabla de las 14 familias más abajo.
+2. **Consulta el canon de esa familia** (severity, label, icono, ubicación, accesibilidad) en la tabla resumen y, si necesitas detalle, en `references/canon-botones.md`.
+3. **Aplícalo directamente.** No hay nada que "preguntar" — el canon te dice cómo construirlo correctamente.
+
+Lo mismo con dropdowns: decide selección única o múltiple, cuenta las opciones para saber si activar `[filter]`, aplica el componente que corresponda (`p-select` / `p-select [filter]` / `p-multiSelect`). Detalle en `references/canon-dropdowns.md`.
+
+### Modo B — Normalización de pantalla existente (Paso 0: clasifica antes de tocar)
+
+Hay ~253 botones en el código y muchos no siguen el patrón general **a propósito**. Antes de modificar un botón existente, identifica su **función real**, no su verbo. El "Siguiente" de un wizard no es acción primaria — es navegación. El "Sí, revertir todos" es destructivo aunque diga "Sí". Aplicar el canon a ciegas genera regresiones; aplicarlo después de clasificar genera consistencia real.
+
+Lo mismo vale para dropdowns existentes: revisa si el tipo es correcto y si necesita búsqueda según el número real de opciones cargadas.
+
+**Flujo de normalización:**
+
+1. **Recorre** los botones/dropdowns de la pantalla.
+2. **Clasifica** cada uno usando el árbol de decisión de `references/canon-botones.md` (botones) o el de `references/canon-dropdowns.md` (dropdowns).
+3. **Aplica el canon** donde la clasificación es clara y el patrón no se cumple.
+4. **Lista las excepciones** que detectes (botones intencionalmente raros, casos que no encajan en ninguna familia). NO las modifiques — déjalas en el entregable para validar con un dev del equipo que conozca el código (ver memoria sobre [[chip-team-cris]]).
+5. **Reporta el entregable** al final de la auditoría (formato más abajo).
+
+### Familias de botones (14)
+
+| # | Familia | Cuándo aplica | Severity/estilo |
+|---|---|---|---|
+| F1 | **Acción primaria** | Guardar, Confirmar, Crear, Aceptar | Cobalto sólido (default) |
+| F2 | **Acción secundaria** | Cancelar, Cerrar — acompaña a una primaria | `secondary` + `[text]` o `[outlined]` |
+| F3 | **Destructiva** | Eliminar, Revertir | `severity="danger"` |
+| F4 | **Navegación wizard** | Siguiente, Anterior, Volver — pasos multietapa | Siguiente cobalto + `iconPos="right"`; Volver `secondary [outlined]` |
+| F5 | **Filtros** | Par "Limpiar" + "Buscar" al pie del panel de filtros | Buscar default; Limpiar `secondary [outlined]` o `[text]` |
+| F6 | **Descarga/exportación** | Descargar PDF/XLSX, Exportar | `success` o `secondary [outlined]`; icon-only en tabla |
+| F7 | **Icon-only en tabla** | Ver, Editar, Eliminar por fila | `[rounded] [text]` con tooltip; severity según acción |
+| F8 | **Menú contextual** | Ellipsis (tres puntos) que abre más acciones | `[rounded] [text] secondary` |
+| F9 | **Adjuntar archivo** | Subir documento, importar | `[outlined]` |
+| F10 | **Enviar / confirmación** | Enviar al backend (distinto de Guardar local) | Default o `success` |
+| F11 | **Copiar** | Copiar al portapapeles (código, HTML, enlace) | `secondary [outlined]` |
+| F12 | **Accesibilidad** | Cambiar tamaño letra, contraste | `<button>` nativo (fuera del canon PrimeNG) |
+| F13 | **Floating** | Chat, contacto, volver arriba, panel a11y | `<button>` nativo flotante |
+| F14 | **Toggles** | Activar/Desactivar, vista grid/lista | Activo sólido + inactivo `[outlined]`; usar `aria-pressed` |
+
+Cuando un botón no encaja claramente en ninguna, detente y avisa al usuario — probablemente sea una excepción legítima o haga falta una familia nueva.
+
+### Listas desplegables — regla rápida
+
+| Caso | Componente |
+|---|---|
+| 1 opción de pocas (≤10) | `p-select` sin filtro |
+| 1 opción de muchas (>10) | `p-select [filter]` con `filterBy` y `filterPlaceholder` |
+| Varias opciones | `p-multiSelect` (con `[filter]` si >10) |
+| Lista enorme (>500) o dinámica desde backend | `p-select [filter]` con `(onFilter)` debounced |
+
+Siempre `inputId` (no `id`) para que el `<label for>` asocie. Siempre `aria-required` y `aria-invalid` cuando aplique. Placeholder con verbo en imperativo ("Selecciona…").
+
+### Referencias detalladas (leer al tocar botones / dropdowns)
+
+| Quieres… | Lee… |
+|---|---|
+| Saber severity, label, icono, ubicación y excepciones exactas de cada familia de botones, con el árbol de decisión completo | `references/canon-botones.md` |
+| Saber cómo configurar `p-select` / `p-multiSelect` con accesibilidad, validación, dependencias entre dropdowns y umbrales de búsqueda | `references/canon-dropdowns.md` |
+
+Léelos cuando vayas a tocar botones o dropdowns concretos — no antes, no después. La SKILL.md no carga su contenido por defecto.
+
+### Entregable al auditar pantallas existentes
+
+Cuando recorras una pantalla normalizando botones o dropdowns, al terminar reporta:
+
+```
+<Pantalla>: N botones revisados / M dropdowns revisados.
+
+Aplicados al canon:
+- F1 Primaria: <conteo> — sin cambios / ajustados (label/icono/severity)
+- F3 Destructiva: …
+
+Excepciones detectadas (no tocadas, requieren validación):
+- <archivo:línea>: <descripción> — clasificación propuesta: <familia o "fuera de canon">
+
+Botones que no encajan en ninguna familia:
+- <archivo:línea>: <descripción> — función que cumple
+```
+
+La lista de excepciones es lo que se discute con el equipo antes del PR final. Ese es el espíritu de la regla: el canon aplica donde encaja, y las excepciones se validan, no se aplastan.
+
+---
+
 ## Criterio de finalización
 
 Una pantalla o componente **sólo se considera terminado** cuando cumple **todos** estos puntos. Trátalo como checklist y verifica explícitamente cada uno antes de reportar el trabajo como completo:
@@ -100,6 +198,8 @@ Una pantalla o componente **sólo se considera terminado** cuando cumple **todos
 - [ ] Usa correctamente los estilos, colores, iconografía y recursos del design system (tokens de `src/styles.scss`, PrimeIcons, tipografías Nunito Sans + Verdana).
 - [ ] Mantiene el alto definido para los inputs (consistente con el resto del proyecto).
 - [ ] Usa PrimeNG cuando es conveniente y compatible; si fue necesario adaptarlo, los estilos custom no rompen la coherencia.
+- [ ] **Los botones siguen el canon por familia funcional** (severity, label, icono, ubicación) — ver `references/canon-botones.md`. Si se tocaron botones de una pantalla existente, las excepciones detectadas quedaron listadas para validar.
+- [ ] **Las listas desplegables usan el componente correcto** (`p-select` / `p-select [filter]` / `p-multiSelect`) y activan búsqueda cuando hay más de 10 opciones — ver `references/canon-dropdowns.md`.
 - [ ] Funciona correctamente en Angular 19 (compila sin errores, sin warnings de tipos, sin dependencias incompatibles).
 - [ ] Puede visualizarse correctamente en el entorno preparado para Vercel.
 - [ ] Ha sido revisado desde criterios UI/UX (jerarquía, espaciado, legibilidad, alineación, estados, accesibilidad básica, consistencia).
@@ -113,6 +213,9 @@ Si alguno de estos puntos no se cumple, **no reportar la tarea como terminada** 
 1. **Entender el alcance.** ¿Es una pantalla nueva, una modificación, un componente, un ajuste visual?
 2. **Consultar referencias.** Revisar el Kit UI (secciones previas a las pantallas: ejemplos, recursos, iconografía) y, si toca el header, el manual de co-branding. Revisar también `CLAUDE.md` y el código de pantallas similares ya hechas.
 3. **Identificar componentes PrimeNG aplicables.** Antes de escribir desde cero, ver si PrimeNG ya resuelve el caso.
-4. **Implementar** siguiendo las 6 reglas.
-5. **Revisar contra el criterio de finalización** punto por punto antes de cerrar la tarea.
-6. **Probar visualmente.** Para cambios de UI, levantar el dev server y verificar en el navegador (la verificación de tipos no equivale a verificación visual).
+4. **Aplicar el canon según el modo** (ver sección "Canon de botones y listas desplegables"):
+   - **Modo A — pantalla nueva:** elige la familia que corresponde a cada botón/dropdown y aplica el canon directamente. Consulta los `references/` si necesitas el detalle.
+   - **Modo B — normalización de pantalla existente:** Paso 0 obligatorio (clasificar antes de tocar) + lista de excepciones detectadas como entregable.
+5. **Implementar** siguiendo las 6 reglas + el canon de la familia correspondiente.
+6. **Revisar contra el criterio de finalización** punto por punto antes de cerrar la tarea.
+7. **Probar visualmente.** Para cambios de UI, levantar el dev server y verificar en el navegador (la verificación de tipos no equivale a verificación visual).
