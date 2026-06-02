@@ -1,0 +1,454 @@
+.btn-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* --- Page Header --- */
+.btn-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #E8EDF8;
+
+  &__icon {
+    font-size: 40px;
+    color: #0943B5;
+  }
+
+  &__title {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #0943B5;
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 14px;
+    color: #616161;
+    margin: 4px 0 0 0;
+    max-width: 760px;
+    line-height: 1.5;
+
+    code {
+      background: #F5F5F5;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #0943B5;
+    }
+  }
+}
+
+/* --- Generic sections (best practices + usage modes) --- */
+.btn-section {
+  margin-bottom: 24px;
+
+  &__title {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #0943B5;
+    margin-bottom: 8px;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: #616161;
+    margin-bottom: 20px;
+    line-height: 1.5;
+
+    code {
+      background: #F5F5F5;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #0943B5;
+    }
+  }
+
+  &--note {
+    background: #FFF8E1;
+    border-left: 4px solid #FBC02D;
+    padding: 20px 24px;
+    border-radius: 8px;
+
+    .btn-section__title {
+      color: #3B3B3B;
+      font-size: 18px;
+    }
+
+    .btn-section__desc {
+      margin-bottom: 0;
+      color: #3B3B3B;
+    }
+  }
+}
+
+/* --- Best Practices --- */
+.best-practices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 992px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 576px) { grid-template-columns: 1fr; }
+}
+
+.bp-card {
+  background: #fff;
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  padding: 20px;
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    border-color: #0943B5;
+    transform: translateY(-2px);
+  }
+
+  &__icon {
+    font-size: 28px;
+    color: #0943B5;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h4 {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+    color: #616161;
+    line-height: 1.5;
+    margin: 0;
+
+    code {
+      background: #F5F5F5;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #0943B5;
+    }
+  }
+}
+
+/* --- Usage modes (Modo A / Modo B) --- */
+.usage-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.usage-mode {
+  background: #fff;
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  padding: 20px;
+
+  &__tag {
+    display: inline-block;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+    letter-spacing: 0.4px;
+
+    &--a {
+      background: #E8EDF8;
+      color: #0943B5;
+    }
+
+    &--b {
+      background: #FFF8E1;
+      color: #B07900;
+    }
+  }
+
+  h4 {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 6px;
+  }
+
+  p {
+    font-size: 13px;
+    color: #616161;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+/* --- Family section --- */
+.btn-family {
+  background: #fff;
+  border: 1px solid #EBEBEB;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: #B5C6E8;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__id {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 24px;
+    padding: 0 8px;
+    background: #0943B5;
+    color: #fff;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+  }
+
+  &__title {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0;
+  }
+
+  &__badge {
+    display: inline-block;
+    background: #FFF8E1;
+    color: #B07900;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: auto;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: #616161;
+    line-height: 1.55;
+    margin: 0 0 20px;
+
+    code {
+      background: #F5F5F5;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #0943B5;
+    }
+
+    strong {
+      color: #3B3B3B;
+    }
+  }
+
+  /* Ejemplos en vivo — full width arriba */
+  &__examples {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    background: #FAFBFD;
+    border: 1px dashed #D5DCE8;
+    border-radius: 8px;
+    min-height: 90px;
+    margin-bottom: 16px;
+  }
+
+  /* Specs + Code — 2 columnas debajo */
+  &__detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* --- Spec list --- */
+.spec-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 16px 20px;
+  background: #F8F9FB;
+  border-radius: 8px;
+  font-size: 13px;
+  align-content: start;
+
+  dt {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 700;
+    color: #0943B5;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    color: #3B3B3B;
+    line-height: 1.5;
+
+    code {
+      background: #fff;
+      border: 1px solid #E6E9F0;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #0943B5;
+    }
+  }
+}
+
+/* --- Code block (HTML snippet con botón copiar) --- */
+.code-block {
+  position: relative;
+  background: #1E2233;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+
+  pre {
+    margin: 0;
+    padding: 16px 20px;
+    padding-right: 90px;
+    overflow-x: auto;
+    color: #D4D9E8;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    flex: 1;
+    min-width: 0;
+  }
+
+  code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: 0;
+    font-size: inherit;
+    white-space: pre;
+  }
+}
+
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #D4D9E8;
+  font-size: 11px;
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  z-index: 1;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #91BBFF;
+    outline-offset: 2px;
+  }
+
+  i {
+    font-size: 11px;
+  }
+}
+
+/* --- Demo buttons (F12 a11y + F13 floating) --- */
+.a11y-demo-btn,
+.floating-demo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #D5DCE8;
+  background: #fff;
+  color: #0943B5;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s, transform 0.15s;
+
+  i {
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: #E8EDF8;
+    border-color: #0943B5;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #0943B5;
+    outline-offset: 2px;
+  }
+
+  &[aria-pressed='true'] {
+    background: #0943B5;
+    color: #fff;
+    border-color: #0943B5;
+  }
+}
+
+.floating-demo-btn {
+  background: #0943B5;
+  color: #fff;
+  border-color: #0943B5;
+  box-shadow: 0 2px 8px rgba(9, 67, 181, 0.25);
+
+  &:hover {
+    background: #07349B;
+    transform: translateY(-2px);
+  }
+}
+
+/* --- Layout toggle group (F14) --- */
+.layout-toggle {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #F5F5F5;
+  border-radius: 8px;
+}

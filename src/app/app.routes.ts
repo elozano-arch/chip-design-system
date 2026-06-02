@@ -57,6 +57,16 @@ export const routes: Routes = [
       import('./pages/autenticacion/autenticacion.component').then(m => m.AutenticacionComponent),
   },
   {
+    path: 'botones',
+    data: {
+      breadcrumb: [
+        { label: 'Botones' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/botones/botones.component').then(m => m.BotonesComponent),
+  },
+  {
     path: 'tokens',
     data: {
       breadcrumb: [
