@@ -743,8 +743,8 @@
                 </ng-template>
                 <ng-template #body let-c>
                   <tr>
-                    <td><code class="prot-table__code">{{ c.codigo }}</code></td>
-                    <td>{{ c.nombre }}</td>
+                    <td><code class="prot-table__code">{{ c['Código'] }}</code></td>
+                    <td>{{ c['Nombre'] }}</td>
                   </tr>
                 </ng-template>
                 <ng-template #emptymessage>
@@ -1091,8 +1091,8 @@
             <p-inputicon styleClass="pi pi-search" />
             <input pInputText type="text"
               [ngModel]="busquedaLista()"
-              (ngModelChange)="busquedaLista.set($event)"
-              placeholder="Buscar por código o nombre…"
+              (ngModelChange)="onBuscarLista($event)"
+              placeholder="Buscar en cualquier campo…"
               aria-label="Buscar dentro de la lista" />
           </p-iconfield>
           <span class="prot-lista__count" aria-live="polite">
@@ -1100,39 +1100,114 @@
           </span>
         </div>
 
-        <p-table [value]="valoresFiltrados()"
+        <!-- Paginador horizontal de columnas (reciclado del tree-table estándar):
+             sólo cuando la lista tiene más campos de los que caben en el datatable. -->
+        @if (mostrarPagerColumnasLista) {
+          <div class="chip-colpager" role="region" aria-label="Paginador de columnas">
+            <span class="chip-colpager__label">{{ rangoColumnasListaTxt() }}</span>
+            <div class="chip-colpager__controls">
+              <button type="button" class="chip-colpager__btn"
+                (click)="paginaColumnasListaAnterior()"
+                [disabled]="paginaColumnasLista === 0"
+                aria-label="Columnas anteriores">
+                <i class="pi pi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span class="chip-colpager__pageinfo">
+                Página {{ paginaColumnasLista + 1 }} / {{ totalPaginasColumnasLista }}
+              </span>
+              <button type="button" class="chip-colpager__btn"
+                (click)="paginaColumnasListaSiguiente()"
+                [disabled]="paginaColumnasLista >= totalPaginasColumnasLista - 1"
+                aria-label="Siguientes columnas">
+                <i class="pi pi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        }
+
+        <p-table [value]="valoresPaginados()"
           [stripedRows]="true"
           [rowHover]="true"
-          [paginator]="true"
-          [rows]="5"
-          [rowsPerPageOptions]="[5, 10, 25]"
-          [showCurrentPageReport]="true"
-          currentPageReportTemplate="{first}-{last} de {totalRecords}"
-          styleClass="prot-lista__table">
+          styleClass="prot-lista__table"
+          [class.prot-lista__table--colpaged]="mostrarPagerColumnasLista"
+          [tableStyle]="{ 'table-layout': 'fixed', width: '100%' }">
           <ng-template #caption>
             <span class="sr-only">Valores válidos para la variable tipo lista</span>
           </ng-template>
           <ng-template #header>
             <tr>
-              <th style="width: 200px" scope="col">Código</th>
-              <th scope="col">Nombre</th>
+              @for (col of columnasVisiblesLista; track col.code) {
+                <th scope="col"
+                  [style.width.px]="anchoColumnaListaPx(col)"
+                  [class.prot-lista__th--num]="col.type === 'N'">
+                  <span class="prot-lista__cell"
+                    [pTooltip]="col.code"
+                    tooltipPosition="top">
+                    {{ col.code }}
+                  </span>
+                </th>
+              }
             </tr>
           </ng-template>
           <ng-template #body let-valor>
             <tr>
-              <td><code class="prot-table__code">{{ valor.codigo }}</code></td>
-              <td>{{ valor.nombre }}</td>
+              @for (col of columnasVisiblesLista; track col.code) {
+                <td [class.prot-lista__td--num]="col.type === 'N'">
+                  <span class="prot-lista__cell"
+                    [pTooltip]="valor[col.code]"
+                    tooltipPosition="top"
+                    [tooltipDisabled]="!valor[col.code]">
+                    @if (col.order === 1) {
+                      <code class="prot-table__code">{{ valor[col.code] }}</code>
+                    } @else {
+                      {{ valor[col.code] }}
+                    }
+                  </span>
+                </td>
+              }
             </tr>
           </ng-template>
           <ng-template #emptymessage>
             <tr>
-              <td colspan="2" class="prot-lista__empty">
+              <td [attr.colspan]="columnasVisiblesLista.length" class="prot-lista__empty">
                 <i class="pi pi-inbox" aria-hidden="true"></i>
                 <p>No se encontraron valores con ese criterio de búsqueda.</p>
               </td>
             </tr>
           </ng-template>
         </p-table>
+
+        <!-- Paginador de registros (reciclado del tree-table estándar): etiqueta
+             "Mostrando X a Y de Z" + controles + selector de tamaño de página. -->
+        @if (valoresFiltrados().length > 0) {
+          <div class="chip-listpager" role="region" aria-label="Paginador de registros">
+            <span class="chip-listpager__label">{{ rangoFilasListaTxt() }}</span>
+            <div class="chip-listpager__controls">
+              <button type="button" class="chip-listpager__btn"
+                (click)="cambiarPaginaFilasLista(-1)"
+                [disabled]="listaPagina() === 0"
+                aria-label="Página anterior">
+                <i class="pi pi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span class="chip-listpager__page">
+                {{ listaPagina() + 1 }} / {{ totalPaginasFilasLista }}
+              </span>
+              <button type="button" class="chip-listpager__btn"
+                (click)="cambiarPaginaFilasLista(1)"
+                [disabled]="listaPagina() >= totalPaginasFilasLista - 1"
+                aria-label="Página siguiente">
+                <i class="pi pi-chevron-right" aria-hidden="true"></i>
+              </button>
+              <p-select [options]="opcionesTamPaginaLista"
+                optionLabel="label" optionValue="value"
+                [ngModel]="listaTamPagina()"
+                (ngModelChange)="cambiarTamPaginaLista($event)"
+                styleClass="chip-listpager__select"
+                appendTo="body"
+                [style]="{ minWidth: '70px' }" />
+            </div>
+          </div>
+        }
       </div>
     }
 

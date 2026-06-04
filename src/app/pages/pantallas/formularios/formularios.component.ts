@@ -101,15 +101,38 @@ interface ProtocoloVariable {
   listaKey?: string;
 }
 
-interface ProtocoloValorLista {
-  codigo: string;
-  nombre: string;
+/**
+ * Tipo de dato de un campo (columna) de una lista — equivale a `tab_field.field_type`.
+ *   S = texto · N = numérico · B = booleano · D = fecha · L = lista
+ * Sólo se usa, por ahora, para alinear los numéricos a la derecha.
+ */
+type ProtocoloFieldType = 'S' | 'N' | 'B' | 'D' | 'L';
+
+/**
+ * Definición de una columna de la lista — simula una fila de `tab_field`.
+ * `code`  → field_code   (encabezado de la columna; también la llave en cada registro)
+ * `order` → orden de despliegue definido en tab_field
+ * `type`  → field_type   (N alinea a la derecha)
+ * `len`   → field_len    (de aquí sale el ancho proporcional de la columna)
+ */
+interface ProtocoloField {
+  code: string;
+  order: number;
+  type: ProtocoloFieldType;
+  len: number;
+  decimals?: number;
 }
+
+/** Un registro de la lista — simula `result`: un valor por field_code. */
+type ProtocoloRegistro = Record<string, string>;
 
 interface ProtocoloLista {
   key: string;
   nombre: string;
-  valores: ProtocoloValorLista[];
+  /** Columnas de la lista, en el orden de tab_field. */
+  fields: ProtocoloField[];
+  /** Valores: cada registro está llaveado por field_code. */
+  valores: ProtocoloRegistro[];
 }
 
 /** Formatos soportados por el botón estándar "Descargar". */
@@ -922,6 +945,22 @@ export class FormulariosComponent {
     { numero: 5, tipoRegistro: 'Detalle', nombre: 'VR_CTE',
       tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
       observaciones: 'Valor corriente del movimiento.' },
+
+    // ── Variables de ejemplo para validar los 4 casos del modal "Ver Lista".
+    //    (En el mock el tab Variables comparte un solo array; cada una indica
+    //     de qué formulario/variable colgaría en producción.)
+    { numero: 6, tipoRegistro: 'Detalle', nombre: 'PERIODO_REP',
+      tipoDato: 'Lista', longitud: 2, decimales: null, unidad: '—',
+      observaciones: 'Periodo del reporte — caso lista simple (2 campos).',
+      listaKey: 'PERIODOS' },                       // form. CGN001_BALANCE_GENERAL / var. PERIODO_REP
+    { numero: 7, tipoRegistro: 'Detalle', nombre: 'TERCERO',
+      tipoDato: 'Lista', longitud: 16, decimales: null, unidad: '—',
+      observaciones: 'Tercero asociado — caso 8 campos (dispara paginador de columnas).',
+      listaKey: 'TERCEROS' },                       // form. CGN015_OPERACIONES_RECIPROCAS / var. TERCERO
+    { numero: 8, tipoRegistro: 'Detalle', nombre: 'CTA_CONTABLE',
+      tipoDato: 'Lista', longitud: 12, decimales: null, unidad: '—',
+      observaciones: 'Cuenta del plan contable — caso con campo Descripción largo (truncado).',
+      listaKey: 'PLAN_CUENTAS' },                   // form. CGN001_BALANCE_GENERAL / var. CTA_CONTABLE
   ];
 
   /** Conteo total de variables (para el chip del header del protocolo). */
@@ -932,12 +971,12 @@ export class FormulariosComponent {
   /** Buscador del tab Conceptos (filtrado en memoria sobre listas.CONCEPTOS.valores). */
   busquedaConceptos = signal('');
 
-  conceptosFiltrados = computed<ProtocoloValorLista[]>(() => {
+  conceptosFiltrados = computed<ProtocoloRegistro[]>(() => {
     const q = this.busquedaConceptos().trim().toLowerCase();
     const todos = this.listas['CONCEPTOS'].valores;
     if (!q) return todos;
-    return todos.filter(c =>
-      c.codigo.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q),
+    return todos.filter(r =>
+      Object.values(r).some(v => v.toLowerCase().includes(q)),
     );
   });
 
@@ -947,34 +986,85 @@ export class FormulariosComponent {
    */
   descargarConceptos(format: DownloadFormatId = 'csv'): void {
     if (format === 'csv') {
-      const lista = this.listas['CONCEPTOS'];
-      this.descargarValoresCSV(lista.nombre, lista.valores);
+      this.descargarValoresCSV(this.listas['CONCEPTOS']);
       return;
     }
     this.toastDescargaSimulada('CONCEPTOS', format);
   }
 
-  /** Catálogos referenciados por las variables tipo Lista. */
+  /**
+   * Catálogos referenciados por las variables tipo Lista.
+   * Cada lista define sus columnas en `fields` (simula tab_field) y sus
+   * registros en `valores` (simula result, llaveados por field_code).
+   */
   readonly listas: Record<string, ProtocoloLista> = {
+    // Caso simple: 2 campos (código + nombre) → sin paginador de columnas.
     PERIODOS: {
       key: 'PERIODOS',
       nombre: 'PERIODOS',
+      fields: [
+        { code: 'Código', order: 1, type: 'S', len: 2 },
+        { code: 'Nombre', order: 2, type: 'S', len: 20 },
+      ],
       valores: [
-        { codigo: '01', nombre: 'Ene-Mar' },
-        { codigo: '02', nombre: 'Abr-Jun' },
-        { codigo: '03', nombre: 'Jul-Sep' },
-        { codigo: '04', nombre: 'Oct-Dic' },
+        { 'Código': '01', 'Nombre': 'Ene-Mar' },
+        { 'Código': '02', 'Nombre': 'Abr-Jun' },
+        { 'Código': '03', 'Nombre': 'Jul-Sep' },
+        { 'Código': '04', 'Nombre': 'Oct-Dic' },
       ],
     },
     CONCEPTOS: {
       key: 'CONCEPTOS',
       nombre: 'CONCEPTOS',
+      fields: [
+        { code: 'Código', order: 1, type: 'S', len: 8 },
+        { code: 'Nombre', order: 2, type: 'S', len: 60 },
+      ],
       valores: this.generarConceptosProtocolo(),
     },
+    // Caso máximo actual: 6 campos → se muestra completo, sin paginador.
     ENTIDADES_RECIPROCAS: {
       key: 'ENTIDADES_RECIPROCAS',
       nombre: 'ENTIDADES_RECIPROCAS',
+      fields: [
+        { code: 'Código', order: 1, type: 'S', len: 9 },
+        { code: 'NIT', order: 2, type: 'S', len: 11 },
+        { code: 'Razón social', order: 3, type: 'S', len: 60 },
+        { code: 'Tipo', order: 4, type: 'S', len: 12 },
+        { code: 'Departamento', order: 5, type: 'S', len: 20 },
+        { code: 'Estado', order: 6, type: 'S', len: 10 },
+      ],
       valores: this.generarEntidadesReciprocasProtocolo(),
+    },
+    // Caso 8 campos → dispara el paginador de columnas (6 + 2).
+    TERCEROS: {
+      key: 'TERCEROS',
+      nombre: 'TERCEROS',
+      fields: [
+        { code: 'Tipo doc.', order: 1, type: 'S', len: 4 },
+        { code: 'Documento', order: 2, type: 'S', len: 12 },
+        { code: 'DV', order: 3, type: 'N', len: 1 },
+        { code: 'Razón social', order: 4, type: 'S', len: 60 },
+        { code: 'Ciudad', order: 5, type: 'S', len: 20 },
+        { code: 'Dirección', order: 6, type: 'S', len: 40 },
+        { code: 'Teléfono', order: 7, type: 'S', len: 14 },
+        { code: 'Estado', order: 8, type: 'S', len: 10 },
+      ],
+      valores: this.generarTercerosProtocolo(),
+    },
+    // Caso campo largo: 5 campos, uno de longitud 180 (Descripción) → truncado
+    // con "…" + tooltip; las demás columnas se reajustan. Cabe en una página.
+    PLAN_CUENTAS: {
+      key: 'PLAN_CUENTAS',
+      nombre: 'PLAN_CUENTAS',
+      fields: [
+        { code: 'Código', order: 1, type: 'S', len: 12 },
+        { code: 'Nombre', order: 2, type: 'S', len: 40 },
+        { code: 'Descripción', order: 3, type: 'S', len: 180 },
+        { code: 'Naturaleza', order: 4, type: 'S', len: 8 },
+        { code: 'Nivel', order: 5, type: 'N', len: 2 },
+      ],
+      valores: this.generarPlanCuentasProtocolo(),
     },
   };
 
@@ -982,27 +1072,169 @@ export class FormulariosComponent {
   listaActiva = signal<ProtocoloLista | null>(null);
   busquedaLista = signal('');
 
-  valoresFiltrados = computed<ProtocoloValorLista[]>(() => {
+  /** Filtra por CUALQUIER campo del registro (no sólo código/nombre). */
+  valoresFiltrados = computed<ProtocoloRegistro[]>(() => {
     const lista = this.listaActiva();
     if (!lista) return [];
     const q = this.busquedaLista().trim().toLowerCase();
     if (!q) return lista.valores;
-    return lista.valores.filter(v =>
-      v.codigo.toLowerCase().includes(q) || v.nombre.toLowerCase().includes(q),
+    return lista.valores.filter(r =>
+      Object.values(r).some(v => v.toLowerCase().includes(q)),
     );
   });
+
+  // ── Columnas dinámicas del modal "Ver Lista" ──────────────────────────────
+  // El modal es estático (820px); quien se adapta es el datatable interno.
+  // Cada columna toma el ancho necesario para que su NOMBRE (header) quepa sin
+  // exprimirse, acotado por un techo (los textos largos se truncan con "…").
+  // Las columnas se empacan por presupuesto de ancho (sin scroll horizontal) y
+  // con un tope de 6; si sobran campos se habilita el paginador de columnas.
+  private readonly LISTA_COLS_MAX = 6;        // tope para no recargar el modal
+  private readonly LISTA_COL_BUDGET = 740;    // ancho útil del datatable (px)
+  private readonly LISTA_COL_MIN = 56;        // piso de columna
+  private readonly LISTA_COL_MAX = 220;       // techo: a partir de aquí trunca
+
+  /** Página de columnas activa del modal (0-based), como el pager del treetable. */
+  paginaColumnasLista = 0;
+
+  /** Campos de la lista activa, ordenados por `order` (tab_field). */
+  private get camposListaOrdenados(): ProtocoloField[] {
+    const lista = this.listaActiva();
+    return lista ? [...lista.fields].sort((a, b) => a.order - b.order) : [];
+  }
+
+  /**
+   * Ancho (px) que necesita una columna: el mayor entre lo que ocupa su nombre
+   * (header en mayúsculas) y lo sugerido por field_len, acotado por piso/techo.
+   */
+  anchoColumnaListaPx(field: ProtocoloField): number {
+    const headerNeed = Math.round(field.code.length * 8.5) + 30;
+    const contentNeed = Math.min(field.len, 28) * 8 + 24;
+    return Math.min(this.LISTA_COL_MAX, Math.max(this.LISTA_COL_MIN, headerNeed, contentNeed));
+  }
+
+  /**
+   * Campos repartidos en páginas: se acumulan columnas hasta llegar al tope (6)
+   * o agotar el presupuesto de ancho, lo que ocurra primero.
+   */
+  get paginasColumnasLista(): ProtocoloField[][] {
+    const campos = this.camposListaOrdenados;
+    if (!campos.length) return [[]];
+    const paginas: ProtocoloField[][] = [];
+    let actual: ProtocoloField[] = [];
+    let ancho = 0;
+    for (const campo of campos) {
+      const w = this.anchoColumnaListaPx(campo);
+      const llena = actual.length >= this.LISTA_COLS_MAX;
+      const excede = actual.length > 0 && ancho + w > this.LISTA_COL_BUDGET;
+      if (llena || excede) {
+        paginas.push(actual);
+        actual = [];
+        ancho = 0;
+      }
+      actual.push(campo);
+      ancho += w;
+    }
+    if (actual.length) paginas.push(actual);
+    return paginas.length ? paginas : [[]];
+  }
+
+  get totalPaginasColumnasLista(): number {
+    return this.paginasColumnasLista.length;
+  }
+
+  /** Sólo se muestra el pager de columnas si hay más de una página. */
+  get mostrarPagerColumnasLista(): boolean {
+    return this.totalPaginasColumnasLista > 1;
+  }
+
+  get columnasVisiblesLista(): ProtocoloField[] {
+    const paginas = this.paginasColumnasLista;
+    const idx = Math.min(this.paginaColumnasLista, paginas.length - 1);
+    return paginas[idx] ?? [];
+  }
+
+  /** Etiqueta del pager de columnas: "Columnas 1–6 de 8". */
+  rangoColumnasListaTxt(): string {
+    const campos = this.camposListaOrdenados;
+    const vis = this.columnasVisiblesLista;
+    if (!vis.length) return '';
+    const desde = campos.indexOf(vis[0]) + 1;
+    const hasta = campos.indexOf(vis[vis.length - 1]) + 1;
+    return `Columnas ${desde}–${hasta} de ${campos.length}`;
+  }
+
+  paginaColumnasListaAnterior(): void {
+    if (this.paginaColumnasLista > 0) this.paginaColumnasLista--;
+  }
+  paginaColumnasListaSiguiente(): void {
+    if (this.paginaColumnasLista < this.totalPaginasColumnasLista - 1) this.paginaColumnasLista++;
+  }
+
+  // ── Paginador de registros del modal (recicla el look del treetable) ──────
+  listaPagina = signal(0);
+  listaTamPagina = signal(5);
+  readonly opcionesTamPaginaLista = [
+    { label: '5', value: 5 },
+    { label: '10', value: 10 },
+    { label: '25', value: 25 },
+  ];
+
+  /** Filas de la página actual (paginación manual, igual que el treetable). */
+  valoresPaginados = computed<ProtocoloRegistro[]>(() => {
+    const filas = this.valoresFiltrados();
+    const size = this.listaTamPagina();
+    const totalPag = Math.max(1, Math.ceil(filas.length / size));
+    const page = Math.min(this.listaPagina(), totalPag - 1);
+    const start = page * size;
+    return filas.slice(start, start + size);
+  });
+
+  get totalPaginasFilasLista(): number {
+    return Math.max(1, Math.ceil(this.valoresFiltrados().length / this.listaTamPagina()));
+  }
+
+  /** Etiqueta "Mostrando X a Y de Z valores". */
+  rangoFilasListaTxt(): string {
+    const total = this.valoresFiltrados().length;
+    if (!total) return 'Sin valores';
+    const size = this.listaTamPagina();
+    const page = Math.min(this.listaPagina(), this.totalPaginasFilasLista - 1);
+    const desde = page * size + 1;
+    const hasta = Math.min(total, desde + size - 1);
+    return `Mostrando ${desde} a ${hasta} de ${total} valores`;
+  }
+
+  cambiarPaginaFilasLista(delta: number): void {
+    const next = this.listaPagina() + delta;
+    if (next >= 0 && next < this.totalPaginasFilasLista) this.listaPagina.set(next);
+  }
+  cambiarTamPaginaLista(size: number): void {
+    this.listaTamPagina.set(size);
+    this.listaPagina.set(0);
+  }
+
+  /** La búsqueda resetea la paginación de filas. */
+  onBuscarLista(q: string): void {
+    this.busquedaLista.set(q);
+    this.listaPagina.set(0);
+  }
 
   abrirLista(listaKey: string | undefined): void {
     if (!listaKey) return;
     const lista = this.listas[listaKey];
     if (!lista) return;
     this.busquedaLista.set('');
+    this.paginaColumnasLista = 0;
+    this.listaPagina.set(0);
     this.listaActiva.set(lista);
   }
 
   cerrarLista(): void {
     this.listaActiva.set(null);
     this.busquedaLista.set('');
+    this.paginaColumnasLista = 0;
+    this.listaPagina.set(0);
   }
 
   /** Descarga el catálogo activo del modal Ver Lista en el formato indicado. */
@@ -1010,7 +1242,7 @@ export class FormulariosComponent {
     const lista = this.listaActiva();
     if (!lista) return;
     if (format === 'csv') {
-      this.descargarValoresCSV(lista.nombre, lista.valores);
+      this.descargarValoresCSV(lista);
       return;
     }
     this.toastDescargaSimulada(lista.nombre, format);
@@ -1023,9 +1255,16 @@ export class FormulariosComponent {
 
   // ── Helpers de descarga reutilizables ──
 
-  /** Genera CSV con BOM UTF-8 (compatible Excel) y dispara la descarga. */
-  private descargarValoresCSV(nombre: string, valores: ProtocoloValorLista[]): void {
-    const filas = [['Código', 'Nombre'], ...valores.map(v => [v.codigo, v.nombre])];
+  /**
+   * Genera CSV con BOM UTF-8 (compatible Excel) y dispara la descarga.
+   * Las columnas y su orden salen de `lista.fields` (tab_field).
+   */
+  private descargarValoresCSV(lista: ProtocoloLista): void {
+    const cols = [...lista.fields].sort((a, b) => a.order - b.order);
+    const filas = [
+      cols.map(c => c.code),
+      ...lista.valores.map(r => cols.map(c => r[c.code] ?? '')),
+    ];
     const csv = filas
       .map(fila => fila.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
       .join('\n');
@@ -1033,13 +1272,13 @@ export class FormulariosComponent {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${nombre}.csv`;
+    a.download = `${lista.nombre}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     this.messageService.add({
       severity: 'success',
       summary: 'Archivo descargado',
-      detail: `${nombre}.csv`,
+      detail: `${lista.nombre}.csv`,
       life: 3000,
     });
   }
@@ -1094,25 +1333,78 @@ export class FormulariosComponent {
     data: { info: f.info },
   }));
 
-  private generarConceptosProtocolo(): ProtocoloValorLista[] {
+  private generarConceptosProtocolo(): ProtocoloRegistro[] {
     return [
-      { codigo: '1.1.05', nombre: 'CAJA' },
-      { codigo: '1.1.10', nombre: 'BANCOS' },
-      { codigo: '1.1.20', nombre: 'INVERSIONES' },
-      { codigo: '1.4.07', nombre: 'PRESTACIÓN DE SERVICIOS' },
-      { codigo: '1.4.13', nombre: 'TRANSFERENCIAS POR COBRAR' },
-      { codigo: '2.4.01', nombre: 'ADQUISICIÓN DE BIENES Y SERVICIOS' },
-      { codigo: '2.4.36', nombre: 'RETENCIÓN EN LA FUENTE' },
-      { codigo: '3.1.05', nombre: 'CAPITAL FISCAL' },
-      { codigo: '3.1.10', nombre: 'RESULTADO DEL EJERCICIO' },
-      { codigo: '4.4.08', nombre: 'INGRESOS FINANCIEROS' },
-      { codigo: '5.1.01', nombre: 'SUELDOS Y SALARIOS' },
-      { codigo: '5.1.11', nombre: 'GENERALES' },
+      { 'Código': '1.1.05', 'Nombre': 'CAJA' },
+      { 'Código': '1.1.10', 'Nombre': 'BANCOS' },
+      { 'Código': '1.1.20', 'Nombre': 'INVERSIONES' },
+      { 'Código': '1.4.07', 'Nombre': 'PRESTACIÓN DE SERVICIOS' },
+      { 'Código': '1.4.13', 'Nombre': 'TRANSFERENCIAS POR COBRAR' },
+      { 'Código': '2.4.01', 'Nombre': 'ADQUISICIÓN DE BIENES Y SERVICIOS' },
+      { 'Código': '2.4.36', 'Nombre': 'RETENCIÓN EN LA FUENTE' },
+      { 'Código': '3.1.05', 'Nombre': 'CAPITAL FISCAL' },
+      { 'Código': '3.1.10', 'Nombre': 'RESULTADO DEL EJERCICIO' },
+      { 'Código': '4.4.08', 'Nombre': 'INGRESOS FINANCIEROS' },
+      { 'Código': '5.1.01', 'Nombre': 'SUELDOS Y SALARIOS' },
+      { 'Código': '5.1.11', 'Nombre': 'GENERALES' },
     ];
   }
 
-  private generarEntidadesReciprocasProtocolo(): ProtocoloValorLista[] {
+  /**
+   * Caso 8 campos (dispara el paginador de columnas). Datos derivados a partir
+   * de un set base de terceros para no escribir 8 valores por fila a mano.
+   */
+  private generarTercerosProtocolo(): ProtocoloRegistro[] {
+    const base: Array<[string, string, string]> = [
+      ['NIT', '830053105', 'EMPRESA DE ENERGÍA DE BOGOTÁ S.A. E.S.P.'],
+      ['NIT', '899999068', 'EMPRESA DE ACUEDUCTO Y ALCANTARILLADO DE BOGOTÁ'],
+      ['NIT', '860002503', 'ETB S.A. E.S.P.'],
+      ['NIT', '800153993', 'COLPENSIONES'],
+      ['CC', '79853012', 'GÓMEZ RAMÍREZ, ANDRÉS FELIPE'],
+      ['CC', '52154879', 'TORRES MORENO, DIANA CAROLINA'],
+      ['NIT', '901037916', 'AGENCIA NACIONAL DE CONTRATACIÓN PÚBLICA'],
+      ['NIT', '830115226', 'POSITIVA COMPAÑÍA DE SEGUROS S.A.'],
+      ['CC', '1018412339', 'RINCÓN VARGAS, JUAN SEBASTIÁN'],
+      ['NIT', '800197268', 'FINDETER S.A.'],
+      ['NIT', '899999063', 'INSTITUTO DE DESARROLLO URBANO — IDU'],
+      ['CC', '41672901', 'CASTAÑO LÓPEZ, MARÍA FERNANDA'],
+    ];
+    const ciudades = ['Bogotá D.C.', 'Medellín', 'Cali', 'Barranquilla', 'Bucaramanga'];
+    return base.map(([tipoDoc, doc, razon], i) => ({
+      'Tipo doc.': tipoDoc,
+      'Documento': doc,
+      'DV': String((i * 7 + 3) % 10),
+      'Razón social': razon,
+      'Ciudad': ciudades[i % ciudades.length],
+      'Dirección': `Calle ${10 + i} # ${20 + i}-${30 + i}`,
+      'Teléfono': `60(1) ${3000000 + i * 7531}`,
+      'Estado': i % 6 === 0 ? 'Inactivo' : 'Activo',
+    }));
+  }
+
+  /**
+   * Caso con un campo de longitud grande (Descripción, field_len 180) junto a
+   * campos cortos, para validar el truncado con "…" + tooltip.
+   */
+  private generarPlanCuentasProtocolo(): ProtocoloRegistro[] {
     return [
+      { 'Código': '1.1.05.01', 'Nombre': 'CAJA PRINCIPAL', 'Naturaleza': 'Débito', 'Nivel': '4',
+        'Descripción': 'Representa el efectivo en moneda nacional y extranjera disponible en la caja principal de la entidad para cubrir pagos menores y operaciones inmediatas de tesorería.' },
+      { 'Código': '1.1.10.06', 'Nombre': 'CUENTA CORRIENTE BANCARIA', 'Naturaleza': 'Débito', 'Nivel': '4',
+        'Descripción': 'Comprende los depósitos constituidos por la entidad en cuentas corrientes de establecimientos bancarios y demás entidades financieras vigiladas por la Superintendencia Financiera de Colombia.' },
+      { 'Código': '1.4.07.01', 'Nombre': 'PRESTACIÓN DE SERVICIOS', 'Naturaleza': 'Débito', 'Nivel': '4',
+        'Descripción': 'Valor de los derechos a favor de la entidad originados en la prestación de servicios, pendientes de recaudo al cierre del período contable que se reporta.' },
+      { 'Código': '2.4.01.01', 'Nombre': 'BIENES Y SERVICIOS', 'Naturaleza': 'Crédito', 'Nivel': '4',
+        'Descripción': 'Obligaciones contraídas por la entidad por concepto de adquisición de bienes y servicios pendientes de pago a proveedores y contratistas al corte del período.' },
+      { 'Código': '3.1.10.01', 'Nombre': 'RESULTADO DEL EJERCICIO', 'Naturaleza': 'Crédito', 'Nivel': '4',
+        'Descripción': 'Corresponde al valor del excedente o déficit obtenido por la entidad como resultado de la diferencia entre los ingresos y los gastos del período contable.' },
+      { 'Código': '5.1.01.01', 'Nombre': 'SUELDOS Y SALARIOS', 'Naturaleza': 'Débito', 'Nivel': '4',
+        'Descripción': 'Gastos asociados a la remuneración del personal vinculado mediante relación laboral, incluyendo asignación básica y demás factores salariales reconocidos.' },
+    ];
+  }
+
+  private generarEntidadesReciprocasProtocolo(): ProtocoloRegistro[] {
+    const base: Array<{ codigo: string; nombre: string }> = [
       { codigo: '102000000', nombre: 'CONTRALORÍA GENERAL DE LA REPÚBLICA' },
       { codigo: '104500000', nombre: 'DEPARTAMENTO ADMINISTRATIVO NACIONAL DE ESTADÍSTICA' },
       { codigo: '105000000', nombre: 'DEPARTAMENTO NACIONAL DE PLANEACIÓN' },
@@ -1154,6 +1446,23 @@ export class FormulariosComponent {
       { codigo: '114500000', nombre: 'ALCALDÍA DE CARTAGENA' },
       { codigo: '114600000', nombre: 'ALCALDÍA DE BUCARAMANGA' },
     ];
+    // Enriquecemos cada entidad con los 6 campos de la lista (NIT, Tipo,
+    // Departamento, Estado) derivados de forma determinística sobre el set base.
+    const deptos = [
+      'Bogotá D.C.', 'Antioquia', 'Atlántico', 'Bolívar', 'Boyacá', 'Caldas',
+      'Cundinamarca', 'Santander', 'Valle del Cauca', 'Nariño', 'Tolima',
+    ];
+    return base.map(({ codigo, nombre }, i) => {
+      const territorial = nombre.startsWith('GOBERNACIÓN') || nombre.startsWith('ALCALDÍA');
+      return {
+        'Código': codigo,
+        'NIT': `${codigo.slice(0, 9)}-${(i % 9) + 1}`,
+        'Razón social': nombre,
+        'Tipo': territorial ? 'Territorial' : 'Nacional',
+        'Departamento': deptos[i % deptos.length],
+        'Estado': i % 7 === 0 ? 'Inactiva' : 'Activa',
+      };
+    });
   }
 
   getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {

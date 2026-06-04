@@ -1771,6 +1771,31 @@
   .p-paginator .p-select {
     min-width: 70px;
   }
+
+  /* Columnas dinámicas: con table-layout fixed el ancho lo dictan los <th>
+     (proporcional a field_len). El contenido largo se trunca con "…". */
+  .p-datatable-tbody > tr > td,
+  .p-datatable-thead > tr > th {
+    overflow: hidden;
+  }
+}
+
+/* Celda truncable de las columnas dinámicas: una sola línea + elipsis.
+   El valor completo queda disponible en el tooltip (pTooltip). */
+.prot-lista__cell {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Campos numéricos (field_type = 'N') alineados a la derecha. */
+.prot-lista__th--num,
+.prot-lista__td--num {
+  text-align: right;
+
+  .prot-lista__cell { text-align: right; }
 }
 
 /* ─────────── Tab "Registro de Encabezado/Detalle" — ejemplo + lista de campos ─────────── */
