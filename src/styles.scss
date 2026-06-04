@@ -653,6 +653,144 @@ textarea.p-inputtext {
 }
 
 /* ==========================================================================
+   Paginadores reutilizables (reciclados del tree-table estándar)
+   Look unificado para paginación de columnas y de registros en tablas/modales.
+   ========================================================================== */
+
+/* Paginador horizontal de columnas */
+.chip-colpager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--chip-bg-white-smoke);
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+
+  &__label {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    font-weight: 600;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__btn {
+    background: #fff;
+    border: 1px solid var(--chip-grey-300);
+    color: var(--chip-grey-700);
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover:not(:disabled) {
+      border-color: var(--chip-cobalt-500);
+      color: var(--chip-cobalt-700);
+      background: var(--chip-cobalt-50);
+    }
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-500);
+      outline-offset: 1px;
+    }
+  }
+
+  &__pageinfo {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    min-width: 80px;
+    text-align: center;
+  }
+}
+
+/* Paginador de registros (barra con etiqueta + controles + tamaño de página) */
+.chip-listpager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-4);
+  background: var(--chip-bg-white-smoke);
+  border: 1px solid var(--chip-grey-200);
+  border-left: 4px solid var(--chip-cobalt-500);
+  border-radius: var(--radius-md);
+
+  &__label {
+    font-size: 12px;
+    color: var(--chip-grey-700);
+    font-weight: 600;
+  }
+
+  &__controls {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__btn {
+    background: #fff;
+    border: 1px solid var(--chip-grey-300);
+    color: var(--chip-grey-700);
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    i { font-size: 10px; }
+
+    &:hover:not(:disabled) {
+      border-color: var(--chip-cobalt-500);
+      color: var(--chip-cobalt-700);
+      background: var(--chip-cobalt-50);
+    }
+
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-500);
+      outline-offset: 1px;
+    }
+  }
+
+  &__page {
+    font-size: 12px;
+    color: var(--chip-grey-700);
+    min-width: 50px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.chip-listpager__select .p-select {
+  height: 26px;
+  min-height: 26px;
+  font-size: 12px;
+
+  .p-select-label {
+    padding: 0 8px;
+    line-height: 24px;
+    font-size: 12px;
+  }
+
+  .p-select-dropdown { width: 22px; }
+}
+
+/* ==========================================================================
    Dark Mode
    ========================================================================== */
 
