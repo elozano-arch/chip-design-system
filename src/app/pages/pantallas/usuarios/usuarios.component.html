@@ -293,17 +293,17 @@
           (blur)="nuevoCodigoTouched = true"
           [class.ng-invalid]="nuevoCodigoInvalid"
           [class.ng-dirty]="nuevoCodigoTouched"
-          placeholder="Ej: ABCD123456"
-          maxlength="10"
+          placeholder="Ej: USER_CODIG"
+          maxlength="30"
           class="w-full"
           aria-required="true"
           [attr.aria-invalid]="nuevoCodigoInvalid"
           aria-describedby="nuevo-codigo-help nuevo-codigo-error" />
-        <small id="nuevo-codigo-help" class="usr-dialog__help">Formato: 4 letras + 6 números (ej: JLMU880704)</small>
+        <small id="nuevo-codigo-help" class="usr-dialog__help">4 a 30 caracteres: mayúsculas (A-Z), números y guion bajo. No al inicio ni al final. Ej: USER_CODIG</small>
         @if (nuevoCodigoVacio) {
           <small id="nuevo-codigo-error" class="usr-dialog__error">El usuario es obligatorio.</small>
         } @else if (nuevoCodigoFormatoInvalido) {
-          <small id="nuevo-codigo-error" class="usr-dialog__error">El usuario debe tener 4 letras seguidas de 6 números.</small>
+          <small id="nuevo-codigo-error" class="usr-dialog__error">El usuario solo admite mayúsculas (A-Z), números y guion bajo, entre 4 y 30 caracteres, y no puede empezar ni terminar con guion bajo.</small>
         } @else if (nuevoCodigoDuplicado) {
           <small id="nuevo-codigo-error" class="usr-dialog__error">Este usuario ya está registrado. Use uno diferente.</small>
         }
