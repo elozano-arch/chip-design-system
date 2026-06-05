@@ -483,14 +483,18 @@ export class UsuariosComponent {
 
   // ── Validaciones CH-1368 (Crear usuario) ──
   private readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  private readonly CODIGO_REGEX = /^[A-Z]{4}[0-9]{6}$/;
+  // Código de usuario: mayúsculas A-Z (incluida Ñ), números y guion bajo;
+  // 4-30 caracteres; no puede iniciar ni terminar con guion bajo.
+  // El primer carácter debe ser letra A-Z (incluida Ñ) o número (regla 3, aclarada por Jorge).
+  private readonly CODIGO_REGEX = /^[A-ZÑ0-9][A-ZÑ0-9_]{2,28}[A-ZÑ0-9]$/;
 
   get nuevoCodigoVacio(): boolean {
     return this.nuevoCodigoTouched && !this.nuevoCodigo.trim();
   }
   get nuevoCodigoFormatoInvalido(): boolean {
     if (!this.nuevoCodigoTouched || !this.nuevoCodigo.trim()) return false;
-    return !this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase());
+    // Sin toUpperCase: las minúsculas son inválidas por regla y deben rechazarse.
+    return !this.CODIGO_REGEX.test(this.nuevoCodigo.trim());
   }
   get nuevoCodigoDuplicado(): boolean {
     if (!this.nuevoCodigoTouched || !this.nuevoCodigo.trim()) return false;
@@ -562,7 +566,7 @@ export class UsuariosComponent {
 
   get nuevoFormValido(): boolean {
     return !!this.nuevoCodigo.trim()
-      && this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase())
+      && this.CODIGO_REGEX.test(this.nuevoCodigo.trim())
       && !this.usuarios.some(u => u.codigo.toUpperCase() === this.nuevoCodigo.trim().toUpperCase())
       && !!this.nuevoNombre.trim()
       && !!this.nuevoCorreo.trim()
@@ -581,8 +585,8 @@ export class UsuariosComponent {
     // Usuario (código)
     if (!this.nuevoCodigo.trim()) {
       errors.push('El usuario es obligatorio.');
-    } else if (!this.CODIGO_REGEX.test(this.nuevoCodigo.trim().toUpperCase())) {
-      errors.push('El usuario debe tener 4 letras seguidas de 6 números.');
+    } else if (!this.CODIGO_REGEX.test(this.nuevoCodigo.trim())) {
+      errors.push('El usuario solo admite mayúsculas (A-Z), números y guion bajo, entre 4 y 30 caracteres, y no puede empezar ni terminar con guion bajo.');
     } else if (this.usuarios.some(u => u.codigo.toUpperCase() === this.nuevoCodigo.trim().toUpperCase())) {
       errors.push('Este usuario ya está registrado. Use uno diferente.');
     }
