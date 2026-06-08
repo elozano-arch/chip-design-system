@@ -1748,30 +1748,6 @@
     font-size: 13px;
   }
 
-  /* Paginador en una sola línea — evita que la sección 'X de Y' o el selector
-     de filas por página se vayan a una segunda línea dentro del modal. */
-  .p-paginator {
-    border-top: 1px solid var(--chip-grey-100);
-    background: transparent;
-    padding: var(--space-2) var(--space-3);
-    flex-wrap: nowrap;
-    gap: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .p-paginator-current {
-    font-size: 12px;
-    color: var(--chip-grey-600);
-    white-space: nowrap;
-    margin: 0;
-  }
-
-  .p-paginator .p-select {
-    min-width: 70px;
-  }
-
   /* Columnas dinámicas: con table-layout fixed el ancho lo dictan los <th>
      (proporcional a field_len). El contenido largo se trunca con "…". */
   .p-datatable-tbody > tr > td,
