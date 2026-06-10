@@ -1,0 +1,305 @@
+<!-- ════════════════════════════════════════════════════════════
+     Tree-table estándar reutilizable (config-driven)
+     ════════════════════════════════════════════════════════════ -->
+<div class="ttc">
+
+  <!-- Toolbar (búsqueda + column toggle + modo expansión) -->
+  @if (searchable || columnToggle || permitirCambioModo) {
+    <section class="ttc-toolbar" role="region" aria-label="Controles de la tabla">
+      @if (searchable) {
+        <div class="ttc-toolbar__left">
+          <p-iconfield iconPosition="left">
+            <p-inputicon styleClass="pi pi-search" />
+            <input pInputText type="text"
+              [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
+              placeholder="Buscar por código o concepto…"
+              aria-label="Búsqueda global en el árbol" />
+            @if (busqueda()) {
+              <button type="button" class="ttc-toolbar__clear" (click)="limpiarBusqueda()"
+                aria-label="Limpiar búsqueda">
+                <i class="pi pi-times" aria-hidden="true"></i>
+              </button>
+            }
+          </p-iconfield>
+        </div>
+      }
+
+      <div class="ttc-toolbar__right">
+        @if (columnToggle) {
+          <p-multiSelect
+            [options]="opcionesColumnas()"
+            optionLabel="label" optionValue="value"
+            [ngModel]="columnasVisiblesKeys()"
+            (ngModelChange)="cambiarColumnasVisibles($event)"
+            placeholder="Columnas"
+            selectedItemsLabel="{0} columnas"
+            [maxSelectedLabels]="1"
+            styleClass="ttc-colselect"
+            appendTo="body"
+            ariaLabel="Seleccionar columnas visibles" />
+        }
+        @if (permitirCambioModo) {
+          <label class="ttc-toolbar__toggle">
+            <p-toggleswitch [ngModel]="modoUnaRama()"
+              (ngModelChange)="modoUnaRama.set($event); cambiarModoExpansion()"
+              [inputId]="uid + '-modo'" />
+            <span>Una sola rama</span>
+          </label>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Miga de pan del nodo activo -->
+  @if (rutaActiva().length > 0) {
+    <nav class="ttc-crumb" aria-label="Ruta del nodo activo">
+      <i class="pi pi-map-marker" aria-hidden="true"></i>
+      <span class="ttc-crumb__label">Estás en:</span>
+      @for (n of rutaActiva(); track n.id; let last = $last) {
+        <button type="button" class="ttc-crumb__item"
+          [class.ttc-crumb__item--last]="last"
+          (click)="irANodo(n.id)"
+          [disabled]="last">
+          <code>{{ n.codigo }}</code>
+          <span>{{ n.nombre }}</span>
+        </button>
+        @if (!last) {
+          <i class="pi pi-angle-right ttc-crumb__sep" aria-hidden="true"></i>
+        }
+      }
+    </nav>
+  }
+
+  <!-- Sticky bar de cambios pendientes (solo editable) -->
+  @if (editable && cambiosPendientes().length > 0) {
+    <div class="ttc-sticky" role="status" aria-live="polite">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      <div class="ttc-sticky__text">
+        <strong>
+          {{ cambiosPendientes().length }}
+          {{ cambiosPendientes().length === 1 ? 'cambio pendiente' : 'cambios pendientes' }} de guardar
+        </strong>
+        <span>Los cambios se enviarán al {{ destinoGuardado }} al guardar.</span>
+      </div>
+      <div class="ttc-sticky__actions">
+        <p-button label="Descartar" icon="pi pi-undo" [text]="true" severity="secondary"
+          (onClick)="descartarCambios()" />
+        <p-button label="Guardar cambios" icon="pi pi-check"
+          (onClick)="guardarCambios()" />
+      </div>
+    </div>
+  }
+
+  <!-- Paginador horizontal de columnas variables -->
+  @if (columnPager) {
+    <div class="ttc-colpager" role="region" aria-label="Paginador de columnas variables">
+      <span class="ttc-colpager__label">{{ rangoColumnasTxt() }}</span>
+      <div class="ttc-colpager__controls">
+        <button type="button" class="ttc-colpager__btn"
+          (click)="cambiarPaginaColumnas(-1)"
+          [disabled]="paginaColumnas() === 0"
+          aria-label="Columnas anteriores">
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
+        </button>
+        <span class="ttc-colpager__pageinfo">
+          Página {{ paginaColumnas() + 1 }} / {{ totalPaginasColumnas() }}
+        </span>
+        <button type="button" class="ttc-colpager__btn"
+          (click)="cambiarPaginaColumnas(1)"
+          [disabled]="paginaColumnas() >= totalPaginasColumnas() - 1"
+          aria-label="Siguientes columnas">
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Tree-table -->
+  <div class="ttc-tablewrap" [class.ttc-tablewrap--flat]="!columnPager">
+    <table class="ttc-table" role="treegrid" aria-label="Tabla jerárquica de conceptos">
+      <caption class="sr-only">Conceptos contables con jerarquía y paginación por nodo padre.</caption>
+      <thead>
+        <tr>
+          @for (col of columnasFijas; track col.key) {
+            <th [style.width]="col.ancho" scope="col" class="ttc-th ttc-th--fija">{{ col.label }}</th>
+          }
+          @for (col of columnasMostradas(); track col.key) {
+            <th scope="col" class="ttc-th"
+              [class.ttc-th--right]="col.alineacion === 'right'"
+              [class.ttc-th--center]="col.alineacion === 'center'">
+              {{ col.label }}
+              @if (esEditableCelda(col)) {
+                <i class="pi pi-pencil ttc-th__edit" aria-hidden="true"
+                  pTooltip="Columna editable" tooltipPosition="top"></i>
+              }
+            </th>
+          }
+          @if (rowMenu) {
+            <th scope="col" class="ttc-th ttc-th--center ttc-th--acciones">Acciones</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (padre of arbolFiltrado(); track padre.id) {
+          <ng-container *ngTemplateOutlet="filaNodo; context: { $implicit: padre }"></ng-container>
+        }
+        @if (arbolFiltrado().length === 0) {
+          <tr>
+            <td [attr.colspan]="colspanTotal()" class="ttc-empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>No se encontraron resultados para "{{ busqueda() }}".</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Menú contextual compartido (popup) -->
+@if (rowMenu) {
+  <p-menu #rowMenuRef [model]="menuModel()" [popup]="true" appendTo="body" />
+}
+
+<!-- ════════════════════════════════════════════════════════════
+     Template recursivo para cada nodo del árbol
+     ════════════════════════════════════════════════════════════ -->
+<ng-template #filaNodo let-nodo>
+  <tr class="ttc-row"
+    [class.ttc-row--padre]="nodo.hijos.length > 0"
+    [class.ttc-row--activa]="esNodoActivo(nodo)"
+    [attr.aria-expanded]="nodo.hijos.length > 0 ? estaExpandido(nodo) : null">
+
+    <!-- Columnas fijas -->
+    <td class="ttc-td ttc-td--fija ttc-td--codigo" [attr.data-nivel]="nodo.nivel">
+      <div class="ttc-td__codigo-wrap" [style.paddingLeft.px]="(nodo.nivel - 1) * 20">
+        @if (nodo.hijos.length > 0) {
+          <button type="button" class="ttc-toggle"
+            (click)="toggleNodo(nodo)"
+            [attr.aria-label]="(estaExpandido(nodo) ? 'Colapsar ' : 'Expandir ') + nodo.codigo">
+            <i class="pi" [class.pi-chevron-down]="estaExpandido(nodo)"
+              [class.pi-chevron-right]="!estaExpandido(nodo)" aria-hidden="true"></i>
+          </button>
+        } @else {
+          <span class="ttc-toggle ttc-toggle--leaf" aria-hidden="true"></span>
+        }
+        <code class="ttc-code">{{ nodo.codigo }}</code>
+      </div>
+    </td>
+    <td class="ttc-td ttc-td--fija ttc-td--nombre">{{ nodo.nombre }}</td>
+
+    <!-- Columnas variables -->
+    @for (col of columnasMostradas(); track col.key) {
+      <td class="ttc-td ttc-td--data"
+        [class.ttc-td--right]="col.alineacion === 'right'"
+        [class.ttc-td--center]="col.alineacion === 'center'"
+        [class.ttc-td--editable]="esEditableCelda(col)"
+        [class.ttc-td--modificada]="hayCambioEn(nodo.id, col.key)"
+        (click)="iniciarEdicion(nodo, col)"
+        [attr.tabindex]="esEditableCelda(col) ? 0 : null"
+        (keydown.enter)="iniciarEdicion(nodo, col)">
+        @if (estaEditando(nodo, col)) {
+          @if (col.tipo === 'numero') {
+            <input pInputText type="number"
+              class="ttc-input"
+              [ngModel]="valorEditando()"
+              (ngModelChange)="valorEditando.set($event)"
+              (blur)="confirmarEdicion(nodo, col)"
+              (keydown.enter)="confirmarEdicion(nodo, col)"
+              (keydown.escape)="cancelarEdicion()"
+              autofocus />
+          } @else if (col.tipo === 'seleccion') {
+            <p-select
+              styleClass="ttc-select"
+              [options]="col.opciones ?? []"
+              [ngModel]="valorEditando()"
+              (ngModelChange)="valorEditando.set($event); confirmarEdicion(nodo, col)"
+              appendTo="body"
+              [autofocus]="true"
+              [style]="{ width: '100%' }" />
+          } @else {
+            <input pInputText type="text"
+              class="ttc-input"
+              [ngModel]="valorEditando()"
+              (ngModelChange)="valorEditando.set($event)"
+              (blur)="confirmarEdicion(nodo, col)"
+              (keydown.enter)="confirmarEdicion(nodo, col)"
+              (keydown.escape)="cancelarEdicion()"
+              autofocus />
+          }
+        } @else {
+          @if (esColumnaConTag(col)) {
+            <p-tag [value]="formatearValor(nodo.valores[col.key], col)"
+              [severity]="severidadValor(nodo.valores[col.key], col)"
+              [rounded]="true" />
+          } @else {
+            {{ formatearValor(nodo.valores[col.key], col) }}
+          }
+          @if (esEditableCelda(col)) {
+            <i class="pi pi-pencil ttc-td__edit-icon" aria-hidden="true"></i>
+          }
+        }
+      </td>
+    }
+
+    <!-- Columna de acciones (menú contextual por fila) -->
+    @if (rowMenu) {
+      <td class="ttc-td ttc-td--acciones ttc-td--center">
+        <p-button
+          icon="pi pi-ellipsis-v"
+          [rounded]="true"
+          [text]="true"
+          severity="secondary"
+          size="small"
+          pTooltip="Más acciones"
+          tooltipPosition="left"
+          [attr.aria-label]="'Más acciones para ' + nodo.codigo"
+          (onClick)="onRowMenu(nodo, $event)" />
+      </td>
+    }
+  </tr>
+
+  <!-- Hijos del nodo expandido + paginador del nodo padre -->
+  @if (estaExpandido(nodo) && nodo.hijos.length > 0) {
+    @for (hijo of filasVisiblesNodo(nodo); track hijo.id) {
+      <ng-container *ngTemplateOutlet="filaNodo; context: { $implicit: hijo }"></ng-container>
+    }
+
+    @if (necesitaPaginador(nodo)) {
+      <tr class="ttc-paginator-row">
+        <td [attr.colspan]="colspanTotal()" class="ttc-paginator">
+          <div class="ttc-paginator__inner">
+            <div class="ttc-paginator__left">
+              <code class="ttc-paginator__nodo">{{ nodo.codigo }}</code>
+              <span class="ttc-paginator__label">{{ rangoRegistrosNodo(nodo) }}</span>
+            </div>
+            <div class="ttc-paginator__controls">
+              <button type="button" class="ttc-paginator__btn"
+                (click)="cambiarPaginaNodo(nodo, -1)"
+                [disabled]="paginaActualNodo(nodo) === 0"
+                [attr.aria-label]="'Página anterior de ' + nodo.codigo">
+                <i class="pi pi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <span class="ttc-paginator__page">
+                {{ paginaActualNodo(nodo) + 1 }} / {{ totalPaginasNodo(nodo) }}
+              </span>
+              <button type="button" class="ttc-paginator__btn"
+                (click)="cambiarPaginaNodo(nodo, 1)"
+                [disabled]="paginaActualNodo(nodo) >= totalPaginasNodo(nodo) - 1"
+                [attr.aria-label]="'Página siguiente de ' + nodo.codigo">
+                <i class="pi pi-chevron-right" aria-hidden="true"></i>
+              </button>
+              <p-select [options]="opcionesTamanoPagina"
+                optionLabel="label" optionValue="value"
+                [ngModel]="tamanoPaginaNodo(nodo)"
+                (ngModelChange)="cambiarTamanoPaginaNodo(nodo, $event)"
+                styleClass="ttc-paginator__select"
+                appendTo="body"
+                [style]="{ minWidth: '70px' }" />
+            </div>
+          </div>
+        </td>
+      </tr>
+    }
+  }
+</ng-template>
