@@ -1,0 +1,231 @@
+<p-toast />
+
+<main class="tt-main" role="main">
+  <app-breadcrumb />
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <div class="tt-page-header">
+    <i class="pi pi-sitemap tt-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="tt-page-header__title">Tree-tables</h1>
+      <p class="tt-page-header__subtitle">
+        Catálogo del tree-table estándar del CHIP y sus 3 variantes funcionales, construidas
+        sobre un único componente reutilizable <code>&lt;app-tree-table&gt;</code> config-driven.
+        Cada variante activa o desactiva features (edición, menús, paginadores, selector de
+        columnas) según el caso de uso, manteniendo el mismo comportamiento base.
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       ESTÁNDARES APLICADOS
+       ============================================================ -->
+  <section class="tt-section" aria-labelledby="std-title">
+    <h2 id="std-title" class="tt-section__title">Estándares aplicados</h2>
+    <p class="tt-section__desc">
+      Decisiones acordadas con el equipo que el componente garantiza en todas sus variantes.
+    </p>
+    <div class="tt-std-grid">
+      @for (e of estandares; track e.titulo) {
+        <div class="tt-std-card">
+          <i [class]="'pi ' + e.icon + ' tt-std-card__icon'" aria-hidden="true"></i>
+          <div>
+            <h4 class="tt-std-card__title">{{ e.titulo }}</h4>
+            <p class="tt-std-card__text">{{ e.texto }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       LAS 3 VARIANTES (intro)
+       ============================================================ -->
+  <section class="tt-section" aria-labelledby="var-title">
+    <h2 id="var-title" class="tt-section__title">Las 3 variantes</h2>
+    <div class="tt-variants-intro">
+      <div class="tt-variant-tag tt-variant-tag--v1">
+        <span class="tt-variant-tag__id">V1</span>
+        <div>
+          <h4>Consulta / Visualización</h4>
+          <p>Solo lectura. Para reportes y consultas — sin edición.</p>
+        </div>
+      </div>
+      <div class="tt-variant-tag tt-variant-tag--v2">
+        <span class="tt-variant-tag__id">V2</span>
+        <div>
+          <h4>Editable / Formularios</h4>
+          <p>Edición inline + barra sticky de cambios pendientes.</p>
+        </div>
+      </div>
+      <div class="tt-variant-tag tt-variant-tag--v3">
+        <span class="tt-variant-tag__id">V3</span>
+        <div>
+          <h4>Completa</h4>
+          <p>Menús por fila + paginador de registros + selector de columnas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       V1 · CONSULTA / VISUALIZACIÓN
+       ============================================================ -->
+  <section class="tt-variant" aria-labelledby="v1-title">
+    <header class="tt-variant__header">
+      <span class="tt-variant__id tt-variant__id--v1">V1</span>
+      <h2 id="v1-title" class="tt-variant__title">Consulta / Visualización</h2>
+    </header>
+    <p class="tt-variant__desc">
+      Tabla de <strong>solo lectura</strong> para reportes y consultas. Conserva la jerarquía,
+      la búsqueda global y el paginador por nodo, pero <strong>no permite editar</strong> ni
+      muestra barra de cambios. Es la base más liviana.
+    </p>
+
+    <ul class="tt-specs">
+      <li><i class="pi pi-check" aria-hidden="true"></i> Búsqueda global</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Paginador por nodo</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Tags de estado</li>
+      <li><i class="pi pi-times" aria-hidden="true"></i> Sin edición</li>
+      <li><i class="pi pi-times" aria-hidden="true"></i> Sin menús ni column toggle</li>
+    </ul>
+
+    <div class="tt-demo">
+      <app-tree-table
+        [nodos]="arbol"
+        [columnasFijas]="columnasFijas"
+        [columnasVariables]="columnasConsulta"
+        [editable]="false"
+        [searchable]="true"
+        [pageable]="true" />
+    </div>
+
+    <div class="tt-snippet">
+      <button type="button" class="tt-snippet__copy" (click)="copySnippet('V1')"
+        [attr.aria-label]="copied['V1'] ? 'Copiado' : 'Copiar código de la variante V1'">
+        <i class="pi" [class.pi-check]="copied['V1']" [class.pi-copy]="!copied['V1']" aria-hidden="true"></i>
+        {{ copied['V1'] ? 'Copiado' : 'Copiar' }}
+      </button>
+      <pre><code>{{ snippets['V1'] }}</code></pre>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       V2 · EDITABLE / FORMULARIOS
+       ============================================================ -->
+  <section class="tt-variant" aria-labelledby="v2-title">
+    <header class="tt-variant__header">
+      <span class="tt-variant__id tt-variant__id--v2">V2</span>
+      <h2 id="v2-title" class="tt-variant__title">Editable / Formularios</h2>
+    </header>
+    <p class="tt-variant__desc">
+      Tabla <strong>editable</strong> para captura tipo formulario. Click en una celda editable
+      (marcada con lápiz) para editar inline; los cambios se acumulan en la
+      <strong>barra sticky</strong> con acciones <em>Guardar</em> / <em>Descartar</em>.
+    </p>
+
+    <ul class="tt-specs">
+      <li><i class="pi pi-check" aria-hidden="true"></i> Edición inline</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Sticky bar de cambios</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Búsqueda + paginador</li>
+      <li><i class="pi pi-times" aria-hidden="true"></i> Sin menús ni column toggle</li>
+    </ul>
+
+    <div class="tt-demo">
+      <app-tree-table
+        [nodos]="arbol"
+        [columnasFijas]="columnasFijas"
+        [columnasVariables]="columnasEditable"
+        [editable]="true"
+        [searchable]="true"
+        [pageable]="true"
+        destinoGuardado="CHIP local" />
+    </div>
+
+    <div class="tt-snippet">
+      <button type="button" class="tt-snippet__copy" (click)="copySnippet('V2')"
+        [attr.aria-label]="copied['V2'] ? 'Copiado' : 'Copiar código de la variante V2'">
+        <i class="pi" [class.pi-check]="copied['V2']" [class.pi-copy]="!copied['V2']" aria-hidden="true"></i>
+        {{ copied['V2'] ? 'Copiado' : 'Copiar' }}
+      </button>
+      <pre><code>{{ snippets['V2'] }}</code></pre>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       V3 · COMPLETA
+       ============================================================ -->
+  <section class="tt-variant" aria-labelledby="v3-title">
+    <header class="tt-variant__header">
+      <span class="tt-variant__id tt-variant__id--v3">V3</span>
+      <h2 id="v3-title" class="tt-variant__title">Completa</h2>
+    </header>
+    <p class="tt-variant__desc">
+      Variante <strong>todo incluido</strong>: añade <strong>menú contextual por fila</strong>
+      (Ver, Editar, Duplicar, Eliminar), <strong>paginación horizontal de columnas</strong> y un
+      <strong>selector de columnas</strong> (column toggle) para mostrar/ocultar columnas variables.
+      Pensada para tablas con muchas columnas y acciones por registro.
+    </p>
+
+    <ul class="tt-specs">
+      <li><i class="pi pi-check" aria-hidden="true"></i> Menú contextual por fila</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Paginador de columnas (4 a la vez)</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Column toggle</li>
+      <li><i class="pi pi-check" aria-hidden="true"></i> Edición + búsqueda + paginador</li>
+    </ul>
+
+    <div class="tt-demo">
+      <app-tree-table
+        [nodos]="arbol"
+        [columnasFijas]="columnasFijas"
+        [columnasVariables]="columnasCompleta"
+        [editable]="true"
+        [searchable]="true"
+        [pageable]="true"
+        [columnPager]="true"
+        [rowMenu]="true"
+        [columnToggle]="true" />
+    </div>
+
+    <div class="tt-snippet">
+      <button type="button" class="tt-snippet__copy" (click)="copySnippet('V3')"
+        [attr.aria-label]="copied['V3'] ? 'Copiado' : 'Copiar código de la variante V3'">
+        <i class="pi" [class.pi-check]="copied['V3']" [class.pi-copy]="!copied['V3']" aria-hidden="true"></i>
+        {{ copied['V3'] ? 'Copiado' : 'Copiar' }}
+      </button>
+      <pre><code>{{ snippets['V3'] }}</code></pre>
+    </div>
+  </section>
+
+  <p-divider />
+
+  <!-- ============================================================
+       SETUP DEL CONSUMIDOR
+       ============================================================ -->
+  <section class="tt-section tt-section--note" aria-labelledby="setup-title">
+    <h2 id="setup-title" class="tt-section__title">Requisito del consumidor</h2>
+    <p class="tt-section__desc">
+      El componente emite mensajes (guardar, descartar, acciones de menú) vía
+      <code>MessageService</code>. La pantalla que lo use debe proveer el servicio y renderizar
+      un <code>&lt;p-toast /&gt;</code> propio (uno por pantalla, compartido entre instancias).
+    </p>
+    <div class="tt-snippet">
+      <button type="button" class="tt-snippet__copy" (click)="copySnippet('setup')"
+        [attr.aria-label]="copied['setup'] ? 'Copiado' : 'Copiar código de setup'">
+        <i class="pi" [class.pi-check]="copied['setup']" [class.pi-copy]="!copied['setup']" aria-hidden="true"></i>
+        {{ copied['setup'] ? 'Copiado' : 'Copiar' }}
+      </button>
+      <pre><code>{{ snippets['setup'] }}</code></pre>
+    </div>
+  </section>
+</main>

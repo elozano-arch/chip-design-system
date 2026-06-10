@@ -67,6 +67,16 @@ export const routes: Routes = [
       import('./pages/botones/botones.component').then(m => m.BotonesComponent),
   },
   {
+    path: 'tree-tables',
+    data: {
+      breadcrumb: [
+        { label: 'Tree-tables' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/tree-tables/tree-tables.component').then(m => m.TreeTablesComponent),
+  },
+  {
     path: 'tokens',
     data: {
       breadcrumb: [

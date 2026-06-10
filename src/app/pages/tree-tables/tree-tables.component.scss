@@ -1,0 +1,293 @@
+/* ============================================================
+   APARTADO TREE-TABLES (catálogo del Design System)
+   ============================================================ */
+.tt-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* --- Page Header --- */
+.tt-page-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 16px 0 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--chip-cobalt-50);
+
+  &__icon {
+    font-size: 40px;
+    color: var(--chip-cobalt-700);
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    margin: 4px 0 0 0;
+    max-width: 820px;
+    line-height: 1.5;
+
+    code {
+      background: var(--chip-bg-white-smoke);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--chip-cobalt-700);
+    }
+  }
+}
+
+/* --- Secciones genéricas --- */
+.tt-section {
+  margin-bottom: 24px;
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin-bottom: 8px;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    margin-bottom: 20px;
+    line-height: 1.5;
+
+    code {
+      background: var(--chip-bg-white-smoke);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  &--note {
+    background: var(--chip-bg-corn-silk);
+    border-left: 4px solid var(--chip-warning);
+    padding: 20px 24px;
+    border-radius: var(--radius-md);
+
+    .tt-section__title { color: var(--chip-grey-900); }
+  }
+}
+
+/* --- Cards de estándares aplicados --- */
+.tt-std-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 992px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.tt-std-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+
+  &__icon {
+    font-size: 20px;
+    color: var(--chip-cobalt-700);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0 0 4px;
+  }
+
+  &__text {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+/* --- Intro de variantes --- */
+.tt-variants-intro {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 880px) { grid-template-columns: 1fr; }
+}
+
+.tt-variant-tag {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--chip-grey-200);
+  background: #fff;
+
+  &__id {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 14px;
+    color: #fff;
+    background: var(--chip-cobalt-700);
+    border-radius: 6px;
+    padding: 4px 10px;
+    flex-shrink: 0;
+  }
+
+  h4 {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0 0 2px;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  &--v1 { border-top: 3px solid var(--chip-info); }
+  &--v2 { border-top: 3px solid var(--chip-success); }
+  &--v3 { border-top: 3px solid var(--chip-cobalt-700); }
+}
+
+/* --- Sección de cada variante --- */
+.tt-variant {
+  margin-bottom: 24px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  &__id {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 15px;
+    color: #fff;
+    border-radius: 6px;
+    padding: 4px 12px;
+
+    &--v1 { background: var(--chip-info); }
+    &--v2 { background: var(--chip-success); }
+    &--v3 { background: var(--chip-cobalt-700); }
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-700);
+    line-height: 1.55;
+    margin: 0 0 14px;
+    max-width: 900px;
+
+    em { font-style: normal; font-weight: 600; color: var(--chip-grey-900); }
+  }
+}
+
+/* --- Specs (lista con checks) --- */
+.tt-specs {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--chip-grey-700);
+
+    .pi-check { color: var(--chip-success); }
+    .pi-times { color: var(--chip-grey-400); }
+  }
+}
+
+/* --- Contenedor del demo en vivo --- */
+.tt-demo {
+  margin-bottom: 18px;
+}
+
+/* --- Snippet copiable --- */
+.tt-snippet {
+  position: relative;
+  background: #1e1e2e;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  pre {
+    margin: 0;
+    padding: 18px 20px;
+    overflow-x: auto;
+
+    code {
+      font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #e4e4ef;
+      white-space: pre;
+    }
+  }
+
+  &__copy {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 12px;
+    font-family: var(--font-body);
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+
+    &:hover { background: rgba(255, 255, 255, 0.22); }
+
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-200);
+      outline-offset: 2px;
+    }
+
+    .pi-check { color: #7ee2a8; }
+  }
+}
