@@ -78,6 +78,14 @@ interface ColumnaRegistro {
   label: string;
 }
 
+/**
+ * Comportamiento del envío de una categoría respecto a las entidades agregadas.
+ *   noAplica    → no gestiona entidades (botón inactivo, envío directo)
+ *   obligatoria → exige ≥1 entidad (bloquea si no hay)
+ *   agregadora  → entidad agregadora (confirma responsabilidad si no hay)
+ */
+type ModoEntidades = 'noAplica' | 'obligatoria' | 'agregadora';
+
 /** Entidad disponible para asignar a la categoría desde el modal "Entidades Agregadas". */
 interface EntidadAgregada {
   id: string;
@@ -469,16 +477,29 @@ export class FormulariosComponent {
   filtersApplied = false;
   filtersCollapsed = false;
 
-  categoriaOptions = [
+  /**
+   * `modoEntidades` define cómo se comporta el envío de la categoría frente a
+   * las entidades agregadas (3 escenarios):
+   *   • 'noAplica'    → la categoría no gestiona entidades agregadas. El botón
+   *                     "Entidades agregadas" queda inactivo y el envío procede
+   *                     sin validar entidades.
+   *   • 'obligatoria' → exige al menos una entidad. Si no hay, el envío se
+   *                     bloquea con un mensaje (Alerta 1).
+   *   • 'agregadora'  → entidad agregadora: si no hay entidades configuradas,
+   *                     el envío se confirma con asunción de responsabilidad
+   *                     (Alerta 2). Ver enviarCategoria().
+   * Sin valor explícito se asume 'noAplica'.
+   */
+  categoriaOptions: { label: string; value: string; modoEntidades?: ModoEntidades }[] = [
     { label: 'Seleccione categoría', value: '' },
-    { label: 'INFORMACIÓN CONTABLE PÚBLICA CONVERGENCIA', value: 'ICP' },
-    { label: 'INFORMACIÓN PRESUPUESTAL', value: 'IP' },
-    { label: 'INFORMACIÓN FINANCIERA', value: 'IF' },
-    { label: 'CONTROL INTERNO CONTABLE', value: 'CIC' },
-    { label: 'CGR PRESUPUESTAL', value: 'CGR' },
-    { label: 'FUT GASTOS DE FUNCIONAMIENTO', value: 'FUT_GF' },
-    { label: 'FUT GASTOS DE INVERSIÓN', value: 'FUT_GI' },
-    { label: 'FUT INGRESOS', value: 'FUT_ING' },
+    { label: 'INFORMACIÓN CONTABLE PÚBLICA CONVERGENCIA', value: 'ICP', modoEntidades: 'agregadora' },
+    { label: 'INFORMACIÓN PRESUPUESTAL', value: 'IP', modoEntidades: 'obligatoria' },
+    { label: 'INFORMACIÓN FINANCIERA', value: 'IF', modoEntidades: 'noAplica' },
+    { label: 'CONTROL INTERNO CONTABLE', value: 'CIC', modoEntidades: 'obligatoria' },
+    { label: 'CGR PRESUPUESTAL', value: 'CGR', modoEntidades: 'agregadora' },
+    { label: 'FUT GASTOS DE FUNCIONAMIENTO', value: 'FUT_GF', modoEntidades: 'noAplica' },
+    { label: 'FUT GASTOS DE INVERSIÓN', value: 'FUT_GI', modoEntidades: 'noAplica' },
+    { label: 'FUT INGRESOS', value: 'FUT_ING', modoEntidades: 'noAplica' },
   ];
 
   anioOptions = [
@@ -591,6 +612,31 @@ export class FormulariosComponent {
     return lista.length > 0 && lista.every(f => f.estadoValidacion === 'Validado');
   }
 
+  /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
+  showAgregadoraDialog = false;
+
+  /** Modo de entidades agregadas de la categoría seleccionada (default noAplica). */
+  get modoEntidades(): ModoEntidades {
+    return this.categoriaOptions.find(o => o.value === this.selectedCategoria)?.modoEntidades
+      ?? 'noAplica';
+  }
+
+  /** True cuando la categoría gestiona entidades agregadas (habilita el botón). */
+  get entidadesAgregadasHabilitado(): boolean {
+    return this.modoEntidades !== 'noAplica';
+  }
+
+  /** True si la categoría seleccionada corresponde a una entidad agregadora. */
+  get categoriaEsAgregadora(): boolean {
+    return this.modoEntidades === 'agregadora';
+  }
+
+  /** Etiqueta legible de la categoría seleccionada (para mensajes/diálogos). */
+  get categoriaLabel(): string {
+    return this.categoriaOptions.find(o => o.value === this.selectedCategoria)?.label
+      ?? 'la categoría';
+  }
+
   enviarCategoria() {
     if (!this.todosValidados) {
       this.messageService.add({
@@ -601,6 +647,42 @@ export class FormulariosComponent {
       });
       return;
     }
+
+    // La categoría gestiona entidades agregadas y no hay ninguna configurada →
+    // dos escenarios según el modo. Las categorías 'noAplica' se saltan esta
+    // validación y envían directo.
+    if (this.entidadesAgregadasHabilitado && this.selectedEntidades.length === 0) {
+      if (this.categoriaEsAgregadora) {
+        // Alerta 2: entidad agregadora — confirma asunción de responsabilidad.
+        this.showAgregadoraDialog = true;
+      } else {
+        // Alerta 1: bloqueo — es obligatorio seleccionar al menos una entidad.
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Seleccione entidades agregadas',
+          detail: 'Debe agregar al menos una entidad antes de enviar la categoría. Use el botón "Entidades agregadas" para configurarlas.',
+          life: 6000,
+        });
+      }
+      return;
+    }
+
+    this.procederEnvioCategoria();
+  }
+
+  /** Confirmación del diálogo de entidad agregadora (Alerta 2). */
+  confirmarEnvioAgregadora() {
+    this.showAgregadoraDialog = false;
+    this.procederEnvioCategoria();
+  }
+
+  /** Cancela el diálogo de entidad agregadora sin enviar. */
+  cancelarEnvioAgregadora() {
+    this.showAgregadoraDialog = false;
+  }
+
+  /** Envío efectivo de la categoría — reutilizado por ambos caminos. */
+  private procederEnvioCategoria() {
     // Simula el envío: pasan a "Enviado" — esperando respuesta central.
     this._formulariosBase = this._formulariosBase.map(f => ({ ...f, estadoValidacion: 'Enviado' }));
     this.messageService.add({
