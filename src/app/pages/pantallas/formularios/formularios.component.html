@@ -796,10 +796,13 @@
             (onClick)="executeAction('enviarAdjunto')" />
           <span class="form-action-badge-wrap">
             <p-button label="Entidades agregadas" icon="pi pi-sitemap"
-              pTooltip="Revisar o ajustar las entidades destino del envío"
+              [disabled]="!entidadesAgregadasHabilitado"
+              [pTooltip]="entidadesAgregadasHabilitado
+                ? 'Seleccione las entidades agregadas para el envío de la categoría'
+                : 'Esta entidad no es agregadora'"
               tooltipPosition="top"
               (onClick)="executeAction('entidadesAgregadas')" />
-            @if (selectedEntidades.length > 0) {
+            @if (entidadesAgregadasHabilitado && selectedEntidades.length > 0) {
               <span class="form-action-badge"
                 [attr.aria-label]="selectedEntidades.length + ' entidades seleccionadas'">
                 {{ selectedEntidades.length }}
@@ -842,6 +845,40 @@
       </section>
     }
   </div>
+
+  <!-- ============================================================= -->
+  <!-- DIÁLOGO: ENTIDAD AGREGADORA SIN ENTIDADES (Alerta 2)           -->
+  <!-- ============================================================= -->
+  <p-dialog
+    [visible]="showAgregadoraDialog"
+    (visibleChange)="$event === false && cancelarEnvioAgregadora()"
+    [modal]="true"
+    [draggable]="false"
+    [closeOnEscape]="true"
+    [style]="{ width: '500px', maxWidth: '95vw' }"
+    header="Entidad agregadora sin entidades configuradas">
+    <div class="form-confirm-dialog">
+      <i class="pi pi-exclamation-triangle form-confirm-dialog__icon" aria-hidden="true"></i>
+      <div class="form-confirm-dialog__body">
+        <p>
+          Su entidad está configurada como <strong>entidad agregadora</strong> para
+          <strong>{{ categoriaLabel }}</strong>, pero no tiene entidades agregadas
+          configuradas para esta categoría.
+        </p>
+        <p>
+          Es responsabilidad de la entidad agregadora reportar sus entidades agregadas.
+          Si continúa sin configurarlas, <strong>asume la responsabilidad</strong> de
+          enviar la categoría sin entidades asociadas.
+        </p>
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="cancelarEnvioAgregadora()" />
+      <p-button label="Continuar y enviar" icon="pi pi-send" iconPos="right"
+        (onClick)="confirmarEnvioAgregadora()" />
+    </ng-template>
+  </p-dialog>
 
   <!-- ============================================================= -->
   <!-- MODAL DE EDICIÓN INLINE DE REGISTRO                            -->

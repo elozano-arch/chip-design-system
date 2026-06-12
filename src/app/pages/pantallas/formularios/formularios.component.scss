@@ -1290,6 +1290,37 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────
+   Diálogo de confirmación con icono de alerta (entidad agregadora).
+   Patrón estándar de "Diálogos de confirmación" del DS.
+   ───────────────────────────────────────────────────────────────── */
+.form-confirm-dialog {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  font-family: var(--font-body);
+
+  &__icon {
+    flex: 0 0 auto;
+    font-size: 24px;
+    color: var(--chip-warning);
+    margin-top: 2px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--chip-grey-700);
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
    Context bar del wizard — filtros aplicados read-only visibles en
    los 3 steps. Sólo se editan desde el Paso 1 (botón "Editar filtros").
    ───────────────────────────────────────────────────────────────── */
