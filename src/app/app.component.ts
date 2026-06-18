@@ -25,6 +25,7 @@ export class AppComponent {
   mobileMenuOpen = false;
   sidebarCollapsed = false;
   darkMode = false;
+  componentesOpen = true;
   seguridadOpen = true;
   formulariosOpen = true;
   formulariosSubOpen = true;

@@ -1,0 +1,134 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-chevron-circle-down ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Listas desplegables</h1>
+      <p class="ds-page-header__subtitle">
+        Estándar de selección sobre <code>p-select</code> y <code>p-multiSelect</code> de PrimeNG.
+        Regla central: <strong>elegir el componente según el caso de uso</strong> (única vs múltiple)
+        y <strong>activar el buscador cuando hay más de 10 opciones</strong>. Alineado con el Kit UI 9.2 GOV.CO.
+      </p>
+    </div>
+  </div>
+
+  <!-- QUÉ DEBE LLEVAR -->
+  <section class="ds-section" aria-labelledby="ld-bp">
+    <h2 id="ld-bp" class="ds-section__title">Qué debe llevar una lista desplegable</h2>
+    <div class="ds-cards">
+      <div class="ds-bp">
+        <i class="pi pi-tag" aria-hidden="true"></i>
+        <h4>Label visible asociado</h4>
+        <p><code>&lt;label for="x"&gt;</code> apuntando a <code>inputId="x"</code> (no <code>id</code>). El label va encima, nunca flotante.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <h4>Buscador desde 10 opciones</h4>
+        <p><code>[filter]="true"</code> con <code>filterBy</code> y <code>filterPlaceholder</code> cuando la lista supera las 10 opciones.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-pencil" aria-hidden="true"></i>
+        <h4>Placeholder en imperativo</h4>
+        <p>"Selecciona una entidad", no un valor por defecto. <code>[showClear]</code> sólo si el campo es opcional.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-eye" aria-hidden="true"></i>
+        <h4>Accesibilidad</h4>
+        <p><code>aria-required</code> y <code>aria-invalid</code> cuando aplica, error con texto que explica cómo solucionar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- UMBRAL -->
+  <section class="ds-section" aria-labelledby="ld-umbral">
+    <h2 id="ld-umbral" class="ds-section__title">Umbral de búsqueda</h2>
+    <table class="ds-umbral">
+      <thead>
+        <tr><th>Tamaño de la lista</th><th>Componente</th><th>Buscador</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>2 – 10 opciones</td><td><code>p-select</code> / <code>p-multiSelect</code></td><td>No</td></tr>
+        <tr><td>11 – 50 opciones</td><td><code>[filter]="true"</code></td><td>Sí</td></tr>
+        <tr><td>50+ o desde backend</td><td><code>[filter]</code> + <code>(onFilter)</code> con debounce</td><td>Sí</td></tr>
+      </tbody>
+    </table>
+    <p class="ds-note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Excepción: listas con orden semántico fuerte (meses, prioridad) pueden omitir el buscador aunque pasen de 10.
+    </p>
+  </section>
+
+  <!-- V1 · p-select simple -->
+  <section class="cmp-variant" aria-labelledby="v1-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="v1-title" class="cmp-variant__title">Selección única (≤ 10 opciones)</h2>
+    </header>
+    <p class="cmp-variant__desc">Caso por defecto: el usuario elige un solo valor de una lista corta y cerrada. Sin buscador.</p>
+
+    <div class="cmp-variant__demo">
+      <div class="cmp-field">
+        <label for="demo-estado">Estado</label>
+        <p-select inputId="demo-estado" [options]="estados" [(ngModel)]="estadoSel" optionLabel="label" optionValue="value" placeholder="Selecciona un estado" [showClear]="true" styleClass="cmp-field__control" />
+      </div>
+    </div>
+
+    <app-code-block [code]="snVSimple" language="markup" />
+  </section>
+
+  <!-- V2 · p-select con buscador -->
+  <section class="cmp-variant" aria-labelledby="v2-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">02</span>
+      <h2 id="v2-title" class="cmp-variant__title">Selección única con buscador (&gt; 10 opciones)</h2>
+    </header>
+    <p class="cmp-variant__desc">Lista larga: se activa <code>[filter]</code> para que el usuario escriba en vez de scrollear. Obligatorio a partir de 10 opciones.</p>
+
+    <div class="cmp-variant__demo">
+      <div class="cmp-field">
+        <label for="demo-entidad">Entidad <span class="field-required">*</span></label>
+        <p-select inputId="demo-entidad" [options]="entidades" [(ngModel)]="entidadSel" optionLabel="label" optionValue="value" placeholder="Selecciona una entidad" [filter]="true" filterBy="label" [resetFilterOnHide]="true" filterPlaceholder="Buscar entidad..." emptyFilterMessage="No se encontraron resultados" [showClear]="true" aria-required="true" styleClass="cmp-field__control" />
+      </div>
+    </div>
+
+    <app-code-block [code]="snVFilter" language="markup" />
+  </section>
+
+  <!-- V3 · p-multiSelect -->
+  <section class="cmp-variant" aria-labelledby="v3-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">03</span>
+      <h2 id="v3-title" class="cmp-variant__title">Selección múltiple (chips)</h2>
+    </header>
+    <p class="cmp-variant__desc">El usuario elige varios valores. <code>display="chip"</code> para ver cada selección; <code>maxSelectedLabels</code> compacta cuando hay muchas.</p>
+
+    <div class="cmp-variant__demo">
+      <div class="cmp-field">
+        <label for="demo-permisos">Permisos asignados</label>
+        <p-multiSelect inputId="demo-permisos" [options]="permisos" [(ngModel)]="permisosSel" optionLabel="label" optionValue="value" placeholder="Selecciona permisos" display="chip" [maxSelectedLabels]="3" selectedItemsLabel="{0} permisos seleccionados" styleClass="cmp-field__control" />
+      </div>
+    </div>
+
+    <app-code-block [code]="snVMulti" language="markup" />
+  </section>
+
+  <!-- V4 · p-multiSelect con buscador -->
+  <section class="cmp-variant" aria-labelledby="v4-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">04</span>
+      <h2 id="v4-title" class="cmp-variant__title">Selección múltiple con buscador (&gt; 10 opciones)</h2>
+    </header>
+    <p class="cmp-variant__desc">En multiSelect el buscador es prácticamente siempre obligatorio cuando la lista pasa de 10, porque crece más rápido en pantalla.</p>
+
+    <div class="cmp-variant__demo">
+      <div class="cmp-field">
+        <label for="demo-municipios">Municipios</label>
+        <p-multiSelect inputId="demo-municipios" [options]="municipios" [(ngModel)]="municipiosSel" optionLabel="label" optionValue="value" placeholder="Selecciona municipios" [filter]="true" filterBy="label" [maxSelectedLabels]="2" selectedItemsLabel="{0} municipios seleccionados" styleClass="cmp-field__control" />
+      </div>
+    </div>
+
+    <app-code-block [code]="snVMultiFilter" language="markup" />
+  </section>
+</main>

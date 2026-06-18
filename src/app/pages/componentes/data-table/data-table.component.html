@@ -1,0 +1,212 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-table ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Data Table</h1>
+      <p class="ds-page-header__subtitle">
+        Tabla de datos estándar sobre <code>p-table</code> de PrimeNG. Define qué debe llevar toda
+        tabla del sistema y sus variantes: con paginador, sin paginador, scroll horizontal con muchas
+        columnas, tooltip en celdas y estado vacío. Alineado con el Kit UI 9.2 GOV.CO.
+      </p>
+    </div>
+  </div>
+
+  <!-- QUÉ DEBE LLEVAR -->
+  <section class="ds-section" aria-labelledby="dt-bp">
+    <h2 id="dt-bp" class="ds-section__title">Qué debe llevar un data table</h2>
+    <div class="ds-cards">
+      <div class="ds-bp">
+        <i class="pi pi-bars" aria-hidden="true"></i>
+        <h4>Filas legibles</h4>
+        <p><code>[stripedRows]="true"</code> + <code>[rowHover]="true"</code> para diferenciar filas y dar feedback al pasar el cursor.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-list" aria-hidden="true"></i>
+        <h4>Paginador con reporte</h4>
+        <p><code>[rows]="10"</code>, <code>[rowsPerPageOptions]="[5,10,25]"</code> y <code>currentPageReportTemplate</code> "Mostrando {{ '{' }}first{{ '}' }} a {{ '{' }}last{{ '}' }} de {{ '{' }}totalRecords{{ '}' }}".</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-volume-up" aria-hidden="true"></i>
+        <h4>Caption para lectores</h4>
+        <p>Una <code>#caption</code> con texto <code>sr-only</code> que describe la tabla. Obligatoria por accesibilidad.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-inbox" aria-hidden="true"></i>
+        <h4>Estado vacío</h4>
+        <p>Template <code>#emptymessage</code> con <code>pi-inbox</code> y mensaje uniforme cuando no hay resultados.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-ellipsis-v" aria-hidden="true"></i>
+        <h4>Columna de acciones</h4>
+        <p>Última columna "Acciones": icon-only (F7) o menú contextual "…" (F8) según cuántas acciones haya.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- V1 · con paginador -->
+  <section class="cmp-variant" aria-labelledby="v1-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="v1-title" class="cmp-variant__title">Estándar con paginador (de filas)</h2>
+    </header>
+    <p class="cmp-variant__desc">El caso por defecto para cualquier listado. Paginador de filas (lo que Cris llama "paginador de grillas") con selector de cuántas mostrar y reporte de página.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <p-table [value]="registros" [stripedRows]="true" [rowHover]="true" [paginator]="true" [rows]="5" [rowsPerPageOptions]="[5, 10, 25]" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" styleClass="dt-demo">
+        <ng-template #caption><span class="sr-only">Listado de usuarios del sistema</span></ng-template>
+        <ng-template #header>
+          <tr>
+            <th>Código</th><th>Nombre</th><th>Rol</th><th>Estado</th>
+            <th scope="col" class="dt-acciones-col">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ row.codigo }}</td>
+            <td>{{ row.nombre }}</td>
+            <td>{{ row.rol }}</td>
+            <td><p-tag [value]="row.estado" [severity]="estadoSeverity(row.estado)" /></td>
+            <td>
+              <div class="dt-acciones">
+                <p-button icon="pi pi-eye" [rounded]="true" [text]="true" size="small" pTooltip="Ver detalle" [attr.aria-label]="'Ver detalle de ' + row.nombre" />
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="success" size="small" pTooltip="Editar" [attr.aria-label]="'Editar ' + row.nombre" />
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" size="small" pTooltip="Eliminar" [attr.aria-label]="'Eliminar ' + row.nombre" />
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <app-code-block [code]="snBase" language="markup" />
+  </section>
+
+  <!-- V2 · sin paginador -->
+  <section class="cmp-variant" aria-labelledby="v2-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">02</span>
+      <h2 id="v2-title" class="cmp-variant__title">Sin paginador (lista corta)</h2>
+    </header>
+    <p class="cmp-variant__desc">Cuando los registros caben de un vistazo (≈ ≤ 10 filas fijas), se omite el paginador y el reporte de página para no agregar ruido.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <p-table [value]="registrosCortos" [stripedRows]="true" [rowHover]="true" styleClass="dt-demo">
+        <ng-template #caption><span class="sr-only">Roles del sistema</span></ng-template>
+        <ng-template #header>
+          <tr><th>Código</th><th>Nombre</th><th>Rol</th><th>Estado</th></tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ row.codigo }}</td>
+            <td>{{ row.nombre }}</td>
+            <td>{{ row.rol }}</td>
+            <td><p-tag [value]="row.estado" [severity]="estadoSeverity(row.estado)" /></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <app-code-block [code]="snSinPaginador" language="markup" />
+  </section>
+
+  <!-- V3 · scroll horizontal / muchas columnas -->
+  <section class="cmp-variant" aria-labelledby="v3-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">03</span>
+      <h2 id="v3-title" class="cmp-variant__title">Muchas columnas — scroll horizontal + columna congelada</h2>
+      <span class="cmp-variant__flag">A confirmar con Cris</span>
+    </header>
+    <p class="cmp-variant__desc">
+      Para tablas anchas: <code>[scrollable]="true"</code> con la primera columna congelada (<code>pFrozenColumn</code>),
+      así el código siempre queda visible al desplazarse a la derecha. <strong>Posible interpretación de "paginador de columnas"</strong> —
+      pendiente de que Cris confirme si se refiere a esto, a un toggle de visibilidad de columnas, o a otra cosa.
+    </p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <p-table [value]="registros" [scrollable]="true" scrollHeight="300px" [stripedRows]="true" [rowHover]="true" styleClass="dt-demo">
+        <ng-template #header>
+          <tr>
+            <th pFrozenColumn style="min-width: 120px">Código</th>
+            <th style="min-width: 220px">Nombre</th>
+            <th style="min-width: 160px">Rol</th>
+            <th style="min-width: 140px">Estado</th>
+            <th style="min-width: 360px">Observación</th>
+            <th style="min-width: 140px">Fecha</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td pFrozenColumn>{{ row.codigo }}</td>
+            <td>{{ row.nombre }}</td>
+            <td>{{ row.rol }}</td>
+            <td><p-tag [value]="row.estado" [severity]="estadoSeverity(row.estado)" /></td>
+            <td>{{ row.observacion }}</td>
+            <td>{{ row.fecha }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <app-code-block [code]="snScroll" language="markup" />
+  </section>
+
+  <!-- V4 · tooltip en celdas -->
+  <section class="cmp-variant" aria-labelledby="v4-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">04</span>
+      <h2 id="v4-title" class="cmp-variant__title">Tooltip en celdas con texto largo</h2>
+    </header>
+    <p class="cmp-variant__desc">Cuando una celda puede tener texto largo, se trunca a una línea y se muestra el contenido completo en un <code>pTooltip</code> al pasar el cursor.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <p-table [value]="registrosCortos" [stripedRows]="true" [rowHover]="true" styleClass="dt-demo">
+        <ng-template #caption><span class="sr-only">Usuarios con observaciones</span></ng-template>
+        <ng-template #header>
+          <tr><th style="width: 120px">Código</th><th>Nombre</th><th>Observación</th></tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>{{ row.codigo }}</td>
+            <td>{{ row.nombre }}</td>
+            <td>
+              <span class="dt-truncate" [pTooltip]="row.observacion" tooltipPosition="top" [showDelay]="200">{{ row.observacion }}</span>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <app-code-block [code]="snTooltip" language="markup" />
+  </section>
+
+  <!-- V5 · empty state -->
+  <section class="cmp-variant" aria-labelledby="v5-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">05</span>
+      <h2 id="v5-title" class="cmp-variant__title">Estado vacío</h2>
+    </header>
+    <p class="cmp-variant__desc">Mensaje uniforme cuando no hay resultados: icono <code>pi-inbox</code> + texto centrado. El <code>colspan</code> debe cubrir todas las columnas.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <p-table [value]="registrosVacios" [stripedRows]="true" styleClass="dt-demo">
+        <ng-template #caption><span class="sr-only">Resultados de búsqueda</span></ng-template>
+        <ng-template #header>
+          <tr><th>Código</th><th>Nombre</th><th>Rol</th><th>Estado</th></tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td [attr.colspan]="4" class="dt-empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>No se encontraron resultados para los filtros aplicados.</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <app-code-block [code]="snEmpty" language="markup" />
+  </section>
+</main>

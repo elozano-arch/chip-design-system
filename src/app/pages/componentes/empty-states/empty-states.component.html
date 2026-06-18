@@ -1,0 +1,90 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-inbox ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Empty states</h1>
+      <p class="ds-page-header__subtitle">
+        El mensaje que ve el usuario cuando una tabla no tiene filas. Hay <strong>tres situaciones
+        distintas</strong> y cada una usa su propio icono y texto — no son intercambiables.
+        Se renderizan en el template <code>#emptymessage</code> de <code>p-table</code>.
+      </p>
+    </div>
+  </div>
+
+  <!-- CUÁNDO CADA UNO -->
+  <section class="ds-section" aria-labelledby="es-bp">
+    <h2 id="es-bp" class="ds-section__title">Cuándo usar cada estado</h2>
+    <table class="ds-umbral">
+      <thead>
+        <tr><th>Situación</th><th>Icono</th><th>Mensaje</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Aún no se ha buscado</td><td><code>pi-search</code></td><td>"Use los filtros y presione Buscar…"</td></tr>
+        <tr><td>Se buscó pero no hay coincidencias</td><td><code>pi-inbox</code></td><td>"No se encontraron resultados…"</td></tr>
+        <tr><td>Nunca ha habido datos</td><td><code>pi-inbox</code> + acción</td><td>"Aún no hay registros. Crea el primero."</td></tr>
+      </tbody>
+    </table>
+    <p class="ds-note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Error frecuente: usar <code>pi-inbox</code> ("sin resultados") cuando en realidad el usuario todavía no ha buscado. Si la búsqueda es manual, el estado inicial va con <code>pi-search</code>.
+    </p>
+  </section>
+
+  <!-- V1 · sin búsqueda -->
+  <section class="cmp-variant" aria-labelledby="v1-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="v1-title" class="cmp-variant__title">Estado inicial — aún no se ha buscado</h2>
+    </header>
+    <p class="cmp-variant__desc">Pantallas donde la consulta es manual (hay que presionar Buscar). Invita a usar los filtros, no dice "sin resultados".</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <div class="chip-empty">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <p>Use los filtros y presione <strong>Buscar</strong> para listar usuarios.</p>
+      </div>
+    </div>
+
+    <app-code-block [code]="snDual" language="markup" />
+  </section>
+
+  <!-- V2 · sin resultados -->
+  <section class="cmp-variant" aria-labelledby="v2-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">02</span>
+      <h2 id="v2-title" class="cmp-variant__title">Sin resultados — se buscó y no hubo coincidencias</h2>
+    </header>
+    <p class="cmp-variant__desc">El caso más común: hay filtros aplicados pero ninguna fila coincide. Icono <code>pi-inbox</code> y mensaje uniforme.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <div class="chip-empty">
+        <i class="pi pi-inbox" aria-hidden="true"></i>
+        <p>No se encontraron resultados para los filtros aplicados.</p>
+      </div>
+    </div>
+
+    <app-code-block [code]="snSinResultados" language="markup" />
+  </section>
+
+  <!-- V3 · sin datos -->
+  <section class="cmp-variant" aria-labelledby="v3-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">03</span>
+      <h2 id="v3-title" class="cmp-variant__title">Sin datos — lista que nunca ha tenido registros</h2>
+    </header>
+    <p class="cmp-variant__desc">Cuando la entidad aún no tiene ningún registro. Además del mensaje, ofrece la acción para crear el primero.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <div class="chip-empty">
+        <i class="pi pi-inbox" aria-hidden="true"></i>
+        <p>Aún no hay registros.</p>
+        <p-button label="Crear el primero" icon="pi pi-plus" size="small" />
+      </div>
+    </div>
+
+    <app-code-block [code]="snSinDatos" language="markup" />
+  </section>
+</main>

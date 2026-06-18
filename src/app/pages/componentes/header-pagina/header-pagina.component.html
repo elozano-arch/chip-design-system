@@ -1,0 +1,84 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-window-minimize ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Header de página</h1>
+      <p class="ds-page-header__subtitle">
+        El encabezado que abre casi toda pantalla del sistema: título + descripción y, opcionalmente,
+        la acción primaria a la derecha. Unificado en la clase compartida <code>chip-header</code>
+        (<code>src/styles.scss</code>) para que todas las pantallas se vean igual.
+      </p>
+    </div>
+  </div>
+
+  <!-- QUÉ DEBE LLEVAR -->
+  <section class="ds-section" aria-labelledby="hp-bp">
+    <h2 id="hp-bp" class="ds-section__title">Qué debe llevar un header de página</h2>
+    <div class="ds-cards">
+      <div class="ds-bp">
+        <i class="pi pi-hashtag" aria-hidden="true"></i>
+        <h4>Un solo <code>h1</code></h4>
+        <p>El título de la página es el único <code>&lt;h1&gt;</code>. Nunca dos por pantalla.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-align-left" aria-hidden="true"></i>
+        <h4>Descripción breve</h4>
+        <p>Una línea que explica de qué trata la pantalla, en <code>chip-header__desc</code>.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-plus" aria-hidden="true"></i>
+        <h4>Acción primaria a la derecha</h4>
+        <p>La acción principal (Crear…) va a la derecha del <code>__row</code>. Opcional: pantallas de solo consulta no la llevan.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-ban" aria-hidden="true"></i>
+        <h4>Sin co-branding</h4>
+        <p>El logo institucional + GOV.CO va sólo en el cabezote global, nunca en el header de la pantalla.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- V1 · con acción -->
+  <section class="cmp-variant" aria-labelledby="v1-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="v1-title" class="cmp-variant__title">Con acción primaria</h2>
+    </header>
+    <p class="cmp-variant__desc">El caso más común en pantallas de listado: el botón "Crear…" se alinea a la derecha de la descripción.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <div class="chip-header">
+        <h1 class="chip-header__title">Gestión de usuarios</h1>
+        <div class="chip-header__row">
+          <p class="chip-header__desc">Administra los usuarios del sistema y sus roles.</p>
+          <p-button label="Crear usuario" icon="pi pi-plus" />
+        </div>
+      </div>
+    </div>
+
+    <app-code-block [code]="snConAccion" language="markup" />
+  </section>
+
+  <!-- V2 · sin acción -->
+  <section class="cmp-variant" aria-labelledby="v2-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">02</span>
+      <h2 id="v2-title" class="cmp-variant__title">Solo consulta (sin acción)</h2>
+    </header>
+    <p class="cmp-variant__desc">Pantallas que solo muestran información (auditoría, reportes) omiten el botón. El <code>__row</code> queda solo con la descripción.</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <div class="chip-header">
+        <h1 class="chip-header__title">Auditoría</h1>
+        <div class="chip-header__row">
+          <p class="chip-header__desc">Consulta la bitácora de eventos del sistema.</p>
+        </div>
+      </div>
+    </div>
+
+    <app-code-block [code]="snSinAccion" language="markup" />
+  </section>
+</main>

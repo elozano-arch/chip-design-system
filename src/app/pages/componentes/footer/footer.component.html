@@ -1,0 +1,75 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-th-large ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Footer</h1>
+      <p class="ds-page-header__subtitle">
+        Pie de página institucional GOV.CO, definido una sola vez en <code>app.component.html</code>
+        (clase <code>app-footer</code>) y presente en todas las pantallas. Lo tienes visible justo
+        al final de esta misma página.
+      </p>
+    </div>
+  </div>
+
+  <!-- QUÉ DEBE LLEVAR -->
+  <section class="ds-section" aria-labelledby="ft-bp">
+    <h2 id="ft-bp" class="ds-section__title">Qué debe llevar el footer</h2>
+    <div class="ds-cards">
+      <div class="ds-bp">
+        <i class="pi pi-images" aria-hidden="true"></i>
+        <h4>Logos institucionales</h4>
+        <p>Ministerio de Hacienda + GOV.CO. Es el único lugar (junto al cabezote) donde va el co-branding.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-building" aria-hidden="true"></i>
+        <h4>Identidad de la entidad</h4>
+        <p>Nombre, eslogan, dirección, código postal, horario y redes sociales.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-phone" aria-hidden="true"></i>
+        <h4>Contacto y legales</h4>
+        <p>Líneas de atención, correos institucionales, políticas de privacidad y copyright.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-flag" aria-hidden="true"></i>
+        <h4>Marca de Estado</h4>
+        <p>Cierra con "Gobierno de Colombia" + GOV.CO, requisito de identidad del Estado colombiano.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANATOMÍA -->
+  <section class="ds-section" aria-labelledby="ft-anat">
+    <h2 id="ft-anat" class="ds-section__title">Anatomía (3 columnas)</h2>
+    <div class="ft-anatomy" aria-hidden="true">
+      <div class="ft-anatomy__col">
+        <span class="ft-anatomy__tag">Col 1</span>
+        <i class="pi pi-images"></i>
+        <p>Logos</p>
+      </div>
+      <div class="ft-anatomy__col ft-anatomy__col--wide">
+        <span class="ft-anatomy__tag">Col 2</span>
+        <i class="pi pi-building"></i>
+        <p>Entidad · eslogan · dirección · redes</p>
+      </div>
+      <div class="ft-anatomy__col ft-anatomy__col--wide">
+        <span class="ft-anatomy__tag">Col 3</span>
+        <i class="pi pi-phone"></i>
+        <p>Contacto · legales · copyright</p>
+      </div>
+    </div>
+    <p class="ds-note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      El footer es global: no se reimplementa por pantalla. Si hace falta ajustar contacto o enlaces, se edita en <code>app.component.html</code> y cambia en todas.
+    </p>
+  </section>
+
+  <!-- CÓDIGO -->
+  <section class="ds-section" aria-labelledby="ft-code">
+    <h2 id="ft-code" class="ds-section__title">Estructura</h2>
+    <app-code-block [code]="snFooter" language="markup" />
+  </section>
+</main>

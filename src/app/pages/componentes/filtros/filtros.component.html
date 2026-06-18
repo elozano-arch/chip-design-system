@@ -1,0 +1,101 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-filter ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Filtros colapsables</h1>
+      <p class="ds-page-header__subtitle">
+        Panel de filtros estándar de los listados. Se colapsa para ahorrar espacio y muestra los
+        filtros activos como <strong>chips removibles</strong>. Unificado en las clases globales
+        <code>chip-filters</code> (<code>src/styles.scss</code>).
+      </p>
+    </div>
+  </div>
+
+  <!-- QUÉ DEBE LLEVAR -->
+  <section class="ds-section" aria-labelledby="fl-bp">
+    <h2 id="fl-bp" class="ds-section__title">Qué debe llevar el panel de filtros</h2>
+    <div class="ds-cards">
+      <div class="ds-bp">
+        <i class="pi pi-chevron-down" aria-hidden="true"></i>
+        <h4>Toggle colapsable</h4>
+        <p>Botón que abre/cierra con <code>[attr.aria-expanded]</code> + <code>aria-controls</code> al body.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-tag" aria-hidden="true"></i>
+        <h4>Chips al colapsar</h4>
+        <p>Cuando está cerrado, cada filtro activo se ve como <code>p-chip [removable]</code> con <code>aria-live="polite"</code>.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-th-large" aria-hidden="true"></i>
+        <h4>Grid 2/3/4 columnas</h4>
+        <p>Los campos van en <code>chip-filters__fields--2col</code> / <code>--3col</code> / <code>--4col</code> según cuántos haya.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-filter-slash" aria-hidden="true"></i>
+        <h4>Limpiar todo</h4>
+        <p>Aparece sólo cuando hay filtros activos. Resetea todos los campos de una.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO INTERACTIVA -->
+  <section class="cmp-variant" aria-labelledby="fl-demo">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="fl-demo" class="cmp-variant__title">Demo interactiva</h2>
+    </header>
+    <p class="cmp-variant__desc">Selecciona filtros, colapsa el panel y verás los chips activos; quítalos con la "x" o usa "Limpiar todo".</p>
+
+    <div class="cmp-variant__demo cmp-variant__demo--block">
+      <div class="chip-filters">
+        <div class="chip-filters__header">
+          <div class="chip-filters__header-left">
+            <p-button [text]="true" severity="secondary"
+              [icon]="expandido() ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+              label="Filtros"
+              (onClick)="expandido.set(!expandido())"
+              [attr.aria-expanded]="expandido()" aria-controls="filtros-demo-body" />
+
+            @if (!expandido() && chips.length) {
+              <div class="chip-filters__chips" aria-live="polite">
+                @for (c of chips; track c.key) {
+                  <p-chip [label]="c.label" [removable]="true" (onRemove)="quitar(c.key)" />
+                }
+              </div>
+            }
+          </div>
+
+          <div class="chip-filters__header-right">
+            @if (chips.length) {
+              <p-button label="Limpiar todo" icon="pi pi-filter-slash" [text]="true" severity="secondary" (onClick)="limpiarTodo()" />
+            }
+          </div>
+        </div>
+
+        @if (expandido()) {
+          <div class="chip-filters__body" id="filtros-demo-body">
+            <div class="chip-filters__fields chip-filters__fields--3col">
+              <div class="chip-filters__field">
+                <label for="f-texto">Búsqueda</label>
+                <input pInputText id="f-texto" [(ngModel)]="texto" placeholder="Nombre o código" class="w-full" />
+              </div>
+              <div class="chip-filters__field">
+                <label for="f-estado">Estado</label>
+                <p-select inputId="f-estado" [options]="estados" [(ngModel)]="estado" optionLabel="label" optionValue="value" placeholder="Todos" [showClear]="true" styleClass="w-full" />
+              </div>
+              <div class="chip-filters__field">
+                <label for="f-rol">Rol</label>
+                <p-select inputId="f-rol" [options]="roles" [(ngModel)]="rol" optionLabel="label" optionValue="value" placeholder="Todos" [showClear]="true" styleClass="w-full" />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <app-code-block [code]="snFiltros" language="markup" />
+  </section>
+</main>

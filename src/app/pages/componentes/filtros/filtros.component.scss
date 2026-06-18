@@ -1,0 +1,12 @@
+/* Chrome de showcase compartido en src/styles.scss (.ds-* y .cmp-*);
+   panel con las clases globales .chip-filters. */
+:host {
+  display: block;
+}
+
+.cmp-variant__demo--block { padding: 16px; }
+
+/* La demo del panel ocupa todo el ancho del bloque */
+.chip-filters { width: 100%; margin-bottom: 0; }
+
+.w-full { width: 100%; }

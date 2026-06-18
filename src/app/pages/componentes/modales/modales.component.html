@@ -1,0 +1,181 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-window-maximize ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Modales</h1>
+      <p class="ds-page-header__subtitle">
+        Ventanas de diálogo sobre <code>p-dialog</code> de PrimeNG. Define qué debe llevar todo modal
+        del sistema y sus variantes: confirmación destructiva, formulario CRUD y selección.
+        Alineado con el Kit UI 9.2 GOV.CO.
+      </p>
+    </div>
+  </div>
+
+  <!-- QUÉ DEBE LLEVAR -->
+  <section class="ds-section" aria-labelledby="md-bp">
+    <h2 id="md-bp" class="ds-section__title">Qué debe llevar un modal</h2>
+    <div class="ds-cards">
+      <div class="ds-bp">
+        <i class="pi pi-lock" aria-hidden="true"></i>
+        <h4>Modal y no arrastrable</h4>
+        <p><code>[modal]="true"</code>, <code>[draggable]="false"</code> y <code>[closeOnEscape]="true"</code> siempre.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-arrows-h" aria-hidden="true"></i>
+        <h4>Ancho contenido</h4>
+        <p>Confirmaciones ≈ 460px · formularios 520–720px. Nunca fullscreen para un diálogo.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-align-right" aria-hidden="true"></i>
+        <h4>Footer ordenado</h4>
+        <p>Cancelar (<code>[text]</code> secondary) a la izquierda, acción principal a la derecha. La confirmación pesa más que el rechazo.</p>
+      </div>
+      <div class="ds-bp">
+        <i class="pi pi-comment" aria-hidden="true"></i>
+        <h4>Mensaje claro</h4>
+        <p>Header descriptivo ("Eliminar usuario"), cuerpo directo y, en destructivas, advertencia explícita de irreversibilidad.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- V1 · confirmación destructiva -->
+  <section class="cmp-variant" aria-labelledby="v1-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="v1-title" class="cmp-variant__title">Confirmación destructiva</h2>
+    </header>
+    <p class="cmp-variant__desc">Para eliminar o revertir. Icono de alerta, mensaje de irreversibilidad y footer con Cancelar + acción <code>danger</code>.</p>
+
+    <div class="cmp-variant__demo">
+      <p-button label="Abrir confirmación" icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="showConfirm = true" />
+    </div>
+
+    <app-code-block [code]="snConfirm" language="markup" />
+  </section>
+
+  <!-- V2 · confirmación crítica -->
+  <section class="cmp-variant" aria-labelledby="v2-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">02</span>
+      <h2 id="v2-title" class="cmp-variant__title">Confirmación crítica (escribir ELIMINAR)</h2>
+    </header>
+    <p class="cmp-variant__desc">Variante para eliminaciones irreversibles de alto impacto: el botón se habilita sólo cuando el usuario escribe <code>ELIMINAR</code>. Previene clics accidentales.</p>
+
+    <div class="cmp-variant__demo">
+      <p-button label="Abrir confirmación crítica" icon="pi pi-exclamation-triangle" severity="danger" [outlined]="true" (onClick)="showConfirmCritico = true; deleteConfirmText = ''" />
+    </div>
+
+    <app-code-block [code]="snConfirmCritico" language="markup" />
+  </section>
+
+  <!-- V3 · formulario CRUD -->
+  <section class="cmp-variant" aria-labelledby="v3-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">03</span>
+      <h2 id="v3-title" class="cmp-variant__title">Formulario CRUD</h2>
+    </header>
+    <p class="cmp-variant__desc">Crear o editar un registro. Hint de campos obligatorios, grid de campos con label + <code>field-required</code>, footer Cancelar + Guardar.</p>
+
+    <div class="cmp-variant__demo">
+      <p-button label="Abrir formulario" icon="pi pi-plus" (onClick)="showForm = true" />
+    </div>
+
+    <app-code-block [code]="snForm" language="markup" />
+  </section>
+
+  <!-- V4 · selección -->
+  <section class="cmp-variant" aria-labelledby="v4-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">04</span>
+      <h2 id="v4-title" class="cmp-variant__title">Selección (radio buttons)</h2>
+    </header>
+    <p class="cmp-variant__desc">Elegir una opción de una lista corta dentro del modal (ej. correo de verificación). <code>role="radiogroup"</code> y acción deshabilitada hasta elegir.</p>
+
+    <div class="cmp-variant__demo">
+      <p-button label="Abrir selección" icon="pi pi-envelope" [outlined]="true" severity="secondary" (onClick)="showSeleccion = true" />
+    </div>
+
+    <app-code-block [code]="snSeleccion" language="markup" />
+  </section>
+</main>
+
+<!-- ════════════ Modales demo (overlay real) ════════════ -->
+
+<!-- V1 -->
+<p-dialog header="Eliminar usuario" [(visible)]="showConfirm" [modal]="true" [draggable]="false" [closeOnEscape]="true" [style]="{ width: '460px' }">
+  <div class="modal-confirm">
+    <i class="pi pi-exclamation-triangle modal-confirm__icon" aria-hidden="true"></i>
+    <p>Está a punto de eliminar al usuario <strong>"María Fernanda Gómez"</strong> (U-001).</p>
+    <p class="modal-confirm__warning">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Esta acción <strong>no se puede revertir</strong>. Se eliminarán también sus permisos asociados.
+    </p>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showConfirm = false" />
+    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="showConfirm = false" />
+  </ng-template>
+</p-dialog>
+
+<!-- V2 -->
+<p-dialog header="Eliminar definitivamente" [(visible)]="showConfirmCritico" [modal]="true" [draggable]="false" [closeOnEscape]="true" [style]="{ width: '460px' }">
+  <div class="modal-confirm">
+    <i class="pi pi-exclamation-triangle modal-confirm__icon" aria-hidden="true"></i>
+    <p>Está a punto de eliminar el rol <strong>"Administrador"</strong> y todos sus permisos.</p>
+    <p class="modal-confirm__warning">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Esta acción <strong>no se puede revertir</strong>.
+    </p>
+    <div class="modal-confirm__field">
+      <label for="del-demo">Para confirmar, escriba <code>ELIMINAR</code>:</label>
+      <input pInputText id="del-demo" [(ngModel)]="deleteConfirmText" placeholder="Escriba ELIMINAR" autocomplete="off" class="w-full" aria-required="true" />
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showConfirmCritico = false" />
+    <p-button label="Eliminar definitivamente" icon="pi pi-trash" severity="danger" [disabled]="!deleteConfirmValid" (onClick)="showConfirmCritico = false" />
+  </ng-template>
+</p-dialog>
+
+<!-- V3 -->
+<p-dialog header="Crear usuario" [(visible)]="showForm" [modal]="true" [draggable]="false" [closeOnEscape]="true" [style]="{ width: '520px' }">
+  <p class="modal-form__hint">Los campos con <span class="field-required">*</span> son obligatorios.</p>
+  <div class="modal-form__grid">
+    <div class="modal-form__field">
+      <label for="f-nombre">Nombre completo <span class="field-required">*</span></label>
+      <input pInputText id="f-nombre" [(ngModel)]="formNombre" placeholder="Ej: María Fernanda Gómez" class="w-full" aria-required="true" />
+    </div>
+    <div class="modal-form__field">
+      <label for="f-correo">Correo institucional <span class="field-required">*</span></label>
+      <input pInputText id="f-correo" [(ngModel)]="formCorreo" placeholder="usuario@contaduria.gov.co" class="w-full" aria-required="true" />
+    </div>
+    <div class="modal-form__field modal-form__field--full">
+      <label for="f-rol">Rol <span class="field-required">*</span></label>
+      <p-select inputId="f-rol" [options]="roles" [(ngModel)]="formRol" optionLabel="label" optionValue="value" placeholder="Selecciona un rol" styleClass="w-full" />
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showForm = false" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="showForm = false" />
+  </ng-template>
+</p-dialog>
+
+<!-- V4 -->
+<p-dialog header="Selecciona un correo" [(visible)]="showSeleccion" [modal]="true" [draggable]="false" [closeOnEscape]="true" [style]="{ width: '480px' }">
+  <p>Enviaremos el código de verificación al correo que elijas:</p>
+  <div class="modal-radio" role="radiogroup" aria-label="Correos disponibles">
+    @for (c of correos; track c) {
+      <label class="modal-radio__opt">
+        <p-radioButton [value]="c" [(ngModel)]="correoSel" name="correoDemo" />
+        <span>{{ c }}</span>
+      </label>
+    }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showSeleccion = false" />
+    <p-button label="Enviar código" icon="pi pi-send" [disabled]="!correoSel" (onClick)="showSeleccion = false" />
+  </ng-template>
+</p-dialog>

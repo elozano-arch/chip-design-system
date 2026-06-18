@@ -14,11 +14,51 @@ import { MenuItem } from 'primeng/api';
   styleUrl: './botones.component.scss',
 })
 export class BotonesComponent {
+  // Ejemplo principal F8 — CRUD estándar (mismo modelo que tree-table / home)
   menuItems: MenuItem[] = [
+    { label: 'Ver detalle', icon: 'pi pi-eye' },
     { label: 'Editar', icon: 'pi pi-pencil' },
     { label: 'Duplicar', icon: 'pi pi-copy' },
     { separator: true },
     { label: 'Eliminar', icon: 'pi pi-trash' },
+  ];
+
+  /* ───────────────────────────────────────────────────────────────
+     Submenús generalizados — los menús "..." reales que se repiten
+     en las pantallas. Se documentan aquí para que el design system
+     comunique el patrón F8 tal como se usa, no un ejemplo genérico.
+     ─────────────────────────────────────────────────────────────── */
+
+  // tree-table estándar / home — listado con CRUD completo
+  menuCrud: MenuItem[] = [
+    { label: 'Ver detalle', icon: 'pi pi-eye' },
+    { label: 'Editar', icon: 'pi pi-pencil' },
+    { label: 'Duplicar', icon: 'pi pi-copy' },
+    { separator: true },
+    { label: 'Eliminar', icon: 'pi pi-trash' },
+  ];
+
+  // Usuarios — acciones según el estado de la fila (activo)
+  menuUsuario: MenuItem[] = [
+    { label: 'Editar', icon: 'pi pi-pencil' },
+    { label: 'Desactivar', icon: 'pi pi-ban' },
+    { separator: true },
+    { label: 'Eliminar', icon: 'pi pi-trash' },
+  ];
+
+  // Roles — gestión del rol y sus permisos
+  menuRol: MenuItem[] = [
+    { label: 'Modificar datos del rol', icon: 'pi pi-pencil' },
+    { label: 'Modificar permisos del rol', icon: 'pi pi-shield' },
+    { separator: true },
+    { label: 'Eliminar rol', icon: 'pi pi-trash' },
+  ];
+
+  // Formularios — registro y protocolo de importación
+  menuFormulario: MenuItem[] = [
+    { label: 'Registro manual', icon: 'pi pi-table' },
+    { separator: true },
+    { label: 'Generar protocolo de importación', icon: 'pi pi-file-export' },
   ];
 
   isActive = true;
@@ -104,7 +144,16 @@ export class BotonesComponent {
   pTooltip="Más acciones"
   aria-label="Más acciones"
   (onClick)="menu.toggle($event)" />
-<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />`,
+<p-menu #menu [model]="menuItems" [popup]="true" appendTo="body" />
+
+// menuItems — CRUD estándar (principal → especiales → sep → destructiva)
+menuItems: MenuItem[] = [
+  { label: 'Ver detalle', icon: 'pi pi-eye' },
+  { label: 'Editar', icon: 'pi pi-pencil' },
+  { label: 'Duplicar', icon: 'pi pi-copy' },
+  { separator: true },
+  { label: 'Eliminar', icon: 'pi pi-trash' },
+];`,
 
     F9: `<p-button label="Adjuntar RUT" icon="pi pi-upload" [outlined]="true" />
 <p-button

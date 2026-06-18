@@ -1,0 +1,114 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-bookmark ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Badges y tags de estado</h1>
+      <p class="ds-page-header__subtitle">
+        Etiquetas de estado sobre <code>p-tag</code>, contadores con <code>p-badge</code> y chips
+        removibles con <code>p-chip</code>. La regla central: <strong>el color comunica el
+        significado, no el texto</strong> — y ese mapeo debe ser el mismo en todas las pantallas.
+      </p>
+    </div>
+  </div>
+
+  <!-- MAPA CANÓNICO -->
+  <section class="ds-section" aria-labelledby="bg-mapa">
+    <h2 id="bg-mapa" class="ds-section__title">Mapa canónico estado → color</h2>
+    <p class="cmp-variant__desc" style="margin-bottom:14px">
+      Antes había ambigüedad (p. ej. <code>info</code> usado tanto para metadato como para pendiente).
+      Este es el mapeo único que toda pantalla debe seguir:
+    </p>
+    <table class="ds-umbral">
+      <thead>
+        <tr><th>Estado</th><th>Ejemplo</th><th>severity</th><th>Cuándo usarlo</th></tr>
+      </thead>
+      <tbody>
+        @for (m of mapa; track m.estado) {
+          <tr>
+            <td>{{ m.estado }}</td>
+            <td><p-tag [value]="m.estado" [severity]="m.severity" /></td>
+            <td><code>{{ m.severity }}</code></td>
+            <td>{{ m.uso }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="ds-note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      No uses el mismo color para significados distintos. Si un estado nuevo no encaja en estos 5, valídalo con el equipo antes de inventar un color.
+    </p>
+  </section>
+
+  <!-- V1 · p-tag estados -->
+  <section class="cmp-variant" aria-labelledby="v1-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="v1-title" class="cmp-variant__title">Tags de estado (p-tag)</h2>
+    </header>
+    <p class="cmp-variant__desc">El uso principal: marcar el estado de un registro en una tabla o ficha. Texto corto + color según el mapa.</p>
+
+    <div class="cmp-variant__demo">
+      <p-tag value="Activo" severity="success" />
+      <p-tag value="Inactivo" severity="danger" />
+      <p-tag value="Pendiente" severity="warn" />
+      <p-tag value="En proceso" severity="info" />
+      <p-tag value="Borrador" severity="secondary" />
+    </div>
+
+    <app-code-block [code]="snTag" language="markup" />
+  </section>
+
+  <!-- V2 · p-tag dinámico -->
+  <section class="cmp-variant" aria-labelledby="v2-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">02</span>
+      <h2 id="v2-title" class="cmp-variant__title">Tag con severity calculada</h2>
+    </header>
+    <p class="cmp-variant__desc">En tablas, la severity se deriva del estado con un método único, para no repetir el mapeo a mano en cada celda.</p>
+
+    <div class="cmp-variant__demo">
+      <p-tag value="Activo" severity="success" [rounded]="true" />
+      <p-tag value="Pendiente" severity="warn" [rounded]="true" />
+      <span class="cmp-hint">Variante <code>[rounded]="true"</code> (píldora) — elige una forma y mantenla en toda la app.</span>
+    </div>
+
+    <app-code-block [code]="snTagDinamico" language="markup" />
+  </section>
+
+  <!-- V3 · p-badge -->
+  <section class="cmp-variant" aria-labelledby="v3-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">03</span>
+      <h2 id="v3-title" class="cmp-variant__title">Contadores (p-badge)</h2>
+    </header>
+    <p class="cmp-variant__desc">Para <strong>cantidades</strong>, no estados: notificaciones, items pendientes, resultados. Numérico y compacto.</p>
+
+    <div class="cmp-variant__demo">
+      <i class="pi pi-bell" pBadge value="3" style="font-size:1.6rem"></i>
+      <span style="display:inline-flex;align-items:center;gap:8px">Resultados <p-badge [value]="12" /></span>
+      <span style="display:inline-flex;align-items:center;gap:8px">Errores <p-badge [value]="2" severity="danger" /></span>
+    </div>
+
+    <app-code-block [code]="snBadge" language="markup" />
+  </section>
+
+  <!-- V4 · p-chip -->
+  <section class="cmp-variant" aria-labelledby="v4-title">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">04</span>
+      <h2 id="v4-title" class="cmp-variant__title">Chips removibles (p-chip)</h2>
+    </header>
+    <p class="cmp-variant__desc">Filtros activos cuando el panel está colapsado. El usuario ve qué filtró y puede quitar cada uno con la "x".</p>
+
+    <div class="cmp-variant__demo">
+      <p-chip label="Estado: Activo" [removable]="true" />
+      <p-chip label="Rol: Analista" [removable]="true" />
+      <p-chip label="Entidad: DIAN" [removable]="true" />
+    </div>
+
+    <app-code-block [code]="snChip" language="markup" />
+  </section>
+</main>

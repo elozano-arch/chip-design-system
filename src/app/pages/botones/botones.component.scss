@@ -330,6 +330,112 @@
   }
 }
 
+/* --- Catálogo de submenús generalizados (F8) --- */
+.submenu-catalog {
+  margin-bottom: 16px;
+
+  &__title {
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0943B5;
+    margin: 0 0 4px;
+  }
+
+  &__intro {
+    font-size: 13px;
+    color: #616161;
+    line-height: 1.55;
+    margin: 0 0 16px;
+    max-width: 760px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+}
+
+.submenu-card {
+  background: #FAFBFD;
+  border: 1px solid #E6E9F0;
+  border-radius: 8px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "trigger meta"
+    "items items";
+  align-items: center;
+  gap: 8px 12px;
+
+  p-button {
+    grid-area: trigger;
+  }
+
+  &__meta {
+    grid-area: meta;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__name {
+    font-family: 'Nunito Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #1A1A1A;
+  }
+
+  &__where {
+    font-size: 11px;
+    color: #7A7A7A;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+  }
+
+  &__items {
+    grid-area: items;
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 12px 0 0;
+    border-top: 1px dashed #DCE0EA;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #3B3B3B;
+
+      i {
+        font-size: 13px;
+        color: #0943B5;
+        width: 16px;
+        text-align: center;
+      }
+    }
+  }
+
+  &__sep {
+    height: 0;
+    border-top: 1px solid #E6E9F0;
+    margin: 2px 0;
+    padding: 0 !important;
+  }
+
+  &__danger {
+    color: #C62828 !important;
+
+    i {
+      color: #C62828 !important;
+    }
+  }
+}
+
 /* --- Code block (HTML snippet con botón copiar) --- */
 .code-block {
   position: relative;
