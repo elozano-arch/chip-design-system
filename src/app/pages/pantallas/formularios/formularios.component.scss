@@ -164,6 +164,85 @@
       span { color: var(--chip-grey-700); }
     }
   }
+
+  &--error {
+    background: #FDECEA;
+    border-color: var(--chip-danger);
+
+    .form-send-bar__info {
+      > i { color: var(--chip-danger); }
+      strong { color: #C62828; }
+      span { color: var(--chip-grey-700); }
+    }
+  }
+}
+
+/* --- Toggle de demostración (Paso 3) --- */
+.form-demo-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--chip-grey-500);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+
+    i { font-size: 13px; }
+  }
+}
+
+/* --- Tabla de errores por tipo (Paso 3) --- */
+.form-errores {
+  margin-top: 16px;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 20px;
+    background: #FDECEA;
+    border-bottom: 1px solid var(--chip-grey-200);
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: #C62828;
+
+    i { font-size: 16px; }
+  }
+
+  &__resumen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__table { padding: 4px; }
+
+  &__fix {
+    color: var(--chip-grey-700);
+    font-weight: 500;
+  }
+
+  &__acc-col { width: 150px; }
 }
 
 /* --- Selection Bar --- */
