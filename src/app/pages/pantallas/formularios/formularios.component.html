@@ -215,36 +215,122 @@
             podrá consultar los envíos previos o importar un archivo nuevo.
           </p>
         </header>
-        <div class="chip-filters__fields chip-filters__fields--4col">
-          <div class="chip-filters__field">
-            <label for="wiz-entidad">Entidad</label>
-            <input pInputText [value]="entidad" [disabled]="true" class="w-full" id="wiz-entidad" />
-          </div>
-          <div class="chip-filters__field">
-            <label for="wiz-categoria">Categoría <span class="chip-filters__required">*</span></label>
-            <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="wiz-categoria" aria-required="true" />
-          </div>
-          <div class="chip-filters__field">
-            <label for="wiz-anio">Año <span class="chip-filters__required">*</span></label>
-            <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="wiz-anio" aria-required="true" />
-          </div>
-          <div class="chip-filters__field">
-            <label for="wiz-periodo">Periodo <span class="chip-filters__required">*</span></label>
-            <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" placeholder="Seleccione periodo" appendTo="body" class="w-full" inputId="wiz-periodo" aria-required="true" />
-          </div>
-        </div>
 
-        <!-- Aplicar filtros para habilitar las acciones del paso -->
-        <div class="form-wizard__filters-actions">
-          <p-button label="Limpiar" icon="pi pi-refresh"
-            [text]="true" severity="secondary"
-            (onClick)="clearFilters()" />
-          <p-button [label]="filtersApplied ? 'Filtros aplicados' : 'Aplicar filtros'"
-            [icon]="filtersApplied ? 'pi pi-check' : 'pi pi-filter'"
-            [outlined]="filtersApplied"
-            [severity]="filtersApplied ? 'success' : 'primary'"
-            [disabled]="!canApplyFilters"
-            (onClick)="applyFilters()" />
+        <!-- Filtros del contexto — acordeón: solo chevron, clic en toda la fila colapsa/expande -->
+        <div class="chip-filters" role="region" aria-label="Filtros del contexto">
+          <div class="chip-filters__header">
+            <button type="button" class="chip-filters__toggle"
+              [attr.aria-expanded]="!filtersCollapsed"
+              aria-controls="wiz-filters-body"
+              (click)="filtersCollapsed = !filtersCollapsed">
+              <i class="chip-filters__toggle-icon pi"
+                [ngClass]="filtersCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"
+                aria-hidden="true"></i>
+              @if (filtersCollapsed && filtersApplied) {
+                <span class="chip-filters__chips" aria-live="polite">
+                  <p-chip [label]="'Entidad: ' + entidadLabel" />
+                  @for (filter of activeFilters; track filter.field) {
+                    <p-chip [label]="filter.label" />
+                  }
+                </span>
+              } @else {
+                <span class="chip-filters__toggle-label">Filtros de búsqueda{{ activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '' }}</span>
+              }
+            </button>
+          </div>
+
+          @if (!filtersCollapsed) {
+            <div class="chip-filters__body" id="wiz-filters-body">
+
+              <!-- Simulación de tipo de usuario (mock demo): dispara los 2 eventos de
+                   resolución de entidad — Local (carga automática) vs A/C/E (directorio). -->
+              <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de tipo de usuario">
+                <i class="pi pi-user" aria-hidden="true"></i>
+                <label for="wiz-tipo-usuario">Tipo de usuario <span class="form-wizard__demo-tag">demostración</span></label>
+                <p-select inputId="wiz-tipo-usuario" [options]="tiposUsuarioOptions"
+                  [(ngModel)]="tipoUsuario" (onChange)="onTipoUsuarioChange()"
+                  appendTo="body" styleClass="form-wizard__demo-select" />
+              </div>
+
+              <!-- Alerta: entidad inactiva (sin categorías activas) -->
+              @if (entidadInactiva) {
+                <p-message severity="warn" styleClass="w-full form-wizard__alert"
+                  text="La entidad seleccionada se encuentra inactiva y no está habilitada para ninguna categoría. No es posible gestionar formularios con esta entidad; comuníquese con soporte para su activación." />
+              }
+
+              <div class="chip-filters__fields chip-filters__fields--4col">
+
+                <!-- Entidad (obligatorio). Tipo L: cargada por defecto (bloqueada).
+                     Tipo A/C/E: abre el Directorio de Entidades desde el campo. -->
+                <div class="chip-filters__field">
+                  <label for="wiz-f-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
+                  @if (esTipoLocal) {
+                    <p-iconField iconPosition="right" styleClass="w-full form-entidad-iconfield form-entidad-iconfield--locked">
+                      <input pInputText id="wiz-f-entidad"
+                        class="w-full form-entidad-locked"
+                        [value]="entidadLabel"
+                        readonly
+                        aria-required="true"
+                        aria-readonly="true"
+                        [attr.aria-label]="filterEntidad ? ('Entidad local asignada: ' + filterEntidad.razonSocial) : ''"
+                        [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500" />
+                      <p-inputIcon styleClass="pi pi-lock form-entidad-lock" />
+                    </p-iconField>
+                  } @else {
+                    <p-iconField iconPosition="right" styleClass="w-full form-entidad-iconfield">
+                      <input pInputText id="wiz-f-entidad"
+                        class="w-full form-entidad-trigger-input"
+                        [value]="entidadLabel"
+                        readonly
+                        placeholder="Seleccionar entidad"
+                        role="combobox" aria-haspopup="dialog"
+                        aria-required="true"
+                        [attr.aria-expanded]="mostrarDirectorioEntidades"
+                        [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+                        [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500"
+                        (click)="abrirDirectorioEntidades()"
+                        (keydown.enter)="abrirDirectorioEntidades()"
+                        (keydown.space)="abrirDirectorioEntidades(); $event.preventDefault()" />
+                      @if (filterEntidad) {
+                        <p-inputIcon
+                          styleClass="pi pi-times-circle form-entidad-clear"
+                          role="button" tabindex="0"
+                          pTooltip="Limpiar selección" tooltipPosition="top"
+                          aria-label="Limpiar entidad seleccionada"
+                          (click)="limpiarEntidad(); $event.stopPropagation()"
+                          (keydown.enter)="limpiarEntidad(); $event.stopPropagation()"
+                          (keydown.space)="limpiarEntidad(); $event.stopPropagation(); $event.preventDefault()" />
+                      } @else {
+                        <p-inputIcon styleClass="pi pi-search form-entidad-search" />
+                      }
+                    </p-iconField>
+                  }
+                </div>
+                <div class="chip-filters__field">
+                  <label for="wiz-categoria">Categoría <span class="field-required" aria-hidden="true">*</span></label>
+                  <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" (onChange)="onFiltroModificado()" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="wiz-categoria" aria-required="true" />
+                </div>
+                <div class="chip-filters__field">
+                  <label for="wiz-anio">Año <span class="field-required" aria-hidden="true">*</span></label>
+                  <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" (onChange)="onFiltroModificado()" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="wiz-anio" aria-required="true" />
+                </div>
+                <div class="chip-filters__field">
+                  <label for="wiz-periodo">Periodo <span class="field-required" aria-hidden="true">*</span></label>
+                  <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" (onChange)="onFiltroModificado()" placeholder="Seleccione periodo" appendTo="body" class="w-full" inputId="wiz-periodo" aria-required="true" />
+                </div>
+              </div>
+
+              <!-- Tras aplicar, "Aplicar filtros" queda inactivo hasta que se edite un filtro. -->
+              <div class="form-wizard__filters-actions">
+                <p-button label="Limpiar" icon="pi pi-refresh"
+                  [text]="true" severity="secondary"
+                  (onClick)="clearFilters()" />
+                <p-button label="Aplicar filtros" icon="pi pi-filter"
+                  [disabled]="!canApplyFilters || filtersApplied"
+                  (onClick)="applyFilters()" />
+              </div>
+            </div>
+          }
         </div>
 
         <!-- Sección de acciones disponibles tras aplicar filtros -->
@@ -925,6 +1011,16 @@
         (onClick)="guardarModalEditar()" />
     </ng-template>
   </p-dialog>
+
+  <!-- ============================================================= -->
+  <!-- MODAL DIRECTORIO DE ENTIDADES (paso Contexto · componente compartido) -->
+  <!-- Mismo estándar que Levantamiento de Restricciones.            -->
+  <!-- ============================================================= -->
+  <app-directorio-entidades
+    [(visible)]="mostrarDirectorioEntidades"
+    [showEstadoFilter]="false"
+    [filtrosColapsables]="true"
+    (seleccionar)="onEntidadSeleccionada($event)" />
 
   <!-- ============================================================= -->
   <!-- MODAL ENTIDADES AGREGADAS (paso Envíos)                        -->

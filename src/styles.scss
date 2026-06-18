@@ -443,6 +443,41 @@ p-breadcrumb .p-breadcrumb {
   flex-wrap: wrap;
 }
 
+/* Header clickeable completo: solo chevron + resumen, clic en toda la fila
+   colapsa/expande el acordeón de filtros. */
+.chip-filters__toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+.chip-filters__toggle-icon {
+  font-size: 14px;
+  color: var(--chip-cobalt-700);
+  flex-shrink: 0;
+}
+
+.chip-filters__toggle-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--chip-grey-700);
+}
+
 .chip-filters__body {
   padding: 16px 20px;
 }
