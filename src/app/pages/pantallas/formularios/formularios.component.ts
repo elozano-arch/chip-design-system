@@ -227,6 +227,9 @@ export class FormulariosComponent {
     if (step === 0) {
       this.filtersApplied = false;
       this.cerrarPanelesPaso1();
+      // Reinicia la verificación: una nueva pasada vuelve a detectar errores.
+      this.verificado = false;
+      this.erroresActivos = [];
     }
     this.cerrarDetalle();
     this.cerrarProtocolo();
@@ -623,15 +626,25 @@ export class FormulariosComponent {
 
   /* ═══════════════════════════════════════════════════════════════════
      Paso 3 — Tabla de errores por tipo (resultado de la verificación)
-     Aditivo y reversible: solo se muestra cuando `simularErrores` está
-     activo. Datos de ejemplo (demo). Da claridad de QUÉ corregir en vez
-     de mandar al usuario a "regresar al paso 2" sin información.
+     La verificación corre al "Enviar Categoría": el primer intento detecta
+     los errores y los muestra clasificados por tipo. El usuario corrige
+     cada uno ("Ir al formulario") y, cuando la tabla queda vacía, el envío
+     pasa. Datos de ejemplo (demo). Da claridad de QUÉ corregir en vez de
+     mandar al usuario a "regresar al paso 2" sin información.
      ═══════════════════════════════════════════════════════════════════ */
 
-  /** Toggle de demo para ver las dos vistas (con / sin errores) sin afectar el flujo. */
-  simularErrores = false;
+  /** True una vez disparada la verificación central (primer "Enviar Categoría"). */
+  verificado = false;
 
-  /** Catálogo de errores de validación clasificados por tipo (mock). */
+  /** Errores aún pendientes de corregir (se vacía a medida que se corrigen). */
+  erroresActivos: ErrorValidacion[] = [];
+
+  /** True mientras la verificación tenga errores pendientes. */
+  get hayErrores(): boolean {
+    return this.verificado && this.erroresActivos.length > 0;
+  }
+
+  /** Catálogo base de errores que arroja la verificación central (mock). */
   readonly erroresValidacion: ErrorValidacion[] = [
     {
       tipo: 'Inconsistencia',
@@ -677,11 +690,6 @@ export class FormulariosComponent {
     },
   ];
 
-  /** True cuando la verificación arrojó errores (en modo demo). */
-  get hayErrores(): boolean {
-    return this.simularErrores && this.erroresValidacion.length > 0;
-  }
-
   /** Severity del tag según la gravedad del tipo de error. */
   tipoErrorSeverity(tipo: string): 'danger' | 'warn' | 'info' {
     switch (tipo) {
@@ -695,10 +703,10 @@ export class FormulariosComponent {
     }
   }
 
-  /** Resumen "N por tipo" para el encabezado de la tabla de errores. */
+  /** Resumen "N por tipo" para el encabezado de la tabla de errores (solo pendientes). */
   get resumenErrores(): { tipo: string; cantidad: number; severity: 'danger' | 'warn' | 'info' }[] {
     const conteo = new Map<string, number>();
-    for (const e of this.erroresValidacion) {
+    for (const e of this.erroresActivos) {
       conteo.set(e.tipo, (conteo.get(e.tipo) ?? 0) + 1);
     }
     return Array.from(conteo, ([tipo, cantidad]) => ({
@@ -708,14 +716,26 @@ export class FormulariosComponent {
     }));
   }
 
-  /** Demo: lleva al usuario al formulario con error (Paso 2) para corregirlo. */
+  /** Lleva al usuario al formulario con error (Paso 2) y marca ese error como corregido. */
   irAFormularioConError(err: ErrorValidacion): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Ir al formulario',
-      detail: `Abriendo "${err.formulario}" en ${err.ubicacion} para corregir.`,
-      life: 3000,
-    });
+    // Se quita este error de la lista de pendientes (simula su corrección).
+    this.erroresActivos = this.erroresActivos.filter(e => e !== err);
+
+    if (this.erroresActivos.length === 0) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Errores corregidos',
+        detail: 'No quedan errores pendientes. Ya puede enviar la categoría.',
+        life: 4000,
+      });
+    } else {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Ir al formulario',
+        detail: `Corrigiendo "${err.formulario}" en ${err.ubicacion}. Quedan ${this.erroresActivos.length} errores.`,
+        life: 3000,
+      });
+    }
     this.irAPaso(1);
   }
 
@@ -790,6 +810,23 @@ export class FormulariosComponent {
 
   /** Envío efectivo de la categoría — reutilizado por ambos caminos. */
   private procederEnvioCategoria() {
+    // Verificación central: la primera vez carga los errores y muestra la
+    // tabla por tipo. El usuario corrige cada uno ("Ir al formulario") hasta
+    // vaciarla; recién ahí el envío pasa. (Demo del comportamiento real.)
+    if (!this.verificado) {
+      this.verificado = true;
+      this.erroresActivos = [...this.erroresValidacion];
+    }
+    if (this.erroresActivos.length > 0) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'La verificación encontró errores',
+        detail: `Quedan ${this.erroresActivos.length} errores en la categoría. Corríjalos antes de enviar.`,
+        life: 6000,
+      });
+      return;
+    }
+
     // Simula el envío: pasan a "Enviado" — esperando respuesta central.
     this._formulariosBase = this._formulariosBase.map(f => ({ ...f, estadoValidacion: 'Enviado' }));
     this.messageService.add({

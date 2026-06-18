@@ -811,15 +811,6 @@
           </span>
         </div>
 
-        <!-- Toggle de demostración: alterna la vista con / sin errores de verificación -->
-        <div class="form-demo-toggle" role="group" aria-label="Vista de demostración">
-          <span class="form-demo-toggle__label"><i class="pi pi-eye" aria-hidden="true"></i> Demo:</span>
-          <p-button [label]="simularErrores ? 'Ver envío sin errores' : 'Simular verificación con errores'"
-            [icon]="simularErrores ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"
-            severity="secondary" [outlined]="true" size="small"
-            (onClick)="simularErrores = !simularErrores" />
-        </div>
-
         <!-- Estado del envío + acción Enviar Categoría -->
         <div class="form-send-bar"
           [class.form-send-bar--ready]="todosValidados && !hayErrores"
@@ -861,7 +852,7 @@
             <header class="form-errores__head">
               <h3 class="form-errores__title">
                 <i class="pi pi-list" aria-hidden="true"></i>
-                Se encontraron {{ erroresValidacion.length }} errores en la verificación
+                Quedan {{ erroresActivos.length }} {{ erroresActivos.length === 1 ? 'error' : 'errores' }} por corregir
               </h3>
               <div class="form-errores__resumen" aria-label="Resumen de errores por tipo">
                 @for (r of resumenErrores; track r.tipo) {
@@ -870,7 +861,7 @@
               </div>
             </header>
 
-            <p-table [value]="erroresValidacion" [stripedRows]="true" [rowHover]="true" styleClass="form-errores__table">
+            <p-table [value]="erroresActivos" [stripedRows]="true" [rowHover]="true" styleClass="form-errores__table">
               <ng-template #caption>
                 <span class="sr-only">Detalle de errores de la verificación clasificados por tipo, con la acción para corregir cada uno.</span>
               </ng-template>
