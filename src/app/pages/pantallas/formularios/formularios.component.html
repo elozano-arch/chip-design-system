@@ -852,7 +852,7 @@
             <header class="form-errores__head">
               <h3 class="form-errores__title">
                 <i class="pi pi-list" aria-hidden="true"></i>
-                Se encontraron {{ erroresValidacion.length }} errores en la verificación
+                Quedan {{ erroresActivos.length }} {{ erroresActivos.length === 1 ? 'error' : 'errores' }} por corregir
               </h3>
               <div class="form-errores__resumen" aria-label="Resumen de errores por tipo">
                 @for (r of resumenErrores; track r.tipo) {
@@ -861,7 +861,7 @@
               </div>
             </header>
 
-            <p-table [value]="erroresValidacion" [stripedRows]="true" [rowHover]="true" styleClass="form-errores__table">
+            <p-table [value]="erroresActivos" [stripedRows]="true" [rowHover]="true" styleClass="form-errores__table">
               <ng-template #caption>
                 <span class="sr-only">Detalle de errores de la verificación clasificados por tipo, con la acción para corregir cada uno.</span>
               </ng-template>
