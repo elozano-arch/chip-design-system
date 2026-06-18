@@ -811,15 +811,6 @@
           </span>
         </div>
 
-        <!-- Toggle de demostración: alterna la vista con / sin errores de verificación -->
-        <div class="form-demo-toggle" role="group" aria-label="Vista de demostración">
-          <span class="form-demo-toggle__label"><i class="pi pi-eye" aria-hidden="true"></i> Demo:</span>
-          <p-button [label]="simularErrores ? 'Ver envío sin errores' : 'Simular verificación con errores'"
-            [icon]="simularErrores ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"
-            severity="secondary" [outlined]="true" size="small"
-            (onClick)="simularErrores = !simularErrores" />
-        </div>
-
         <!-- Estado del envío + acción Enviar Categoría -->
         <div class="form-send-bar"
           [class.form-send-bar--ready]="todosValidados && !hayErrores"

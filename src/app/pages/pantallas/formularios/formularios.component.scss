@@ -177,27 +177,6 @@
   }
 }
 
-/* --- Toggle de demostración (Paso 3) --- */
-.form-demo-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 16px;
-
-  &__label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--chip-grey-500);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-
-    i { font-size: 13px; }
-  }
-}
-
 /* --- Tabla de errores por tipo (Paso 3) --- */
 .form-errores {
   margin-top: 16px;
