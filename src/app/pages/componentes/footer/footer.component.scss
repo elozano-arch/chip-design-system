@@ -1,0 +1,42 @@
+/* Chrome de showcase compartido en src/styles.scss (.ds-* y .cmp-*) */
+:host {
+  display: block;
+}
+
+.ft-anatomy {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  &__col {
+    flex: 1 1 140px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 20px 16px;
+    background: var(--chip-cobalt-700);
+    border-radius: 10px;
+    color: #fff;
+    text-align: center;
+    position: relative;
+
+    &--wide { flex: 2 1 240px; }
+
+    i { font-size: 26px; opacity: 0.9; }
+    p { margin: 0; font-size: 13px; line-height: 1.4; }
+  }
+
+  &__tag {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    opacity: 0.7;
+    letter-spacing: 0.4px;
+  }
+}

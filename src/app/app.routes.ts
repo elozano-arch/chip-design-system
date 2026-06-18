@@ -77,6 +77,105 @@ export const routes: Routes = [
       import('./pages/tree-tables/tree-tables.component').then(m => m.TreeTablesComponent),
   },
   {
+    path: 'componentes/listas-desplegables',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Listas desplegables' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/listas-desplegables/listas-desplegables.component').then(m => m.ListasDesplegablesComponent),
+  },
+  {
+    path: 'componentes/data-table',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Data Table' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/data-table/data-table.component').then(m => m.DataTableComponent),
+  },
+  {
+    path: 'componentes/modales',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Modales' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/modales/modales.component').then(m => m.ModalesComponent),
+  },
+  {
+    path: 'componentes/header-pagina',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Header de página' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/header-pagina/header-pagina.component').then(m => m.HeaderPaginaComponent),
+  },
+  {
+    path: 'componentes/footer',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Footer' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/footer/footer.component').then(m => m.FooterComponent),
+  },
+  {
+    path: 'componentes/badges',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Badges y tags de estado' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/badges/badges.component').then(m => m.BadgesComponent),
+  },
+  {
+    path: 'componentes/empty-states',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Empty states' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/empty-states/empty-states.component').then(m => m.EmptyStatesComponent),
+  },
+  {
+    path: 'componentes/filtros',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Filtros colapsables' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/filtros/filtros.component').then(m => m.FiltrosComponent),
+  },
+  {
+    path: 'componentes/inputs',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Inputs de formulario' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/inputs/inputs.component').then(m => m.InputsComponent),
+  },
+  {
     path: 'tokens',
     data: {
       breadcrumb: [

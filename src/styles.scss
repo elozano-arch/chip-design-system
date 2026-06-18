@@ -342,6 +342,7 @@ p-breadcrumb .p-breadcrumb {
 }
 
 /* Pantallas — header compartido */
+.chip-header,
 .usr-header,
 .form-header,
 .aud-header,
@@ -356,6 +357,7 @@ p-breadcrumb .p-breadcrumb {
   margin-bottom: 28px;
 }
 
+.chip-header__title,
 .usr-header__title,
 .form-header__title,
 .aud-header__title,
@@ -374,6 +376,7 @@ p-breadcrumb .p-breadcrumb {
   margin: 0 0 4px;
 }
 
+.chip-header__row,
 .usr-header__row,
 .form-header__row,
 .aud-header__row,
@@ -389,6 +392,7 @@ p-breadcrumb .p-breadcrumb {
   gap: 16px;
 }
 
+.chip-header__desc,
 .usr-header__desc,
 .form-header__desc,
 .aud-header__desc,
@@ -1263,4 +1267,215 @@ textarea.p-inputtext {
       color: var(--chip-cobalt-700);
     }
   }
+}
+
+/* ============================================================
+   COMPONENTES — chrome compartido de las páginas de showcase
+   (Listas desplegables, Data Table, etc. bajo /componentes/*)
+   Centralizado aquí para no duplicar estilos entre páginas.
+   ============================================================ */
+.ds-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.ds-page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 16px 0 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--chip-cobalt-50);
+
+  &__icon {
+    font-size: 40px;
+    color: var(--chip-cobalt-700);
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 0;
+  }
+
+  &__subtitle {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: 4px 0 0;
+    max-width: 820px;
+    line-height: 1.55;
+
+    code { background: var(--chip-grey-50); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--chip-cobalt-700); }
+    strong { color: var(--chip-grey-900); }
+  }
+}
+
+.ds-section {
+  margin-bottom: 28px;
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 0 0 14px;
+  }
+}
+
+.ds-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.ds-bp {
+  background: #fff;
+  border: 1px solid var(--chip-grey-100);
+  border-radius: 10px;
+  padding: 16px;
+
+  i { font-size: 22px; color: var(--chip-cobalt-700); }
+  h4 { font-family: var(--font-heading); font-size: 14px; font-weight: 700; color: var(--chip-grey-900); margin: 8px 0 4px; }
+  p { font-size: 13px; color: var(--chip-grey-600); line-height: 1.5; margin: 0; }
+  code { background: var(--chip-grey-50); padding: 1px 5px; border-radius: 4px; font-size: 11px; color: var(--chip-cobalt-700); }
+}
+
+.ds-umbral {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: #fff;
+  border: 1px solid var(--chip-grey-100);
+  border-radius: 10px;
+  overflow: hidden;
+
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--chip-grey-100); }
+  th { font-family: var(--font-heading); font-weight: 700; color: var(--chip-cobalt-700); background: var(--chip-grey-50); }
+  tr:last-child td { border-bottom: none; }
+  code { background: var(--chip-grey-50); padding: 1px 5px; border-radius: 4px; font-size: 12px; color: var(--chip-cobalt-700); }
+}
+
+.ds-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 12px 16px;
+  background: var(--chip-bg-solitude, #EBF0FA);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--chip-grey-700);
+  line-height: 1.5;
+
+  i { color: var(--chip-cobalt-700); margin-top: 1px; }
+}
+
+.cmp-variant {
+  background: #fff;
+  border: 1px solid var(--chip-grey-100);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: var(--chip-cobalt-200); }
+
+  &__header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+
+  &__id {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 32px; height: 24px; padding: 0 8px;
+    background: var(--chip-cobalt-700); color: #fff;
+    font-family: var(--font-heading); font-size: 12px; font-weight: 700;
+    border-radius: 4px; letter-spacing: 0.4px;
+  }
+
+  &__title { font-family: var(--font-heading); font-size: 18px; font-weight: 700; color: var(--chip-grey-900); margin: 0; }
+
+  &__desc {
+    font-size: 14px; color: var(--chip-grey-600); line-height: 1.55; margin: 0 0 16px;
+    code { background: var(--chip-grey-50); padding: 1px 6px; border-radius: 4px; font-size: 12px; color: var(--chip-cobalt-700); }
+  }
+
+  &__demo {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px;
+    padding: 24px;
+    background: #FAFBFD;
+    border: 1px dashed #D5DCE8;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+}
+
+.cmp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 280px;
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chip-grey-900);
+  }
+
+  &__control { width: 100%; }
+}
+
+/* Estado vacío de tablas — clase canónica reutilizable (chip-empty).
+   Las pantallas tienen variantes propias (usr-empty, etc.); usar esta
+   en pantallas nuevas para mantener el estándar. */
+.chip-empty {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--chip-grey-400);
+
+  i {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+    color: var(--chip-grey-300);
+  }
+
+  p {
+    margin: 0 0 4px;
+    font-size: 13px;
+    color: var(--chip-grey-600);
+  }
+
+  p-button { margin-top: 12px; display: inline-block; }
+}
+
+/* Campo de formulario — clase canónica reutilizable (chip-field).
+   label + control + small de ayuda/error. Usar en pantallas nuevas. */
+.chip-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+
+  label {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--chip-grey-900);
+  }
+
+  &__help {
+    font-size: 12px;
+    color: var(--chip-grey-600);
+    line-height: 1.45;
+  }
+
+  &__error {
+    font-size: 12px;
+    color: var(--chip-danger);
+    line-height: 1.45;
+  }
+
+  .w-full { width: 100%; }
 }

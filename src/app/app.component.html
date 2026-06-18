@@ -64,12 +64,88 @@
       <a routerLink="/autenticacion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Iconografía' : ''" tooltipPosition="right">
         <i class="pi pi-image"></i> <span class="app-sidebar__label">Iconografía</span>
       </a>
-      <a routerLink="/botones" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Botones' : ''" tooltipPosition="right">
-        <i class="pi pi-stop-circle"></i> <span class="app-sidebar__label">Botones</span>
-      </a>
-      <a routerLink="/tree-tables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Tree-tables' : ''" tooltipPosition="right">
-        <i class="pi pi-sitemap"></i> <span class="app-sidebar__label">Tree-tables</span>
-      </a>
+      <!-- ══ COMPONENTES (catálogo estándar del DS) ══ -->
+      <button class="app-sidebar__link app-sidebar__toggle-sub" (click)="componentesOpen = !componentesOpen"
+        [attr.aria-expanded]="componentesOpen"
+        [pTooltip]="sidebarCollapsed ? 'Componentes' : ''" tooltipPosition="right">
+        <i class="pi pi-box"></i> <span class="app-sidebar__label">Componentes</span>
+        @if (!sidebarCollapsed) {
+          <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!componentesOpen" [class.pi-chevron-up]="componentesOpen"></i>
+        }
+      </button>
+      @if (componentesOpen && !sidebarCollapsed) {
+        <div class="app-sidebar__submenu">
+          <a routerLink="/botones" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-stop-circle"></i> <span class="app-sidebar__label">Botones</span>
+          </a>
+          <a routerLink="/componentes/listas-desplegables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-chevron-circle-down"></i> <span class="app-sidebar__label">Listas desplegables</span>
+          </a>
+          <a routerLink="/componentes/data-table" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-table"></i> <span class="app-sidebar__label">Data Table</span>
+          </a>
+          <a routerLink="/componentes/modales" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-window-maximize"></i> <span class="app-sidebar__label">Modales</span>
+          </a>
+          <a routerLink="/componentes/header-pagina" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-window-minimize"></i> <span class="app-sidebar__label">Header de página</span>
+          </a>
+          <a routerLink="/componentes/footer" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-th-large"></i> <span class="app-sidebar__label">Footer</span>
+          </a>
+          <a routerLink="/componentes/badges" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-bookmark"></i> <span class="app-sidebar__label">Badges y estados</span>
+          </a>
+          <a routerLink="/componentes/empty-states" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-inbox"></i> <span class="app-sidebar__label">Empty states</span>
+          </a>
+          <a routerLink="/componentes/filtros" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-filter"></i> <span class="app-sidebar__label">Filtros colapsables</span>
+          </a>
+          <a routerLink="/componentes/inputs" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-pencil"></i> <span class="app-sidebar__label">Inputs de formulario</span>
+          </a>
+          <a routerLink="/tree-tables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-sitemap"></i> <span class="app-sidebar__label">Tree-tables</span>
+          </a>
+        </div>
+      }
+      @if (sidebarCollapsed) {
+        <a routerLink="/botones" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Botones" tooltipPosition="right">
+          <i class="pi pi-stop-circle"></i> <span class="app-sidebar__label">Botones</span>
+        </a>
+        <a routerLink="/componentes/listas-desplegables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Listas desplegables" tooltipPosition="right">
+          <i class="pi pi-chevron-circle-down"></i> <span class="app-sidebar__label">Listas desplegables</span>
+        </a>
+        <a routerLink="/componentes/data-table" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Data Table" tooltipPosition="right">
+          <i class="pi pi-table"></i> <span class="app-sidebar__label">Data Table</span>
+        </a>
+        <a routerLink="/componentes/modales" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Modales" tooltipPosition="right">
+          <i class="pi pi-window-maximize"></i> <span class="app-sidebar__label">Modales</span>
+        </a>
+        <a routerLink="/componentes/header-pagina" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Header de página" tooltipPosition="right">
+          <i class="pi pi-window-minimize"></i> <span class="app-sidebar__label">Header de página</span>
+        </a>
+        <a routerLink="/componentes/footer" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Footer" tooltipPosition="right">
+          <i class="pi pi-th-large"></i> <span class="app-sidebar__label">Footer</span>
+        </a>
+        <a routerLink="/componentes/badges" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Badges y estados" tooltipPosition="right">
+          <i class="pi pi-bookmark"></i> <span class="app-sidebar__label">Badges y estados</span>
+        </a>
+        <a routerLink="/componentes/empty-states" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Empty states" tooltipPosition="right">
+          <i class="pi pi-inbox"></i> <span class="app-sidebar__label">Empty states</span>
+        </a>
+        <a routerLink="/componentes/filtros" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Filtros colapsables" tooltipPosition="right">
+          <i class="pi pi-filter"></i> <span class="app-sidebar__label">Filtros colapsables</span>
+        </a>
+        <a routerLink="/componentes/inputs" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Inputs de formulario" tooltipPosition="right">
+          <i class="pi pi-pencil"></i> <span class="app-sidebar__label">Inputs de formulario</span>
+        </a>
+        <a routerLink="/tree-tables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Tree-tables" tooltipPosition="right">
+          <i class="pi pi-sitemap"></i> <span class="app-sidebar__label">Tree-tables</span>
+        </a>
+      }
+
       <a routerLink="/tokens" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Tokens' : ''" tooltipPosition="right">
         <i class="pi pi-palette"></i> <span class="app-sidebar__label">Tokens</span>
       </a>

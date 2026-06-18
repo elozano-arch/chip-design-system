@@ -1,0 +1,65 @@
+/* Chrome de showcase compartido en src/styles.scss (.ds-* y .cmp-*) */
+:host {
+  display: block;
+}
+
+/* La tabla demo ocupa todo el ancho del bloque punteado */
+.cmp-variant__demo--block {
+  display: block;
+  padding: 16px;
+}
+
+::ng-deep .dt-demo {
+  width: 100%;
+}
+
+/* Columna de acciones por fila */
+.dt-acciones {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.dt-acciones-col {
+  width: 160px;
+}
+
+/* Celda truncada con tooltip */
+.dt-truncate {
+  display: block;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+}
+
+/* Estado vacío uniforme */
+.dt-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--chip-grey-600);
+
+  i {
+    display: block;
+    font-size: 36px;
+    color: var(--chip-grey-300);
+    margin-bottom: 12px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+/* Flag "a confirmar" en el header de la variante */
+.cmp-variant__flag {
+  margin-left: auto;
+  background: var(--chip-bg-corn-silk, #FFF8E1);
+  color: #B07900;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+}

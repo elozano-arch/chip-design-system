@@ -1,0 +1,12 @@
+/* Chrome de showcase compartido en src/styles.scss (.ds-* y .cmp-*);
+   estado vacío con la clase canónica .chip-empty (también global). */
+:host {
+  display: block;
+}
+
+.cmp-variant__demo--block .chip-empty {
+  width: 100%;
+  background: #fff;
+  border: 1px dashed var(--chip-grey-200);
+  border-radius: 8px;
+}

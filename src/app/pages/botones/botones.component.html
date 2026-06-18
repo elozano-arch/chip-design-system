@@ -322,6 +322,81 @@
       <p-button label="Acciones" icon="pi pi-ellipsis-v" severity="secondary" [outlined]="true" />
     </div>
 
+    <!-- Submenús generalizados: los "..." reales que se repiten en las pantallas -->
+    <div class="submenu-catalog" role="region" aria-label="Submenús generalizados del menú contextual">
+      <h3 class="submenu-catalog__title">Submenús generalizados (en uso en pantallas)</h3>
+      <p class="submenu-catalog__intro">
+        Estos son los menús de tres puntos que ya se generalizaron y se repiten en varias pantallas.
+        Pulsa cada uno para ver sus acciones. Mantén estos modelos como referencia al construir un nuevo "...".
+      </p>
+
+      <div class="submenu-catalog__grid">
+        <!-- CRUD estándar -->
+        <div class="submenu-card">
+          <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" pTooltip="Más acciones" aria-label="Acciones — CRUD estándar" (onClick)="menuCrudRef.toggle($event)" />
+          <p-menu #menuCrudRef [model]="menuCrud" [popup]="true" appendTo="body" />
+          <div class="submenu-card__meta">
+            <span class="submenu-card__name">CRUD estándar</span>
+            <span class="submenu-card__where">tree-table · home</span>
+          </div>
+          <ul class="submenu-card__items">
+            <li><i class="pi pi-eye" aria-hidden="true"></i> Ver detalle</li>
+            <li><i class="pi pi-pencil" aria-hidden="true"></i> Editar</li>
+            <li><i class="pi pi-copy" aria-hidden="true"></i> Duplicar</li>
+            <li class="submenu-card__sep" aria-hidden="true"></li>
+            <li class="submenu-card__danger"><i class="pi pi-trash" aria-hidden="true"></i> Eliminar</li>
+          </ul>
+        </div>
+
+        <!-- Por estado de usuario -->
+        <div class="submenu-card">
+          <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" pTooltip="Más acciones" aria-label="Acciones — usuario activo" (onClick)="menuUsuarioRef.toggle($event)" />
+          <p-menu #menuUsuarioRef [model]="menuUsuario" [popup]="true" appendTo="body" />
+          <div class="submenu-card__meta">
+            <span class="submenu-card__name">Por estado de usuario</span>
+            <span class="submenu-card__where">usuarios</span>
+          </div>
+          <ul class="submenu-card__items">
+            <li><i class="pi pi-pencil" aria-hidden="true"></i> Editar</li>
+            <li><i class="pi pi-ban" aria-hidden="true"></i> Desactivar</li>
+            <li class="submenu-card__sep" aria-hidden="true"></li>
+            <li class="submenu-card__danger"><i class="pi pi-trash" aria-hidden="true"></i> Eliminar</li>
+          </ul>
+        </div>
+
+        <!-- Gestión de rol -->
+        <div class="submenu-card">
+          <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" pTooltip="Más acciones" aria-label="Acciones — rol" (onClick)="menuRolRef.toggle($event)" />
+          <p-menu #menuRolRef [model]="menuRol" [popup]="true" appendTo="body" />
+          <div class="submenu-card__meta">
+            <span class="submenu-card__name">Gestión de rol</span>
+            <span class="submenu-card__where">roles</span>
+          </div>
+          <ul class="submenu-card__items">
+            <li><i class="pi pi-pencil" aria-hidden="true"></i> Modificar datos del rol</li>
+            <li><i class="pi pi-shield" aria-hidden="true"></i> Modificar permisos del rol</li>
+            <li class="submenu-card__sep" aria-hidden="true"></li>
+            <li class="submenu-card__danger"><i class="pi pi-trash" aria-hidden="true"></i> Eliminar rol</li>
+          </ul>
+        </div>
+
+        <!-- Formulario -->
+        <div class="submenu-card">
+          <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" pTooltip="Más acciones" aria-label="Acciones — formulario" (onClick)="menuFormularioRef.toggle($event)" />
+          <p-menu #menuFormularioRef [model]="menuFormulario" [popup]="true" appendTo="body" />
+          <div class="submenu-card__meta">
+            <span class="submenu-card__name">Formulario</span>
+            <span class="submenu-card__where">formularios</span>
+          </div>
+          <ul class="submenu-card__items">
+            <li><i class="pi pi-table" aria-hidden="true"></i> Registro manual</li>
+            <li class="submenu-card__sep" aria-hidden="true"></li>
+            <li><i class="pi pi-file-export" aria-hidden="true"></i> Generar protocolo de importación</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <div class="btn-family__detail">
       <dl class="spec-list">
         <dt>Estilo</dt><dd><code>[rounded] [text] secondary</code> · o con label</dd>
