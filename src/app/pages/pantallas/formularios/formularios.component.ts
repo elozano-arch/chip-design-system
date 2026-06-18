@@ -86,6 +86,15 @@ interface ColumnaRegistro {
  */
 type ModoEntidades = 'noAplica' | 'obligatoria' | 'agregadora';
 
+/** Error de validación central, clasificado por tipo (Paso 3). */
+interface ErrorValidacion {
+  tipo: string;
+  formulario: string;
+  ubicacion: string;
+  detalle: string;
+  correccion: string;
+}
+
 /** Entidad disponible para asignar a la categoría desde el modal "Entidades Agregadas". */
 interface EntidadAgregada {
   id: string;
@@ -610,6 +619,104 @@ export class FormulariosComponent {
   get todosValidados(): boolean {
     const lista = this.filteredFormularios;
     return lista.length > 0 && lista.every(f => f.estadoValidacion === 'Validado');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     Paso 3 — Tabla de errores por tipo (resultado de la verificación)
+     Aditivo y reversible: solo se muestra cuando `simularErrores` está
+     activo. Datos de ejemplo (demo). Da claridad de QUÉ corregir en vez
+     de mandar al usuario a "regresar al paso 2" sin información.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /** Toggle de demo para ver las dos vistas (con / sin errores) sin afectar el flujo. */
+  simularErrores = false;
+
+  /** Catálogo de errores de validación clasificados por tipo (mock). */
+  readonly erroresValidacion: ErrorValidacion[] = [
+    {
+      tipo: 'Inconsistencia',
+      formulario: 'Saldos y Movimientos',
+      ubicacion: 'Fila 14 · concepto 1.1.05',
+      detalle: 'Débitos ($3.200.000) ≠ Créditos ($2.000.000).',
+      correccion: 'Ajuste los valores del concepto para que el cuadre dé cero.',
+    },
+    {
+      tipo: 'Dato obligatorio',
+      formulario: 'Saldos y Movimientos',
+      ubicacion: 'Concepto 2.1.03',
+      detalle: 'El saldo final está vacío.',
+      correccion: 'Diligencie el saldo final del concepto.',
+    },
+    {
+      tipo: 'Formato inválido',
+      formulario: 'Operaciones Recíprocas',
+      ubicacion: 'Fila 7 · campo NIT',
+      detalle: 'El NIT contiene letras.',
+      correccion: 'Ingrese solo números, sin puntos ni guion.',
+    },
+    {
+      tipo: 'Valor fuera de rango',
+      formulario: 'Variaciones',
+      ubicacion: 'Concepto 4.2.01',
+      detalle: 'La variación de 320% supera el límite permitido.',
+      correccion: 'Verifique el valor reportado o justifique la variación.',
+    },
+    {
+      tipo: 'Código no válido',
+      formulario: 'Saldos y Movimientos',
+      ubicacion: 'Concepto 9999',
+      detalle: 'La cuenta 9999 no existe en el catálogo CGN.',
+      correccion: 'Use un código de cuenta válido del catálogo.',
+    },
+    {
+      tipo: 'Registro duplicado',
+      formulario: 'Operaciones Recíprocas',
+      ubicacion: 'Concepto 1.2.03',
+      detalle: 'El concepto aparece 2 veces.',
+      correccion: 'Elimine el registro duplicado.',
+    },
+  ];
+
+  /** True cuando la verificación arrojó errores (en modo demo). */
+  get hayErrores(): boolean {
+    return this.simularErrores && this.erroresValidacion.length > 0;
+  }
+
+  /** Severity del tag según la gravedad del tipo de error. */
+  tipoErrorSeverity(tipo: string): 'danger' | 'warn' | 'info' {
+    switch (tipo) {
+      case 'Inconsistencia':
+      case 'Dato obligatorio':
+        return 'danger';
+      case 'Regla de negocio':
+        return 'info';
+      default:
+        return 'warn';
+    }
+  }
+
+  /** Resumen "N por tipo" para el encabezado de la tabla de errores. */
+  get resumenErrores(): { tipo: string; cantidad: number; severity: 'danger' | 'warn' | 'info' }[] {
+    const conteo = new Map<string, number>();
+    for (const e of this.erroresValidacion) {
+      conteo.set(e.tipo, (conteo.get(e.tipo) ?? 0) + 1);
+    }
+    return Array.from(conteo, ([tipo, cantidad]) => ({
+      tipo,
+      cantidad,
+      severity: this.tipoErrorSeverity(tipo),
+    }));
+  }
+
+  /** Demo: lleva al usuario al formulario con error (Paso 2) para corregirlo. */
+  irAFormularioConError(err: ErrorValidacion): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Ir al formulario',
+      detail: `Abriendo "${err.formulario}" en ${err.ubicacion} para corregir.`,
+      life: 3000,
+    });
+    this.irAPaso(1);
   }
 
   /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
