@@ -45,6 +45,14 @@ export class DirectorioEntidadesComponent {
   /** Muestra/oculta el filtro de Estado del modal. */
   @Input() showEstadoFilter = true;
 
+  /**
+   * Flag de scoping: habilita el acordeón colapsable de los filtros del modal.
+   * Al consultar, los filtros se colapsan automáticamente para dar alto a la
+   * tabla de resultados (clave en pantallas chicas, p. ej. portátiles de 14").
+   */
+  @Input() filtrosColapsables = false;
+  filtrosColapsados = false;
+
   /** Emite la entidad seleccionada al hacer Aceptar. */
   @Output() seleccionar = new EventEmitter<Entidad>();
 
@@ -134,6 +142,8 @@ export class DirectorioEntidadesComponent {
     });
     this.busquedaRealizada = true;
     this.seleccion = null;
+    // Colapsa los filtros para dar alto a la tabla (pantallas chicas).
+    if (this.filtrosColapsables) this.filtrosColapsados = true;
   }
 
   limpiar() {
@@ -146,6 +156,7 @@ export class DirectorioEntidadesComponent {
     this.resultados = [];
     this.busquedaRealizada = false;
     this.seleccion = null;
+    this.filtrosColapsados = false;
   }
 
   cancelar() {

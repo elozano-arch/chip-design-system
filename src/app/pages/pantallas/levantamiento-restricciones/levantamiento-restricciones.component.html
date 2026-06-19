@@ -18,32 +18,33 @@
        ════════════════════════════════════════════ -->
   <div class="chip-filters" role="region" aria-label="Filtros de consulta">
     <div class="chip-filters__header">
-      <div class="chip-filters__header-left">
-        <p-button
-          [icon]="filtersCollapsed ? 'pi pi-chevron-down' : 'pi pi-chevron-up'"
-          [label]="'Filtros de búsqueda' + (activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '')"
-          [outlined]="true" severity="secondary" size="small"
-          [attr.aria-expanded]="!filtersCollapsed"
-          aria-controls="lvr-filters-body"
-          (onClick)="filtersCollapsed = !filtersCollapsed" />
-
+      <button type="button" class="chip-filters__toggle"
+        [attr.aria-expanded]="!filtersCollapsed"
+        aria-controls="lvr-filters-body"
+        (click)="filtersCollapsed = !filtersCollapsed">
+        <i class="chip-filters__toggle-icon pi"
+          [ngClass]="filtersCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"
+          aria-hidden="true"></i>
         @if (filtersCollapsed && filtrosAplicados) {
-          <div class="chip-filters__chips" aria-live="polite">
+          <span class="chip-filters__chips" aria-live="polite">
             <p-chip [label]="'Entidad: ' + resumenEntidad" />
             <p-chip [label]="'Año: ' + filtrosAplicados.anio" />
             <p-chip [label]="'Categoría: ' + filtrosAplicados.categoria.nombre" />
             <p-chip [label]="'Período: ' + resumenPeriodoLabel" />
             <p-chip [label]="'Tipo deficiencia: ' + (filtrosAplicados.tipo === 'local' ? 'Local' : 'Central')" />
-          </div>
+          </span>
+        } @else {
+          <span class="chip-filters__toggle-label">Filtros de búsqueda{{ activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '' }}</span>
         }
-      </div>
+      </button>
     </div>
 
     @if (!filtersCollapsed) {
       <div class="chip-filters__body" id="lvr-filters-body">
+
         <div class="chip-filters__fields chip-filters__fields--3col">
 
-          <!-- Entidad (obligatorio, abre directorio) -->
+          <!-- Entidad (obligatorio, abre el Directorio de Entidades) -->
           <div class="chip-filters__field">
             <label for="lvr-f-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
             <p-iconField iconPosition="right" styleClass="w-full lvr-entidad-iconfield">
@@ -300,6 +301,7 @@
   <app-directorio-entidades
     [(visible)]="mostrarDirectorioEntidades"
     [showEstadoFilter]="false"
+    [filtrosColapsables]="true"
     (seleccionar)="onEntidadSeleccionada($event)" />
 
   <!-- ════════════════════════════════════════════

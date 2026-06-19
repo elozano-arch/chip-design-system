@@ -25,6 +25,10 @@ import { PaginatorModule } from 'primeng/paginator';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import {
+  DirectorioEntidadesComponent,
+  Entidad,
+} from '../../../components/directorio-entidades/directorio-entidades.component';
 
 interface Formulario {
   id: number;
@@ -101,6 +105,20 @@ interface EntidadAgregada {
   nombre: string;
   nit: string;
 }
+
+/**
+ * Tipo de usuario que determina cómo se resuelve la entidad del contexto (Paso 1):
+ *   • 'L' (Local)       → opera una sola entidad: se carga por defecto, sin elegir.
+ *   • 'A' (Agregadora)  ┐
+ *   • 'C' (Consolidadora)│→ operan sobre varias entidades: deben elegir una desde
+ *   • 'E' (Estratégico) ┘  el modal "Directorio de entidades".
+ * En producción este valor vendría de la sesión/backend; aquí se mockea con un
+ * selector de demostración para poder mostrar los escenarios en la pantalla demo.
+ *   • 'L'          → entidad local activa, cargada por defecto.
+ *   • 'L_INACTIVA' → entidad local inactiva (sin categorías activas) → alerta.
+ *   • 'ACE'        → A/C/E: elige la entidad desde el directorio.
+ */
+type TipoUsuario = 'L' | 'L_INACTIVA' | 'ACE';
 
 /* ── Protocolo de Importación — sub-vista del Paso 2 ── */
 type ProtocoloTipoDato = 'Numérico' | 'Texto' | 'Fecha' | 'Lista';
@@ -190,6 +208,7 @@ interface DownloadFormat {
     DialogModule,
     PaginatorModule,
     AppBreadcrumbComponent,
+    DirectorioEntidadesComponent,
   ],
   providers: [MessageService],
   templateUrl: './formularios.component.html',
@@ -223,9 +242,10 @@ export class FormulariosComponent {
    */
   irAPaso(step: number) {
     if (step < 0 || step > this.wizardStep) return;
-    // Volver al paso de filtros desde cualquier punto reabre la edición de filtros.
+    // Al volver al paso de filtros se CONSERVA el contexto aplicado (acordeón
+    // colapsado con sus chips) para no bloquear Consultar envíos e Importar.
+    // Solo se cierran los paneles inline que pudieran estar abiertos.
     if (step === 0) {
-      this.filtersApplied = false;
       this.cerrarPanelesPaso1();
       // Reinicia la verificación: una nueva pasada vuelve a detectar errores.
       this.verificado = false;
@@ -481,13 +501,105 @@ export class FormulariosComponent {
     this.menuFormulario.toggle(event);
   }
 
+  // ── Tipo de usuario (mock de demostración) ──
+  // Dispara los dos eventos de resolución de entidad del Paso 1.
+  readonly entidadLocalPorDefecto: Entidad = {
+    codigo: '110100000', nit: '830.000.000-0',
+    razonSocial: 'Contaduría General de la Nación',
+    departamento: 'Bogotá D.C.', municipio: 'Bogotá D.C.', estado: 'Activo',
+  };
+  /** Entidad local inactiva (mock) — escenario "sin categorías activas". */
+  readonly entidadLocalInactiva: Entidad = {
+    codigo: '210111076', nit: '800.345.678-3',
+    razonSocial: 'Municipio de Puerto Nariño',
+    departamento: 'Amazonas', municipio: 'Puerto Nariño', estado: 'Inactivo',
+  };
+  tiposUsuarioOptions = [
+    { label: 'Tipo L · Entidad local (carga automática)', value: 'L' },
+    { label: 'Tipo L · Entidad inactiva (sin categorías activas)', value: 'L_INACTIVA' },
+    { label: 'Tipo A, C y E · Selecciona del directorio', value: 'ACE' },
+  ];
+  tipoUsuario: TipoUsuario = 'L';
+
+  get esTipoLocal(): boolean {
+    return this.tipoUsuario === 'L' || this.tipoUsuario === 'L_INACTIVA';
+  }
+
+  /** True cuando la entidad seleccionada está inactiva (no opera ninguna categoría). */
+  get entidadInactiva(): boolean {
+    return this.filterEntidad?.estado === 'Inactivo';
+  }
+
   // ── Filtros ──
-  entidad = 'Contaduría General de la Nación';
+  filterEntidad: Entidad | null = this.entidadLocalPorDefecto;
   selectedCategoria = '';
   selectedAnio = '';
   selectedPeriodo = '';
   filtersApplied = false;
   filtersCollapsed = false;
+
+  /** Etiqueta visible de la entidad seleccionada (código - razón social). */
+  get entidadLabel(): string {
+    return this.filterEntidad
+      ? `${this.filterEntidad.codigo} - ${this.filterEntidad.razonSocial}`
+      : '';
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Directorio de entidades — selección ÚNICA mediante el componente
+  // compartido `app-directorio-entidades` (mismo estándar que Levantamiento
+  // de Restricciones). El usuario A/C/E lo abre desde el campo Entidad.
+  // ──────────────────────────────────────────────────────────────────────
+  mostrarDirectorioEntidades = false;
+
+  /**
+   * Resuelve la entidad según el tipo de usuario (mock de los dos eventos).
+   * Cambiar de contexto de entidad invalida cualquier filtro ya aplicado.
+   */
+  onTipoUsuarioChange() {
+    this.resetContextoEntidad();
+    this.mostrarDirectorioEntidades = false;
+    if (this.tipoUsuario === 'L') {
+      // Evento 1 — Local: la entidad se carga por defecto, sin modal.
+      this.filterEntidad = this.entidadLocalPorDefecto;
+    } else if (this.tipoUsuario === 'L_INACTIVA') {
+      // Escenario — Local con entidad inactiva: carga la entidad inactiva (dispara alerta).
+      this.filterEntidad = this.entidadLocalInactiva;
+    } else {
+      // Evento 2 — A/C/E: el usuario abre el directorio desde el campo Entidad.
+      this.filterEntidad = null;
+    }
+  }
+
+  abrirDirectorioEntidades() {
+    // El usuario local no elige entidad: la suya viene cargada por defecto.
+    if (this.esTipoLocal) return;
+    this.mostrarDirectorioEntidades = true;
+  }
+
+  onEntidadSeleccionada(e: Entidad) {
+    this.filterEntidad = e;
+    // Cambiar la entidad del contexto invalida los filtros aplicados.
+    this.resetContextoEntidad();
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Entidad seleccionada',
+      detail: this.entidadLabel,
+      life: 3000,
+    });
+  }
+
+  limpiarEntidad() {
+    this.filterEntidad = null;
+    this.resetContextoEntidad();
+  }
+
+  /** Reinicia el contexto dependiente cuando cambia la entidad. */
+  private resetContextoEntidad() {
+    this.filtersApplied = false;
+    this.filtersCollapsed = false;
+    this.cerrarPanelesPaso1();
+  }
 
   /**
    * `modoEntidades` define cómo se comporta el envío de la categoría frente a
@@ -905,7 +1017,8 @@ export class FormulariosComponent {
 
   // ── Filtros ──
   get canApplyFilters(): boolean {
-    return !!this.selectedCategoria && !!this.selectedAnio;
+    return !!this.filterEntidad && !this.entidadInactiva
+      && !!this.selectedCategoria && !!this.selectedAnio && !!this.selectedPeriodo;
   }
 
   /**
@@ -944,15 +1057,30 @@ export class FormulariosComponent {
 
   applyFilters() {
     if (!this.canApplyFilters) {
-      this.messageService.add({ severity: 'warn', summary: 'Filtros requeridos', detail: 'Debe seleccionar al menos Categoría y Año.' });
+      this.messageService.add({ severity: 'warn', summary: 'Filtros requeridos', detail: 'Debe seleccionar Entidad, Categoría, Año y Periodo.' });
       return;
     }
     this.recomputarFormulariosBase();
     this.filtersApplied = true;
+    // Al aplicar, el acordeón de filtros se colapsa a su resumen de chips.
+    this.filtersCollapsed = true;
+  }
+
+  /**
+   * Al modificar cualquier filtro tras haberlos aplicado, el contexto deja de
+   * ser válido: Consultar envíos, Importar y Siguiente vuelven a inactivarse
+   * (gateados por `filtersApplied`) y se cierran los paneles abiertos.
+   */
+  onFiltroModificado() {
+    if (this.filtersApplied) {
+      this.filtersApplied = false;
+      this.cerrarPanelesPaso1();
+    }
   }
 
   get activeFilterCount(): number {
     let count = 0;
+    if (this.filterEntidad) count++;
     if (this.selectedCategoria) count++;
     if (this.selectedAnio) count++;
     if (this.selectedPeriodo) count++;
@@ -983,7 +1111,9 @@ export class FormulariosComponent {
     this.selectedAnio = '';
     this.selectedPeriodo = '';
     this.filtersApplied = false;
+    this.filtersCollapsed = false;
     this.searchFormulario = '';
+    this.cerrarPanelesPaso1();
   }
 
   // ──────────────────────────────────────────────────────────────────────
