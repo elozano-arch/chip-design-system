@@ -1,0 +1,126 @@
+:host {
+  display: block;
+}
+
+/* Tarjeta de paso (categoría / listado) */
+.ent-step {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200, #e0e0e0);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--chip-grey-900, #212121);
+    margin: 0 0 16px;
+  }
+
+}
+
+/* Campo categoría */
+.ent-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 760px;
+
+  &__label {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--chip-grey-900, #212121);
+  }
+
+  &__hint {
+    color: var(--chip-grey-600, #616161);
+    font-size: 0.8rem;
+  }
+
+  /* Fila: select (elástico) + botón, alineados verticalmente */
+  &__control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* El botón mantiene su ancho según el label y se alinea con el select */
+  &__btn {
+    flex: 0 0 auto;
+  }
+}
+
+/* Cabecera del listado */
+.ent-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .ent-step__title {
+    margin: 0;
+  }
+
+  &__count {
+    background: var(--chip-cobalt-50, #e8edf8);
+    color: var(--chip-cobalt-700, #0943b5);
+    font-weight: 600;
+    font-size: 0.8rem;
+    border-radius: 999px;
+    padding: 2px 12px;
+  }
+
+  /* Empuja "Quitar todas" al extremo derecho */
+  p-button {
+    margin-left: auto;
+  }
+}
+
+/* Tabla */
+.ent-table {
+  &__actions-col {
+    width: 92px;
+    text-align: center;
+  }
+}
+
+/* Estado vacío */
+.ent-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--chip-grey-600, #616161);
+
+  i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 12px;
+    color: var(--chip-grey-400, #bdbdbd);
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .ent-step {
+    padding: 16px;
+  }
+
+  .ent-field__control {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ent-field__btn ::ng-deep .p-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

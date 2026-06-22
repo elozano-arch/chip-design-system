@@ -1,0 +1,153 @@
+<p-toast />
+
+<div class="form-page" role="main">
+  <app-breadcrumb />
+
+  <div class="form-header">
+    <h1 class="form-header__title">Entidades agregadas</h1>
+    <div class="form-header__row">
+      <p class="form-header__desc">
+        Seleccione una categoría para habilitar el directorio de entidades, agregue una o varias
+        entidades y revise el listado de entidades seleccionadas.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══ Paso 1 — Categoría ══ -->
+  <section class="ent-step" role="region" aria-label="Selección de categoría">
+    <h2 class="ent-step__title">1. Categoría</h2>
+    <div class="ent-field">
+      <label for="categoria" class="ent-field__label">
+        Categoría <span class="field-required" aria-hidden="true">*</span>
+      </label>
+      <div class="ent-field__control">
+        <p-select
+          inputId="categoria"
+          [options]="categoriaOptions"
+          [(ngModel)]="selectedCategoria"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccione categoría"
+          [filter]="true"
+          filterBy="label"
+          filterPlaceholder="Buscar categoría"
+          appendTo="body"
+          styleClass="ent-field__select"
+          [attr.aria-required]="true"
+          (onChange)="onCategoriaChange()" />
+
+        <!-- ══ Paso 2 — Abrir directorio ══ -->
+        <p-button
+          label="Seleccionar entidades"
+          icon="pi pi-building-columns"
+          styleClass="ent-field__btn"
+          [disabled]="!categoriaSeleccionada"
+          (onClick)="abrirDirectorio()"
+          [pTooltip]="categoriaSeleccionada ? '' : 'Seleccione una categoría primero'"
+          tooltipPosition="top" />
+      </div>
+      <small id="categoria-hint" class="ent-field__hint">
+        El directorio de entidades se habilita al seleccionar una categoría.
+      </small>
+    </div>
+  </section>
+
+  <!-- ══ Paso 3 — Entidades seleccionadas ══ -->
+  <section class="ent-step" role="region" aria-label="Entidades seleccionadas">
+    <div class="ent-list-header">
+      <h2 class="ent-step__title">2. Entidades seleccionadas</h2>
+      <span class="ent-list-header__count" aria-live="polite">
+        {{ entidadesSeleccionadas.length }}
+        {{ entidadesSeleccionadas.length === 1 ? 'entidad' : 'entidades' }}
+      </span>
+      @if (entidadesSeleccionadas.length) {
+        <p-button
+          label="Quitar todas"
+          icon="pi pi-trash"
+          [text]="true"
+          severity="danger"
+          size="small"
+          (onClick)="quitarTodas()" />
+      }
+    </div>
+
+    <p-table
+      [value]="entidadesSeleccionadas"
+      [stripedRows]="true"
+      [rowHover]="true"
+      [paginator]="entidadesSeleccionadas.length > 10"
+      [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 25]"
+      [showCurrentPageReport]="entidadesSeleccionadas.length > 10"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+      styleClass="p-datatable-sm ent-table">
+      <ng-template #caption>
+        <span class="sr-only">
+          Entidades seleccionadas para la categoría {{ categoriaLabel || 'sin definir' }}
+        </span>
+      </ng-template>
+
+      <ng-template #header>
+        <tr>
+          <th scope="col">Código</th>
+          <th scope="col">NIT</th>
+          <th scope="col">Razón social</th>
+          <th scope="col">Departamento</th>
+          <th scope="col">Municipio</th>
+          <th scope="col">Estado</th>
+          <th scope="col" class="ent-table__actions-col">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template #body let-entidad>
+        <tr>
+          <td>{{ entidad.codigo }}</td>
+          <td>{{ entidad.nit }}</td>
+          <td>{{ entidad.razonSocial }}</td>
+          <td>{{ entidad.departamento }}</td>
+          <td>{{ entidad.municipio }}</td>
+          <td>
+            <p-tag
+              [value]="entidad.estado"
+              [severity]="entidad.estado === 'Activo' ? 'success' : 'danger'" />
+          </td>
+          <td class="ent-table__actions-col">
+            <p-button
+              icon="pi pi-times"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              size="small"
+              (onClick)="quitarEntidad(entidad)"
+              [attr.aria-label]="'Quitar ' + entidad.razonSocial"
+              pTooltip="Quitar de la lista"
+              tooltipPosition="left" />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="7" class="ent-empty">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>
+              @if (!categoriaSeleccionada) {
+                Seleccione una categoría y agregue entidades desde el directorio.
+              } @else {
+                Aún no hay entidades agregadas. Use «Seleccionar entidades» para abrir el directorio.
+              }
+            </p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+
+  <!-- Directorio de entidades (selección múltiple — refleja lo ya seleccionado al reabrir) -->
+  <app-directorio-entidades-multiple
+    [(visible)]="directorioVisible"
+    [showEstadoFilter]="false"
+    [filtrosColapsables]="true"
+    [seleccionadas]="entidadesSeleccionadas"
+    (seleccionar)="onEntidadesSeleccionadas($event)" />
+</div>

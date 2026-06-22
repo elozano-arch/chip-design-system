@@ -261,6 +261,28 @@
         </a>
       }
 
+      <!-- ══ ENTIDADES ══ -->
+      <button class="app-sidebar__link app-sidebar__toggle-sub" (click)="entidadesOpen = !entidadesOpen"
+        [attr.aria-expanded]="entidadesOpen"
+        [pTooltip]="sidebarCollapsed ? 'Entidades' : ''" tooltipPosition="right">
+        <i class="pi pi-building"></i> <span class="app-sidebar__label">Entidades</span>
+        @if (!sidebarCollapsed) {
+          <i class="pi app-sidebar__chevron" [class.pi-chevron-down]="!entidadesOpen" [class.pi-chevron-up]="entidadesOpen"></i>
+        }
+      </button>
+      @if (entidadesOpen && !sidebarCollapsed) {
+        <div class="app-sidebar__submenu">
+          <a routerLink="/pantallas/entidades/entidades-agregadas" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-building-columns"></i> <span class="app-sidebar__label">Entidades agregadas</span>
+          </a>
+        </div>
+      }
+      @if (sidebarCollapsed) {
+        <a routerLink="/pantallas/entidades/entidades-agregadas" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Entidades agregadas" tooltipPosition="right">
+          <i class="pi pi-building-columns"></i> <span class="app-sidebar__label">Entidades agregadas</span>
+        </a>
+      }
+
       <!-- ══ FLUJO DE ENVÍO ══ -->
       <a routerLink="/pantallas/flujo-envio" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Flujo de Envío' : ''" tooltipPosition="right">
         <i class="pi pi-send"></i> <span class="app-sidebar__label">Flujo de Envío</span>

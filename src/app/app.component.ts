@@ -29,6 +29,7 @@ export class AppComponent {
   seguridadOpen = true;
   formulariosOpen = true;
   formulariosSubOpen = true;
+  entidadesOpen = true;
   categoriasOpen = true;
 
   constructor() {

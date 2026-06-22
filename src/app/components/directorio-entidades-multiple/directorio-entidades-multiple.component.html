@@ -1,0 +1,168 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [closeOnEscape]="true"
+  [style]="{ width: '1000px', maxWidth: '95vw', maxHeight: '90vh' }"
+  styleClass="dir-ent-dialog"
+  header="Directorio de Entidades">
+
+  <div class="dir-ent">
+
+    <!-- ── Filtros internos (acordeón opcional vía [filtrosColapsables]) ── -->
+    <section class="dir-ent__filtros" aria-label="Filtros de búsqueda de entidades">
+      @if (filtrosColapsables) {
+        <button type="button" class="dir-ent__filtros-toggle"
+          [attr.aria-expanded]="!filtrosColapsados"
+          aria-controls="dir-ent-m-filtros-body"
+          (click)="filtrosColapsados = !filtrosColapsados">
+          <i class="pi" [ngClass]="filtrosColapsados ? 'pi-chevron-down' : 'pi-chevron-up'" aria-hidden="true"></i>
+          <span class="dir-ent__section-title">
+            <i class="pi pi-filter" aria-hidden="true"></i> Filtros de Búsqueda
+          </span>
+          @if (filtrosColapsados && busquedaRealizada) {
+            <span class="dir-ent__filtros-resumen">{{ resultados.length }} resultado{{ resultados.length === 1 ? '' : 's' }}</span>
+          }
+        </button>
+      } @else {
+        <h3 class="dir-ent__section-title">
+          <i class="pi pi-filter" aria-hidden="true"></i> Filtros de Búsqueda
+        </h3>
+      }
+
+      @if (!filtrosColapsables || !filtrosColapsados) {
+      <div id="dir-ent-m-filtros-body">
+      <div class="dir-ent__grid">
+        <div class="dir-ent__field">
+          <label for="dir-ent-m-codigo">Código</label>
+          <input pInputText id="dir-ent-m-codigo" placeholder="Buscar..." [(ngModel)]="fCodigo" class="w-full" />
+        </div>
+        <div class="dir-ent__field">
+          <label for="dir-ent-m-nit">NIT</label>
+          <input pInputText id="dir-ent-m-nit" placeholder="Buscar..." [(ngModel)]="fNit" class="w-full" />
+        </div>
+        <div class="dir-ent__field">
+          <label for="dir-ent-m-razon">Razón Social</label>
+          <input pInputText id="dir-ent-m-razon" placeholder="Buscar..." [(ngModel)]="fRazonSocial" class="w-full" />
+        </div>
+        <div class="dir-ent__field">
+          <label for="dir-ent-m-dpto">Departamento</label>
+          <p-select inputId="dir-ent-m-dpto" [options]="departamentoOptions" [(ngModel)]="fDepartamento"
+            (onChange)="onDepartamentoChange()"
+            placeholder="Todos" appendTo="body" class="w-full" />
+        </div>
+        <div class="dir-ent__field">
+          <label for="dir-ent-m-mun">Municipio</label>
+          <p-select inputId="dir-ent-m-mun" [options]="municipioOptions" [(ngModel)]="fMunicipio"
+            placeholder="Todos" appendTo="body" class="w-full" />
+        </div>
+        @if (showEstadoFilter) {
+          <div class="dir-ent__field">
+            <label for="dir-ent-m-estado">Estado</label>
+            <p-select inputId="dir-ent-m-estado" [options]="estadoOptions" [(ngModel)]="fEstado"
+              placeholder="Todos" appendTo="body" class="w-full" />
+          </div>
+        }
+      </div>
+
+      <div class="dir-ent__filtros-actions">
+        <p-button label="Limpiar" icon="pi pi-filter-slash" [text]="true" severity="secondary"
+          [disabled]="!tieneAlgunFiltro && !busquedaRealizada"
+          (onClick)="limpiar()" />
+        <p-button label="Consultar" icon="pi pi-search"
+          pTooltip="Sin filtros se listan todas las entidades (paginadas)"
+          [tooltipDisabled]="tieneAlgunFiltro" tooltipPosition="top"
+          (onClick)="consultar()" />
+      </div>
+      </div>
+      }
+    </section>
+
+    <!-- ── Resultados ── -->
+    <section class="dir-ent__resultados" aria-label="Resultados de la búsqueda">
+      <h3 class="dir-ent__section-title">
+        <i class="pi pi-list" aria-hidden="true"></i> Resultados
+        @if (busquedaRealizada) {
+          <span class="dir-ent__count">({{ resultados.length }} entidad{{ resultados.length === 1 ? '' : 'es' }} encontrada{{ resultados.length === 1 ? '' : 's' }})</span>
+        }
+      </h3>
+
+      <p-table
+        [value]="resultados"
+        [paginator]="resultados.length > 10"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="resultados.length > 10"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} entidades"
+        [stripedRows]="true"
+        [rowHover]="true"
+        [(selection)]="seleccion"
+        dataKey="codigo"
+        [attr.aria-label]="'Tabla de entidades disponibles para selección múltiple'">
+        <ng-template #header>
+          <tr>
+            <th style="width: 44px">
+              <p-tableHeaderCheckbox [attr.aria-label]="'Seleccionar todas las entidades de la página'" />
+            </th>
+            <th pSortableColumn="codigo" style="width: 96px">Código <p-sortIcon field="codigo" /></th>
+            <th pSortableColumn="nit" style="width: 128px">NIT <p-sortIcon field="nit" /></th>
+            <th pSortableColumn="razonSocial">Razón Social <p-sortIcon field="razonSocial" /></th>
+            <th pSortableColumn="departamento" style="width: 122px">Departamento <p-sortIcon field="departamento" /></th>
+            <th pSortableColumn="municipio" style="width: 116px">Municipio <p-sortIcon field="municipio" /></th>
+            @if (showEstadoFilter) {
+              <th pSortableColumn="estado" style="width: 96px">Estado <p-sortIcon field="estado" /></th>
+            }
+          </tr>
+        </ng-template>
+        <ng-template #body let-e>
+          <tr [class.dir-ent__row--selected]="estaSeleccionada(e)">
+            <td>
+              <p-tableCheckbox [value]="e" [attr.aria-label]="'Seleccionar ' + e.razonSocial" />
+            </td>
+            <td><span class="dir-ent__code">{{ e.codigo }}</span></td>
+            <td>{{ e.nit }}</td>
+            <td>
+              <span class="dir-ent__razon"
+                [pTooltip]="e.razonSocial" tooltipPosition="top" [showDelay]="400">
+                {{ e.razonSocial }}
+              </span>
+            </td>
+            <td>{{ e.departamento }}</td>
+            <td>{{ e.municipio }}</td>
+            @if (showEstadoFilter) {
+              <td>
+                <p-tag [value]="e.estado"
+                  [severity]="e.estado === 'Activo' ? 'success' : 'danger'" />
+              </td>
+            }
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td [attr.colspan]="showEstadoFilter ? 7 : 6" class="dir-ent__empty">
+              @if (!busquedaRealizada) {
+                <i class="pi pi-inbox" aria-hidden="true"></i>
+                <p>Utilice los filtros y presione <strong>Consultar</strong> para buscar entidades.</p>
+              } @else {
+                <i class="pi pi-search" aria-hidden="true"></i>
+                <p>No se encontraron entidades con los filtros aplicados.</p>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+    </section>
+  </div>
+
+  <ng-template #footer>
+    <span class="dir-ent__footer-count">
+      {{ seleccion.length }} seleccionada{{ seleccion.length === 1 ? '' : 's' }}
+    </span>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+      (onClick)="cancelar()" />
+    <p-button label="Aceptar" icon="pi pi-check"
+      (onClick)="aceptar()" />
+  </ng-template>
+</p-dialog>
