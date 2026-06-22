@@ -197,6 +197,17 @@ export const routes: Routes = [
       import('./pages/pantallas/formularios/formularios.component').then(m => m.FormulariosComponent),
   },
   {
+    path: 'pantallas/entidades/entidades-agregadas',
+    data: {
+      breadcrumb: [
+        { label: 'Entidades', icon: 'pi pi-building', routerLink: '/pantallas/entidades/entidades-agregadas' },
+        { label: 'Entidades agregadas' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/entidades-agregadas/entidades-agregadas.component').then(m => m.EntidadesAgregadasComponent),
+  },
+  {
     path: 'pantallas/flujo-envio',
     data: {
       breadcrumb: [
