@@ -693,6 +693,42 @@ export class ParametrizacionListasComponent {
       this.tabla('sub', 'identificacion', 'SUBESTADOS', 'Subestados', 'Subestados del ciclo de vida de una entidad.', ['Subestado'], true, subestados),
     ];
 
+    /* ── UBICACIÓN: ejemplo de 5 niveles, mixto (config 2 y 3) ───── */
+    // País → Departamento → Municipio → Comuna/Localidad → Barrio.
+    // Ramas completas de 5 niveles + nodos sin hijos en distintos niveles.
+    const ubicacion: NodoLista[] = [
+      this.n('CO', 'Colombia', 1, 'activo', [
+        this.n('CO-ANT', 'Antioquia', 2, 'activo', [
+          this.n('CO-ANT-MED', 'Medellín', 3, 'activo', [
+            this.n('CO-ANT-MED-C14', 'Comuna 14 · El Poblado', 4, 'activo', [
+              this.n('CO-ANT-MED-C14-CAS', 'Castropol', 5),
+              this.n('CO-ANT-MED-C14-MAN', 'Manila', 5),
+              this.n('CO-ANT-MED-C14-PAT', 'Patio Bonito', 5, 'inactivo'),
+            ]),
+            this.n('CO-ANT-MED-C11', 'Comuna 11 · Laureles', 4, 'activo', [
+              this.n('CO-ANT-MED-C11-LAU', 'Laureles', 5),
+              this.n('CO-ANT-MED-C11-EST', 'Estadio', 5),
+            ]),
+          ]),
+          this.n('CO-ANT-BEL', 'Bello', 3), // municipio sin comunas (mixto)
+        ]),
+        this.n('CO-CUN', 'Cundinamarca', 2, 'activo', [
+          this.n('CO-CUN-BOG', 'Bogotá D.C.', 3, 'activo', [
+            this.n('CO-CUN-BOG-CHA', 'Localidad de Chapinero', 4, 'activo', [
+              this.n('CO-CUN-BOG-CHA-CHI', 'Chicó', 5),
+              this.n('CO-CUN-BOG-CHA-RET', 'El Retiro', 5),
+            ]),
+            this.n('CO-CUN-BOG-USA', 'Localidad de Usaquén', 4), // localidad sin barrios (mixto)
+          ]),
+          this.n('CO-CUN-SOA', 'Soacha', 3), // municipio sin comunas (mixto)
+        ]),
+        this.n('CO-VAC', 'Valle del Cauca', 2, 'activo', [
+          this.n('CO-VAC-CAL', 'Cali', 3), // municipio sin comunas (mixto, nivel intermedio)
+        ]),
+      ]),
+      this.n('MX', 'México', 1, 'inactivo'), // país sin departamentos (mixto, raíz sin hijos)
+    ];
+
     /* ── GENERALES (muestra representativa de las 456) ──────────── */
     const generalesNombres = [
       'Acepta signo', 'AE tipo conceptos presupuestales', 'AESGPRI asociaciones indígenas',
@@ -701,21 +737,28 @@ export class ParametrizacionListasComponent {
       'Agrupación', 'Aumento servicio deuda', 'BDME estado deuda',
       'BDME tipo actualización', 'Categorías según MEFP 2001',
     ];
-    const generales: TablaParametrica[] = generalesNombres.map((nombre, i) =>
+    const generales: TablaParametrica[] = [
       this.tabla(
-        `gen-${i}`, 'generales',
-        nombre.toUpperCase().replace(/ /g, '_').slice(0, 18),
-        nombre,
-        'Lista general transversal del sistema.',
-        ['Valor'],
-        i % 5 !== 0,
-        [
-          this.n(`G${i}1`, 'Opción 1', 1),
-          this.n(`G${i}2`, 'Opción 2', 1),
-          this.n(`G${i}3`, 'Opción 3', 1, 'inactivo'),
-        ],
+        'ubicacion', 'generales', 'UBICACION', 'Ubicación',
+        'División político-administrativa: país, departamento, municipio, comuna/localidad y barrio.',
+        ['País', 'Departamento', 'Municipio', 'Comuna/Localidad', 'Barrio'], true, ubicacion,
       ),
-    );
+      ...generalesNombres.map((nombre, i) =>
+        this.tabla(
+          `gen-${i}`, 'generales',
+          nombre.toUpperCase().replace(/ /g, '_').slice(0, 18),
+          nombre,
+          'Lista general transversal del sistema.',
+          ['Valor'],
+          i % 5 !== 0,
+          [
+            this.n(`G${i}1`, 'Opción 1', 1),
+            this.n(`G${i}2`, 'Opción 2', 1),
+            this.n(`G${i}3`, 'Opción 3', 1, 'inactivo'),
+          ],
+        ),
+      ),
+    ];
 
     /* ── Otros grupos (muestras) ────────────────────────────────── */
     const gestion: TablaParametrica[] = [
