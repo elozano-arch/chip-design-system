@@ -1,0 +1,467 @@
+<p-toast />
+
+<!-- ============================================================
+     VISTA 1 · GRUPOS DE TABLAS
+     ============================================================ -->
+@if (vista() === 'grupos') {
+  <div class="plt-page" role="main">
+    <app-breadcrumb />
+
+    <div class="plt-header">
+      <h1 class="plt-header__title">Parametrización de listas</h1>
+      <div class="plt-header__row">
+        <p class="plt-header__desc">
+          Administre las tablas paramétricas que alimentan los catálogos y listas del sistema.
+          Seleccione un grupo de tablas para ver y gestionar sus parámetros.
+        </p>
+      </div>
+    </div>
+
+    <section class="plt-grupos" aria-label="Grupos de tablas">
+      @for (grupo of grupos; track grupo.id) {
+        <button type="button" class="plt-grupo" (click)="seleccionarGrupo(grupo)"
+          [attr.aria-label]="'Abrir grupo ' + grupo.nombre">
+          <span class="plt-grupo__icon" aria-hidden="true"><i [class]="grupo.icon"></i></span>
+          <span class="plt-grupo__body">
+            <span class="plt-grupo__nombre">{{ grupo.nombre }}</span>
+            <span class="plt-grupo__code">{{ grupo.codigo }}</span>
+            <span class="plt-grupo__desc">{{ grupo.descripcion }}</span>
+            <span class="plt-grupo__meta">
+              <i class="pi pi-table" aria-hidden="true"></i>
+              {{ grupo.totalTablas }} {{ grupo.totalTablas === 1 ? 'tabla' : 'tablas' }}
+            </span>
+          </span>
+          <i class="pi pi-chevron-right plt-grupo__chevron" aria-hidden="true"></i>
+        </button>
+      }
+    </section>
+  </div>
+}
+
+<!-- ============================================================
+     VISTA 2 · TABLAS DEL GRUPO
+     ============================================================ -->
+@if (vista() === 'tablas' && grupoActivo(); as grupo) {
+  <div class="plt-page" role="main">
+    <p-breadcrumb [model]="breadcrumbModel()" [home]="breadcrumbHome" />
+
+    <div class="plt-header">
+      <h1 class="plt-header__title">{{ grupo.nombre }}</h1>
+      <div class="plt-header__row">
+        <p class="plt-header__desc">{{ grupo.descripcion }}</p>
+        <p-button label="Volver a grupos" icon="pi pi-arrow-left" [text]="true"
+          severity="secondary" size="small" (onClick)="volverAGrupos()" />
+      </div>
+    </div>
+
+    <div class="plt-search">
+      <p-iconField>
+        <p-inputIcon styleClass="pi pi-search" />
+        <input pInputText type="text" placeholder="Buscar tabla por nombre o código..."
+          [ngModel]="busquedaTablas()" (ngModelChange)="busquedaTablas.set($event)"
+          aria-label="Buscar tabla" class="w-full" />
+      </p-iconField>
+    </div>
+
+    <p-table [value]="tablasDelGrupo()" [stripedRows]="true" [rowHover]="true"
+      [paginator]="tablasDelGrupo().length > 10" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} tablas"
+      styleClass="plt-tabla-listado">
+      <ng-template #caption><span class="sr-only">Tablas del grupo {{ grupo.nombre }}</span></ng-template>
+      <ng-template #header>
+        <tr>
+          <th style="width: 150px">Código</th>
+          <th>Nombre de la tabla</th>
+          <th style="width: 120px; text-align: center">Tipo</th>
+          <th style="width: 120px; text-align: center">Parámetros</th>
+          <th style="width: 110px; text-align: center">Estado</th>
+          <th style="width: 130px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-tabla>
+        <tr>
+          <td><span class="plt-tabla-listado__code">{{ tabla.tabCode }}</span></td>
+          <td>
+            <span class="plt-tabla-listado__nombre">
+              <i class="pi pi-table" aria-hidden="true"></i>
+              {{ tabla.nombre }}
+            </span>
+            <span class="plt-tabla-listado__desc">{{ tabla.descripcion }}</span>
+          </td>
+          <td style="text-align: center">
+            @if (tabla.jerarquica) {
+              <p-tag value="Jerárquica" severity="info" icon="pi pi-sitemap" />
+            } @else {
+              <p-tag value="Plana" severity="secondary" />
+            }
+          </td>
+          <td style="text-align: center">{{ totalParametros(tabla) }}</td>
+          <td style="text-align: center">
+            @if (tabla.activa) {
+              <p-tag value="Activa" severity="success" />
+            } @else {
+              <p-tag value="Inactiva" severity="secondary" />
+            }
+          </td>
+          <td style="text-align: center">
+            <p-button label="Gestionar" icon="pi pi-cog" [text]="true" size="small"
+              (onClick)="gestionarTabla(tabla)"
+              [attr.aria-label]="'Gestionar tabla ' + tabla.nombre" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr>
+          <td colspan="6" class="plt-empty">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>No se encontraron tablas para la búsqueda aplicada.</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+}
+
+<!-- ============================================================
+     VISTA 3 · ÁRBOL DE LA TABLA (master-detail)
+     ============================================================ -->
+@if (vista() === 'arbol' && tablaActiva(); as tabla) {
+  <div class="plt-page plt-page--wide" role="main">
+    <p-breadcrumb [model]="breadcrumbModel()" [home]="breadcrumbHome" />
+
+    <div class="plt-edit-header">
+      <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary" size="small"
+        (onClick)="volverATablas()" aria-label="Volver al listado de tablas" />
+      <h1 class="plt-edit-header__title">{{ tabla.nombre }}</h1>
+      <p-button label="Nuevo {{ nombreNivel(1) }}" icon="pi pi-plus" size="small"
+        styleClass="plt-edit-header__new" (onClick)="abrirAgregarRaiz()" />
+      <p-button icon="pi pi-ellipsis-v" [rounded]="true" [text]="true" severity="secondary" size="small"
+        pTooltip="Más acciones de la tabla" tooltipPosition="top"
+        aria-label="Más acciones de la tabla" (onClick)="abrirMenuTabla($event)" />
+      <p-menu #menuTabla [model]="menuTablaItems()" [popup]="true" appendTo="body" />
+    </div>
+
+    <!-- Barra de metadatos de la tabla -->
+    <section class="plt-meta" aria-label="Información de la tabla">
+      <p-tag [value]="tabla.jerarquica ? 'Tabla jerárquica' : 'Tabla plana'"
+        [severity]="tabla.jerarquica ? 'info' : 'secondary'"
+        [icon]="tabla.jerarquica ? 'pi pi-sitemap' : 'pi pi-list'" />
+      <span class="plt-meta__stat"><strong>{{ nodosTotales() }}</strong> nodos totales</span>
+      <span class="plt-meta__sep" aria-hidden="true">·</span>
+      <span class="plt-meta__stat"><strong>{{ nodosActivos() }}</strong> activos</span>
+      <span class="plt-meta__sep" aria-hidden="true">·</span>
+      <span class="plt-meta__stat"><strong>{{ nodosRaiz() }}</strong> {{ nodosRaiz() === 1 ? 'nodo raíz' : 'nodos raíz' }}</span>
+      <span class="plt-meta__sep" aria-hidden="true">·</span>
+      <span class="plt-meta__stat"><strong>{{ nodosFinales() }}</strong> {{ nodosFinales() === 1 ? 'nodo final' : 'nodos finales' }}</span>
+      <span class="plt-meta__tabcode">tab_code: {{ tabla.tabCode }}</span>
+    </section>
+
+    <!-- Niveles -->
+    <div class="plt-levels" aria-label="Niveles jerárquicos">
+      <span class="plt-levels__label">Niveles:</span>
+      @for (nivel of tabla.niveles; track $index; let last = $last) {
+        <span class="plt-levels__level">{{ nivel }}</span>
+        @if (!last) { <i class="pi pi-angle-right" aria-hidden="true"></i> }
+      }
+    </div>
+
+    <!-- Card del árbol -->
+    <section class="plt-card" aria-labelledby="plt-card-title">
+      <h2 id="plt-card-title" class="sr-only">Estructura de {{ tabla.nombre }}</h2>
+
+      <!-- Toolbar: búsqueda + filtros + expandir/colapsar -->
+      <div class="plt-card__toolbar">
+        <div class="plt-card__search">
+          <p-iconField>
+            <p-inputIcon styleClass="pi pi-search" />
+            <input pInputText type="text" placeholder="Buscar nodo por valor o código..."
+              [ngModel]="busquedaNodos()" (ngModelChange)="busquedaNodos.set($event)"
+              aria-label="Buscar nodo" class="w-full" />
+          </p-iconField>
+        </div>
+        <p-selectButton [options]="opcionesFiltroEstado" optionLabel="label" optionValue="value"
+          [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"
+          [allowEmpty]="false" aria-label="Filtrar por estado" styleClass="plt-filtro-estado" />
+        <div class="plt-card__toolbar-actions">
+          <p-button label="Expandir todo" icon="pi pi-angle-double-down" [text]="true"
+            severity="secondary" size="small" (onClick)="expandirTodo()" />
+          <p-button label="Colapsar" icon="pi pi-angle-double-up" [text]="true"
+            severity="secondary" size="small" (onClick)="colapsarTodo()" />
+        </div>
+      </div>
+
+      <!-- Split: árbol + detalle -->
+      <div class="plt-split">
+        <!-- Árbol aplanado -->
+        <div class="plt-tree" role="tree" [attr.aria-label]="'Estructura de ' + tabla.nombre">
+          @for (fila of filasVisibles(); track fila.nodo.id) {
+            <div class="plt-tree__row" role="treeitem" tabindex="0"
+              [class.plt-tree__row--sel]="esNodoSeleccionado(fila.nodo)"
+              [class.plt-tree__row--inactivo]="fila.nodo.estado === 'inactivo'"
+              [attr.aria-level]="fila.nodo.nivel"
+              [attr.aria-selected]="esNodoSeleccionado(fila.nodo)"
+              [attr.aria-expanded]="fila.tieneHijos ? fila.expandido : null"
+              (click)="seleccionarNodo(fila.nodo)"
+              (keydown.enter)="seleccionarNodo(fila.nodo)">
+              <span class="plt-tree__valor" [style.paddingLeft.px]="fila.profundidad * 22 + 8">
+                @if (fila.tieneHijos) {
+                  <button type="button" class="plt-tree__toggle" (click)="toggleNodo(fila.nodo, $event)"
+                    [attr.aria-label]="(fila.expandido ? 'Contraer ' : 'Expandir ') + fila.nodo.valor">
+                    <i class="pi" [class.pi-chevron-down]="fila.expandido" [class.pi-chevron-right]="!fila.expandido"></i>
+                  </button>
+                } @else {
+                  <span class="plt-tree__leaf" aria-hidden="true"></span>
+                }
+                <i class="plt-tree__ficon pi"
+                  [class.pi-folder]="!fila.esFinal" [class.pi-file]="fila.esFinal" aria-hidden="true"></i>
+                <span class="plt-tree__code">{{ fila.nodo.code }}</span>
+                <span class="plt-tree__texto">{{ fila.nodo.valor }}</span>
+                @if (fila.tieneHijos) {
+                  <span class="plt-tree__count" aria-hidden="true">{{ fila.nodo.hijos.length }}</span>
+                }
+                @if (fila.esFinal) {
+                  <span class="plt-tree__final">Final</span>
+                }
+                @if (fila.nodo.estado === 'inactivo') {
+                  <span class="plt-tree__inactivo">Inactivo</span>
+                }
+              </span>
+
+              <span class="plt-tree__acciones" (click)="$event.stopPropagation()">
+                @if (!fila.esFinal) {
+                  <p-button icon="pi pi-plus" [rounded]="true" [text]="true" size="small"
+                    pTooltip="Agregar hijo" tooltipPosition="top"
+                    [attr.aria-label]="'Agregar hijo a ' + fila.nodo.valor"
+                    (onClick)="abrirAgregarHijo(fila.nodo, $event)" />
+                }
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" size="small" severity="secondary"
+                  pTooltip="Editar" tooltipPosition="top"
+                  [attr.aria-label]="'Editar ' + fila.nodo.valor"
+                  (onClick)="abrirEditar(fila.nodo, $event)" />
+                <p-button [icon]="fila.nodo.estado === 'activo' ? 'pi pi-pause' : 'pi pi-play'"
+                  [rounded]="true" [text]="true" size="small" severity="secondary"
+                  [pTooltip]="fila.nodo.estado === 'activo' ? 'Desactivar' : 'Activar'" tooltipPosition="top"
+                  [attr.aria-label]="(fila.nodo.estado === 'activo' ? 'Desactivar ' : 'Activar ') + fila.nodo.valor"
+                  (onClick)="toggleEstado(fila.nodo, $event)" />
+                <p-button icon="pi pi-trash" [rounded]="true" [text]="true" size="small" severity="danger"
+                  pTooltip="Eliminar" tooltipPosition="top"
+                  [attr.aria-label]="'Eliminar ' + fila.nodo.valor"
+                  (onClick)="confirmarEliminar(fila.nodo, $event)" />
+              </span>
+            </div>
+          } @empty {
+            <div class="plt-empty plt-empty--tree">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>
+                @if (busquedaNodos().trim().length > 0 || filtroEstado() !== 'todos') {
+                  No se encontraron nodos para el filtro aplicado.
+                } @else {
+                  Esta tabla aún no tiene registros. Agregue el primer {{ nombreNivel(1) }}.
+                }
+              </p>
+            </div>
+          }
+        </div>
+
+        <!-- Panel de detalle -->
+        <aside class="plt-detalle" aria-label="Detalle del nodo">
+          <h3 class="plt-detalle__title">Detalle del nodo</h3>
+          @if (nodoSeleccionado(); as nodo) {
+            <div class="plt-detalle__head">
+              <i class="pi" [class.pi-folder]="!detalleEsFinal()" [class.pi-file]="detalleEsFinal()" aria-hidden="true"></i>
+              <div>
+                <strong class="plt-detalle__nombre">{{ nodo.valor }}</strong>
+                <span class="plt-detalle__code">code: {{ nodo.code }}</span>
+              </div>
+            </div>
+
+            <dl class="plt-detalle__grid">
+              <dt>Estado</dt>
+              <dd>
+                <p-tag [value]="nodo.estado === 'activo' ? 'Activo' : 'Inactivo'"
+                  [severity]="nodo.estado === 'activo' ? 'success' : 'secondary'" />
+              </dd>
+              <dt>Tipo</dt>
+              <dd>{{ detalleTipo() }}</dd>
+              <dt>Nivel</dt>
+              <dd>{{ nodo.nivel }} · {{ nombreNivel(nodo.nivel) }}</dd>
+              <dt>Hijos directos</dt>
+              <dd>{{ detalleHijosDirectos() }}</dd>
+              <dt>Desc. totales</dt>
+              <dd>{{ detalleDescTotales() }}</dd>
+              <dt>Orden</dt>
+              <dd>{{ detalleOrden() }}</dd>
+            </dl>
+
+            <div class="plt-detalle__ruta">
+              <span class="plt-detalle__ruta-label">Ruta</span>
+              <span class="plt-detalle__ruta-path">
+                @for (paso of detalleRuta(); track $index; let last = $last) {
+                  <span>{{ paso }}</span>
+                  @if (!last) { <i class="pi pi-angle-right" aria-hidden="true"></i> }
+                }
+              </span>
+            </div>
+
+            <div class="plt-detalle__actions">
+              @if (!detalleEsFinal()) {
+                <p-button label="Agregar hijo" icon="pi pi-plus" size="small" styleClass="w-full"
+                  (onClick)="abrirAgregarHijo(nodo)" />
+              }
+              <p-button label="Editar" icon="pi pi-pencil" [outlined]="true" severity="secondary" size="small"
+                styleClass="w-full" (onClick)="abrirEditar(nodo)" />
+              <p-button [label]="nodo.estado === 'activo' ? 'Desactivar' : 'Activar'"
+                [icon]="nodo.estado === 'activo' ? 'pi pi-pause' : 'pi pi-play'"
+                [outlined]="true" severity="secondary" size="small" styleClass="w-full"
+                (onClick)="toggleEstado(nodo)" />
+              <p-button label="Eliminar" icon="pi pi-trash" [text]="true" severity="danger" size="small"
+                styleClass="w-full" (onClick)="confirmarEliminar(nodo)" />
+            </div>
+          } @else {
+            <div class="plt-detalle__empty">
+              <i class="pi pi-arrow-left" aria-hidden="true"></i>
+              <p>Selecciona un nodo para ver su detalle.</p>
+            </div>
+          }
+        </aside>
+      </div>
+
+      <footer class="plt-card__footer">
+        <p-button label="Volver" icon="pi pi-arrow-left" severity="secondary" [outlined]="true"
+          (onClick)="volverATablas()" />
+        <p-button label="Guardar cambios" icon="pi pi-check" (onClick)="guardarTabla()" />
+      </footer>
+    </section>
+  </div>
+}
+
+<!-- ============================================================
+     DIÁLOGO · AGREGAR / EDITAR NODO
+     ============================================================ -->
+<p-dialog
+  [header]="dialogoModo() === 'editar' ? 'Editar registro' : ('Agregar ' + nombreNivel(nivelDestino()))"
+  [(visible)]="dialogoNodoVisibleProxy" [modal]="true" [style]="{ width: '460px' }" [draggable]="false">
+  <div class="dialog-form">
+    <p class="dialog-form__hint">
+      Los campos marcados con <span class="field-required">*</span> son obligatorios.
+    </p>
+    @if (dialogoModo() === 'agregar' && nodoPadre(); as padre) {
+      <p class="dialog-form__context">
+        <i class="pi pi-sitemap" aria-hidden="true"></i>
+        Se agregará dentro de <strong>{{ padre.valor }}</strong>
+        ({{ nombreNivel(padre.nivel) }}).
+      </p>
+    }
+    <div class="dialog-form__field">
+      <label for="plt-code">Código</label>
+      <input pInputText id="plt-code"
+        [ngModel]="codeNodo()" (ngModelChange)="codeNodo.set($event)"
+        placeholder="Código del registro"
+        class="w-full" autocomplete="off"
+        aria-describedby="plt-code-help" />
+      <small id="plt-code-help" class="dialog-form__help">
+        Identificador del registro. Si lo deja vacío se genera automáticamente.
+      </small>
+    </div>
+    <div class="dialog-form__field">
+      <label for="plt-valor">Valor <span class="field-required">*</span></label>
+      <input pInputText id="plt-valor"
+        [ngModel]="valorNodo()" (ngModelChange)="valorNodo.set($event)"
+        (blur)="valorTocado.set(true)"
+        [class.ng-invalid]="valorTocado() && valorInvalido"
+        [class.ng-dirty]="valorTocado()"
+        placeholder="Escriba el valor del registro"
+        class="w-full" autocomplete="off"
+        aria-required="true"
+        [attr.aria-invalid]="valorTocado() && valorInvalido"
+        aria-describedby="plt-valor-error" />
+      @if (valorTocado() && valorInvalido) {
+        <small id="plt-valor-error" class="dialog-form__error">El valor es obligatorio.</small>
+      }
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogoNodoVisible.set(false)" />
+    <p-button [label]="dialogoModo() === 'editar' ? 'Guardar' : 'Agregar'" icon="pi pi-check"
+      (onClick)="guardarNodo()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ============================================================
+     DIÁLOGO · CONFIRMAR ELIMINACIÓN
+     ============================================================ -->
+<p-dialog header="Confirmar eliminación" [(visible)]="dialogoEliminarVisibleProxy" [modal]="true"
+  [style]="{ width: '460px' }" [draggable]="false">
+  <div class="dialog-confirm">
+    <i class="pi pi-exclamation-triangle dialog-confirm__icon" aria-hidden="true"></i>
+    @if (nodoAEliminar(); as nodo) {
+      <p>Está a punto de eliminar el registro <strong>"{{ nodo.valor }}"</strong>.</p>
+      @if (totalDescendientes > 0) {
+        <div class="dialog-confirm__warning" role="alert" aria-live="assertive">
+          <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+          <span>
+            También se eliminarán sus
+            <strong>{{ totalDescendientes }}</strong>
+            registro{{ totalDescendientes === 1 ? '' : 's' }} descendiente{{ totalDescendientes === 1 ? '' : 's' }}.
+          </span>
+        </div>
+      }
+      <p class="dialog-confirm__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Esta acción no se puede deshacer.
+      </p>
+    }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogoEliminarVisible.set(false)" />
+    <p-button label="Eliminar" icon="pi pi-trash" severity="danger" (onClick)="eliminarNodo()" />
+  </ng-template>
+</p-dialog>
+
+<!-- ============================================================
+     DIÁLOGO · EDITAR DATOS DE LA TABLA
+     ============================================================ -->
+<p-dialog header="Editar datos de la tabla" [(visible)]="dialogoTablaVisibleProxy" [modal]="true"
+  [style]="{ width: '480px' }" [draggable]="false">
+  <div class="dialog-form">
+    <p class="dialog-form__hint">
+      Los campos marcados con <span class="field-required">*</span> son obligatorios.
+    </p>
+    @if (tablaActiva(); as tabla) {
+      <div class="dialog-form__field">
+        <label for="plt-tabla-code">Código de la tabla</label>
+        <input pInputText id="plt-tabla-code" [value]="tabla.tabCode" [disabled]="true" class="w-full" />
+        <small class="dialog-form__help">El código de la tabla (tab_code) no se puede modificar.</small>
+      </div>
+    }
+    <div class="dialog-form__field">
+      <label for="plt-tabla-nombre">Nombre <span class="field-required">*</span></label>
+      <input pInputText id="plt-tabla-nombre"
+        [ngModel]="editTablaNombre()" (ngModelChange)="editTablaNombre.set($event)"
+        (blur)="editTablaNombreTocado.set(true)"
+        [class.ng-invalid]="editTablaNombreTocado() && tablaNombreInvalido"
+        [class.ng-dirty]="editTablaNombreTocado()"
+        placeholder="Nombre de la tabla"
+        class="w-full" autocomplete="off"
+        aria-required="true"
+        [attr.aria-invalid]="editTablaNombreTocado() && tablaNombreInvalido"
+        aria-describedby="plt-tabla-nombre-error" />
+      @if (editTablaNombreTocado() && tablaNombreInvalido) {
+        <small id="plt-tabla-nombre-error" class="dialog-form__error">El nombre de la tabla es obligatorio.</small>
+      }
+    </div>
+    <div class="dialog-form__field">
+      <label for="plt-tabla-desc">Descripción</label>
+      <textarea pInputText id="plt-tabla-desc"
+        [ngModel]="editTablaDesc()" (ngModelChange)="editTablaDesc.set($event)"
+        placeholder="Descripción de la tabla"
+        class="w-full" rows="3" maxlength="200" style="resize: vertical"></textarea>
+      <small class="dialog-form__help">Máximo 200 caracteres. ({{ editTablaDesc().length }}/200)</small>
+    </div>
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogoTablaVisible.set(false)" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarTablaDatos()" />
+  </ng-template>
+</p-dialog>

@@ -360,4 +360,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/pantallas/propuesta-diseno/propuesta-diseno.component').then(m => m.PropuestaDisenoComponent),
   },
+  {
+    path: 'pantallas/parametrizacion-listas',
+    data: {
+      breadcrumb: [
+        { label: 'Parametrización de listas' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/parametrizacion-listas/parametrizacion-listas.component').then(m => m.ParametrizacionListasComponent),
+  },
 ];
