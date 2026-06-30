@@ -7,68 +7,155 @@
     <h1 class="form-header__title">Entidades agregadas</h1>
     <div class="form-header__row">
       <p class="form-header__desc">
-        Seleccione una categoría para habilitar el directorio de entidades, agregue una o varias
-        entidades y revise el listado de entidades seleccionadas.
+        Seleccione la entidad principal y la categoría para habilitar el directorio, asigne una o
+        varias entidades agregadas y revise el listado resultante.
       </p>
     </div>
   </div>
 
-  <!-- ══ Paso 1 — Categoría ══ -->
-  <section class="ent-step" role="region" aria-label="Selección de categoría">
-    <h2 class="ent-step__title">1. Categoría</h2>
-    <div class="ent-field">
-      <label for="categoria" class="ent-field__label">
-        Categoría <span class="field-required" aria-hidden="true">*</span>
-      </label>
-      <div class="ent-field__control">
-        <p-select
-          inputId="categoria"
-          [options]="categoriaOptions"
-          [(ngModel)]="selectedCategoria"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Seleccione categoría"
-          [filter]="true"
-          filterBy="label"
-          filterPlaceholder="Buscar categoría"
-          appendTo="body"
-          styleClass="ent-field__select"
-          [attr.aria-required]="true"
-          (onChange)="onCategoriaChange()" />
-
-        <!-- ══ Paso 2 — Abrir directorio ══ -->
-        <p-button
-          label="Seleccionar entidades"
-          icon="pi pi-building-columns"
-          styleClass="ent-field__btn"
-          [disabled]="!categoriaSeleccionada"
-          (onClick)="abrirDirectorio()"
-          [pTooltip]="categoriaSeleccionada ? '' : 'Seleccione una categoría primero'"
-          tooltipPosition="top" />
-      </div>
-      <small id="categoria-hint" class="ent-field__hint">
-        El directorio de entidades se habilita al seleccionar una categoría.
-      </small>
+  <!-- ══ Paso 1 — Filtros colapsables (Entidad + Categoría, estilo estándar) ══ -->
+  <div class="chip-filters" role="region" aria-label="Filtros de entidad y categoría">
+    <div class="chip-filters__header">
+      <button type="button" class="chip-filters__toggle"
+        [attr.aria-expanded]="!filtersCollapsed"
+        aria-controls="ea-filters-body"
+        (click)="filtersCollapsed = !filtersCollapsed">
+        <i class="chip-filters__toggle-icon pi"
+          [ngClass]="filtersCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"
+          aria-hidden="true"></i>
+        @if (filtersCollapsed && busquedaAplicada) {
+          <span class="chip-filters__chips" aria-live="polite">
+            <p-chip [label]="'Entidad: ' + entidadLabel" />
+            <p-chip [label]="'Categoría: ' + categoriaLabel" />
+          </span>
+        } @else {
+          <span class="chip-filters__toggle-label">Filtros de búsqueda{{ activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '' }}</span>
+        }
+      </button>
     </div>
-  </section>
 
-  <!-- ══ Paso 3 — Entidades seleccionadas ══ -->
-  <section class="ent-step" role="region" aria-label="Entidades seleccionadas">
+    @if (!filtersCollapsed) {
+      <div class="chip-filters__body" id="ea-filters-body">
+
+        <!-- Simulación de tipo de usuario (mock demo): L carga la entidad; C/E la eligen del directorio. -->
+        <div class="ent-demo-switch" role="group" aria-label="Simulación de tipo de usuario">
+          <i class="pi pi-user" aria-hidden="true"></i>
+          <label for="ea-tipo-usuario">Tipo de usuario <span class="ent-demo-switch__tag">demostración</span></label>
+          <p-select inputId="ea-tipo-usuario"
+            [options]="tiposUsuarioOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="tipoUsuario" (onChange)="onTipoUsuarioChange()"
+            appendTo="body" styleClass="ent-demo-switch__select" />
+        </div>
+
+        <div class="chip-filters__fields chip-filters__fields--2col">
+
+          <!-- Entidad (obligatorio). Tipo L: cargada por defecto (bloqueada).
+               Tipo C/E: campo-trigger que abre el Directorio de Entidades. -->
+          <div class="chip-filters__field">
+            <label for="ea-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
+            @if (esTipoLocal) {
+              <p-iconField iconPosition="right" styleClass="w-full ent-entidad-iconfield ent-entidad-iconfield--locked">
+                <input pInputText id="ea-entidad"
+                  class="w-full ent-entidad-locked"
+                  [value]="entidadLabel"
+                  readonly
+                  aria-required="true"
+                  aria-readonly="true"
+                  [attr.aria-label]="selectedEntidad ? ('Entidad local asignada: ' + selectedEntidad.razonSocial) : ''"
+                  [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500" />
+                <p-inputIcon styleClass="pi pi-lock ent-entidad-lock" />
+              </p-iconField>
+            } @else {
+              <p-iconField iconPosition="right" styleClass="w-full ent-entidad-iconfield">
+                <input pInputText id="ea-entidad"
+                  class="w-full ent-entidad-trigger"
+                  [value]="entidadLabel"
+                  readonly
+                  placeholder="Seleccionar entidad"
+                  role="combobox" aria-haspopup="dialog"
+                  aria-required="true"
+                  [attr.aria-expanded]="entidadDirectorioVisible"
+                  [attr.aria-label]="selectedEntidad ? ('Entidad seleccionada: ' + selectedEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+                  [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500"
+                  (click)="abrirDirectorioEntidad()"
+                  (keydown.enter)="abrirDirectorioEntidad()"
+                  (keydown.space)="abrirDirectorioEntidad(); $event.preventDefault()" />
+                @if (selectedEntidad) {
+                  <p-inputIcon
+                    styleClass="pi pi-times-circle ent-entidad-clear"
+                    role="button" tabindex="0"
+                    pTooltip="Limpiar selección" tooltipPosition="top"
+                    aria-label="Limpiar entidad seleccionada"
+                    (click)="limpiarEntidad(); $event.stopPropagation()"
+                    (keydown.enter)="limpiarEntidad(); $event.stopPropagation()"
+                    (keydown.space)="limpiarEntidad(); $event.stopPropagation(); $event.preventDefault()" />
+                } @else {
+                  <p-inputIcon styleClass="pi pi-search ent-entidad-search" />
+                }
+              </p-iconField>
+            }
+          </div>
+
+          <!-- Categoría (obligatorio): se habilita al elegir la entidad. -->
+          <div class="chip-filters__field">
+            <label for="ea-categoria">Categoría <span class="field-required" aria-hidden="true">*</span></label>
+            <p-select inputId="ea-categoria"
+              [options]="categoriaOptions"
+              [(ngModel)]="selectedCategoria"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccione categoría"
+              [filter]="true"
+              filterBy="label"
+              filterPlaceholder="Buscar categoría"
+              appendTo="body"
+              class="w-full"
+              [disabled]="!entidadSeleccionada"
+              aria-required="true"
+              (onChange)="onCategoriaChange()"
+              [pTooltip]="entidadSeleccionada ? '' : 'Seleccione una entidad primero'"
+              tooltipPosition="top" />
+          </div>
+        </div>
+
+        <div class="chip-filters__actions">
+          <p-button label="Limpiar" icon="pi pi-refresh"
+            [text]="true" severity="secondary"
+            (onClick)="limpiarFiltros()" />
+          <p-button label="Aplicar filtros" icon="pi pi-filter"
+            [disabled]="!filtrosValidos"
+            (onClick)="buscar()" />
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ══ Paso 2 — Entidades agregadas ══ -->
+  <section class="ent-step" role="region" aria-label="Entidades agregadas">
     <div class="ent-list-header">
-      <h2 class="ent-step__title">2. Entidades seleccionadas</h2>
+      <h2 class="ent-step__title">Entidades agregadas</h2>
       <span class="ent-list-header__count" aria-live="polite">
         {{ entidadesSeleccionadas.length }}
         {{ entidadesSeleccionadas.length === 1 ? 'entidad' : 'entidades' }}
       </span>
-      @if (entidadesSeleccionadas.length) {
+      <div class="ent-list-header__actions">
         <p-button
-          label="Quitar todas"
-          icon="pi pi-trash"
-          [text]="true"
-          severity="danger"
-          size="small"
-          (onClick)="quitarTodas()" />
-      }
+          label="Asignar entidades agregadas"
+          icon="pi pi-building-columns"
+          [disabled]="!puedeAsignar"
+          (onClick)="abrirDirectorio()"
+          [pTooltip]="puedeAsignar ? '' : 'Aplique la búsqueda (entidad y categoría) primero'"
+          tooltipPosition="top" />
+        @if (entidadesSeleccionadas.length) {
+          <p-button
+            label="Quitar todas"
+            icon="pi pi-trash"
+            [text]="true"
+            severity="danger"
+            size="small"
+            (onClick)="pedirQuitarTodas()" />
+        }
+      </div>
     </div>
 
     <p-table
@@ -89,12 +176,12 @@
 
       <ng-template #header>
         <tr>
-          <th scope="col">Código</th>
-          <th scope="col">NIT</th>
-          <th scope="col">Razón social</th>
-          <th scope="col">Departamento</th>
-          <th scope="col">Municipio</th>
-          <th scope="col">Estado</th>
+          <th scope="col" pSortableColumn="codigo">Código <p-sortIcon field="codigo" /></th>
+          <th scope="col" pSortableColumn="nit">NIT <p-sortIcon field="nit" /></th>
+          <th scope="col" pSortableColumn="razonSocial">Razón social <p-sortIcon field="razonSocial" /></th>
+          <th scope="col" pSortableColumn="departamento">Departamento <p-sortIcon field="departamento" /></th>
+          <th scope="col" pSortableColumn="municipio">Municipio <p-sortIcon field="municipio" /></th>
+          <th scope="col" pSortableColumn="estado">Estado <p-sortIcon field="estado" /></th>
           <th scope="col" class="ent-table__actions-col">Acciones</th>
         </tr>
       </ng-template>
@@ -118,7 +205,7 @@
               [text]="true"
               severity="danger"
               size="small"
-              (onClick)="quitarEntidad(entidad)"
+              (onClick)="pedirQuitarEntidad(entidad)"
               [attr.aria-label]="'Quitar ' + entidad.razonSocial"
               pTooltip="Quitar de la lista"
               tooltipPosition="left" />
@@ -131,10 +218,10 @@
           <td colspan="7" class="ent-empty">
             <i class="pi pi-inbox" aria-hidden="true"></i>
             <p>
-              @if (!categoriaSeleccionada) {
-                Seleccione una categoría y agregue entidades desde el directorio.
+              @if (!puedeAsignar) {
+                Seleccione entidad y categoría y haga clic en «Aplicar filtros» para habilitar la asignación.
               } @else {
-                Aún no hay entidades agregadas. Use «Seleccionar entidades» para abrir el directorio.
+                Aún no hay entidades agregadas. Use «Asignar entidades agregadas» para abrir el directorio.
               }
             </p>
           </td>
@@ -143,11 +230,52 @@
     </p-table>
   </section>
 
-  <!-- Directorio de entidades (selección múltiple — refleja lo ya seleccionado al reabrir) -->
+  <!-- Directorio de la Entidad principal (selección única — reúso del componente del wizard) -->
+  <app-directorio-entidades
+    [(visible)]="entidadDirectorioVisible"
+    [showEstadoFilter]="false"
+    [filtrosColapsables]="true"
+    (seleccionar)="onEntidadSeleccionada($event)" />
+
+  <!-- Directorio de entidades agregadas (selección múltiple — refleja lo ya seleccionado al reabrir) -->
   <app-directorio-entidades-multiple
     [(visible)]="directorioVisible"
     [showEstadoFilter]="false"
     [filtrosColapsables]="true"
     [seleccionadas]="entidadesSeleccionadas"
     (seleccionar)="onEntidadesSeleccionadas($event)" />
+
+  <!-- Alerta de confirmación al quitar de la lista (puntual o todas) -->
+  <p-dialog
+    [header]="entidadAQuitar ? 'Quitar entidad de la lista' : 'Quitar todas las entidades'"
+    [(visible)]="confirmQuitarVisible"
+    [modal]="true" [draggable]="false" [closeOnEscape]="true"
+    [style]="{ width: '440px' }"
+    (onHide)="cancelarQuitar()">
+    <div class="ent-dialog-confirm">
+      <i class="pi pi-exclamation-triangle ent-dialog-confirm__icon" aria-hidden="true"></i>
+      @if (entidadAQuitar) {
+        <p>
+          ¿Seguro que desea quitar la entidad
+          <strong>"{{ entidadAQuitar.codigo }} · {{ entidadAQuitar.razonSocial }}"</strong>
+          de la lista?
+        </p>
+      } @else {
+        <p>
+          ¿Seguro que desea quitar las
+          <strong>{{ entidadesSeleccionadas.length }} entidades</strong>
+          de la lista?
+        </p>
+      }
+      <p class="ent-dialog-confirm__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Podrá volver a agregarla{{ entidadAQuitar ? '' : 's' }} desde «Asignar entidades agregadas».
+      </p>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="cancelarQuitar()" />
+      <p-button [label]="entidadAQuitar ? 'Quitar' : 'Quitar todas'" icon="pi pi-trash"
+        severity="danger" (onClick)="confirmarQuitar()" />
+    </ng-template>
+  </p-dialog>
 </div>
