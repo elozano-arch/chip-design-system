@@ -181,6 +181,34 @@ interface DownloadFormat {
   info: string;
 }
 
+/** Severity admitida por los `p-tag` del panel de estado. */
+type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
+
+/** Estado dominante (lifecycle) de la categoría seleccionada. */
+type EstadoCategoriaClave =
+  | 'sin-contexto'
+  | 'importado'
+  | 'validado'
+  | 'rechazado'
+  | 'enviado';
+
+/** Resumen del estado dominante de la categoría para el panel lateral. */
+interface EstadoCategoriaResumen {
+  clave: EstadoCategoriaClave;
+  label: string;
+  severity: TagSeverity;
+  icon: string;
+  descripcion: string;
+}
+
+/** Una fila del desglose por estado de los formularios (panel lateral). */
+interface DesgloseEstado {
+  label: string;
+  cantidad: number;
+  icon: string;
+  severity: TagSeverity;
+}
+
 @Component({
   selector: 'app-formularios',
   standalone: true,
@@ -598,6 +626,8 @@ export class FormulariosComponent {
   private resetContextoEntidad() {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
+    this.panelEstadoAbierto = false;
+    this.showImportDialog = false;
     this.cerrarPanelesPaso1();
   }
 
@@ -673,8 +703,22 @@ export class FormulariosComponent {
   activePanel: string | null = null;
   selectedFormularios: Formulario[] = [];
 
-  // ── Importar ──
+  // ── Importar (acción transversal de los 3 pasos) ──
   importFileName = '';
+
+  /** Diálogo de importación, accesible desde el botón transversal. */
+  showImportDialog = false;
+
+  /** Abre el diálogo de importación (gateado por el contexto del Paso 1). */
+  abrirImportDialog() {
+    if (!this.filtersApplied) return;
+    this.importFileName = '';
+    this.showImportDialog = true;
+  }
+
+  cerrarImportDialog() {
+    this.showImportDialog = false;
+  }
 
   // ── Exportar ──
   exportFormatOptions = [
@@ -734,6 +778,103 @@ export class FormulariosComponent {
   get todosValidados(): boolean {
     const lista = this.filteredFormularios;
     return lista.length > 0 && lista.every(f => f.estadoValidacion === 'Validado');
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     Panel lateral "Estado de la categoría" — único en el layout, visible
+     y toggleable en los 3 pasos (toggle, NO modal). No introduce estado
+     nuevo más allá del flag de apertura: TODO lo que muestra se deriva de
+     la única fuente de verdad que ya comparten los pasos:
+       • filtersApplied + contexto (categoría/entidad/año/periodo)
+       • _formulariosBase / filteredFormularios (estadoValidacion)
+       • verificado / erroresActivos (verificación central, Paso 3)
+       • selectedEntidades (entidades agregadas, Paso 3)
+     Al navegar entre pasos el estado se conserva solo, porque se recalcula
+     de esas mismas propiedades.
+     ═══════════════════════════════════════════════════════════════════ */
+
+  /** Apertura del panel lateral (toggle). Único estado propio del panel. */
+  panelEstadoAbierto = false;
+
+  togglePanelEstado(): void {
+    // El control de envío sólo se habilita con un contexto aplicado.
+    if (!this.filtersApplied) return;
+    this.panelEstadoAbierto = !this.panelEstadoAbierto;
+  }
+
+  /** Etiqueta legible del periodo seleccionado (para el contexto del panel). */
+  get periodoLabel(): string {
+    return this.periodoOptions.find(o => o.value === this.selectedPeriodo)?.label ?? '';
+  }
+
+  /**
+   * Estado dominante (lifecycle) de la categoría. Se calcula a partir del
+   * listado de formularios y de la verificación central — misma fuente que
+   * usan los pasos para habilitar Validar / Enviar.
+   */
+  get estadoCategoria(): EstadoCategoriaResumen {
+    const lista = this.filteredFormularios;
+    if (!this.filtersApplied || lista.length === 0) {
+      return {
+        clave: 'sin-contexto', label: 'Sin contexto', severity: 'secondary',
+        icon: 'pi pi-inbox',
+        descripcion: 'Aplique los filtros en el Paso 1 para cargar la categoría.',
+      };
+    }
+    // Tras el envío central todos los formularios quedan en "Enviado".
+    if (lista.every(f => f.estadoValidacion === 'Enviado')) {
+      return {
+        clave: 'enviado', label: 'Enviada a validación central', severity: 'info',
+        icon: 'pi pi-send',
+        descripcion: 'La categoría fue enviada. El resultado (aceptado o rechazado) llegará en Consultar envíos.',
+      };
+    }
+    // Rechazo: formularios marcados con deficiencia o errores de verificación.
+    if ((this.verificado && this.erroresActivos.length > 0)
+        || lista.some(f => f.estadoValidacion === 'Rechazado por Deficiencia')) {
+      return {
+        clave: 'rechazado', label: 'Rechazado por deficiencia', severity: 'danger',
+        icon: 'pi pi-times-circle',
+        descripcion: 'Hay formularios rechazados o errores de verificación por corregir antes de enviar.',
+      };
+    }
+    if (lista.every(f => f.estadoValidacion === 'Validado')) {
+      return {
+        clave: 'validado', label: 'Validada · lista para enviar', severity: 'success',
+        icon: 'pi pi-check-circle',
+        descripcion: 'Todos los formularios están validados. Puede enviar la categoría en el Paso 3.',
+      };
+    }
+    return {
+      clave: 'importado', label: 'Importada · en diligenciamiento', severity: 'warn',
+      icon: 'pi pi-file-import',
+      descripcion: 'Formularios cargados. Valide cada uno para poder enviar la categoría.',
+    };
+  }
+
+  /** Desglose por estado de los formularios (solo los estados presentes). */
+  get desgloseEstados(): DesgloseEstado[] {
+    const lista = this.filteredFormularios;
+    const cuenta = (estado: string) => lista.filter(f => f.estadoValidacion === estado).length;
+    const buckets: { label: string; estado: string; icon: string; severity: TagSeverity }[] = [
+      { label: 'Importado / pendiente', estado: 'Pendiente de validar', icon: 'pi pi-file-import', severity: 'warn' },
+      { label: 'Validado', estado: 'Validado', icon: 'pi pi-check-circle', severity: 'success' },
+      { label: 'Rechazado por deficiencia', estado: 'Rechazado por Deficiencia', icon: 'pi pi-times-circle', severity: 'danger' },
+      { label: 'Enviado', estado: 'Enviado', icon: 'pi pi-send', severity: 'info' },
+    ];
+    return buckets
+      .map(b => ({ label: b.label, cantidad: cuenta(b.estado), icon: b.icon, severity: b.severity }))
+      .filter(b => b.cantidad > 0);
+  }
+
+  /** Progreso de validación local: validados (o enviados) sobre el total. */
+  get progresoValidacion(): { validados: number; total: number; pct: number } {
+    const lista = this.filteredFormularios;
+    const total = lista.length;
+    const validados = lista.filter(
+      f => f.estadoValidacion === 'Validado' || f.estadoValidacion === 'Enviado',
+    ).length;
+    return { validados, total, pct: total ? Math.round((validados / total) * 100) : 0 };
   }
 
   /* ═══════════════════════════════════════════════════════════════════
@@ -958,6 +1099,7 @@ export class FormulariosComponent {
     this.messageService.add({ severity: 'success', summary: 'Importación iniciada', detail: `Importando archivo "${this.importFileName}"...` });
     this.importFileName = '';
     this.activePanel = null;
+    this.showImportDialog = false;
   }
 
   confirmExport() {
@@ -1074,6 +1216,8 @@ export class FormulariosComponent {
   onFiltroModificado() {
     if (this.filtersApplied) {
       this.filtersApplied = false;
+      this.panelEstadoAbierto = false;
+      this.showImportDialog = false;
       this.cerrarPanelesPaso1();
     }
   }
@@ -1113,6 +1257,8 @@ export class FormulariosComponent {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.searchFormulario = '';
+    this.panelEstadoAbierto = false;
+    this.showImportDialog = false;
     this.cerrarPanelesPaso1();
   }
 
