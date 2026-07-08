@@ -1,4 +1,4 @@
-import { Component, ViewChild, signal, computed } from '@angular/core';
+import { Component, ViewChild, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -242,11 +242,40 @@ interface DesgloseEstado {
   templateUrl: './formularios.component.html',
   styleUrl: './formularios.component.scss',
 })
-export class FormulariosComponent {
+export class FormulariosComponent implements OnDestroy {
   @ViewChild('menuFormulario') menuFormulario: any;
   selectedFormularioForMenu: Formulario | null = null;
 
-  constructor(private messageService: MessageService) {}
+  constructor(private messageService: MessageService) {
+    this.setupColumnasResponsivas();
+  }
+
+  // ── Responsive: columnas visibles de la matriz de registro manual ──
+  // En tablet/phone caben menos periodos; el paginador de columnas se ajusta
+  // al viewport (4 desktop · 3 ≤992 · 2 ≤768) con matchMedia nativo (sin CDK).
+  private mqlTablet?: MediaQueryList;
+  private mqlPhone?: MediaQueryList;
+  private readonly onViewportChange = () => this.ajustarColumnasPorViewport();
+
+  private setupColumnasResponsivas(): void {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    this.mqlTablet = window.matchMedia('(max-width: 992px)');
+    this.mqlPhone = window.matchMedia('(max-width: 768px)');
+    this.mqlTablet.addEventListener('change', this.onViewportChange);
+    this.mqlPhone.addEventListener('change', this.onViewportChange);
+    this.ajustarColumnasPorViewport();
+  }
+
+  private ajustarColumnasPorViewport(): void {
+    this.columnasPorPagina = this.mqlPhone?.matches ? 2 : this.mqlTablet?.matches ? 3 : 4;
+    const maxPagina = Math.max(0, this.totalPaginasColumnas - 1);
+    if (this.paginaColumnas > maxPagina) this.paginaColumnas = maxPagina;
+  }
+
+  ngOnDestroy(): void {
+    this.mqlTablet?.removeEventListener('change', this.onViewportChange);
+    this.mqlPhone?.removeEventListener('change', this.onViewportChange);
+  }
 
   /**
    * Paso actual del wizard — 3 pasos:
@@ -423,6 +452,7 @@ export class FormulariosComponent {
   }
 
   abrirDetalle(form: Formulario) {
+    this.controlEnvioAbierto = false;
     this.detalleAbierto = form;
     this.paginaColumnas = 0;
     this.conceptos.forEach(c => c.pagina = 0);
@@ -485,6 +515,7 @@ export class FormulariosComponent {
   abrirProtocolo(form: Formulario | null) {
     if (!form) return;
     this.cerrarDetalle();
+    this.controlEnvioAbierto = false;
     this.protocoloAbierto = form;
     queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
@@ -516,6 +547,11 @@ export class FormulariosComponent {
       icon: 'pi pi-table',
       command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
     },
+    {
+      label: 'Ver control de envío',
+      icon: 'pi pi-send',
+      command: () => this.verControlEnvio(),
+    },
     { separator: true },
     {
       label: 'Generar protocolo de importación',
@@ -527,6 +563,69 @@ export class FormulariosComponent {
   abrirMenuFormulario(event: Event, form: Formulario) {
     this.selectedFormularioForMenu = form;
     this.menuFormulario.toggle(event);
+  }
+
+  /**
+   * Control de envío como PANTALLA dedicada (no toggle lateral): se abre desde
+   * la acción ⋮ de una fila y reemplaza el listado, igual que las sub-vistas de
+   * Registro manual / Protocolo. Se vuelve con "Volver al listado".
+   */
+  controlEnvioAbierto = false;
+
+  verControlEnvio(): void {
+    if (!this.filtersApplied) return;
+    this.cerrarDetalle();
+    this.cerrarProtocolo();
+    this.controlEnvioAbierto = true;
+    queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+
+  cerrarControlEnvio(): void {
+    this.controlEnvioAbierto = false;
+  }
+
+  // ── Rechazo por deficiencia (V3) ──────────────────────────────────────────
+  // Desde la columna Estado, las filas "Rechazado por Deficiencia" abren un
+  // diálogo con los motivos del rechazo y cómo corregirlos. Datos de demo.
+  rechazoDetalle: Formulario | null = null;
+
+  /** True si el formulario fue rechazado por deficiencia (habilita "Ver motivo"). */
+  esRechazado(form: Formulario): boolean {
+    return form.estadoValidacion === 'Rechazado por Deficiencia';
+  }
+
+  /** Motivos del rechazo por deficiencia (mock de demostración). */
+  readonly deficienciasMock: { tipo: string; detalle: string; correccion: string }[] = [
+    {
+      tipo: 'Saldo descuadrado',
+      detalle: 'El total de débitos no coincide con el total de créditos del formulario.',
+      correccion: 'Revise los movimientos del periodo y ajuste hasta que el cuadre dé cero.',
+    },
+    {
+      tipo: 'Concepto obligatorio vacío',
+      detalle: 'Faltan valores en conceptos marcados como obligatorios por la CGN.',
+      correccion: 'Diligencie los conceptos obligatorios pendientes antes de reenviar.',
+    },
+    {
+      tipo: 'Operación recíproca sin par',
+      detalle: 'Una operación recíproca no tiene su contraparte reportada.',
+      correccion: 'Verifique la entidad recíproca y el valor reportado del movimiento.',
+    },
+  ];
+
+  verRechazoDeficiencia(form: Formulario): void {
+    this.rechazoDetalle = form;
+  }
+
+  cerrarRechazoDetalle(): void {
+    this.rechazoDetalle = null;
+  }
+
+  /** Desde el diálogo de rechazo, salta al registro manual del formulario. */
+  irARegistroDesdeRechazo(): void {
+    const form = this.rechazoDetalle;
+    this.cerrarRechazoDetalle();
+    if (form) this.abrirDetalle(form);
   }
 
   // ── Tipo de usuario (mock de demostración) ──
@@ -627,6 +726,7 @@ export class FormulariosComponent {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.panelEstadoAbierto = false;
+    this.controlEnvioAbierto = false;
     this.showImportDialog = false;
     this.cerrarPanelesPaso1();
   }
@@ -989,7 +1089,11 @@ export class FormulariosComponent {
         life: 3000,
       });
     }
-    this.irAPaso(1);
+    // V3: todo vive en una sola pantalla; no hay navegación por pasos.
+    // Subimos al listado de formularios conservando los errores pendientes.
+    this.cerrarDetalle();
+    this.cerrarProtocolo();
+    queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
   /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
@@ -1217,6 +1321,7 @@ export class FormulariosComponent {
     if (this.filtersApplied) {
       this.filtersApplied = false;
       this.panelEstadoAbierto = false;
+    this.controlEnvioAbierto = false;
       this.showImportDialog = false;
       this.cerrarPanelesPaso1();
     }
@@ -1258,6 +1363,7 @@ export class FormulariosComponent {
     this.filtersCollapsed = false;
     this.searchFormulario = '';
     this.panelEstadoAbierto = false;
+    this.controlEnvioAbierto = false;
     this.showImportDialog = false;
     this.cerrarPanelesPaso1();
   }
