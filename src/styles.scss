@@ -325,6 +325,7 @@ p-breadcrumb .p-breadcrumb {
 .prot-page,
 .flj-page,
 .plt-page,
+.ent-page,
 .ttr-page {
   max-width: 1200px;
   margin: 0 auto;
@@ -355,6 +356,7 @@ p-breadcrumb .p-breadcrumb {
 .flj-header,
 .ttr-header,
 .plt-header,
+.ent-header,
 .lvr-header {
   margin-bottom: 28px;
 }
@@ -371,6 +373,7 @@ p-breadcrumb .p-breadcrumb {
 .flj-header__title,
 .ttr-header__title,
 .plt-header__title,
+.ent-header__title,
 .lvr-header__title {
   font-family: var(--font-heading);
   font-size: 28px;
@@ -389,6 +392,7 @@ p-breadcrumb .p-breadcrumb {
 .flj-header__row,
 .ttr-header__row,
 .plt-header__row,
+.ent-header__row,
 .lvr-header__row {
   display: flex;
   align-items: center;
@@ -408,6 +412,7 @@ p-breadcrumb .p-breadcrumb {
 .flj-header__desc,
 .ttr-header__desc,
 .plt-header__desc,
+.ent-header__desc,
 .lvr-header__desc {
   font-size: 15px;
   color: var(--chip-grey-500);
