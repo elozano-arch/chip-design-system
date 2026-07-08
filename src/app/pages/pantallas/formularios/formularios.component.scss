@@ -2447,3 +2447,203 @@ $estado-panel-width: 300px;
   .form-estado-toggle--open { right: 92vw; }
   .form-estado-panel { top: 0; height: 100vh; }
 }
+
+/* ── Estado "Rechazado por deficiencia" clickable (V3) ── */
+.form-estado-tagbtn {
+  border: 0;
+  background: transparent;
+  padding: 3px 7px;
+  margin: -3px -7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  transition: background .15s ease;
+
+  &:hover {
+    background: rgba(244, 67, 54, 0.10);
+  }
+  /* Subrayado tipo hipervínculo para reforzar que es clickeable. */
+  &:hover ::ng-deep .p-tag-label {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
+    outline-offset: 2px;
+  }
+}
+
+/* ── Diálogo "Rechazo por deficiencia" (V3) ── */
+.form-rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--chip-grey-200, #e0e0e0);
+    border-left: 3px solid var(--chip-danger, #f44336);
+    border-radius: 8px;
+    background: var(--chip-bg-white-smoke, #f5f5f5);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__detalle {
+    margin: 0;
+    color: var(--chip-grey-800, #303030);
+  }
+
+  &__fix {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--chip-cobalt-700, #0943b5);
+
+    i { font-size: 14px; }
+  }
+}
+
+/* ── Pantalla dedicada "Control de envío" (V3, desde acción ⋮) ── */
+.form-estado-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+
+  .form-estado-badge { align-items: flex-start; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE — Tablet (mínimo objetivo). Bootstrap 5 breakpoints:
+   ≥992 desktop · 768–992 tablet landscape · ≤768 tablet portrait.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* P1 · Tablas densas: scroll horizontal controlado, sin aplastar columnas.
+   El contenedor scrollea; la tabla conserva un ancho mínimo legible. */
+.form-table-scroll,
+.form-errores__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+:host ::ng-deep .form-errores__table table { min-width: 760px; }
+:host ::ng-deep .form-list-table table { min-width: 520px; }
+
+/* P2 · Filtros: en tablet (768–992) usar 2 columnas en vez de saltar a 1.
+   (El global colapsa a 1col recién en ≤768.) */
+@media (min-width: 768px) and (max-width: 992px) {
+  :host ::ng-deep .chip-filters__fields--4col,
+  :host ::ng-deep .chip-filters__fields--3col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* P1.2 · Ocultar columna "Código" (ya visible en el nombre) para ganar ancho. */
+  :host ::ng-deep .form-list-table th:nth-child(2),
+  :host ::ng-deep .form-list-table td:nth-child(2) { display: none; }
+  :host ::ng-deep .form-list-table table { min-width: 0; }
+
+  /* P2.5 · Toolbars y navegación: apilar botones a ancho completo (mejor toque). */
+  .form-wizard__actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-wizard__nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .form-wizard__actions-bar ::ng-deep .p-button,
+  .form-wizard__nav ::ng-deep .p-button {
+    width: 100%;
+    justify-content: center;
+  }
+  .form-wizard__nav-hint { order: -1; text-align: center; }
+}
+
+/* P3 · Touch targets ≥44×44 en tablet-y-abajo (WCAG 2.5.5 / Kit UI). */
+@media (max-width: 992px) {
+  :host ::ng-deep .p-button.p-button-icon-only {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .form-estado-tagbtn { min-height: 44px; }
+  .chip-colpager__btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TEXTOS LARGOS → ⓘ + tooltip (helper) y truncado + tooltip (inline).
+   Mantiene la vista limpia en responsive sin apilar párrafos largos.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Helper de sección: párrafos descriptivos convertidos a icono ⓘ. */
+.panel-help {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-left: 6px;
+  cursor: help;
+  color: var(--chip-grey-500, #6b6b6b);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1;
+  transition: color .15s ease;
+
+  i { font-size: 15px; }
+  &:hover { color: var(--chip-cobalt-700, #0943b5); }
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+@media (max-width: 992px) {
+  .panel-help { min-width: 44px; min-height: 44px; justify-content: center; }
+}
+
+/* Texto inline largo: truncado con … (el completo viaja en el tooltip). */
+.cell-ellipsis {
+  display: block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chips de filtro con categorías largas: truncar la etiqueta. */
+:host ::ng-deep .chip-trunc .p-chip-label {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+@media (max-width: 768px) {
+  :host ::ng-deep .chip-trunc .p-chip-label { max-width: 150px; }
+}
