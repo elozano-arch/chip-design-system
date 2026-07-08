@@ -2179,3 +2179,471 @@
     }
   }
 }
+
+/* ==========================================================================
+   Panel lateral · Estado de la categoría (toggle, no modal)
+   Botón flotante en el borde derecho (estilo VS Code) + panel deslizable.
+   Único en el layout: vive fuera de los pasos y se muestra en los 3.
+   Se ancla bajo la pila de cabezotes sticky (~124px) para no taparlos.
+   ========================================================================== */
+$estado-panel-top: 124px;
+$estado-panel-width: 300px;
+
+.form-estado-toggle {
+  position: fixed;
+  /* Pestaña vertical anclada a la altura de los pasos del wizard. */
+  top: 230px;
+  right: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 9px;
+  border: 1px solid var(--chip-grey-200);
+  border-right: none;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: var(--chip-cobalt-700);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: -2px 2px 10px rgba(9, 67, 181, 0.18);
+  transition: right 0.28s ease, background 0.2s ease, opacity 0.2s ease;
+
+  .form-estado-toggle__icon { font-size: 17px; }
+
+  .form-estado-toggle__text {
+    font-family: var(--font-heading);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    /* Texto vertical (de abajo hacia arriba) propio de una pestaña lateral. */
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  &:hover:not(:disabled) { background: var(--chip-cobalt-800, #073494); }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+
+  /* Inactiva hasta aplicar los filtros del Paso 1 — se marca de forma
+     evidente: atenuada, borde punteado, candado y cursor de bloqueo. */
+  &:disabled {
+    background: var(--chip-grey-100);
+    color: var(--chip-grey-400);
+    border: 1px dashed var(--chip-grey-300);
+    border-right: none;
+    box-shadow: none;
+    opacity: 0.9;
+    cursor: not-allowed;
+
+    .form-estado-toggle__icon { color: var(--chip-grey-400); }
+  }
+
+  /* Cuando el panel está abierto, el botón se desplaza pegado a su borde. */
+  &--open { right: $estado-panel-width; }
+}
+
+.form-estado-panel {
+  position: fixed;
+  top: $estado-panel-top;
+  right: 0;
+  z-index: 900;
+  width: $estado-panel-width;
+  max-width: 92vw;
+  height: calc(100vh - #{$estado-panel-top});
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-left: 1px solid var(--chip-grey-200);
+  box-shadow: -6px 0 22px rgba(0, 0, 0, 0.1);
+  transform: translateX(100%);
+  transition: transform 0.28s ease;
+  overflow: hidden;
+
+  &--open { transform: translateX(0); }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--chip-bg-solitude);
+    border-bottom: 1px solid var(--chip-grey-200);
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--chip-cobalt-700);
+
+      i { font-size: 18px; }
+    }
+  }
+
+  &__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--chip-grey-500);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+
+    &:hover { background: var(--chip-grey-100); color: var(--chip-grey-700); }
+    &:focus-visible { outline: 2px solid var(--chip-cobalt-700); outline-offset: 2px; }
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+/* Contexto (categoría / entidad / periodo) */
+.form-estado-ctx {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  dt {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--chip-grey-500);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    line-height: 1.4;
+  }
+}
+
+/* Estado dominante */
+.form-estado-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  background: var(--chip-grey-50);
+
+  &__desc {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--chip-grey-600);
+  }
+}
+
+/* Progreso de validación */
+.form-estado-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 12.5px;
+    color: var(--chip-grey-600);
+
+    span:first-child { font-weight: 700; color: var(--chip-grey-700); }
+  }
+
+  :host ::ng-deep .form-estado-progress__bar { height: 8px; }
+}
+
+/* Desglose por estado */
+.form-estado-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-md);
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--chip-grey-700);
+
+    i { color: var(--chip-grey-400); font-size: 15px; }
+  }
+}
+
+.form-estado-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-700);
+
+    i { color: var(--chip-cobalt-700); }
+  }
+}
+
+.form-estado-msg { margin: 0; }
+
+/* Estado vacío (sin filtros aplicados) */
+.form-estado-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--chip-grey-500);
+
+  i { font-size: 40px; color: var(--chip-grey-300); display: block; margin-bottom: 14px; }
+  p { margin: 0; font-size: 13.5px; line-height: 1.55; }
+}
+
+@media (max-width: 768px) {
+  .form-estado-toggle--open { right: 92vw; }
+  .form-estado-panel { top: 0; height: 100vh; }
+}
+
+/* ── Estado "Rechazado por deficiencia" clickable (V3) ── */
+.form-estado-tagbtn {
+  border: 0;
+  background: transparent;
+  padding: 3px 7px;
+  margin: -3px -7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  transition: background .15s ease;
+
+  &:hover {
+    background: rgba(244, 67, 54, 0.10);
+  }
+  /* Subrayado tipo hipervínculo para reforzar que es clickeable. */
+  &:hover ::ng-deep .p-tag-label {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
+    outline-offset: 2px;
+  }
+}
+
+/* ── Diálogo "Rechazo por deficiencia" (V3) ── */
+.form-rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--chip-grey-200, #e0e0e0);
+    border-left: 3px solid var(--chip-danger, #f44336);
+    border-radius: 8px;
+    background: var(--chip-bg-white-smoke, #f5f5f5);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__detalle {
+    margin: 0;
+    color: var(--chip-grey-800, #303030);
+  }
+
+  &__fix {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--chip-cobalt-700, #0943b5);
+
+    i { font-size: 14px; }
+  }
+}
+
+/* ── Pantalla dedicada "Control de envío" (V3, desde acción ⋮) ── */
+.form-estado-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 640px;
+
+  .form-estado-badge { align-items: flex-start; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RESPONSIVE — Tablet (mínimo objetivo). Bootstrap 5 breakpoints:
+   ≥992 desktop · 768–992 tablet landscape · ≤768 tablet portrait.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* P1 · Tablas densas: scroll horizontal controlado, sin aplastar columnas.
+   El contenedor scrollea; la tabla conserva un ancho mínimo legible. */
+.form-table-scroll,
+.form-errores__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+:host ::ng-deep .form-errores__table table { min-width: 760px; }
+:host ::ng-deep .form-list-table table { min-width: 520px; }
+
+/* P2 · Filtros: en tablet (768–992) usar 2 columnas en vez de saltar a 1.
+   (El global colapsa a 1col recién en ≤768.) */
+@media (min-width: 768px) and (max-width: 992px) {
+  :host ::ng-deep .chip-filters__fields--4col,
+  :host ::ng-deep .chip-filters__fields--3col {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* P1.2 · Ocultar columna "Código" (ya visible en el nombre) para ganar ancho. */
+  :host ::ng-deep .form-list-table th:nth-child(2),
+  :host ::ng-deep .form-list-table td:nth-child(2) { display: none; }
+  :host ::ng-deep .form-list-table table { min-width: 0; }
+
+  /* P2.5 · Toolbars y navegación: apilar botones a ancho completo (mejor toque). */
+  .form-wizard__actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-wizard__nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .form-wizard__actions-bar ::ng-deep .p-button,
+  .form-wizard__nav ::ng-deep .p-button {
+    width: 100%;
+    justify-content: center;
+  }
+  .form-wizard__nav-hint { order: -1; text-align: center; }
+}
+
+/* P3 · Touch targets ≥44×44 en tablet-y-abajo (WCAG 2.5.5 / Kit UI). */
+@media (max-width: 992px) {
+  :host ::ng-deep .p-button.p-button-icon-only {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .form-estado-tagbtn { min-height: 44px; }
+  .chip-colpager__btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TEXTOS LARGOS → ⓘ + tooltip (helper) y truncado + tooltip (inline).
+   Mantiene la vista limpia en responsive sin apilar párrafos largos.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Helper de sección: párrafos descriptivos convertidos a icono ⓘ. */
+.panel-help {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-left: 6px;
+  cursor: help;
+  color: var(--chip-grey-500, #6b6b6b);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1;
+  transition: color .15s ease;
+
+  i { font-size: 15px; }
+  &:hover { color: var(--chip-cobalt-700, #0943b5); }
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+@media (max-width: 992px) {
+  .panel-help { min-width: 44px; min-height: 44px; justify-content: center; }
+}
+
+/* Texto inline largo: truncado con … (el completo viaja en el tooltip). */
+.cell-ellipsis {
+  display: block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Chips de filtro con categorías largas: truncar la etiqueta. */
+:host ::ng-deep .chip-trunc .p-chip-label {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+@media (max-width: 768px) {
+  :host ::ng-deep .chip-trunc .p-chip-label { max-width: 150px; }
+}
