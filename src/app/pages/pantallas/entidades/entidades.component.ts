@@ -18,6 +18,7 @@ import { ChipModule } from 'primeng/chip';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
+import { StepperModule } from 'primeng/stepper';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
@@ -26,6 +27,14 @@ import { FormErrorBannerComponent } from '../../../components/form-error-banner/
 /* ════════════════ Modelo ════════════════ */
 
 export type EstadoEntidad = 'Solicitud' | 'Activo' | 'Inactivo';
+
+export interface AmbitoAsignado {
+  id: number;
+  categoria: string;
+  ambito: string;
+  anio: number;
+  periodo: string;
+}
 
 export interface Entidad {
   id: number;
@@ -58,10 +67,15 @@ export interface Entidad {
   fechaEstado: string | null;
   actoAdministrativo: string;
   observaciones: string;
+  ambitos: AmbitoAsignado[];
 }
 
 type Vista = 'list' | 'form';
 type FormMode = 'crear' | 'editar';
+
+/** Pesos del algoritmo de dígito de verificación del NIT (constante de módulo
+ *  para no depender del orden de inicialización de campos de la clase). */
+const PESOS_DV = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
 
 @Component({
   selector: 'app-entidades',
@@ -71,7 +85,7 @@ type FormMode = 'crear' | 'editar';
     ButtonModule, InputTextModule, TableModule, TagModule,
     ToastModule, TooltipModule, IconFieldModule, InputIconModule,
     SelectModule, DialogModule, DividerModule, MenuModule, ChipModule,
-    SelectButtonModule, DatePickerModule, BreadcrumbModule,
+    SelectButtonModule, DatePickerModule, BreadcrumbModule, StepperModule,
     AppBreadcrumbComponent, FormErrorBannerComponent,
   ],
   providers: [MessageService],
@@ -161,6 +175,23 @@ export class EntidadesComponent {
     'Activo': ['Activa', 'En escisión', 'Proyecto DECO', 'En fusión', 'En liquidación'],
   };
 
+  /* Ámbitos: categoría → ámbito, año y periodo (la CGN maneja ~4 categorías). */
+  readonly categoriaOptions = [
+    { label: 'Contabilidad', value: 'Contabilidad' },
+    { label: 'Presupuesto', value: 'Presupuesto' },
+    { label: 'Tesorería', value: 'Tesorería' },
+    { label: 'Regalías', value: 'Regalías' },
+  ];
+  readonly ambitosPorCategoria: Record<string, string[]> = {
+    Contabilidad: ['CGN - Convergencia', 'CGN - Contable', 'BDME'],
+    Presupuesto: ['CGR - Presupuestal', 'FUT - Ejecución'],
+    Tesorería: ['CUN - Tesorería', 'Flujo de caja'],
+    Regalías: ['SGR - Regalías', 'DNP - Inversión'],
+  };
+  readonly anioOptions = [2026, 2025, 2024, 2023].map(a => ({ label: String(a), value: a }));
+  readonly periodoOptions = ['Anual', 'Trimestre I', 'Trimestre II', 'Trimestre III', 'Trimestre IV']
+    .map(p => ({ label: p, value: p }));
+
   /* ═══════════════ Datos mock ═══════════════ */
   entidades: Entidad[] = [
     this.mockEntidad(1, 'E001', '899.999.001', 'CGN', 'Contaduría General de la Nación', 'Central', 'Gobierno general', 'Gobierno central', 'Activo', 'Activa', 'Bogotá D.C.', 'Bogotá D.C.'),
@@ -185,6 +216,12 @@ export class EntidadesComponent {
       agregadora: 'No', consolidadora: 'No', planeadora: 'No', nombreUsuario: sigla.toLowerCase(),
       estado, subEstado, fechaEstado: estado === 'Solicitud' ? null : '01/01/2020',
       actoAdministrativo: '', observaciones: '',
+      ambitos: id === 1
+        ? [
+            { id: 1, categoria: 'Contabilidad', ambito: 'CGN - Convergencia', anio: 2025, periodo: 'Anual' },
+            { id: 2, categoria: 'Presupuesto', ambito: 'CGR - Presupuestal', anio: 2025, periodo: 'Trimestre IV' },
+          ]
+        : [],
     };
   }
 
@@ -280,14 +317,13 @@ export class EntidadesComponent {
   }
 
   /* ═══════════════ Dígito de verificación (NIT) ═══════════════ */
-  private readonly PESOS_DV = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
   calcularDV(nit: string): string {
     const digitos = (nit || '').replace(/\D/g, '');
     if (!digitos) return '';
     let suma = 0;
     const rev = digitos.split('').reverse();
-    for (let i = 0; i < rev.length && i < this.PESOS_DV.length; i++) {
-      suma += parseInt(rev[i], 10) * this.PESOS_DV[i];
+    for (let i = 0; i < rev.length && i < PESOS_DV.length; i++) {
+      suma += parseInt(rev[i], 10) * PESOS_DV[i];
     }
     const resto = suma % 11;
     return String(resto <= 1 ? resto : 11 - resto);
@@ -296,38 +332,31 @@ export class EntidadesComponent {
     this.form.dv = this.calcularDV(this.form.nit);
   }
 
-  /* ═══════════════ Wizard: pestañas ═══════════════ */
+  /* ═══════════════ Wizard: pasos (p-stepper) ═══════════════ */
   readonly tabs = [
-    { key: 'general', label: 'Información General', icon: 'pi pi-id-card' },
-    { key: 'estado', label: 'Estado', icon: 'pi pi-flag' },
-    { key: 'ambito', label: 'Ámbito', icon: 'pi pi-sitemap' },
-    { key: 'responsables', label: 'Responsables', icon: 'pi pi-users' },
-    { key: 'atributos', label: 'Atributos extensibles', icon: 'pi pi-sliders-h' },
-    { key: 'patrimonial', label: 'Composición Patrimonial', icon: 'pi pi-chart-pie' },
-    { key: 'cuin', label: 'CUIN', icon: 'pi pi-hashtag' },
+    { key: 'general', label: 'Información General' },
+    { key: 'estado', label: 'Estado' },
+    { key: 'ambito', label: 'Ámbito' },
+    { key: 'responsables', label: 'Responsables' },
+    { key: 'atributos', label: 'Atributos extensibles' },
+    { key: 'patrimonial', label: 'Composición Patrimonial' },
+    { key: 'cuin', label: 'CUIN' },
   ];
-  activeTabKey = 'general';
+  activePaso = 1;
+
+  /** Pasos pendientes (4-7): placeholder hasta que llegue su historia de usuario. */
+  get tabsPendientes(): { key: string; label: string; paso: number }[] {
+    return this.tabs.slice(3).map((t, i) => ({ ...t, paso: i + 4 }));
+  }
+
+  /** En creación el stepper es lineal (no se avanza sin guardar); en edición es libre. */
+  get stepperLinear(): boolean {
+    return this.formMode === 'crear';
+  }
 
   /** Progreso del wizard: se habilita la siguiente sección al guardar la anterior. */
   infoGuardada = false;
   estadoGuardado = false;
-
-  tabBloqueado(key: string): boolean {
-    if (key === 'general') return false;
-    if (key === 'estado') return !this.infoGuardada;
-    return !this.estadoGuardado; // ámbito y posteriores
-  }
-
-  irATab(key: string): void {
-    if (this.tabBloqueado(key)) {
-      this.messageService.add({
-        severity: 'warn', summary: 'Sección bloqueada',
-        detail: 'Debe guardar la sección anterior antes de continuar.',
-      });
-      return;
-    }
-    this.activeTabKey = key;
-  }
 
   /* ═══════════════ Formulario de entidad ═══════════════ */
   editEntidadRef: Entidad | null = null;
@@ -356,6 +385,14 @@ export class EntidadesComponent {
   infoSubmitted = false;
   estadoSubmitted = false;
 
+  /* Ámbitos (paso 3): lista de trabajo + formulario de alta */
+  editAmbitos: AmbitoAsignado[] = [];
+  ambCategoria = '';
+  ambAmbito = '';
+  ambAnio: number | null = null;
+  ambPeriodo = '';
+  ambTouched = false;
+
   /* Dependencias de selección */
   get municipiosFormOptions(): { label: string; value: string }[] {
     return (this.municipiosPorDepartamento[this.form.departamento] ?? []).map(m => ({ label: m, value: m }));
@@ -372,17 +409,69 @@ export class EntidadesComponent {
   }
   onNuevoEstadoChange(): void { this.estadoForm.nuevoSubEstado = ''; }
 
+  /* Ámbitos: ámbito depende de la categoría seleccionada. */
+  get ambAmbitoOptions(): { label: string; value: string }[] {
+    return (this.ambitosPorCategoria[this.ambCategoria] ?? []).map(a => ({ label: a, value: a }));
+  }
+  onAmbCategoriaChange(): void { this.ambAmbito = ''; }
+
+  get ambitoFormValido(): boolean {
+    return !!this.ambCategoria && !!this.ambAmbito && !!this.ambAnio && !!this.ambPeriodo;
+  }
+
+  agregarAmbito(): void {
+    this.ambTouched = true;
+    if (!this.ambitoFormValido) return;
+    const dup = this.editAmbitos.some(a =>
+      a.categoria === this.ambCategoria && a.ambito === this.ambAmbito &&
+      a.anio === this.ambAnio && a.periodo === this.ambPeriodo);
+    if (dup) {
+      this.messageService.add({ severity: 'warn', summary: 'Ámbito duplicado', detail: 'Ese ámbito ya está agregado con el mismo año y periodo.' });
+      return;
+    }
+    this.editAmbitos = [...this.editAmbitos, {
+      id: Math.max(0, ...this.editAmbitos.map(a => a.id)) + 1,
+      categoria: this.ambCategoria, ambito: this.ambAmbito,
+      anio: this.ambAnio!, periodo: this.ambPeriodo,
+    }];
+    this.resetAmbitoForm();
+  }
+
+  eliminarAmbito(a: AmbitoAsignado): void {
+    this.editAmbitos = this.editAmbitos.filter(x => x.id !== a.id);
+  }
+
+  private resetAmbitoForm(): void {
+    this.ambCategoria = '';
+    this.ambAmbito = '';
+    this.ambAnio = null;
+    this.ambPeriodo = '';
+    this.ambTouched = false;
+  }
+
+  guardarAmbitos(): void {
+    if (this.editEntidadRef) {
+      this.editEntidadRef.ambitos = this.editAmbitos.map(a => ({ ...a }));
+    }
+    this.messageService.add({
+      severity: 'success', summary: 'Ámbitos guardados',
+      detail: `Se guardaron ${this.editAmbitos.length} ámbito(s) de la entidad.`,
+    });
+  }
+
   /* ═══════════════ Abrir crear / editar ═══════════════ */
   abrirCrear(): void {
     this.formMode = 'crear';
     this.editEntidadRef = null;
     this.form = this.formVacio();
     this.estadoForm = this.estadoFormVacio();
+    this.editAmbitos = [];
+    this.resetAmbitoForm();
     this.infoGuardada = false;
     this.estadoGuardado = false;
     this.infoSubmitted = false;
     this.estadoSubmitted = false;
-    this.activeTabKey = 'general';
+    this.activePaso = 1;
     this.vista = 'form';
   }
 
@@ -404,12 +493,14 @@ export class EntidadesComponent {
       nuevoEstado: '', nuevoSubEstado: '', fechaInicial: null,
       actoAdministrativo: e.actoAdministrativo, observaciones: e.observaciones,
     };
+    this.editAmbitos = e.ambitos.map(a => ({ ...a }));
+    this.resetAmbitoForm();
     // Al editar, las secciones ya están guardadas → desbloqueadas.
     this.infoGuardada = true;
     this.estadoGuardado = true;
     this.infoSubmitted = false;
     this.estadoSubmitted = false;
-    this.activeTabKey = 'general';
+    this.activePaso = 1;
     this.vista = 'form';
   }
 
@@ -483,6 +574,7 @@ export class EntidadesComponent {
         ...this.formToEntidad(),
         estado: 'Solicitud', subEstado: 'Ninguno',
         fechaEstado: null, actoAdministrativo: '', observaciones: '',
+        ambitos: [],
       };
       this.entidades = [nueva, ...this.entidades];
       this.editEntidadRef = nueva;
@@ -523,7 +615,15 @@ export class EntidadesComponent {
       this.messageService.add({ severity: 'warn', summary: 'Cambios sin guardar', detail: 'No puede avanzar sin guardar los cambios.' });
       return;
     }
-    this.activeTabKey = 'estado';
+    this.activePaso = 2;
+  }
+
+  irSiguienteDesdeEstado(): void {
+    if (!this.estadoGuardado) {
+      this.messageService.add({ severity: 'warn', summary: 'Cambios sin guardar', detail: 'No puede avanzar sin guardar los cambios.' });
+      return;
+    }
+    this.activePaso = 3;
   }
 
   /* ═══════════════ Validación · Estado ═══════════════ */
