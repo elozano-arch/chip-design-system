@@ -18,6 +18,7 @@ import { ChipModule } from 'primeng/chip';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { DatePickerModule } from 'primeng/datepicker';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
+import { StepperModule } from 'primeng/stepper';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
@@ -63,6 +64,10 @@ export interface Entidad {
 type Vista = 'list' | 'form';
 type FormMode = 'crear' | 'editar';
 
+/** Pesos del algoritmo de dígito de verificación del NIT (constante de módulo
+ *  para no depender del orden de inicialización de campos de la clase). */
+const PESOS_DV = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
+
 @Component({
   selector: 'app-entidades',
   standalone: true,
@@ -71,7 +76,7 @@ type FormMode = 'crear' | 'editar';
     ButtonModule, InputTextModule, TableModule, TagModule,
     ToastModule, TooltipModule, IconFieldModule, InputIconModule,
     SelectModule, DialogModule, DividerModule, MenuModule, ChipModule,
-    SelectButtonModule, DatePickerModule, BreadcrumbModule,
+    SelectButtonModule, DatePickerModule, BreadcrumbModule, StepperModule,
     AppBreadcrumbComponent, FormErrorBannerComponent,
   ],
   providers: [MessageService],
@@ -280,14 +285,13 @@ export class EntidadesComponent {
   }
 
   /* ═══════════════ Dígito de verificación (NIT) ═══════════════ */
-  private readonly PESOS_DV = [3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71];
   calcularDV(nit: string): string {
     const digitos = (nit || '').replace(/\D/g, '');
     if (!digitos) return '';
     let suma = 0;
     const rev = digitos.split('').reverse();
-    for (let i = 0; i < rev.length && i < this.PESOS_DV.length; i++) {
-      suma += parseInt(rev[i], 10) * this.PESOS_DV[i];
+    for (let i = 0; i < rev.length && i < PESOS_DV.length; i++) {
+      suma += parseInt(rev[i], 10) * PESOS_DV[i];
     }
     const resto = suma % 11;
     return String(resto <= 1 ? resto : 11 - resto);
@@ -296,38 +300,31 @@ export class EntidadesComponent {
     this.form.dv = this.calcularDV(this.form.nit);
   }
 
-  /* ═══════════════ Wizard: pestañas ═══════════════ */
+  /* ═══════════════ Wizard: pasos (p-stepper) ═══════════════ */
   readonly tabs = [
-    { key: 'general', label: 'Información General', icon: 'pi pi-id-card' },
-    { key: 'estado', label: 'Estado', icon: 'pi pi-flag' },
-    { key: 'ambito', label: 'Ámbito', icon: 'pi pi-sitemap' },
-    { key: 'responsables', label: 'Responsables', icon: 'pi pi-users' },
-    { key: 'atributos', label: 'Atributos extensibles', icon: 'pi pi-sliders-h' },
-    { key: 'patrimonial', label: 'Composición Patrimonial', icon: 'pi pi-chart-pie' },
-    { key: 'cuin', label: 'CUIN', icon: 'pi pi-hashtag' },
+    { key: 'general', label: 'Información General' },
+    { key: 'estado', label: 'Estado' },
+    { key: 'ambito', label: 'Ámbito' },
+    { key: 'responsables', label: 'Responsables' },
+    { key: 'atributos', label: 'Atributos extensibles' },
+    { key: 'patrimonial', label: 'Composición Patrimonial' },
+    { key: 'cuin', label: 'CUIN' },
   ];
-  activeTabKey = 'general';
+  activePaso = 1;
+
+  /** Pasos pendientes (3-7): placeholder hasta que llegue su historia de usuario. */
+  get tabsPendientes(): { key: string; label: string; paso: number }[] {
+    return this.tabs.slice(2).map((t, i) => ({ ...t, paso: i + 3 }));
+  }
+
+  /** En creación el stepper es lineal (no se avanza sin guardar); en edición es libre. */
+  get stepperLinear(): boolean {
+    return this.formMode === 'crear';
+  }
 
   /** Progreso del wizard: se habilita la siguiente sección al guardar la anterior. */
   infoGuardada = false;
   estadoGuardado = false;
-
-  tabBloqueado(key: string): boolean {
-    if (key === 'general') return false;
-    if (key === 'estado') return !this.infoGuardada;
-    return !this.estadoGuardado; // ámbito y posteriores
-  }
-
-  irATab(key: string): void {
-    if (this.tabBloqueado(key)) {
-      this.messageService.add({
-        severity: 'warn', summary: 'Sección bloqueada',
-        detail: 'Debe guardar la sección anterior antes de continuar.',
-      });
-      return;
-    }
-    this.activeTabKey = key;
-  }
 
   /* ═══════════════ Formulario de entidad ═══════════════ */
   editEntidadRef: Entidad | null = null;
@@ -382,7 +379,7 @@ export class EntidadesComponent {
     this.estadoGuardado = false;
     this.infoSubmitted = false;
     this.estadoSubmitted = false;
-    this.activeTabKey = 'general';
+    this.activePaso = 1;
     this.vista = 'form';
   }
 
@@ -409,7 +406,7 @@ export class EntidadesComponent {
     this.estadoGuardado = true;
     this.infoSubmitted = false;
     this.estadoSubmitted = false;
-    this.activeTabKey = 'general';
+    this.activePaso = 1;
     this.vista = 'form';
   }
 
@@ -523,7 +520,15 @@ export class EntidadesComponent {
       this.messageService.add({ severity: 'warn', summary: 'Cambios sin guardar', detail: 'No puede avanzar sin guardar los cambios.' });
       return;
     }
-    this.activeTabKey = 'estado';
+    this.activePaso = 2;
+  }
+
+  irSiguienteDesdeEstado(): void {
+    if (!this.estadoGuardado) {
+      this.messageService.add({ severity: 'warn', summary: 'Cambios sin guardar', detail: 'No puede avanzar sin guardar los cambios.' });
+      return;
+    }
+    this.activePaso = 3;
   }
 
   /* ═══════════════ Validación · Estado ═══════════════ */
