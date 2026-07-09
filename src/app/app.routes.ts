@@ -370,4 +370,15 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/pantallas/parametrizacion-listas/parametrizacion-listas.component').then(m => m.ParametrizacionListasComponent),
   },
+  {
+    path: 'pantallas/entidades/gestion',
+    data: {
+      breadcrumb: [
+        { label: 'Entidades', icon: 'pi pi-building', routerLink: '/pantallas/entidades/gestion' },
+        { label: 'Gestión de entidades' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/entidades/entidades.component').then(m => m.EntidadesComponent),
+  },
 ];
