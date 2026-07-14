@@ -253,11 +253,28 @@
               </a>
             </div>
           }
+
+          <!-- Nivel 2: Consultas (colapsable) -->
+          <button class="app-sidebar__sub-toggle" (click)="formulariosConsultasOpen = !formulariosConsultasOpen"
+            [attr.aria-expanded]="formulariosConsultasOpen">
+            <i class="pi pi-search"></i> <span class="app-sidebar__label">Consultas</span>
+            <i class="pi app-sidebar__sub-chevron" [class.pi-chevron-down]="!formulariosConsultasOpen" [class.pi-chevron-up]="formulariosConsultasOpen"></i>
+          </button>
+          @if (formulariosConsultasOpen) {
+            <div class="app-sidebar__sub-children">
+              <a routerLink="/pantallas/formularios/consultas/historico-envios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sub-item" (click)="mobileMenuOpen = false">
+                <i class="pi pi-history"></i> <span class="app-sidebar__label">Histórico de envíos</span>
+              </a>
+            </div>
+          }
         </div>
       }
       @if (sidebarCollapsed) {
         <a routerLink="/pantallas/formularios/gestion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Gestión de Formularios" tooltipPosition="right">
           <i class="pi pi-list"></i> <span class="app-sidebar__label">Gestión de Formularios</span>
+        </a>
+        <a routerLink="/pantallas/formularios/consultas/historico-envios" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Histórico de envíos" tooltipPosition="right">
+          <i class="pi pi-history"></i> <span class="app-sidebar__label">Histórico de envíos</span>
         </a>
       }
 
