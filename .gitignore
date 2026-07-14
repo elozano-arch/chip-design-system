@@ -43,3 +43,6 @@ Thumbs.db
 
 # Claude Code local state (personal por máquina)
 .claude/settings.local.json
+
+# Notas personales de entorno (por máquina, no versionar)
+NOTAS-LOCAL.md
