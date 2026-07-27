@@ -10,6 +10,52 @@
     </div>
   </div>
 
+  @if (detalleRow; as d) {
+  <!-- ============================================================= -->
+  <!-- DETALLE DEL FORMULARIO — pantalla completa (reemplaza la grilla) -->
+  <!-- Tree-table estándar en variante consulta: sin edición y con     -->
+  <!-- paginador horizontal de columnas (periodos).                    -->
+  <!-- ============================================================= -->
+  <section class="form-wizard__panel hist-detalle-screen" aria-label="Detalle del formulario">
+    <div class="hist-detalle__back">
+      <p-button label="Volver a la grilla" icon="pi pi-arrow-left"
+        [text]="true" severity="secondary" (onClick)="cerrarDetalle()" />
+    </div>
+
+    <header class="form-wizard__panel-header">
+      <h2>{{ d.formulario }}
+        <button type="button" class="panel-help"
+          pTooltip="Consulta de solo lectura del formulario aceptado: conceptos y sus variables por periodo. Use el paginador de columnas para ver los demás periodos y el buscador para ubicar un concepto."
+          tooltipPosition="top" aria-label="Ayuda del detalle del formulario">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+        </button>
+      </h2>
+    </header>
+
+    <div class="hist-detalle__meta" role="group" aria-label="Contexto del formulario">
+      <span class="hist-detalle__meta-item"><strong>Entrada N.º</strong> {{ d.idEntrada }}</span>
+      <span class="hist-detalle__meta-item hist-detalle__meta-item--trunc"
+        [pTooltip]="d.categoria" tooltipPosition="top" [showDelay]="300">
+        <strong>Categoría</strong> {{ d.categoria }}
+      </span>
+      <span class="hist-detalle__meta-item"><strong>Periodo</strong> {{ d.periodo }} · {{ d.anio }}</span>
+      <p-tag [value]="d.estado" [severity]="estadoSeverity(d.estado)" [icon]="estadoIcon(d.estado)" />
+      <p-tag [value]="d.tipo"
+        [severity]="d.tipo === 'Categoría' ? 'info' : 'secondary'"
+        [icon]="d.tipo === 'Categoría' ? 'pi pi-folder' : 'pi pi-file'" />
+    </div>
+
+    <app-tree-table
+      [nodos]="arbolDetalle"
+      [columnasFijas]="columnasFijasDetalle"
+      [columnasVariables]="columnasPeriodos"
+      [editable]="false"
+      [searchable]="true"
+      [pageable]="true"
+      [columnPager]="true" />
+  </section>
+  } @else {
+
   <!-- ============================================================= -->
   <!-- FILTROS DE CONTEXTO (réplica de Gestión de Formularios)        -->
   <!-- ============================================================= -->
@@ -141,7 +187,7 @@
       <header class="form-wizard__panel-header">
         <h2>Histórico de envíos
           <button type="button" class="panel-help"
-            pTooltip="Envíos registrados para el contexto seleccionado. Use el icono de cada columna para ordenar y buscar. En los envíos aceptados, el nombre del formulario abre el detalle."
+            pTooltip="Envíos registrados para el contexto seleccionado. Ordene y busque desde los encabezados de cada columna. El nombre del formulario abre su flujo: sólo está disponible en formularios Aceptados de los dos envíos aceptados más recientes."
             tooltipPosition="top" aria-label="Ayuda de la sección Histórico de envíos">
             <i class="pi pi-info-circle" aria-hidden="true"></i>
           </button>
@@ -165,6 +211,7 @@
             <th scope="col" pSortableColumn="idEntrada" style="width: 150px">N.º entrada <p-sortIcon field="idEntrada" /></th>
             <th scope="col" pSortableColumn="periodo">Periodo <p-sortIcon field="periodo" /></th>
             <th scope="col" pSortableColumn="estado" style="width: 170px">Estado <p-sortIcon field="estado" /></th>
+            <th scope="col" pSortableColumn="tipo" style="width: 145px">Tipo <p-sortIcon field="tipo" /></th>
             <th scope="col" pSortableColumn="formulario">Formulario <p-sortIcon field="formulario" /></th>
             <th scope="col" pSortableColumn="fechaEnvio" style="width: 185px">Fecha de envío <p-sortIcon field="fechaEnvio" /></th>
             <th scope="col" pSortableColumn="fechaRecepcion" style="width: 185px">Fecha de recepción <p-sortIcon field="fechaRecepcion" /></th>
@@ -182,6 +229,15 @@
               <p-columnFilter field="estado" matchMode="in" display="row" [showMenu]="false">
                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                   <p-multiSelect [ngModel]="value" [options]="estadoFilterOptions"
+                    (onChange)="filter($event.value)" placeholder="Todos" [showClear]="true"
+                    appendTo="body" styleClass="w-full" />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th scope="col">
+              <p-columnFilter field="tipo" matchMode="equals" display="row" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-select [ngModel]="value" [options]="tipoFilterOptions"
                     (onChange)="filter($event.value)" placeholder="Todos" [showClear]="true"
                     appendTo="body" styleClass="w-full" />
                 </ng-template>
@@ -207,11 +263,16 @@
               <p-tag [value]="row.estado" [severity]="estadoSeverity(row.estado)" [icon]="estadoIcon(row.estado)" />
             </td>
             <td>
-              @if (esAceptado(row)) {
+              <p-tag [value]="row.tipo"
+                [severity]="row.tipo === 'Categoría' ? 'info' : 'secondary'"
+                [icon]="row.tipo === 'Categoría' ? 'pi pi-folder' : 'pi pi-file'" />
+            </td>
+            <td>
+              @if (puedeVerDetalle(row)) {
                 <button type="button" class="hist-link"
                   (click)="verDetalle(row)"
-                  [attr.aria-label]="'Ver detalle del formulario ' + row.formulario + ' de la entrada ' + row.idEntrada"
-                  [pTooltip]="'Ver detalle · ' + row.formulario" tooltipPosition="top" [showDelay]="400">
+                  [attr.aria-label]="'Ver flujo del formulario ' + row.formulario + ' de la entrada ' + row.idEntrada"
+                  [pTooltip]="'Ver flujo · ' + row.formulario" tooltipPosition="top" [showDelay]="400">
                   <i class="pi pi-file" aria-hidden="true"></i>
                   <span class="hist-link__text">{{ row.formulario }}</span>
                 </button>
@@ -229,7 +290,7 @@
 
         <ng-template #emptymessage>
           <tr>
-            <td colspan="6" class="hist-table__empty">
+            <td colspan="7" class="hist-table__empty">
               <i class="pi pi-inbox" aria-hidden="true"></i>
               <p>No se encontraron envíos para el contexto seleccionado.</p>
             </td>
@@ -242,9 +303,11 @@
       <div class="hist-empty" role="status" aria-live="polite">
         <i class="pi pi-filter" aria-hidden="true"></i>
         <h3>Aplique los filtros para consultar</h3>
-        <p>Seleccione Entidad, Categoría, Año y Periodo y pulse <strong>Aplicar filtros</strong> para ver el histórico de envíos.</p>
+        <p>Seleccione Entidad, Categoría y Año (el Periodo es opcional) y pulse <strong>Aplicar filtros</strong> para ver el histórico de envíos.</p>
       </div>
     </section>
+  }
+
   }
 
   <!-- ============================================================= -->
@@ -257,36 +320,4 @@
     [filtrosColapsables]="true"
     (seleccionar)="onEntidadSeleccionada($event)" />
 
-  <!-- ============================================================= -->
-  <!-- DIÁLOGO DETALLE DEL FORMULARIO (sólo envíos Aceptados)         -->
-  <!-- ============================================================= -->
-  <p-dialog
-    [visible]="!!detalleRow"
-    (visibleChange)="!$event && cerrarDetalle()"
-    [modal]="true"
-    [draggable]="false"
-    [closeOnEscape]="true"
-    [style]="{ width: '520px', maxWidth: '95vw' }"
-    [header]="detalleRow ? detalleRow.formulario : 'Detalle del envío'"
-    styleClass="hist-detalle-dialog">
-    @if (detalleRow; as d) {
-      <div class="hist-detalle">
-        <p class="hist-detalle__lead">
-          Envío aceptado de la categoría <strong>{{ d.categoria }}</strong>.
-        </p>
-        <dl class="hist-detalle__grid">
-          <div><dt>N.º de entrada</dt><dd>{{ d.idEntrada }}</dd></div>
-          <div><dt>Estado</dt><dd><p-tag [value]="d.estado" [severity]="estadoSeverity(d.estado)" [icon]="estadoIcon(d.estado)" /></dd></div>
-          <div><dt>Periodo</dt><dd>{{ d.periodo }}</dd></div>
-          <div><dt>Año</dt><dd>{{ d.anio }}</dd></div>
-          <div><dt>Formulario</dt><dd>{{ d.formulario }}</dd></div>
-          <div><dt>Fecha de envío</dt><dd>{{ d.fechaEnvio }}</dd></div>
-          <div><dt>Fecha de recepción</dt><dd>{{ d.fechaRecepcion ?? '—' }}</dd></div>
-        </dl>
-      </div>
-    }
-    <ng-template #footer>
-      <p-button label="Cerrar" [text]="true" severity="secondary" (onClick)="cerrarDetalle()" />
-    </ng-template>
-  </p-dialog>
 </div>

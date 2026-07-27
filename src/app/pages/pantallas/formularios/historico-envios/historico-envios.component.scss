@@ -212,6 +212,13 @@
   margin-top: 4px;
 }
 
+/* Con varias columnas, la grilla scrollea en horizontal dentro del panel
+   (no rompe el layout en viewports angostos). */
+:host ::ng-deep .hist-table {
+  .p-datatable-wrapper,
+  .p-datatable-table-container { overflow-x: auto; }
+}
+
 /* Fila de filtros nativa (p-columnFilter en modo row): que el input ocupe el ancho */
 :host ::ng-deep .hist-table .p-columnfilter {
   width: 100%;
@@ -289,38 +296,45 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Diálogo detalle del formulario
+   Detalle del formulario — pantalla completa (reemplaza la grilla)
    ───────────────────────────────────────────────────────────────── */
-.hist-detalle__lead {
-  margin: 0 0 16px;
-  font-size: 13px;
-  color: var(--chip-grey-700);
+.hist-detalle__back {
+  margin-bottom: 8px;
 }
 
-.hist-detalle__grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px 20px;
-  margin: 0;
+/* Contexto del formulario abierto (entrada · categoría · periodo · estado) */
+.hist-detalle__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: var(--chip-bg-solitude);
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+}
 
-  > div { display: flex; flex-direction: column; gap: 2px; }
+.hist-detalle__meta-item {
+  font-size: 13px;
+  color: var(--chip-grey-800);
 
-  dt {
+  strong {
+    display: block;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
     color: var(--chip-grey-500);
   }
-  dd {
-    margin: 0;
-    font-size: 14px;
-    color: var(--chip-grey-800);
-  }
-}
 
-@media (max-width: 520px) {
-  .hist-detalle__grid { grid-template-columns: 1fr; }
+  &--trunc {
+    min-width: 0;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* Truncado de chips del resumen de filtros colapsados */
