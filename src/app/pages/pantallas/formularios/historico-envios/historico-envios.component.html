@@ -1,0 +1,323 @@
+<p-toast />
+
+<div class="form-page form-page--wide" role="main">
+  <app-breadcrumb />
+
+  <div class="form-header">
+    <h1 class="form-header__title">Histórico de envíos</h1>
+    <div class="form-header__row">
+      <p class="form-header__desc">Seleccione los filtros de búsqueda para consultar el histórico de envíos de la categoría.</p>
+    </div>
+  </div>
+
+  @if (detalleRow; as d) {
+  <!-- ============================================================= -->
+  <!-- DETALLE DEL FORMULARIO — pantalla completa (reemplaza la grilla) -->
+  <!-- Tree-table estándar en variante consulta: sin edición y con     -->
+  <!-- paginador horizontal de columnas (periodos).                    -->
+  <!-- ============================================================= -->
+  <section class="form-wizard__panel hist-detalle-screen" aria-label="Detalle del formulario">
+    <div class="hist-detalle__back">
+      <p-button label="Volver a la grilla" icon="pi pi-arrow-left"
+        [text]="true" severity="secondary" (onClick)="cerrarDetalle()" />
+    </div>
+
+    <header class="form-wizard__panel-header">
+      <h2>{{ d.formulario }}
+        <button type="button" class="panel-help"
+          pTooltip="Consulta de solo lectura del formulario aceptado: conceptos y sus variables por periodo. Use el paginador de columnas para ver los demás periodos y el buscador para ubicar un concepto."
+          tooltipPosition="top" aria-label="Ayuda del detalle del formulario">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+        </button>
+      </h2>
+    </header>
+
+    <div class="hist-detalle__meta" role="group" aria-label="Contexto del formulario">
+      <span class="hist-detalle__meta-item"><strong>Entrada N.º</strong> {{ d.idEntrada }}</span>
+      <span class="hist-detalle__meta-item hist-detalle__meta-item--trunc"
+        [pTooltip]="d.categoria" tooltipPosition="top" [showDelay]="300">
+        <strong>Categoría</strong> {{ d.categoria }}
+      </span>
+      <span class="hist-detalle__meta-item"><strong>Periodo</strong> {{ d.periodo }} · {{ d.anio }}</span>
+      <p-tag [value]="d.estado" [severity]="estadoSeverity(d.estado)" [icon]="estadoIcon(d.estado)" />
+      <p-tag [value]="d.tipo"
+        [severity]="d.tipo === 'Categoría' ? 'info' : 'secondary'"
+        [icon]="d.tipo === 'Categoría' ? 'pi pi-folder' : 'pi pi-file'" />
+    </div>
+
+    <app-tree-table
+      [nodos]="arbolDetalle"
+      [columnasFijas]="columnasFijasDetalle"
+      [columnasVariables]="columnasPeriodos"
+      [editable]="false"
+      [searchable]="true"
+      [pageable]="true"
+      [columnPager]="true" />
+  </section>
+  } @else {
+
+  <!-- ============================================================= -->
+  <!-- FILTROS DE CONTEXTO (réplica de Gestión de Formularios)        -->
+  <!-- ============================================================= -->
+  <section class="form-wizard__panel" aria-label="Filtros de la consulta">
+    <div class="chip-filters" role="region" aria-label="Filtros del contexto">
+      <div class="chip-filters__header">
+        <button type="button" class="chip-filters__toggle"
+          [attr.aria-expanded]="!filtersCollapsed"
+          aria-controls="hist-filters-body"
+          (click)="filtersCollapsed = !filtersCollapsed">
+          <i class="chip-filters__toggle-icon pi"
+            [ngClass]="filtersCollapsed ? 'pi-chevron-down' : 'pi-chevron-up'"
+            aria-hidden="true"></i>
+          @if (filtersCollapsed && filtersApplied) {
+            <span class="chip-filters__chips" aria-live="polite">
+              <p-chip [label]="'Entidad: ' + entidadLabel" styleClass="chip-trunc"
+                [pTooltip]="'Entidad: ' + entidadLabel" tooltipPosition="top" />
+              @for (filter of activeFilters; track filter.field) {
+                <p-chip [label]="filter.label" styleClass="chip-trunc"
+                  [pTooltip]="filter.label" tooltipPosition="top" />
+              }
+            </span>
+          } @else {
+            <span class="chip-filters__toggle-label">Filtros de búsqueda{{ activeFilterCount > 0 ? ' (' + activeFilterCount + ')' : '' }}</span>
+          }
+        </button>
+      </div>
+
+      @if (!filtersCollapsed) {
+        <div class="chip-filters__body" id="hist-filters-body">
+
+          <!-- Simulación de tipo de usuario (mock demo): dispara los 2 eventos de
+               resolución de entidad — Local (carga automática) vs A/C/E (directorio). -->
+          <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de tipo de usuario">
+            <i class="pi pi-user" aria-hidden="true"></i>
+            <label for="hist-tipo-usuario">Tipo de usuario <span class="form-wizard__demo-tag">demostración</span></label>
+            <p-select inputId="hist-tipo-usuario" [options]="tiposUsuarioOptions"
+              [(ngModel)]="tipoUsuario" (onChange)="onTipoUsuarioChange()"
+              appendTo="body" styleClass="form-wizard__demo-select" />
+          </div>
+
+          <!-- Alerta: entidad inactiva (sin categorías activas) -->
+          @if (entidadInactiva) {
+            <p-message severity="warn" styleClass="w-full form-wizard__alert"
+              text="La entidad seleccionada se encuentra inactiva y no está habilitada para ninguna categoría. No es posible consultar envíos con esta entidad; comuníquese con soporte para su activación." />
+          }
+
+          <div class="chip-filters__fields chip-filters__fields--4col">
+
+            <!-- Entidad (obligatorio). Tipo L: cargada por defecto (bloqueada).
+                 Tipo A/C/E: abre el Directorio de Entidades desde el campo. -->
+            <div class="chip-filters__field">
+              <label for="hist-f-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
+              @if (esTipoLocal) {
+                <p-iconField iconPosition="right" styleClass="w-full form-entidad-iconfield form-entidad-iconfield--locked">
+                  <input pInputText id="hist-f-entidad"
+                    class="w-full form-entidad-locked"
+                    [value]="entidadLabel"
+                    readonly
+                    aria-required="true"
+                    aria-readonly="true"
+                    [attr.aria-label]="filterEntidad ? ('Entidad local asignada: ' + filterEntidad.razonSocial) : ''"
+                    [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500" />
+                  <p-inputIcon styleClass="pi pi-lock form-entidad-lock" />
+                </p-iconField>
+              } @else {
+                <p-iconField iconPosition="right" styleClass="w-full form-entidad-iconfield">
+                  <input pInputText id="hist-f-entidad"
+                    class="w-full form-entidad-trigger-input"
+                    [value]="entidadLabel"
+                    readonly
+                    placeholder="Seleccionar entidad"
+                    role="combobox" aria-haspopup="dialog"
+                    aria-required="true"
+                    [attr.aria-expanded]="mostrarDirectorioEntidades"
+                    [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
+                    [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500"
+                    (click)="abrirDirectorioEntidades()"
+                    (keydown.enter)="abrirDirectorioEntidades()"
+                    (keydown.space)="abrirDirectorioEntidades(); $event.preventDefault()" />
+                  @if (filterEntidad) {
+                    <p-inputIcon
+                      styleClass="pi pi-times-circle form-entidad-clear"
+                      role="button" tabindex="0"
+                      pTooltip="Limpiar selección" tooltipPosition="top"
+                      aria-label="Limpiar entidad seleccionada"
+                      (click)="limpiarEntidad(); $event.stopPropagation()"
+                      (keydown.enter)="limpiarEntidad(); $event.stopPropagation()"
+                      (keydown.space)="limpiarEntidad(); $event.stopPropagation(); $event.preventDefault()" />
+                  } @else {
+                    <p-inputIcon styleClass="pi pi-search form-entidad-search" />
+                  }
+                </p-iconField>
+              }
+            </div>
+            <div class="chip-filters__field">
+              <label for="hist-categoria">Categoría <span class="field-required" aria-hidden="true">*</span></label>
+              <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" (onChange)="onFiltroModificado()" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="hist-categoria" aria-required="true" />
+            </div>
+            <div class="chip-filters__field">
+              <label for="hist-anio">Año <span class="field-required" aria-hidden="true">*</span></label>
+              <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" (onChange)="onFiltroModificado()" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="hist-anio" aria-required="true" />
+            </div>
+            <div class="chip-filters__field">
+              <label for="hist-periodo">Periodo <span class="chip-filters__optional">(opcional)</span></label>
+              <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" (onChange)="onFiltroModificado()" placeholder="Todos los periodos" appendTo="body" class="w-full" inputId="hist-periodo" />
+            </div>
+          </div>
+
+          <!-- Tras aplicar, "Aplicar filtros" queda inactivo hasta que se edite un filtro. -->
+          <div class="form-wizard__filters-actions">
+            <p-button label="Limpiar" icon="pi pi-refresh"
+              [text]="true" severity="secondary"
+              (onClick)="clearFilters()" />
+            <p-button label="Aplicar filtros" icon="pi pi-filter"
+              [disabled]="!canApplyFilters || filtersApplied"
+              (onClick)="applyFilters()" />
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ============================================================= -->
+  <!-- RESULTADO DEL HISTÓRICO (placeholder — se construye a continuación) -->
+  <!-- ============================================================= -->
+  @if (filtersApplied) {
+    <section class="form-wizard__panel hist-result" aria-label="Histórico de envíos de la categoría">
+      <header class="form-wizard__panel-header">
+        <h2>Histórico de envíos
+          <button type="button" class="panel-help"
+            pTooltip="Envíos registrados para el contexto seleccionado. Ordene y busque desde los encabezados de cada columna. El nombre del formulario abre su flujo: sólo está disponible en formularios Aceptados de los dos envíos aceptados más recientes."
+            tooltipPosition="top" aria-label="Ayuda de la sección Histórico de envíos">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+          </button>
+        </h2>
+      </header>
+
+      <p-table [value]="historicoRows"
+        [stripedRows]="true" [rowHover]="true"
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} envíos"
+        [sortField]="'idEntrada'" [sortOrder]="-1"
+        styleClass="hist-table">
+        <ng-template #caption>
+          <span class="sr-only">Histórico de envíos de la categoría {{ categoriaLabel }} para el año {{ selectedAnio }}. Cada columna se puede ordenar y filtrar desde su encabezado.</span>
+        </ng-template>
+
+        <!-- Fila 1: títulos ordenables -->
+        <ng-template #header>
+          <tr>
+            <th scope="col" pSortableColumn="idEntrada" style="width: 150px">N.º entrada <p-sortIcon field="idEntrada" /></th>
+            <th scope="col" pSortableColumn="periodo">Periodo <p-sortIcon field="periodo" /></th>
+            <th scope="col" pSortableColumn="estado" style="width: 170px">Estado <p-sortIcon field="estado" /></th>
+            <th scope="col" pSortableColumn="tipo" style="width: 145px">Tipo <p-sortIcon field="tipo" /></th>
+            <th scope="col" pSortableColumn="formulario">Formulario <p-sortIcon field="formulario" /></th>
+            <th scope="col" pSortableColumn="fechaEnvio" style="width: 185px">Fecha de envío <p-sortIcon field="fechaEnvio" /></th>
+            <th scope="col" pSortableColumn="fechaRecepcion" style="width: 185px">Fecha de recepción <p-sortIcon field="fechaRecepcion" /></th>
+          </tr>
+          <!-- Fila 2: filtros por columna (p-columnFilter en modo fila) -->
+          <tr>
+            <th scope="col">
+              <p-columnFilter type="numeric" field="idEntrada" display="row"
+                placeholder="N.º entrada" />
+            </th>
+            <th scope="col">
+              <p-columnFilter type="text" field="periodo" display="row" placeholder="Buscar periodo" />
+            </th>
+            <th scope="col">
+              <p-columnFilter field="estado" matchMode="in" display="row" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-multiSelect [ngModel]="value" [options]="estadoFilterOptions"
+                    (onChange)="filter($event.value)" placeholder="Todos" [showClear]="true"
+                    appendTo="body" styleClass="w-full" />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th scope="col">
+              <p-columnFilter field="tipo" matchMode="equals" display="row" [showMenu]="false">
+                <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                  <p-select [ngModel]="value" [options]="tipoFilterOptions"
+                    (onChange)="filter($event.value)" placeholder="Todos" [showClear]="true"
+                    appendTo="body" styleClass="w-full" />
+                </ng-template>
+              </p-columnFilter>
+            </th>
+            <th scope="col">
+              <p-columnFilter type="text" field="formulario" display="row" placeholder="Buscar formulario" />
+            </th>
+            <th scope="col">
+              <p-columnFilter type="date" field="fechaEnvio" display="row" />
+            </th>
+            <th scope="col">
+              <p-columnFilter type="date" field="fechaRecepcion" display="row" />
+            </th>
+          </tr>
+        </ng-template>
+
+        <ng-template #body let-row>
+          <tr>
+            <td class="hist-table__id">{{ row.idEntrada }}</td>
+            <td class="hist-cell--trunc" [pTooltip]="row.periodo" tooltipPosition="top" [showDelay]="400">{{ row.periodo }}</td>
+            <td>
+              <p-tag [value]="row.estado" [severity]="estadoSeverity(row.estado)" [icon]="estadoIcon(row.estado)" />
+            </td>
+            <td>
+              <p-tag [value]="row.tipo"
+                [severity]="row.tipo === 'Categoría' ? 'info' : 'secondary'"
+                [icon]="row.tipo === 'Categoría' ? 'pi pi-folder' : 'pi pi-file'" />
+            </td>
+            <td>
+              @if (puedeVerDetalle(row)) {
+                <button type="button" class="hist-link"
+                  (click)="verDetalle(row)"
+                  [attr.aria-label]="'Ver flujo del formulario ' + row.formulario + ' de la entrada ' + row.idEntrada"
+                  [pTooltip]="'Ver flujo · ' + row.formulario" tooltipPosition="top" [showDelay]="400">
+                  <i class="pi pi-file" aria-hidden="true"></i>
+                  <span class="hist-link__text">{{ row.formulario }}</span>
+                </button>
+              } @else {
+                <span class="hist-form-name hist-cell--trunc" [pTooltip]="row.formulario" tooltipPosition="top" [showDelay]="400">
+                  <i class="pi pi-file" aria-hidden="true"></i>
+                  {{ row.formulario }}
+                </span>
+              }
+            </td>
+            <td class="hist-table__date">{{ fmtFecha(row.fechaEnvio) }}</td>
+            <td class="hist-table__date">{{ fmtFecha(row.fechaRecepcion) }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="7" class="hist-table__empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>No se encontraron envíos para el contexto seleccionado.</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  } @else {
+    <section class="form-wizard__panel hist-result" aria-label="Sin contexto de consulta">
+      <div class="hist-empty" role="status" aria-live="polite">
+        <i class="pi pi-filter" aria-hidden="true"></i>
+        <h3>Aplique los filtros para consultar</h3>
+        <p>Seleccione Entidad, Categoría y Año (el Periodo es opcional) y pulse <strong>Aplicar filtros</strong> para ver el histórico de envíos.</p>
+      </div>
+    </section>
+  }
+
+  }
+
+  <!-- ============================================================= -->
+  <!-- MODAL DIRECTORIO DE ENTIDADES (componente compartido)          -->
+  <!-- Mismo estándar que Gestión de Formularios.                    -->
+  <!-- ============================================================= -->
+  <app-directorio-entidades
+    [(visible)]="mostrarDirectorioEntidades"
+    [showEstadoFilter]="false"
+    [filtrosColapsables]="true"
+    (seleccionar)="onEntidadSeleccionada($event)" />
+
+</div>

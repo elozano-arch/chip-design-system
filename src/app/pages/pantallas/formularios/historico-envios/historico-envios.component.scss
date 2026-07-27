@@ -1,0 +1,350 @@
+/* ─────────────────────────────────────────────────────────────────
+   Histórico de envíos — reutiliza el panel de filtros de Gestión de
+   Formularios. `.form-page`, `.form-header` y `.chip-filters` son
+   globales (src/styles.scss); aquí sólo viven las clases del panel de
+   contexto (demo-switch, entidad, filters-actions) y el estado del
+   resultado del histórico.
+   ───────────────────────────────────────────────────────────────── */
+
+.form-wizard__panel {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+
+  & + & {
+    margin-top: 24px;
+  }
+}
+
+.form-wizard__filters-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--chip-grey-100);
+}
+
+.form-wizard__panel-header {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--chip-grey-100);
+
+  h2 {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+  }
+}
+
+/* Ayuda contextual: icono info con el texto explicativo en tooltip (estándar) */
+.panel-help {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-left: 6px;
+  cursor: help;
+  color: var(--chip-grey-500);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1;
+  transition: color .15s ease;
+
+  i { font-size: 15px; }
+  &:hover { color: var(--chip-cobalt-700); }
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+@media (max-width: 992px) {
+  .panel-help { min-width: 44px; min-height: 44px; justify-content: center; }
+}
+
+/* Simulación de tipo de usuario (mock demo) */
+.form-wizard__demo-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: var(--chip-bg-white-smoke);
+  border: 1px dashed var(--chip-grey-400);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+
+  > i {
+    font-size: 15px;
+    color: var(--chip-grey-700);
+  }
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-700);
+  }
+}
+
+.form-wizard__alert {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.form-wizard__demo-tag {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--chip-cobalt-50);
+  color: var(--chip-cobalt-700);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Campo de entidad — input read-only que abre el directorio
+   (mismo estándar visual que Gestión de Formularios).
+   ───────────────────────────────────────────────────────────────── */
+.form-entidad-iconfield {
+  cursor: pointer;
+}
+
+.form-entidad-trigger-input {
+  cursor: pointer;
+  background: #fff;
+
+  &:hover:not(:disabled) {
+    border-color: var(--chip-cobalt-500);
+  }
+}
+
+.form-entidad-clear,
+.form-entidad-search {
+  cursor: pointer;
+  color: var(--chip-grey-500);
+
+  &:hover {
+    color: var(--chip-cobalt-700);
+  }
+}
+
+/* Entidad bloqueada (tipo L): valor legible + fondo gris e icono de candado. */
+.form-entidad-iconfield--locked {
+  cursor: default;
+}
+
+.form-entidad-locked {
+  cursor: default;
+  background: var(--chip-bg-white-smoke);
+  color: var(--chip-grey-700);
+  font-weight: 600;
+
+  &:focus,
+  &:hover {
+    border-color: var(--chip-grey-300);
+  }
+}
+
+.form-entidad-lock {
+  color: var(--chip-grey-500);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Resultado del histórico — estado vacío / contexto aplicado
+   (placeholder hasta montar la tabla del histórico).
+   ───────────────────────────────────────────────────────────────── */
+.hist-empty {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--chip-grey-50);
+  border: 2px dashed var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+
+  > i {
+    font-size: 42px;
+    color: var(--chip-grey-300);
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chip-grey-700);
+    margin: 0 0 8px;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--chip-grey-600);
+    max-width: 440px;
+    margin: 0 auto 6px;
+  }
+
+  &__hint {
+    color: var(--chip-grey-500);
+    font-style: italic;
+  }
+}
+
+/* Marca "(opcional)" junto al label de un filtro no obligatorio */
+.chip-filters__optional {
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--chip-grey-500);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Grilla del histórico
+   ───────────────────────────────────────────────────────────────── */
+.hist-table {
+  margin-top: 4px;
+}
+
+/* Con varias columnas, la grilla scrollea en horizontal dentro del panel
+   (no rompe el layout en viewports angostos). */
+:host ::ng-deep .hist-table {
+  .p-datatable-wrapper,
+  .p-datatable-table-container { overflow-x: auto; }
+}
+
+/* Fila de filtros nativa (p-columnFilter en modo row): que el input ocupe el ancho */
+:host ::ng-deep .hist-table .p-columnfilter {
+  width: 100%;
+
+  .p-columnfilter-element,
+  .p-inputtext,
+  .p-select {
+    width: 100%;
+  }
+}
+
+.hist-table__id {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--chip-grey-800);
+}
+
+/* Celdas con texto extenso: truncan con elipsis (tooltip muestra el valor) */
+.hist-cell--trunc {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Nombre del formulario como enlace (sólo envíos Aceptados) → Ver detalle */
+.hist-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  color: var(--chip-cobalt-700);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+
+  span { text-decoration: underline; text-underline-offset: 2px; }
+  i { font-size: 14px; }
+
+  &:hover span { color: var(--chip-cobalt-800, #072f7a); }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-700);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* Nombre del formulario no accionable (envíos no aceptados) */
+.hist-form-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--chip-grey-700);
+
+  i { font-size: 14px; color: var(--chip-grey-400); }
+}
+
+.hist-table__date {
+  font-variant-numeric: tabular-nums;
+  color: var(--chip-grey-700);
+  white-space: nowrap;
+}
+
+.hist-table__empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--chip-grey-600);
+
+  > i { font-size: 32px; color: var(--chip-grey-300); display: block; margin-bottom: 8px; }
+  p { margin: 0; font-size: 13px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Detalle del formulario — pantalla completa (reemplaza la grilla)
+   ───────────────────────────────────────────────────────────────── */
+.hist-detalle__back {
+  margin-bottom: 8px;
+}
+
+/* Contexto del formulario abierto (entrada · categoría · periodo · estado) */
+.hist-detalle__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  background: var(--chip-bg-solitude);
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+}
+
+.hist-detalle__meta-item {
+  font-size: 13px;
+  color: var(--chip-grey-800);
+
+  strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--chip-grey-500);
+  }
+
+  &--trunc {
+    min-width: 0;
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/* Truncado de chips del resumen de filtros colapsados */
+:host ::ng-deep .chip-trunc .p-chip-label {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  :host ::ng-deep .chip-trunc .p-chip-label { max-width: 150px; }
+}

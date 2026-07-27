@@ -306,6 +306,18 @@ export const routes: Routes = [
       import('./pages/pantallas/formularios/formularios.component').then(m => m.FormulariosComponent),
   },
   {
+    path: 'pantallas/formularios/consultas/historico-envios',
+    data: {
+      breadcrumb: [
+        { label: 'Formularios', icon: 'pi pi-file-edit', routerLink: '/pantallas/formularios/gestion' },
+        { label: 'Consultas' },
+        { label: 'Histórico de envíos' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/formularios/historico-envios/historico-envios.component').then(m => m.HistoricoEnviosComponent),
+  },
+  {
     path: 'pantallas/entidades/entidades-agregadas',
     data: {
       breadcrumb: [
