@@ -184,6 +184,15 @@ interface DownloadFormat {
 /** Severity admitida por los `p-tag` del panel de estado. */
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 
+/**
+ * Resultado de la validación central de la categoría (simulación demo).
+ *   ninguna    → aún no enviado / sin respuesta
+ *   enProceso  → enviado, en validación central
+ *   aceptado   → aceptado por la CGN
+ *   rechazado  → rechazado por deficiencia
+ */
+type RespuestaCentral = 'ninguna' | 'enProceso' | 'aceptado' | 'rechazado';
+
 /** Estado dominante (lifecycle) de la categoría seleccionada. */
 type EstadoCategoriaClave =
   | 'sin-contexto'
@@ -502,6 +511,53 @@ export class FormulariosComponent implements OnDestroy {
     // En el wizard de 3 pasos, el listado y el registro manual viven en
     // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
     // el step se mantiene en 1.
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Resultado de la validación central (simulación de demostración).
+  // En producción este estado llega del backend tras "Enviar Categoría";
+  // aquí se simula desde el detalle del formulario con un switch demo para
+  // poder mostrar cómo se refleja el resultado en el banner del Paso 3:
+  //   • enProceso → enviado, en validación central (azul/info)
+  //   • aceptado  → aceptado por la CGN (verde/éxito)
+  //   • rechazado → rechazado por deficiencia (rojo/error)
+  // ──────────────────────────────────────────────────────────────────────
+  respuestaCentral: RespuestaCentral = 'ninguna';
+
+  readonly respuestaCentralOptions = [
+    { label: 'Sin respuesta (aún no enviado)', value: 'ninguna' },
+    { label: 'En proceso', value: 'enProceso' },
+    { label: 'Aceptado', value: 'aceptado' },
+    { label: 'Rechazado por deficiencia', value: 'rechazado' },
+  ];
+
+  /**
+   * Presentación del resultado de validación central para el banner del Paso 3.
+   * Devuelve `null` cuando aún no hay respuesta simulada (banner normal de envío).
+   */
+  get respuestaCentralInfo(): { clase: string; icon: string; titulo: string; detalle: string } | null {
+    switch (this.respuestaCentral) {
+      case 'enProceso':
+        return {
+          clase: 'form-send-bar--proceso', icon: 'pi-hourglass',
+          titulo: 'Envío en proceso de validación central',
+          detalle: 'La categoría fue enviada y está en validación por la CGN. El resultado llegará en Consultar envíos.',
+        };
+      case 'aceptado':
+        return {
+          clase: 'form-send-bar--aceptado', icon: 'pi-check-circle',
+          titulo: 'Categoría aceptada por validación central',
+          detalle: 'La validación central aceptó la categoría. No se requieren correcciones.',
+        };
+      case 'rechazado':
+        return {
+          clase: 'form-send-bar--rechazado', icon: 'pi-times-circle',
+          titulo: 'Categoría rechazada por deficiencia',
+          detalle: 'La validación central rechazó la categoría. Revise los formularios señalados y vuelva a enviar.',
+        };
+      default:
+        return null;
+    }
   }
 
   // ──────────────────────────────────────────────────────────────────────

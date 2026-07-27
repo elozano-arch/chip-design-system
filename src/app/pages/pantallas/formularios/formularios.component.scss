@@ -154,7 +154,8 @@
     }
   }
 
-  &--ready {
+  &--ready,
+  &--aceptado {
     background: #E8F5E9;
     border-color: var(--chip-success);
 
@@ -165,13 +166,26 @@
     }
   }
 
-  &--error {
+  &--error,
+  &--rechazado {
     background: #FDECEA;
     border-color: var(--chip-danger);
 
     .form-send-bar__info {
       > i { color: var(--chip-danger); }
       strong { color: #C62828; }
+      span { color: var(--chip-grey-700); }
+    }
+  }
+
+  /* Resultado central "En proceso" — informativo (azul/cobalto). */
+  &--proceso {
+    background: var(--chip-bg-solitude);
+    border-color: var(--chip-cobalt-700);
+
+    .form-send-bar__info {
+      > i { color: var(--chip-cobalt-700); }
+      strong { color: var(--chip-cobalt-700); }
       span { color: var(--chip-grey-700); }
     }
   }
@@ -886,6 +900,11 @@
   }
 
   &__panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--chip-grey-100);

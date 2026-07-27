@@ -37,6 +37,17 @@
         </div>
       </div>
 
+      <!-- Simulación (demo) del resultado de la validación central. En producción
+           llega del backend tras "Enviar Categoría"; aquí se fija a mano para
+           mostrar cómo se refleja en el banner de estado del Paso 3 (Envíos). -->
+      <div class="form-wizard__demo-switch" role="group" aria-label="Simulación del resultado de validación central">
+        <i class="pi pi-flag" aria-hidden="true"></i>
+        <label for="det-resp-central">Resultado de validación central <span class="form-wizard__demo-tag">demostración</span></label>
+        <p-select inputId="det-resp-central" [options]="respuestaCentralOptions"
+          [(ngModel)]="respuestaCentral"
+          appendTo="body" styleClass="form-wizard__demo-select" />
+      </div>
+
       <!-- Paginador global de columnas (periodos visibles) -->
       <div class="form-detalle__cols-pager" aria-label="Paginador de columnas">
         <span class="form-detalle__cols-label">
@@ -155,6 +166,15 @@
               <i class="pi pi-info-circle" aria-hidden="true"></i>
             </button>
           </h2>
+          <!-- Importar es transversal: solo depende de que el contexto (filtros)
+               esté aplicado, no de estar en el listado ni en el detalle. Por eso
+               vive en la cabecera del Paso 1 (siempre visible) y no en el Paso 2. -->
+          @if (filtersApplied) {
+            <p-button label="Importar" icon="pi pi-upload" [outlined]="true" size="small"
+              pTooltip="Cargar un archivo .xlsx o .csv para la categoría"
+              tooltipPosition="top"
+              (onClick)="abrirImportDialog()" />
+          }
         </header>
 
         <!-- Filtros del contexto — acordeón: solo chevron, clic en toda la fila colapsa/expande -->
@@ -297,10 +317,6 @@
              · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
              · Exportar y Validar se habilitan al marcar al menos un formulario -->
         <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
-          <p-button label="Importar" icon="pi pi-upload" [outlined]="true"
-            pTooltip="Cargar un archivo .xlsx o .csv para la categoría"
-            tooltipPosition="top"
-            (onClick)="abrirImportDialog()" />
           <p-button label="Exportar" icon="pi pi-download"
             [disabled]="selectedFormularios.length === 0"
             [pTooltip]="selectedFormularios.length === 0 ? 'Marque al menos un formulario para exportar' : ''"
@@ -685,33 +701,42 @@
 
         <!-- Estado del envío + acción Enviar Categoría -->
         <div class="form-send-bar"
-          [class.form-send-bar--ready]="todosValidados && !hayErrores"
-          [class.form-send-bar--error]="hayErrores">
+          [class.form-send-bar--ready]="!respuestaCentralInfo && todosValidados && !hayErrores"
+          [class.form-send-bar--error]="!respuestaCentralInfo && hayErrores"
+          [ngClass]="respuestaCentralInfo?.clase">
           <div class="form-send-bar__info">
-            <i class="pi"
-              [class.pi-exclamation-triangle]="hayErrores"
-              [class.pi-send]="todosValidados && !hayErrores"
-              [class.pi-info-circle]="!todosValidados && !hayErrores" aria-hidden="true"></i>
-            <div>
-              <strong>
-                @if (hayErrores) {
-                  La verificación encontró errores
-                } @else if (todosValidados) {
-                  Categoría lista para enviar
-                } @else {
-                  Aún hay formularios sin validar
-                }
-              </strong>
-              <span>
-                @if (hayErrores) {
-                  Corrija los errores listados abajo antes de enviar la categoría.
-                } @else if (todosValidados) {
-                  Todos los formularios están en estado Validado. Al enviar, se ejecutan las validaciones centrales.
-                } @else {
-                  Valide los formularios pendientes (sección anterior) antes de enviar la categoría.
-                }
-              </span>
-            </div>
+            @if (respuestaCentralInfo; as rc) {
+              <i class="pi {{ rc.icon }}" aria-hidden="true"></i>
+              <div>
+                <strong>{{ rc.titulo }}</strong>
+                <span>{{ rc.detalle }}</span>
+              </div>
+            } @else {
+              <i class="pi"
+                [class.pi-exclamation-triangle]="hayErrores"
+                [class.pi-send]="todosValidados && !hayErrores"
+                [class.pi-info-circle]="!todosValidados && !hayErrores" aria-hidden="true"></i>
+              <div>
+                <strong>
+                  @if (hayErrores) {
+                    La verificación encontró errores
+                  } @else if (todosValidados) {
+                    Categoría lista para enviar
+                  } @else {
+                    Aún hay formularios sin validar
+                  }
+                </strong>
+                <span>
+                  @if (hayErrores) {
+                    Corrija los errores listados abajo antes de enviar la categoría.
+                  } @else if (todosValidados) {
+                    Todos los formularios están en estado Validado. Al enviar, se ejecutan las validaciones centrales.
+                  } @else {
+                    Valide los formularios pendientes (sección anterior) antes de enviar la categoría.
+                  }
+                </span>
+              </div>
+            }
           </div>
           <p-button label="Enviar Categoría" icon="pi pi-send" iconPos="right"
             [disabled]="!todosValidados || hayErrores"
