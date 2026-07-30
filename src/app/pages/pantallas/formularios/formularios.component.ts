@@ -90,15 +90,6 @@ interface ColumnaRegistro {
  */
 type ModoEntidades = 'noAplica' | 'obligatoria' | 'agregadora';
 
-/** Error de validación central, clasificado por tipo (Paso 3). */
-interface ErrorValidacion {
-  tipo: string;
-  formulario: string;
-  ubicacion: string;
-  detalle: string;
-  correccion: string;
-}
-
 /** Entidad disponible para asignar a la categoría desde el modal "Entidades Agregadas". */
 interface EntidadAgregada {
   id: string;
@@ -183,6 +174,15 @@ interface DownloadFormat {
 
 /** Severity admitida por los `p-tag` del panel de estado. */
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
+
+/**
+ * Resultado de la validación central de la categoría (simulación demo).
+ *   ninguna    → aún no enviado / sin respuesta
+ *   enProceso  → enviado, en validación central
+ *   aceptado   → aceptado por la CGN
+ *   rechazado  → rechazado por deficiencia
+ */
+type RespuestaCentral = 'ninguna' | 'enProceso' | 'aceptado' | 'rechazado';
 
 /** Estado dominante (lifecycle) de la categoría seleccionada. */
 type EstadoCategoriaClave =
@@ -304,9 +304,6 @@ export class FormulariosComponent implements OnDestroy {
     // Solo se cierran los paneles inline que pudieran estar abiertos.
     if (step === 0) {
       this.cerrarPanelesPaso1();
-      // Reinicia la verificación: una nueva pasada vuelve a detectar errores.
-      this.verificado = false;
-      this.erroresActivos = [];
     }
     this.cerrarDetalle();
     this.cerrarProtocolo();
@@ -488,6 +485,8 @@ export class FormulariosComponent implements OnDestroy {
     this._formulariosBase = this._formulariosBase.map(f =>
       f.id === id ? { ...f, estadoValidacion: 'Validado' } : f,
     );
+    // Al re-validar tras un rechazo, el resultado del envío anterior deja de aplicar.
+    this.categoriaEnviada = false;
     this.messageService.add({
       severity: 'success',
       summary: 'Formulario validado',
@@ -502,6 +501,65 @@ export class FormulariosComponent implements OnDestroy {
     // En el wizard de 3 pasos, el listado y el registro manual viven en
     // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
     // el step se mantiene en 1.
+  }
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Resultado del último envío a validación central (simulación de demostración).
+  // En producción este estado llega del backend tras "Enviar Categoría"; aquí se
+  // elige desde "Control de envío" con un switch demo qué responderá la validación
+  // central. Al pulsar "Enviar Categoría" se APLICA ese resultado:
+  //   • rechazado → marca un formulario como "Rechazado por Deficiencia" (su motivo
+  //                 se consulta en el listado, Sección 2 → "Ver motivo") y la
+  //                 Sección 3 muestra el envío rechazado.
+  //   • aceptado  → todos los formularios pasan a "Enviado" (aceptado por la CGN).
+  //   • enProceso → todos "Enviado", en validación central.
+  // El resultado en el banner solo aparece TRAS enviar (ver `resultadoEnvio`).
+  // ──────────────────────────────────────────────────────────────────────
+  respuestaCentral: RespuestaCentral = 'rechazado';
+
+  /** True una vez que se pulsó "Enviar Categoría" (para mostrar el resultado). */
+  categoriaEnviada = false;
+
+  readonly respuestaCentralOptions = [
+    { label: 'En proceso', value: 'enProceso' },
+    { label: 'Aceptado', value: 'aceptado' },
+    { label: 'Rechazado por deficiencia', value: 'rechazado' },
+  ];
+
+  /**
+   * Resultado del envío a mostrar en el banner. Solo tras "Enviar Categoría"
+   * (`categoriaEnviada`); antes de enviar devuelve null (banner de preparación).
+   */
+  get resultadoEnvio(): { clase: string; icon: string; titulo: string; detalle: string } | null {
+    return this.categoriaEnviada ? this.respuestaCentralInfo : null;
+  }
+
+  /**
+   * Presentación del resultado de validación central para el banner del Paso 3.
+   */
+  get respuestaCentralInfo(): { clase: string; icon: string; titulo: string; detalle: string } | null {
+    switch (this.respuestaCentral) {
+      case 'enProceso':
+        return {
+          clase: 'form-send-bar--proceso', icon: 'pi-hourglass',
+          titulo: 'Envío en proceso de validación central',
+          detalle: 'El resultado llegará en Consultar envíos.',
+        };
+      case 'aceptado':
+        return {
+          clase: 'form-send-bar--aceptado', icon: 'pi-check-circle',
+          titulo: 'Categoría aceptada por validación central',
+          detalle: 'No se requieren correcciones.',
+        };
+      case 'rechazado':
+        return {
+          clase: 'form-send-bar--rechazado', icon: 'pi-times-circle',
+          titulo: 'Envío rechazado por deficiencia',
+          detalle: 'Revise los formularios rechazados en el listado y corrija el motivo.',
+        };
+      default:
+        return null;
+    }
   }
 
   // ──────────────────────────────────────────────────────────────────────
@@ -887,7 +945,6 @@ export class FormulariosComponent implements OnDestroy {
      la única fuente de verdad que ya comparten los pasos:
        • filtersApplied + contexto (categoría/entidad/año/periodo)
        • _formulariosBase / filteredFormularios (estadoValidacion)
-       • verificado / erroresActivos (verificación central, Paso 3)
        • selectedEntidades (entidades agregadas, Paso 3)
      Al navegar entre pasos el estado se conserva solo, porque se recalcula
      de esas mismas propiedades.
@@ -929,13 +986,13 @@ export class FormulariosComponent implements OnDestroy {
         descripcion: 'La categoría fue enviada. El resultado (aceptado o rechazado) llegará en Consultar envíos.',
       };
     }
-    // Rechazo: formularios marcados con deficiencia o errores de verificación.
-    if ((this.verificado && this.erroresActivos.length > 0)
-        || lista.some(f => f.estadoValidacion === 'Rechazado por Deficiencia')) {
+    // Rechazo: formularios marcados con deficiencia. El detalle del motivo se
+    // consulta en el formulario rechazado del listado (columna Estado → Ver motivo).
+    if (lista.some(f => f.estadoValidacion === 'Rechazado por Deficiencia')) {
       return {
         clave: 'rechazado', label: 'Rechazado por deficiencia', severity: 'danger',
         icon: 'pi pi-times-circle',
-        descripcion: 'Hay formularios rechazados o errores de verificación por corregir antes de enviar.',
+        descripcion: 'Hay formularios rechazados. Abra el formulario rechazado para ver el motivo y corregirlo.',
       };
     }
     if (lista.every(f => f.estadoValidacion === 'Validado')) {
@@ -975,125 +1032,6 @@ export class FormulariosComponent implements OnDestroy {
       f => f.estadoValidacion === 'Validado' || f.estadoValidacion === 'Enviado',
     ).length;
     return { validados, total, pct: total ? Math.round((validados / total) * 100) : 0 };
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════
-     Paso 3 — Tabla de errores por tipo (resultado de la verificación)
-     La verificación corre al "Enviar Categoría": el primer intento detecta
-     los errores y los muestra clasificados por tipo. El usuario corrige
-     cada uno ("Ir al formulario") y, cuando la tabla queda vacía, el envío
-     pasa. Datos de ejemplo (demo). Da claridad de QUÉ corregir en vez de
-     mandar al usuario a "regresar al paso 2" sin información.
-     ═══════════════════════════════════════════════════════════════════ */
-
-  /** True una vez disparada la verificación central (primer "Enviar Categoría"). */
-  verificado = false;
-
-  /** Errores aún pendientes de corregir (se vacía a medida que se corrigen). */
-  erroresActivos: ErrorValidacion[] = [];
-
-  /** True mientras la verificación tenga errores pendientes. */
-  get hayErrores(): boolean {
-    return this.verificado && this.erroresActivos.length > 0;
-  }
-
-  /** Catálogo base de errores que arroja la verificación central (mock). */
-  readonly erroresValidacion: ErrorValidacion[] = [
-    {
-      tipo: 'Inconsistencia',
-      formulario: 'Saldos y Movimientos',
-      ubicacion: 'Fila 14 · concepto 1.1.05',
-      detalle: 'Débitos ($3.200.000) ≠ Créditos ($2.000.000).',
-      correccion: 'Ajuste los valores del concepto para que el cuadre dé cero.',
-    },
-    {
-      tipo: 'Dato obligatorio',
-      formulario: 'Saldos y Movimientos',
-      ubicacion: 'Concepto 2.1.03',
-      detalle: 'El saldo final está vacío.',
-      correccion: 'Diligencie el saldo final del concepto.',
-    },
-    {
-      tipo: 'Formato inválido',
-      formulario: 'Operaciones Recíprocas',
-      ubicacion: 'Fila 7 · campo NIT',
-      detalle: 'El NIT contiene letras.',
-      correccion: 'Ingrese solo números, sin puntos ni guion.',
-    },
-    {
-      tipo: 'Valor fuera de rango',
-      formulario: 'Variaciones',
-      ubicacion: 'Concepto 4.2.01',
-      detalle: 'La variación de 320% supera el límite permitido.',
-      correccion: 'Verifique el valor reportado o justifique la variación.',
-    },
-    {
-      tipo: 'Código no válido',
-      formulario: 'Saldos y Movimientos',
-      ubicacion: 'Concepto 9999',
-      detalle: 'La cuenta 9999 no existe en el catálogo CGN.',
-      correccion: 'Use un código de cuenta válido del catálogo.',
-    },
-    {
-      tipo: 'Registro duplicado',
-      formulario: 'Operaciones Recíprocas',
-      ubicacion: 'Concepto 1.2.03',
-      detalle: 'El concepto aparece 2 veces.',
-      correccion: 'Elimine el registro duplicado.',
-    },
-  ];
-
-  /** Severity del tag según la gravedad del tipo de error. */
-  tipoErrorSeverity(tipo: string): 'danger' | 'warn' | 'info' {
-    switch (tipo) {
-      case 'Inconsistencia':
-      case 'Dato obligatorio':
-        return 'danger';
-      case 'Regla de negocio':
-        return 'info';
-      default:
-        return 'warn';
-    }
-  }
-
-  /** Resumen "N por tipo" para el encabezado de la tabla de errores (solo pendientes). */
-  get resumenErrores(): { tipo: string; cantidad: number; severity: 'danger' | 'warn' | 'info' }[] {
-    const conteo = new Map<string, number>();
-    for (const e of this.erroresActivos) {
-      conteo.set(e.tipo, (conteo.get(e.tipo) ?? 0) + 1);
-    }
-    return Array.from(conteo, ([tipo, cantidad]) => ({
-      tipo,
-      cantidad,
-      severity: this.tipoErrorSeverity(tipo),
-    }));
-  }
-
-  /** Lleva al usuario al formulario con error (Paso 2) y marca ese error como corregido. */
-  irAFormularioConError(err: ErrorValidacion): void {
-    // Se quita este error de la lista de pendientes (simula su corrección).
-    this.erroresActivos = this.erroresActivos.filter(e => e !== err);
-
-    if (this.erroresActivos.length === 0) {
-      this.messageService.add({
-        severity: 'success',
-        summary: 'Errores corregidos',
-        detail: 'No quedan errores pendientes. Ya puede enviar la categoría.',
-        life: 4000,
-      });
-    } else {
-      this.messageService.add({
-        severity: 'info',
-        summary: 'Ir al formulario',
-        detail: `Corrigiendo "${err.formulario}" en ${err.ubicacion}. Quedan ${this.erroresActivos.length} errores.`,
-        life: 3000,
-      });
-    }
-    // V3: todo vive en una sola pantalla; no hay navegación por pasos.
-    // Subimos al listado de formularios conservando los errores pendientes.
-    this.cerrarDetalle();
-    this.cerrarProtocolo();
-    queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
   /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
@@ -1165,31 +1103,39 @@ export class FormulariosComponent implements OnDestroy {
     this.showAgregadoraDialog = false;
   }
 
-  /** Envío efectivo de la categoría — reutilizado por ambos caminos. */
+  /** Envío efectivo de la categoría — aplica el resultado simulado (switch demo). */
   private procederEnvioCategoria() {
-    // Verificación central: la primera vez carga los errores y muestra la
-    // tabla por tipo. El usuario corrige cada uno ("Ir al formulario") hasta
-    // vaciarla; recién ahí el envío pasa. (Demo del comportamiento real.)
-    if (!this.verificado) {
-      this.verificado = true;
-      this.erroresActivos = [...this.erroresValidacion];
-    }
-    if (this.erroresActivos.length > 0) {
+    this.categoriaEnviada = true;
+
+    if (this.respuestaCentral === 'rechazado') {
+      // Rechazo por deficiencia: se marca UN formulario como rechazado (los demás
+      // quedan Validado, para poder reenviar tras corregirlo). El motivo se consulta
+      // en ese formulario desde el listado (Sección 2 → "Ver motivo").
+      let marcado = false;
+      this._formulariosBase = this._formulariosBase.map(f => {
+        if (!marcado) {
+          marcado = true;
+          return { ...f, estadoValidacion: 'Rechazado por Deficiencia' };
+        }
+        return f;
+      });
       this.messageService.add({
         severity: 'error',
-        summary: 'La verificación encontró errores',
-        detail: `Quedan ${this.erroresActivos.length} errores en la categoría. Corríjalos antes de enviar.`,
+        summary: 'Envío rechazado por deficiencia',
+        detail: 'Revise los formularios rechazados en el listado y corrija el motivo.',
         life: 6000,
       });
       return;
     }
 
-    // Simula el envío: pasan a "Enviado" — esperando respuesta central.
+    // Aceptado / En proceso: todos los formularios pasan a "Enviado".
     this._formulariosBase = this._formulariosBase.map(f => ({ ...f, estadoValidacion: 'Enviado' }));
     this.messageService.add({
-      severity: 'success',
-      summary: 'Categoría enviada',
-      detail: 'La categoría fue enviada para validación central. Recibirá el resultado en consulta de envíos.',
+      severity: this.respuestaCentral === 'aceptado' ? 'success' : 'info',
+      summary: this.respuestaCentral === 'aceptado' ? 'Categoría aceptada' : 'Categoría enviada',
+      detail: this.respuestaCentral === 'aceptado'
+        ? 'La validación central aceptó la categoría. No se requieren correcciones.'
+        : 'La categoría fue enviada y está en validación central. Recibirá el resultado en Consultar envíos.',
       life: 5000,
     });
   }
@@ -1220,6 +1166,8 @@ export class FormulariosComponent implements OnDestroy {
     );
     this.selectedFormularios = [];
     this.activePanel = null;
+    // Al re-validar tras un rechazo, el resultado del envío anterior deja de aplicar.
+    this.categoriaEnviada = false;
 
     // Mensaje contextual: si todos quedaron validados, el botón "Siguiente"
     // se habilita y se invita a continuar al paso Envíos.
@@ -1299,6 +1247,8 @@ export class FormulariosComponent implements OnDestroy {
       estadoValidacion: plantilla.estado,
       ultimaModificacion: `0${(idx % 9) + 1}/${(idx % 12) + 1}/${anioNum}`,
     }));
+    // Contexto nuevo: aún no se ha enviado.
+    this.categoriaEnviada = false;
   }
 
   applyFilters() {
@@ -1321,8 +1271,9 @@ export class FormulariosComponent implements OnDestroy {
     if (this.filtersApplied) {
       this.filtersApplied = false;
       this.panelEstadoAbierto = false;
-    this.controlEnvioAbierto = false;
+      this.controlEnvioAbierto = false;
       this.showImportDialog = false;
+      this.categoriaEnviada = false;
       this.cerrarPanelesPaso1();
     }
   }
@@ -1365,6 +1316,7 @@ export class FormulariosComponent implements OnDestroy {
     this.panelEstadoAbierto = false;
     this.controlEnvioAbierto = false;
     this.showImportDialog = false;
+    this.categoriaEnviada = false;
     this.cerrarPanelesPaso1();
   }
 

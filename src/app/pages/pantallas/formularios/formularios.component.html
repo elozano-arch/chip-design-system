@@ -276,6 +276,18 @@
           }
         </div>
 
+        <!-- Importar es transversal: solo depende de que el contexto (filtros) esté
+             aplicado, no de estar en el listado ni en el detalle. Vive aquí, bajo el
+             resumen del contexto (Paso 1), y por eso se retiró de la toolbar del Paso 2. -->
+        @if (filtersApplied) {
+          <div class="form-wizard__import-row">
+            <p-button label="Importar" icon="pi pi-upload"
+              pTooltip="Cargar un archivo .xlsx o .csv para la categoría"
+              tooltipPosition="top"
+              (onClick)="abrirImportDialog()" />
+          </div>
+        }
+
       </section>
     }
 
@@ -297,10 +309,6 @@
              · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
              · Exportar y Validar se habilitan al marcar al menos un formulario -->
         <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
-          <p-button label="Importar" icon="pi pi-upload" [outlined]="true"
-            pTooltip="Cargar un archivo .xlsx o .csv para la categoría"
-            tooltipPosition="top"
-            (onClick)="abrirImportDialog()" />
           <p-button label="Exportar" icon="pi pi-download"
             [disabled]="selectedFormularios.length === 0"
             [pTooltip]="selectedFormularios.length === 0 ? 'Marque al menos un formulario para exportar' : ''"
@@ -594,6 +602,7 @@
                 </p-menu>
               </div>
 
+              <div class="form-table-scroll">
               <p-table [value]="conceptosFiltrados()"
                 [stripedRows]="true" [rowHover]="true"
                 [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
@@ -625,6 +634,7 @@
                   </tr>
                 </ng-template>
               </p-table>
+              </div>
             </p-tabpanel>
           </p-tabpanels>
         </p-tabs>
@@ -683,90 +693,44 @@
           </span>
         </div>
 
-        <!-- Estado del envío + acción Enviar Categoría -->
+        <!-- Estado del envío + acción Enviar Categoría. Solo el estado: el detalle
+             del rechazo se consulta en el formulario rechazado (columna Estado). -->
         <div class="form-send-bar"
-          [class.form-send-bar--ready]="todosValidados && !hayErrores"
-          [class.form-send-bar--error]="hayErrores">
+          [class.form-send-bar--ready]="!resultadoEnvio && todosValidados"
+          [ngClass]="resultadoEnvio?.clase">
           <div class="form-send-bar__info">
-            <i class="pi"
-              [class.pi-exclamation-triangle]="hayErrores"
-              [class.pi-send]="todosValidados && !hayErrores"
-              [class.pi-info-circle]="!todosValidados && !hayErrores" aria-hidden="true"></i>
-            <div>
-              <strong>
-                @if (hayErrores) {
-                  La verificación encontró errores
-                } @else if (todosValidados) {
-                  Categoría lista para enviar
-                } @else {
-                  Aún hay formularios sin validar
-                }
-              </strong>
-              <span>
-                @if (hayErrores) {
-                  Corrija los errores listados abajo antes de enviar la categoría.
-                } @else if (todosValidados) {
-                  Todos los formularios están en estado Validado. Al enviar, se ejecutan las validaciones centrales.
-                } @else {
-                  Valide los formularios pendientes (sección anterior) antes de enviar la categoría.
-                }
-              </span>
-            </div>
+            @if (resultadoEnvio; as rc) {
+              <i class="pi {{ rc.icon }}" aria-hidden="true"></i>
+              <div>
+                <strong>{{ rc.titulo }}</strong>
+                <span>{{ rc.detalle }}</span>
+              </div>
+            } @else {
+              <i class="pi"
+                [class.pi-send]="todosValidados"
+                [class.pi-info-circle]="!todosValidados" aria-hidden="true"></i>
+              <div>
+                <strong>
+                  @if (todosValidados) {
+                    Categoría lista para enviar
+                  } @else {
+                    Aún hay formularios sin validar
+                  }
+                </strong>
+                <span>
+                  @if (todosValidados) {
+                    Al enviar se ejecutan las validaciones centrales.
+                  } @else {
+                    Valide los formularios pendientes antes de enviar.
+                  }
+                </span>
+              </div>
+            }
           </div>
           <p-button label="Enviar Categoría" icon="pi pi-send" iconPos="right"
-            [disabled]="!todosValidados || hayErrores"
+            [disabled]="!todosValidados"
             (onClick)="enviarCategoria()" />
         </div>
-
-        <!-- Tabla de errores por tipo (resultado de la verificación) -->
-        @if (hayErrores) {
-          <section class="form-errores" role="region" aria-label="Errores de la verificación">
-            <header class="form-errores__head">
-              <h3 class="form-errores__title">
-                <i class="pi pi-list" aria-hidden="true"></i>
-                Quedan {{ erroresActivos.length }} {{ erroresActivos.length === 1 ? 'error' : 'errores' }} por corregir
-              </h3>
-              <div class="form-errores__resumen" aria-label="Resumen de errores por tipo">
-                @for (r of resumenErrores; track r.tipo) {
-                  <p-tag [value]="r.cantidad + ' · ' + r.tipo" [severity]="r.severity" [rounded]="true" />
-                }
-              </div>
-            </header>
-
-            <div class="form-errores__scroll">
-            <p-table [value]="erroresActivos" [stripedRows]="true" [rowHover]="true" styleClass="form-errores__table">
-              <ng-template #caption>
-                <span class="sr-only">Detalle de errores de la verificación clasificados por tipo, con la acción para corregir cada uno.</span>
-              </ng-template>
-              <ng-template #header>
-                <tr>
-                  <th scope="col">Tipo</th>
-                  <th scope="col">Formulario</th>
-                  <th scope="col">Ubicación</th>
-                  <th scope="col">Detalle del error</th>
-                  <th scope="col">Cómo corregirlo</th>
-                  <th scope="col" class="form-errores__acc-col">Acción</th>
-                </tr>
-              </ng-template>
-              <ng-template #body let-err>
-                <tr>
-                  <td><p-tag [value]="err.tipo" [severity]="tipoErrorSeverity(err.tipo)" /></td>
-                  <td>{{ err.formulario }}</td>
-                  <td>{{ err.ubicacion }}</td>
-                  <td><span class="cell-ellipsis" [pTooltip]="err.detalle" tooltipPosition="top">{{ err.detalle }}</span></td>
-                  <td class="form-errores__fix"><span class="cell-ellipsis" [pTooltip]="err.correccion" tooltipPosition="top">{{ err.correccion }}</span></td>
-                  <td>
-                    <p-button label="Ir al formulario" icon="pi pi-arrow-up-right"
-                      [text]="true" size="small"
-                      [attr.aria-label]="'Ir a ' + err.formulario + ' en ' + err.ubicacion + ' para corregir'"
-                      (onClick)="irAFormularioConError(err)" />
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-            </div>
-          </section>
-        }
 
       </section>
     }
@@ -790,6 +754,30 @@
 
         <div class="form-estado-screen" aria-live="polite">
           @if (filtersApplied && filterEntidad && filteredFormularios.length > 0) {
+            <!-- Simulación (demo): qué responderá la validación central al enviar.
+                 Al pulsar "Enviar Categoría" (Sección 3) se aplica este resultado;
+                 si es rechazo, se marca un formulario como "Rechazado por Deficiencia".
+                 En producción llega del backend tras enviar. -->
+            <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de la respuesta de validación central">
+              <i class="pi pi-flag" aria-hidden="true"></i>
+              <label for="ce-resp-central">Respuesta central al enviar <span class="form-wizard__demo-tag">demostración</span></label>
+              <p-select inputId="ce-resp-central" [options]="respuestaCentralOptions"
+                [(ngModel)]="respuestaCentral"
+                appendTo="body" styleClass="form-wizard__demo-select" />
+            </div>
+
+            @if (resultadoEnvio; as rc) {
+              <div class="form-send-bar" [ngClass]="rc.clase">
+                <div class="form-send-bar__info">
+                  <i class="pi {{ rc.icon }}" aria-hidden="true"></i>
+                  <div>
+                    <strong>{{ rc.titulo }}</strong>
+                    <span>{{ rc.detalle }}</span>
+                  </div>
+                </div>
+              </div>
+            }
+
             <!-- Contexto actual de la categoría -->
             <dl class="form-estado-ctx">
               <div><dt>Categoría</dt><dd class="cell-ellipsis" [pTooltip]="categoriaLabel" tooltipPosition="top">{{ categoriaLabel }}</dd></div>
@@ -825,13 +813,6 @@
                 </li>
               }
             </ul>
-
-            <!-- Errores de verificación central -->
-            @if (hayErrores) {
-              <p-message severity="error" styleClass="w-full form-estado-msg">
-                {{ erroresActivos.length }} error(es) de verificación por corregir.
-              </p-message>
-            }
 
             <!-- Entidades agregadas (cuando la categoría las gestiona) -->
             @if (entidadesAgregadasHabilitado) {
@@ -1101,6 +1082,7 @@
   <!-- TEMPLATE: tabla horizontal de variables del protocolo          -->
   <!-- ============================================================= -->
   <ng-template #tablaVariables let-variables let-tipo="tipo">
+    <div class="form-table-scroll">
     <p-table [value]="variables"
       [stripedRows]="true"
       [rowHover]="true"
@@ -1158,6 +1140,7 @@
         </tr>
       </ng-template>
     </p-table>
+    </div>
   </ng-template>
 
   <!-- ============================================================= -->
@@ -1347,7 +1330,7 @@
     @if (rechazoDetalle) {
       <div class="form-rechazo">
         <p-message severity="error" styleClass="w-full"
-          text="Este formulario fue rechazado por deficiencia. Corrija los motivos listados y valídelo nuevamente antes de reenviar la categoría." />
+          text="Corrija los motivos y valide de nuevo antes de reenviar." />
         <ul class="form-rechazo__list">
           @for (d of deficienciasMock; track d.tipo) {
             <li class="form-rechazo__item">
@@ -1371,4 +1354,5 @@
         (onClick)="irARegistroDesdeRechazo()" />
     </ng-template>
   </p-dialog>
+
 </div>

@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 /* --- Empty State --- */
 .form-empty {
   text-align: center;
@@ -154,7 +156,8 @@
     }
   }
 
-  &--ready {
+  &--ready,
+  &--aceptado {
     background: #E8F5E9;
     border-color: var(--chip-success);
 
@@ -165,7 +168,8 @@
     }
   }
 
-  &--error {
+  &--error,
+  &--rechazado {
     background: #FDECEA;
     border-color: var(--chip-danger);
 
@@ -175,53 +179,18 @@
       span { color: var(--chip-grey-700); }
     }
   }
-}
 
-/* --- Tabla de errores por tipo (Paso 3) --- */
-.form-errores {
-  margin-top: 16px;
-  border: 1px solid var(--chip-grey-200);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  /* Resultado central "En proceso" — informativo (azul/cobalto). */
+  &--proceso {
+    background: var(--chip-bg-solitude);
+    border-color: var(--chip-cobalt-700);
 
-  &__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 14px 20px;
-    background: #FDECEA;
-    border-bottom: 1px solid var(--chip-grey-200);
+    .form-send-bar__info {
+      > i { color: var(--chip-cobalt-700); }
+      strong { color: var(--chip-cobalt-700); }
+      span { color: var(--chip-grey-700); }
+    }
   }
-
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-    font-family: var(--font-heading);
-    font-size: 15px;
-    font-weight: 700;
-    color: #C62828;
-
-    i { font-size: 16px; }
-  }
-
-  &__resumen {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  &__table { padding: 4px; }
-
-  &__fix {
-    color: var(--chip-grey-700);
-    font-weight: 500;
-  }
-
-  &__acc-col { width: 150px; }
 }
 
 /* --- Selection Bar --- */
@@ -466,7 +435,7 @@
 }
 
 /* --- Responsive (specific to formularios) --- */
-@media (max-width: 768px) {
+@include bp.down('md') {
   .form-summary {
     flex-direction: column;
   }
@@ -1047,6 +1016,14 @@
     border-top: 1px solid var(--chip-grey-100);
   }
 
+  /* Acción Importar bajo el resumen del contexto (Paso 1). Transversal:
+     visible siempre que los filtros estén aplicados. */
+  &__import-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
   /* Bloque de "acciones disponibles" después de aplicar filtros */
   &__context-actions {
     margin-top: 20px;
@@ -1153,7 +1130,7 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
 
-  @media (max-width: 768px) {
+  @include bp.down('md') {
     grid-template-columns: 1fr;
   }
 }
@@ -1228,7 +1205,7 @@
     color: var(--chip-grey-600);
   }
 
-  @media (max-width: 520px) {
+  @include bp.down('sm') {
     grid-template-columns: auto 1fr;
     grid-template-rows: auto auto;
 
@@ -1324,7 +1301,7 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 12px 16px;
 
-    @media (max-width: 520px) {
+    @include bp.down('sm') {
       grid-template-columns: 1fr;
     }
   }
@@ -2443,7 +2420,7 @@ $estado-panel-width: 300px;
   p { margin: 0; font-size: 13.5px; line-height: 1.55; }
 }
 
-@media (max-width: 768px) {
+@include bp.down('md') {
   .form-estado-toggle--open { right: 92vw; }
   .form-estado-panel { top: 0; height: 100vh; }
 }
@@ -2535,30 +2512,32 @@ $estado-panel-width: 300px;
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   RESPONSIVE — Tablet (mínimo objetivo). Bootstrap 5 breakpoints:
-   ≥992 desktop · 768–992 tablet landscape · ≤768 tablet portrait.
+   RESPONSIVE — Mínimo viable tablet (576–992px).
+   Contrato completo en .claude/skills/chip-ui-rules/references/
+   minimo-viable-tablet.md. Breakpoints vía src/styles/_breakpoints.scss.
    ══════════════════════════════════════════════════════════════════ */
 
 /* P1 · Tablas densas: scroll horizontal controlado, sin aplastar columnas.
-   El contenedor scrollea; la tabla conserva un ancho mínimo legible. */
-.form-table-scroll,
-.form-errores__scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+   El contenedor scrollea; la tabla conserva un ancho mínimo legible.
+
+   Necesario porque .p-datatable-table-container de PrimeNG 19 NO trae
+   overflow: auto salvo con [scrollable]="true" — sin este wrapper, un
+   [tableStyle] con min-width empuja el <body> entero. */
+.form-table-scroll {
+  @include bp.scroll-x;
 }
-:host ::ng-deep .form-errores__table table { min-width: 760px; }
 :host ::ng-deep .form-list-table table { min-width: 520px; }
 
-/* P2 · Filtros: en tablet (768–992) usar 2 columnas en vez de saltar a 1.
+/* P2 · Filtros: en tablet landscape usar 2 columnas en vez de saltar a 1.
    (El global colapsa a 1col recién en ≤768.) */
-@media (min-width: 768px) and (max-width: 992px) {
+@include bp.tablet-landscape {
   :host ::ng-deep .chip-filters__fields--4col,
   :host ::ng-deep .chip-filters__fields--3col {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
 
-@media (max-width: 768px) {
+@include bp.down('md') {
   /* P1.2 · Ocultar columna "Código" (ya visible en el nombre) para ganar ancho. */
   :host ::ng-deep .form-list-table th:nth-child(2),
   :host ::ng-deep .form-list-table td:nth-child(2) { display: none; }
@@ -2583,15 +2562,20 @@ $estado-panel-width: 300px;
 }
 
 /* P3 · Touch targets ≥44×44 en tablet-y-abajo (WCAG 2.5.5 / Kit UI). */
-@media (max-width: 992px) {
-  :host ::ng-deep .p-button.p-button-icon-only {
-    min-width: 44px;
-    min-height: 44px;
-  }
-  .form-estado-tagbtn { min-height: 44px; }
-  .chip-colpager__btn {
-    min-width: 40px;
-    min-height: 40px;
+@include bp.down('lg') {
+  :host ::ng-deep .p-button.p-button-icon-only { @include bp.touch-target; }
+  .form-estado-tagbtn { min-height: bp.$chip-touch-target; }
+  .chip-colpager__btn { @include bp.touch-target; }
+
+  /* Checkbox de selección de fila: .p-checkbox trae width/height explícitos
+     (20px) y su <input> absoluto cubre el 100% del wrapper, así que ampliar
+     el wrapper agranda el área táctil sin tocar el tamaño visual del box.
+     El centrado es obligatorio: sin él el box de 20px queda pegado arriba. */
+  :host ::ng-deep .form-list-table td .p-checkbox,
+  :host ::ng-deep .form-list-table th .p-checkbox {
+    @include bp.touch-target;
+    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -2622,8 +2606,8 @@ $estado-panel-width: 300px;
     border-radius: 4px;
   }
 }
-@media (max-width: 992px) {
-  .panel-help { min-width: 44px; min-height: 44px; justify-content: center; }
+@include bp.down('lg') {
+  .panel-help { @include bp.touch-target; justify-content: center; }
 }
 
 /* Texto inline largo: truncado con … (el completo viaja en el tooltip). */
@@ -2644,6 +2628,6 @@ $estado-panel-width: 300px;
   white-space: nowrap;
   vertical-align: middle;
 }
-@media (max-width: 768px) {
+@include bp.down('md') {
   :host ::ng-deep .chip-trunc .p-chip-label { max-width: 150px; }
 }

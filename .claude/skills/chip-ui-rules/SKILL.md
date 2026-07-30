@@ -163,6 +163,7 @@ Siempre `inputId` (no `id`) para que el `<label for>` asocie. Siempre `aria-requ
 |---|---|
 | Saber severity, label, icono, ubicación y excepciones exactas de cada familia de botones, con el árbol de decisión completo | `references/canon-botones.md` |
 | Saber cómo configurar `p-select` / `p-multiSelect` con accesibilidad, validación, dependencias entre dropdowns y umbrales de búsqueda | `references/canon-dropdowns.md` |
+| Saber cómo validar y ajustar una pantalla en tablet (mixins de breakpoints, los 6 parámetros, formato de auditoría) | `references/minimo-viable-tablet.md` |
 
 Léelos cuando vayas a tocar botones o dropdowns concretos — no antes, no después. La SKILL.md no carga su contenido por defecto.
 
@@ -200,6 +201,8 @@ Una pantalla o componente **sólo se considera terminado** cuando cumple **todos
 - [ ] Usa PrimeNG cuando es conveniente y compatible; si fue necesario adaptarlo, los estilos custom no rompen la coherencia.
 - [ ] **Los botones siguen el canon por familia funcional** (severity, label, icono, ubicación) — ver `references/canon-botones.md`. Si se tocaron botones de una pantalla existente, las excepciones detectadas quedaron listadas para validar.
 - [ ] **Las listas desplegables usan el componente correcto** (`p-select` / `p-select [filter]` / `p-multiSelect`) y activan búsqueda cuando hay más de 10 opciones — ver `references/canon-dropdowns.md`.
+- [ ] **Los textos largos están donde corresponde** — títulos cortos; ayuda contextual estática en ⓘ + tooltip (`.panel-help`); valores largos truncados + tooltip; mensajes de estado **visibles** con copy corto y la parte accionable en un botón, nunca sólo en tooltip. Ver la tabla "Textos largos" en `CLAUDE.md`.
+- [ ] **Cumple el mínimo viable tablet (576–992px)** — sin scroll horizontal del `<body>`, tablas con scroll propio, grids/filtros a máx. 2 columnas, touch targets ≥ 44×44px, breakpoints de la escala oficial vía `src/styles/_breakpoints.scss`, sin anchos fijos > 100%. Ver `references/minimo-viable-tablet.md`.
 - [ ] Funciona correctamente en Angular 19 (compila sin errores, sin warnings de tipos, sin dependencias incompatibles).
 - [ ] Puede visualizarse correctamente en el entorno preparado para Vercel.
 - [ ] Ha sido revisado desde criterios UI/UX (jerarquía, espaciado, legibilidad, alineación, estados, accesibilidad básica, consistencia).
