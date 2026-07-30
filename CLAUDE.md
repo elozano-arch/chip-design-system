@@ -129,6 +129,24 @@ Stack cerrado. Cualquier paquete fuera de esta lista requiere confirmación expl
 - Icono de acción: SIEMPRE con `aria-label` o texto visible
 - Tamaño base: 16px, mínimo 14px
 
+### Textos largos — dónde va cada cosa
+
+Los párrafos largos en pantalla se ven mal en responsive (se apilan y empujan el contenido). Títulos siempre cortos. Para el resto, **el tratamiento depende del tipo de texto, no de su longitud**:
+
+| Tipo de texto | Tratamiento | Por qué |
+|---|---|---|
+| **Ayuda contextual estática** — explica qué hace una sección; el usuario puede operar sin leerla | Icono ⓘ con tooltip (`.panel-help` + `pTooltip`) | Es opcional. Esconderla no impide actuar. |
+| **Mensaje de estado / resultado de una acción** — confirma qué pasó y qué hacer ahora | **Visible siempre**, con copy corto + botón para la acción | Es información esencial. |
+| **Instrucción de navegación** ("revise el listado de la sección 2 y…") | **No es texto: es un botón** | El Kit UI resuelve las acciones con botones, no describiéndole la ruta al usuario. |
+| **Valor largo en celda o chip** | Truncado con `…` + tooltip con el valor completo (`.cell-ellipsis`, `.chip-trunc`) | El valor completo sigue disponible. |
+
+**Nunca** poner un mensaje de estado o una instrucción accionable sólo en tooltip:
+- En tablet y móvil no existe el hover — y el mínimo viable tablet es obligatorio.
+- WCAG 2.1 §1.4.13 desaconseja que información esencial viva sólo en hover.
+- Un tooltip no se anuncia a lectores de pantalla; un mensaje de resultado necesita `aria-live`.
+
+Si un mensaje de estado quedó largo, **el problema es el copy, no la falta de tooltip**: acórtalo y mueve la parte accionable a un botón.
+
 ---
 
 ## ♿ Accesibilidad (WCAG 2.1 AA - Resolución 1519/2020)

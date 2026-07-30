@@ -1,0 +1,105 @@
+// ==========================================================================
+// CHIP 2.0 — Breakpoints y helpers responsive
+// Kit UI 9.2 GOV.CO · Cuadrícula Bootstrap 5.0
+// --------------------------------------------------------------------------
+// Este archivo NO emite CSS. Contiene únicamente variables, funciones y
+// mixins, por lo que importarlo desde un componente añade 0 bytes al bundle
+// hasta que se hace `@include` de algo.
+//
+// Uso desde el SCSS de un componente:
+//
+//   @use 'breakpoints' as bp;
+//
+//   .mi-grid {
+//     grid-template-columns: repeat(3, 1fr);
+//
+//     @include bp.down('lg') { grid-template-columns: repeat(2, 1fr); }
+//     @include bp.down('md') { grid-template-columns: 1fr; }
+//   }
+// ==========================================================================
+
+@use 'sass:map';
+
+// --------------------------------------------------------------------------
+// Escala oficial (idéntica a la declarada en CLAUDE.md y en la pantalla
+// /responsive del design system). No agregar valores nuevos aquí sin
+// actualizar también esas dos fuentes.
+// --------------------------------------------------------------------------
+$chip-breakpoints: (
+  'sm': 576px,    // ↑ tablet vertical
+  'md': 768px,    // ↑ tablet horizontal / desktop pequeño
+  'lg': 992px,    // ↑ desktop
+  'xl': 1200px,   // ↑ desktop grande
+  'xxl': 1400px,  // ↑ desktop extra grande
+);
+
+// Área táctil mínima — WCAG 2.5.5 (Resolución 1519/2020).
+$chip-touch-target: 44px;
+
+// --------------------------------------------------------------------------
+// Función de acceso. Falla en compilación si el nombre no existe, para que un
+// typo se vea en el build y no como una media query que nunca dispara.
+// --------------------------------------------------------------------------
+@function bp($name) {
+  @if not map.has-key($chip-breakpoints, $name) {
+    @error 'Breakpoint "#{$name}" no existe. Disponibles: #{map.keys($chip-breakpoints)}.';
+  }
+  @return map.get($chip-breakpoints, $name);
+}
+
+// --------------------------------------------------------------------------
+// Mixins de rango
+//
+// `up()` es mobile-first (min-width) — es el sentido preferido para código
+// nuevo. `down()` es desktop-first (max-width) y existe para poder ajustar
+// pantallas ya escritas sin reescribir su SCSS completo.
+//
+// `down()` resta 0.02px al límite para que `up('md')` y `down('md')` nunca
+// apliquen a la vez en el mismo ancho. Ojo: `down('md')` es 767.98px, no 768px
+// como las media queries antiguas escritas a mano.
+// --------------------------------------------------------------------------
+@mixin up($name) {
+  @media (min-width: bp($name)) { @content; }
+}
+
+@mixin down($name) {
+  @media (max-width: bp($name) - 0.02px) { @content; }
+}
+
+@mixin between($lower, $upper) {
+  @media (min-width: bp($lower)) and (max-width: bp($upper) - 0.02px) { @content; }
+}
+
+// --------------------------------------------------------------------------
+// Alias semánticos por dispositivo
+//
+// `tablet` cubre 576px–991.98px: tablet vertical y horizontal. Es el rango que
+// usa la tabla "Comportamiento de componentes" de la pantalla /responsive y el
+// que valida el triage. (La tabla de breakpoints de esa misma pantalla parte
+// tablet en 576–768 y llama 768–992 "desktop small"; para validar dispositivos
+// reales se toma el rango completo, porque un iPad vertical mide 768px.)
+// --------------------------------------------------------------------------
+@mixin mobile { @include down('sm') { @content; } }
+@mixin tablet { @include between('sm', 'lg') { @content; } }
+@mixin tablet-portrait { @include between('sm', 'md') { @content; } }
+@mixin tablet-landscape { @include between('md', 'lg') { @content; } }
+@mixin desktop { @include up('lg') { @content; } }
+
+// --------------------------------------------------------------------------
+// Helpers del contrato "mínimo viable tablet"
+// --------------------------------------------------------------------------
+
+// Área táctil mínima para controles que en desktop son más pequeños
+// (icon-only de tabla, toggles de ayuda, chips removibles).
+@mixin touch-target($size: $chip-touch-target) {
+  min-width: $size;
+  min-height: $size;
+}
+
+// Contenedor que hace scroll horizontal en sí mismo en vez de empujar el
+// ancho del `<body>`. El scroll lateral de página es el defecto más común
+// al bajar a tablet.
+@mixin scroll-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
