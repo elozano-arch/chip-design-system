@@ -11,17 +11,33 @@
     </p>
   </div>
 
-  <!-- Selector de plantilla -->
-  <div class="cor-tabs">
-    @for (plantilla of plantillas; track plantilla.key; let i = $index) {
-      <button class="cor-tab"
-        [class.cor-tab--active]="activeIndex() === i"
-        (click)="cambiarTab(i)"
-        [attr.aria-pressed]="activeIndex() === i">
-        <span class="cor-tab__jira">{{ plantilla.jira }}</span>
-        <span class="cor-tab__name">{{ plantilla.nombre }}</span>
-      </button>
-    }
+  <!-- Selector de plantilla, agrupado por proceso -->
+  <div class="cor-selector" role="region" aria-label="Selector de plantilla de correo">
+    <p-accordion [multiple]="true" [(value)]="panelesAbiertos">
+      @for (grupo of grupos; track grupo.nombre) {
+        <p-accordion-panel [value]="grupo.nombre">
+          <p-accordion-header>
+            <span class="cor-grupo__title">{{ grupo.nombre }}</span>
+            <p-tag [value]="grupo.plantillas.length + ''" severity="secondary" [rounded]="true" />
+          </p-accordion-header>
+          <p-accordion-content>
+            <div class="cor-tabs">
+              @for (plantilla of grupo.plantillas; track plantilla.key) {
+                <button class="cor-tab"
+                  [class.cor-tab--active]="activeIndex() === plantilla.indice"
+                  (click)="seleccionarPlantilla(plantilla.indice)"
+                  [attr.aria-pressed]="activeIndex() === plantilla.indice">
+                  @if (plantilla.jira) {
+                    <span class="cor-tab__jira">{{ plantilla.jira }}</span>
+                  }
+                  <span class="cor-tab__name">{{ plantilla.nombre }}</span>
+                </button>
+              }
+            </div>
+          </p-accordion-content>
+        </p-accordion-panel>
+      }
+    </p-accordion>
   </div>
 
   <!-- Vista de la plantilla activa -->

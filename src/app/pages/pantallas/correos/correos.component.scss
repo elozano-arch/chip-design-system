@@ -1,29 +1,42 @@
+@use 'breakpoints' as bp;
+
 /* ============================================================
    PLANTILLAS DE CORREO
    Header usa estilos globales (.cor-header, __title, __desc)
    ============================================================ */
 
-/* --- Tabs/selector de plantilla --- */
+/* --- Selector agrupado por proceso (acordeón) --- */
+.cor-selector {
+  margin-bottom: 20px;
+}
+
+.cor-grupo__title {
+  flex: 1;
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--chip-grey-800);
+  text-align: left;
+}
+
+/* --- Tabs/selector de plantilla dentro de cada grupo --- */
 .cor-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 8px;
-  margin-bottom: 20px;
 
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
+  /* Máx. 2 columnas en tablet — contrato "mínimo viable tablet" */
+  @include bp.tablet { grid-template-columns: repeat(2, 1fr); }
+  @include bp.mobile { grid-template-columns: 1fr; }
 }
 
 .cor-tab {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: center;
   gap: 4px;
+  min-height: 44px; /* área táctil mínima WCAG 2.5.5 */
   padding: 12px 16px;
   background: #fff;
   border: 1px solid var(--chip-grey-200);

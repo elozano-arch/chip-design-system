@@ -4,15 +4,28 @@ import { HttpClient } from '@angular/common/http';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 import { ButtonModule } from 'primeng/button';
-import { TabsModule } from 'primeng/tabs';
+import { AccordionModule } from 'primeng/accordion';
 import { ToastModule } from 'primeng/toast';
 import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 
+/** Grupos de plantillas — el orden aquí define el orden del acordeón */
+const GRUPOS = [
+  'Seguridad y acceso',
+  'Común a los 3 procesos',
+  'Importación',
+  'Validaciones locales',
+  'Validación central',
+] as const;
+
+type Grupo = (typeof GRUPOS)[number];
+
 interface Plantilla {
-  jira: string;
+  /** Ticket Jira. Ausente en las plantillas del proceso CHIP Local (pendientes de asignar). */
+  jira?: string;
+  grupo: Grupo;
   key: string;
   nombre: string;
   asunto: string;
@@ -21,12 +34,17 @@ interface Plantilla {
   variables: { name: string; descripcion: string }[];
 }
 
+/** Plantilla con su posición en el array plano, para poder seleccionarla desde el acordeón */
+interface PlantillaIndexada extends Plantilla {
+  indice: number;
+}
+
 @Component({
   selector: 'app-correos',
   standalone: true,
   imports: [
     CommonModule,
-    ButtonModule, TabsModule, ToastModule, TagModule,
+    ButtonModule, AccordionModule, ToastModule, TagModule,
     AppBreadcrumbComponent,
   ],
   providers: [MessageService],
@@ -37,6 +55,7 @@ export class CorreosComponent {
   plantillas: Plantilla[] = [
     {
       jira: 'CH-1364',
+      grupo: 'Seguridad y acceso',
       key: 'creacion-usuario',
       nombre: 'Creación de usuario',
       asunto: 'Bienvenido al CHIP - Su cuenta ha sido creada',
@@ -52,6 +71,7 @@ export class CorreosComponent {
     },
     {
       jira: 'CH-1365',
+      grupo: 'Seguridad y acceso',
       key: 'cambio-contrasena',
       nombre: 'Cambio de contraseña',
       asunto: 'Su contraseña fue actualizada en CHIP',
@@ -63,6 +83,7 @@ export class CorreosComponent {
     },
     {
       jira: 'CH-1366',
+      grupo: 'Seguridad y acceso',
       key: 'olvido-clave',
       nombre: 'Olvido su clave',
       asunto: 'Restablecer su contraseña - CHIP',
@@ -76,6 +97,7 @@ export class CorreosComponent {
     },
     {
       jira: 'CH-1367',
+      grupo: 'Seguridad y acceso',
       key: 'caducidad',
       nombre: 'Cambio por caducidad',
       asunto: 'Su contraseña está por vencer - CHIP',
@@ -89,7 +111,202 @@ export class CorreosComponent {
         { name: '{{url_cambio_contrasena}}', descripcion: 'URL de la pantalla para cambiar contraseña' },
       ],
     },
+
+    /* ----------------------------------------------------------------
+       PROCESO CHIP LOCAL — Importación / Validaciones locales / Central
+       ---------------------------------------------------------------- */
+    {
+      grupo: 'Común a los 3 procesos',
+      key: 'validacion-iniciada',
+      nombre: 'Validación iniciada',
+      asunto: '{{proceso}} en validación - CHIP',
+      descripcion: 'Se envía cuando el sistema arranca la validación de cualquiera de los 3 procesos. Una sola plantilla para los tres: el backend inyecta el nombre del proceso en {{proceso}} (Importación / Validaciones locales / Validación central). No requiere acción del usuario.',
+      archivo: 'assets/correos/validacion-iniciada.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{proceso}}', descripcion: 'Nombre del proceso: "Importación", "Validaciones locales" o "Validación central"' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte (ej: 2026-Q1)' },
+        { name: '{{nombre_archivo}}', descripcion: 'Nombre del archivo importado' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de inicio de la validación' },
+        { name: '{{url_detalle}}', descripcion: 'URL a la pantalla de seguimiento del proceso' },
+      ],
+    },
+    {
+      grupo: 'Importación',
+      key: 'importacion-exitosa',
+      nombre: 'Importación exitosa',
+      asunto: 'Importación exitosa - {{categoria}} - CHIP',
+      descripcion: 'La importación terminó sin deficiencias. La información queda cargada y se habilitan las validaciones locales.',
+      archivo: 'assets/correos/importacion-exitosa.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{nombre_archivo}}', descripcion: 'Nombre del archivo importado' },
+        { name: '{{total_registros}}', descripcion: 'Cantidad de registros cargados' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de finalización' },
+        { name: '{{url_detalle}}', descripcion: 'URL a la pantalla para ejecutar validaciones locales' },
+      ],
+    },
+    {
+      grupo: 'Importación',
+      key: 'importacion-observaciones',
+      nombre: 'Importación con observaciones',
+      asunto: 'Importación exitosa con observaciones - {{categoria}} - CHIP',
+      descripcion: 'La importación terminó con deficiencias no bloqueantes. El usuario puede continuar, pero se le recomienda revisarlas.',
+      archivo: 'assets/correos/importacion-observaciones.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{nombre_archivo}}', descripcion: 'Nombre del archivo importado' },
+        { name: '{{total_registros}}', descripcion: 'Cantidad de registros cargados' },
+        { name: '{{total_observaciones}}', descripcion: 'Cantidad de deficiencias NO bloqueantes detectadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de finalización' },
+        { name: '{{url_detalle}}', descripcion: 'URL al detalle de las observaciones' },
+      ],
+    },
+    {
+      grupo: 'Importación',
+      key: 'importacion-rechazada',
+      nombre: 'Importación rechazada',
+      asunto: 'Importación rechazada - {{categoria}} - CHIP',
+      descripcion: 'La importación fue rechazada por deficiencias bloqueantes. La información NO queda cargada; el usuario debe corregir el archivo y volver a importarlo.',
+      archivo: 'assets/correos/importacion-rechazada.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{nombre_archivo}}', descripcion: 'Nombre del archivo importado' },
+        { name: '{{total_deficiencias}}', descripcion: 'Cantidad de deficiencias BLOQUEANTES detectadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de finalización' },
+        { name: '{{url_detalle}}', descripcion: 'URL al detalle de las deficiencias' },
+      ],
+    },
+    {
+      grupo: 'Validaciones locales',
+      key: 'validacion-local-exitosa',
+      nombre: 'Validaciones locales exitosas',
+      asunto: 'Validaciones locales exitosas - {{categoria}} - CHIP',
+      descripcion: 'Las validaciones locales terminaron sin deficiencias. Se habilita el envío a validación central.',
+      archivo: 'assets/correos/validacion-local-exitosa.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{total_validaciones}}', descripcion: 'Cantidad de reglas de validación ejecutadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de finalización' },
+        { name: '{{url_detalle}}', descripcion: 'URL a la pantalla para enviar a validación central' },
+      ],
+    },
+    {
+      grupo: 'Validaciones locales',
+      key: 'validacion-local-observaciones',
+      nombre: 'Validaciones locales con observaciones',
+      asunto: 'Validaciones locales exitosas con observaciones - {{categoria}} - CHIP',
+      descripcion: 'Las validaciones locales terminaron con deficiencias no bloqueantes. El usuario puede enviar a validación central, pero se le recomienda revisarlas.',
+      archivo: 'assets/correos/validacion-local-observaciones.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{total_validaciones}}', descripcion: 'Cantidad de reglas de validación ejecutadas' },
+        { name: '{{total_observaciones}}', descripcion: 'Cantidad de deficiencias NO bloqueantes detectadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de finalización' },
+        { name: '{{url_detalle}}', descripcion: 'URL al detalle de las observaciones' },
+      ],
+    },
+    {
+      grupo: 'Validaciones locales',
+      key: 'validacion-local-rechazada',
+      nombre: 'Validaciones locales rechazadas',
+      asunto: 'Validaciones locales rechazadas - {{categoria}} - CHIP',
+      descripcion: 'Las validaciones locales detectaron deficiencias bloqueantes. La categoría no avanza; el usuario debe reiniciar desde el proceso de importación.',
+      archivo: 'assets/correos/validacion-local-rechazada.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{total_deficiencias}}', descripcion: 'Cantidad de deficiencias BLOQUEANTES detectadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de finalización' },
+        { name: '{{url_detalle}}', descripcion: 'URL al detalle de las deficiencias' },
+      ],
+    },
+    {
+      grupo: 'Validación central',
+      key: 'validacion-central-aceptada',
+      nombre: 'Categoría aceptada',
+      asunto: 'Categoría aceptada - {{categoria}} - CHIP',
+      descripcion: 'La validación central terminó sin deficiencias: la categoría queda aceptada y el reporte formalmente registrado ante la CGN. Fin del flujo.',
+      archivo: 'assets/correos/validacion-central-aceptada.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{numero_envio}}', descripcion: 'Consecutivo del envío, sirve como soporte del reporte' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de aceptación' },
+        { name: '{{url_detalle}}', descripcion: 'URL a la constancia del envío' },
+      ],
+    },
+    {
+      grupo: 'Validación central',
+      key: 'validacion-central-observaciones',
+      nombre: 'Categoría aceptada con observaciones',
+      asunto: 'Categoría aceptada con observaciones - {{categoria}} - CHIP',
+      descripcion: 'La validación central terminó con deficiencias no bloqueantes: la categoría queda aceptada y registrada, pero con observaciones a tener en cuenta.',
+      archivo: 'assets/correos/validacion-central-observaciones.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{numero_envio}}', descripcion: 'Consecutivo del envío, sirve como soporte del reporte' },
+        { name: '{{total_observaciones}}', descripcion: 'Cantidad de deficiencias NO bloqueantes detectadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora de aceptación' },
+        { name: '{{url_detalle}}', descripcion: 'URL al detalle de las observaciones' },
+      ],
+    },
+    {
+      grupo: 'Validación central',
+      key: 'validacion-central-rechazada',
+      nombre: 'Categoría rechazada',
+      asunto: 'Categoría rechazada - {{categoria}} - CHIP',
+      descripcion: 'La validación central detectó deficiencias bloqueantes: la categoría NO es aceptada y el reporte no queda registrado. El usuario debe reiniciar desde el proceso de importación.',
+      archivo: 'assets/correos/validacion-central-rechazada.html',
+      variables: [
+        { name: '{{nombre_usuario}}', descripcion: 'Nombre completo del usuario' },
+        { name: '{{entidad}}', descripcion: 'Entidad que reporta' },
+        { name: '{{categoria}}', descripcion: 'Categoría reportada' },
+        { name: '{{periodo}}', descripcion: 'Periodo del reporte' },
+        { name: '{{numero_envio}}', descripcion: 'Consecutivo del envío rechazado' },
+        { name: '{{total_deficiencias}}', descripcion: 'Cantidad de deficiencias BLOQUEANTES detectadas' },
+        { name: '{{fecha_hora}}', descripcion: 'Fecha y hora del rechazo' },
+        { name: '{{url_detalle}}', descripcion: 'URL al detalle de las deficiencias' },
+      ],
+    },
   ];
+
+  /** Plantillas agrupadas para el acordeón, conservando el índice del array plano */
+  grupos: { nombre: Grupo; plantillas: PlantillaIndexada[] }[] = GRUPOS
+    .map((nombre) => ({
+      nombre,
+      plantillas: this.plantillas
+        .map((plantilla, indice) => ({ ...plantilla, indice }))
+        .filter((plantilla) => plantilla.grupo === nombre),
+    }))
+    .filter((grupo) => grupo.plantillas.length > 0);
+
+  /** Paneles abiertos del acordeón (multiple) */
+  panelesAbiertos: string[] = [GRUPOS[0]];
 
   activeIndex = signal(0);
   htmlContent = signal('');
@@ -117,7 +334,7 @@ export class CorreosComponent {
     return this.sanitizer.bypassSecurityTrustResourceUrl(this.plantillaActiva.archivo);
   }
 
-  cambiarTab(index: number) {
+  seleccionarPlantilla(index: number) {
     this.activeIndex.set(index);
     this.cargarPlantilla(index);
   }
