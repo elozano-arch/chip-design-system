@@ -90,6 +90,10 @@
                         <td style="padding:0 0 10px; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600; vertical-align:top;">{{categoria}}</td>
                       </tr>
                       <tr>
+                        <td style="padding:0 0 10px; font-family:Verdana, sans-serif; font-size:11px; color:#616161; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; vertical-align:top;">Formulario</td>
+                        <td style="padding:0 0 10px; font-family:'Courier New', monospace; font-size:13px; color:#3B3B3B; font-weight:700; word-break:break-all; vertical-align:top;">{{formulario}}</td>
+                      </tr>
+                      <tr>
                         <td style="padding:0 0 10px; font-family:Verdana, sans-serif; font-size:11px; color:#616161; text-transform:uppercase; font-weight:700; letter-spacing:0.5px; vertical-align:top;">Periodo</td>
                         <td style="padding:0 0 10px; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; font-weight:600; vertical-align:top;">{{periodo}}</td>
                       </tr>
@@ -106,38 +110,6 @@
                 </tr>
               </table>
 
-              <!-- Resultado por formulario -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px; background-color:#FFFFFF; border:1px solid #EBEBEB; border-radius:8px;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 4px; font-family:'Nunito Sans', Arial, sans-serif; font-size:12px; font-weight:700; color:#4C4C4C; text-transform:uppercase; letter-spacing:0.6px;">
-                      Resultado por formulario
-                    </p>
-                    <p style="margin:0 0 14px; font-family:Verdana, sans-serif; font-size:12px; color:#7A7A7A; line-height:1.5;">
-                      Formularios procesados en este envío: <strong style="color:#3B3B3B;">{{total_formularios}}</strong>
-                    </p>
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                      {{#formularios_observaciones}}
-                      <tr>
-                        <td style="padding:9px 0; border-bottom:1px solid #F0F0F0; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; vertical-align:middle;">{{nombre}}</td>
-                        <td style="padding:9px 0; border-bottom:1px solid #F0F0F0; text-align:right; vertical-align:middle;">
-                          <span style="display:inline-block; background-color:#FFF8E1; color:#5D4F00; font-family:Verdana, sans-serif; font-size:11px; font-weight:700; padding:4px 10px; border-radius:10px; white-space:nowrap;">Observaciones &middot; {{observaciones}}</span>
-                        </td>
-                      </tr>
-                      {{/formularios_observaciones}}
-                      {{#formularios_exitosos}}
-                      <tr>
-                        <td style="padding:9px 0; border-bottom:1px solid #F0F0F0; font-family:Verdana, sans-serif; font-size:13px; color:#3B3B3B; vertical-align:middle;">{{nombre}}</td>
-                        <td style="padding:9px 0; border-bottom:1px solid #F0F0F0; text-align:right; vertical-align:middle;">
-                          <span style="display:inline-block; background-color:#E8F5E9; color:#1B5E20; font-family:Verdana, sans-serif; font-size:11px; font-weight:700; padding:4px 10px; border-radius:10px; white-space:nowrap;">Exitoso</span>
-                        </td>
-                      </tr>
-                      {{/formularios_exitosos}}
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
               <!-- Siguiente paso -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px; background-color:#FFF8E1; border-left:4px solid #FBC02D; border-radius:4px;">
                 <tr>
@@ -148,7 +120,7 @@
                     <p style="margin:0; font-family:Verdana, sans-serif; font-size:13px; color:#5D4F00; line-height:1.6;">
                       Consulte el detalle de las observaciones en el sistema. Si decide continuar,
                       puede <strong>enviar la categoría a validación central</strong>; si prefiere
-                      corregirlas, ajuste su archivo y vuelva a importarlo.
+                      corregirlas, ajuste su formulario y vuelva a importarlo.
                     </p>
                   </td>
                 </tr>
