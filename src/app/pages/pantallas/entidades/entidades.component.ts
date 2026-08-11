@@ -70,7 +70,8 @@ export interface Entidad {
   ambitos: AmbitoAsignado[];
 }
 
-type Vista = 'list' | 'form';
+/** `crear` muestra sólo Información General; `editar` muestra el wizard de 7 pasos. */
+type Vista = 'list' | 'crear' | 'editar';
 type FormMode = 'crear' | 'editar';
 
 /** Pesos del algoritmo de dígito de verificación del NIT (constante de módulo
@@ -100,7 +101,11 @@ export class EntidadesComponent {
 
   /* ───────────── Navegación ───────────── */
   vista: Vista = 'list';
-  formMode: FormMode = 'crear';
+
+  /** Deriva de `vista`: la creación y la edición ya son vistas distintas. */
+  get formMode(): FormMode {
+    return this.vista === 'crear' ? 'crear' : 'editar';
+  }
 
   /* ───────────── Menú de acciones por fila ───────────── */
   @ViewChild('menuAcciones') menuAcciones!: Menu;
@@ -109,15 +114,10 @@ export class EntidadesComponent {
   get menuAccionesItems(): MenuItem[] {
     const e = this.selectedEntidad;
     if (!e) return [];
-    const items: MenuItem[] = [
+    // El cambio de estado se hace en la pestaña "Estado" de la edición, no desde aquí.
+    return [
       { label: 'Editar', icon: 'pi pi-pencil', command: () => { if (this.selectedEntidad) this.abrirEditar(this.selectedEntidad); } },
     ];
-    if (e.estado === 'Activo') {
-      items.push({ label: 'Desactivar', icon: 'pi pi-ban', command: () => this.toggleEstadoRapido(e, 'Inactivo') });
-    } else if (e.estado === 'Inactivo') {
-      items.push({ label: 'Activar', icon: 'pi pi-check', command: () => this.toggleEstadoRapido(e, 'Activo') });
-    }
-    return items;
   }
 
   abrirMenuAcciones(event: Event, entidad: Entidad): void {
@@ -349,11 +349,6 @@ export class EntidadesComponent {
     return this.tabs.slice(3).map((t, i) => ({ ...t, paso: i + 4 }));
   }
 
-  /** En creación el stepper es lineal (no se avanza sin guardar); en edición es libre. */
-  get stepperLinear(): boolean {
-    return this.formMode === 'crear';
-  }
-
   /** Progreso del wizard: se habilita la siguiente sección al guardar la anterior. */
   infoGuardada = false;
   estadoGuardado = false;
@@ -461,7 +456,6 @@ export class EntidadesComponent {
 
   /* ═══════════════ Abrir crear / editar ═══════════════ */
   abrirCrear(): void {
-    this.formMode = 'crear';
     this.editEntidadRef = null;
     this.form = this.formVacio();
     this.estadoForm = this.estadoFormVacio();
@@ -472,11 +466,10 @@ export class EntidadesComponent {
     this.infoSubmitted = false;
     this.estadoSubmitted = false;
     this.activePaso = 1;
-    this.vista = 'form';
+    this.vista = 'crear';
   }
 
   abrirEditar(e: Entidad): void {
-    this.formMode = 'editar';
     this.editEntidadRef = e;
     this.form = {
       nit: e.nit, dv: e.dv, sigla: e.sigla, razonSocial: e.razonSocial, objeto: e.objeto,
@@ -501,7 +494,7 @@ export class EntidadesComponent {
     this.infoSubmitted = false;
     this.estadoSubmitted = false;
     this.activePaso = 1;
-    this.vista = 'form';
+    this.vista = 'editar';
   }
 
   volverAListado(): void {
@@ -566,7 +559,8 @@ export class EntidadesComponent {
   }
   confirmarGuardarInfo(): void {
     this.showConfirmInfo = false;
-    if (this.formMode === 'crear' && !this.editEntidadRef) {
+
+    if (this.vista === 'crear') {
       // Crear la entidad en estado SOLICITADO / Subestado Ninguno (HU-02, criterio 17).
       const nueva: Entidad = {
         id: Math.max(0, ...this.entidades.map(e => e.id)) + 1,
@@ -577,8 +571,15 @@ export class EntidadesComponent {
         ambitos: [],
       };
       this.entidades = [nueva, ...this.entidades];
-      this.editEntidadRef = nueva;
-    } else if (this.editEntidadRef) {
+      this.messageService.add({
+        severity: 'success', summary: 'Entidad creada',
+        detail: `"${nueva.razonSocial}" se creó en estado Solicitud. Ábrala desde el listado para completar el resto de secciones.`,
+      });
+      this.volverAListado();
+      return;
+    }
+
+    if (this.editEntidadRef) {
       Object.assign(this.editEntidadRef, this.formToEntidad());
     }
     this.infoGuardada = true;
@@ -669,17 +670,6 @@ export class EntidadesComponent {
       detail: `"${this.editEntidadRef?.razonSocial ?? this.form.razonSocial}" se guardó correctamente.`,
     });
     this.volverAListado();
-  }
-
-  /* ═══════════════ Activar/Desactivar rápido ═══════════════ */
-  private toggleEstadoRapido(e: Entidad, nuevo: EstadoEntidad): void {
-    e.estado = nuevo;
-    if (nuevo === 'Inactivo') e.subEstado = e.subEstado ?? 'En liquidación';
-    if (nuevo === 'Activo') { e.subEstado = 'Activa'; e.fechaEstado = e.fechaEstado ?? this.fechaHoy(); }
-    this.messageService.add({
-      severity: 'info', summary: nuevo === 'Activo' ? 'Entidad activada' : 'Entidad desactivada',
-      detail: `"${e.razonSocial}" ahora está en estado ${nuevo}.`,
-    });
   }
 
   /* ───────────── Breadcrumb dinámico ───────────── */
