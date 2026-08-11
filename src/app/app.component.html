@@ -25,6 +25,21 @@
     </a>
   </div>
   <div class="app-header__right">
+    <!-- Sesión activa: identifica con qué usuario, perfil y entidad se trabaja (CH-1737) -->
+    @if (mostrarSesion() && usuarioSesion(); as sesion) {
+      <a class="app-session" routerLink="/pantallas/seguridad/perfil-usuario"
+        [attr.aria-label]="'Sesión de ' + sesion.nombreCompleto + ', perfil ' + sesion.perfil + ', entidad ' + sesion.entidad.razonSocial + '. Ir a mi perfil'">
+        <span class="app-session__avatar" aria-hidden="true">{{ sesion.iniciales }}</span>
+        <span class="app-session__data">
+          <span class="app-session__name">
+            {{ sesion.nombreCompleto }}
+            <span class="app-session__user">{{ sesion.usuario }}</span>
+          </span>
+          <span class="app-session__context">{{ sesion.perfil }} · {{ sesion.entidad.razonSocial }}</span>
+        </span>
+      </a>
+    }
+
     <div class="accessibility-bar" role="toolbar" aria-label="Opciones de accesibilidad">
       <button (click)="increaseFontSize()" aria-label="Aumentar tamaño de letra">
         <i class="pi pi-plus"></i> A+

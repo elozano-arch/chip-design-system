@@ -189,6 +189,91 @@ $sidebar-width-collapsed: 60px;
   }
 }
 
+/* --- Sesión activa en el cabezote (CH-1737) ---
+   Identifica con qué usuario, perfil y entidad se está trabajando. */
+.app-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 320px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    border-color: var(--chip-cobalt-300);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--chip-cobalt-700);
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  &__data {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* permite que el ellipsis funcione dentro del flex */
+    line-height: 1.3;
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__user {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+  }
+
+  /* Perfil · Entidad — el dato que responde "¿con cuál estoy trabajando?" */
+  &__context {
+    font-size: 11px;
+    color: var(--chip-grey-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Tablet y abajo: sólo el avatar, para no comprimir el cobranding.
+     El texto sigue disponible para lectores de pantalla vía aria-label. */
+  @media (max-width: 992px) {
+    max-width: none;
+    padding: 0;
+    border: none;
+
+    &:hover { background: none; }
+    &__data { display: none; }
+  }
+}
+
 /* --- Accessibility Bar (inline in header) --- */
 .accessibility-bar {
   display: flex;

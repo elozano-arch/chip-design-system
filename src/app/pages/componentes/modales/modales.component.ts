@@ -67,9 +67,11 @@ export class ModalesComponent {
   <div class="modal-confirm">
     <i class="pi pi-exclamation-triangle modal-confirm__icon" aria-hidden="true"></i>
     <p>Está a punto de eliminar al usuario <strong>"María Fernanda Gómez"</strong>.</p>
+    <!-- El texto va dentro de un <span>: el contenedor es flex y, sin él,
+         cada <strong> se convertiría en una columna aparte. -->
     <p class="modal-confirm__warning">
       <i class="pi pi-info-circle" aria-hidden="true"></i>
-      Esta acción <strong>no se puede revertir</strong>.
+      <span>Esta acción <strong>no se puede revertir</strong>.</span>
     </p>
   </div>
 
