@@ -164,19 +164,45 @@
 }
 
 <!-- ============================================================
-     VISTA 2 · CREAR / EDITAR ENTIDAD (p-stepper, HU-02 / HU-03)
+     VISTA 2 · CREAR ENTIDAD (sólo Información General, HU-02)
+     Al crear no se muestra el wizard: la entidad nace en estado
+     Solicitud y el resto de secciones se completa luego editándola.
      ============================================================ -->
-@if (vista === 'form') {
+@if (vista === 'crear') {
   <div class="ent-page ent-page--wide" role="main">
     <p-breadcrumb [model]="breadcrumbModel" [home]="breadcrumbHome" />
 
     <div class="ent-edit-header">
       <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary" size="small"
         (onClick)="volverAListado()" aria-label="Volver al listado de entidades" />
-      <h1 class="ent-edit-header__title">{{ formMode === 'crear' ? 'Crear nueva entidad' : 'Editar entidad' }}</h1>
+      <h1 class="ent-edit-header__title">Crear nueva entidad</h1>
     </div>
 
-    <p-stepper [(value)]="activePaso" [linear]="stepperLinear" styleClass="ent-stepper">
+    <section class="ent-card">
+      <ng-container [ngTemplateOutlet]="infoGeneralCampos" />
+
+      <footer class="ent-card__actions">
+        <p-button label="Cancelar" icon="pi pi-times" severity="secondary" [outlined]="true" (onClick)="volverAListado()" />
+        <p-button label="Crear entidad" icon="pi pi-check" (onClick)="intentarGuardarInfo()" />
+      </footer>
+    </section>
+  </div>
+}
+
+<!-- ============================================================
+     VISTA 3 · EDITAR ENTIDAD (p-stepper de 7 pasos, HU-03)
+     ============================================================ -->
+@if (vista === 'editar') {
+  <div class="ent-page ent-page--wide" role="main">
+    <p-breadcrumb [model]="breadcrumbModel" [home]="breadcrumbHome" />
+
+    <div class="ent-edit-header">
+      <p-button label="Volver" icon="pi pi-arrow-left" [text]="true" severity="secondary" size="small"
+        (onClick)="volverAListado()" aria-label="Volver al listado de entidades" />
+      <h1 class="ent-edit-header__title">Editar entidad</h1>
+    </div>
+
+    <p-stepper [(value)]="activePaso" styleClass="ent-stepper">
       <p-step-list>
         @for (t of tabs; track t.key; let i = $index) {
           <p-step [value]="i + 1">{{ t.label }}</p-step>
@@ -188,162 +214,7 @@
         <p-step-panel [value]="1">
           <ng-template #content>
             <section class="ent-card">
-              <header class="ent-card__section-head">
-                <h2 class="ent-card__section-title">Información general</h2>
-                <p class="ent-card__section-desc">Diligencie los datos básicos de la entidad. Los campos con <span class="field-required">*</span> son obligatorios.</p>
-              </header>
-
-              <app-form-error-banner [visible]="infoSubmitted && infoErrors.length > 0" [errors]="infoErrors" />
-
-              @if (nitDuplicadoAlerta) {
-                <div class="ent-alert" role="alert">
-                  <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-                  El NIT ya se encuentra asociado a otra entidad. Puede continuar con la creación de todos modos.
-                </div>
-              }
-              @if (razonDuplicadaAlerta) {
-                <div class="ent-alert" role="alert">
-                  <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-                  Existe una entidad con la misma razón social. Puede continuar con la creación de todos modos.
-                </div>
-              }
-
-              <div class="ent-form-grid ent-form-grid--3">
-                <div class="ent-form__field">
-                  <label for="f-nit">NIT <span class="field-required">*</span></label>
-                  <input pInputText id="f-nit" [(ngModel)]="form.nit" (ngModelChange)="onNitChange()"
-                    [class.ng-invalid]="campoInvalido(form.nit)" placeholder="Número de identificación tributaria" class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field ent-form__field--sm">
-                  <label for="f-dv">DV</label>
-                  <input pInputText id="f-dv" [value]="form.dv" [disabled]="true" class="w-full" />
-                  <small class="ent-form__help">Calculado automáticamente.</small>
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-sigla">Sigla <span class="field-required">*</span></label>
-                  <input pInputText id="f-sigla" [(ngModel)]="form.sigla"
-                    [class.ng-invalid]="campoInvalido(form.sigla)" placeholder="Sigla de la entidad" class="w-full" autocomplete="off" />
-                </div>
-
-                <div class="ent-form__field ent-form__field--2">
-                  <label for="f-razon">Razón social <span class="field-required">*</span></label>
-                  <input pInputText id="f-razon" [(ngModel)]="form.razonSocial"
-                    [class.ng-invalid]="campoInvalido(form.razonSocial)" placeholder="Nombre oficial de la entidad" maxlength="100" class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-objeto">Objeto <span class="field-required">*</span></label>
-                  <p-select inputId="f-objeto" [options]="objetoOptions" [(ngModel)]="form.objeto"
-                    optionLabel="label" optionValue="value" placeholder="Local / Central" appendTo="body"
-                    [class.ng-invalid]="campoInvalido(form.objeto)" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-
-                <div class="ent-form__field">
-                  <label for="f-doc">Documento de creación <span class="field-required">*</span></label>
-                  <input pInputText id="f-doc" [(ngModel)]="form.documentoCreacion"
-                    [class.ng-invalid]="campoInvalido(form.documentoCreacion)" placeholder="Ej: Ley, Decreto..." class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-numdoc">Número de documento <span class="field-required">*</span></label>
-                  <input pInputText id="f-numdoc" [(ngModel)]="form.numeroDocumento"
-                    [class.ng-invalid]="campoInvalido(form.numeroDocumento)" placeholder="Ej: 298" class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-fecha">Fecha <span class="field-required">*</span></label>
-                  <p-datepicker inputId="f-fecha" [(ngModel)]="form.fecha" dateFormat="dd/mm/yy" [showIcon]="true"
-                    appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" placeholder="dd/mm/aaaa"
-                    [class.ng-invalid]="fechaInvalida" />
-                </div>
-
-                <div class="ent-form__field">
-                  <label for="f-depto">Departamento <span class="field-required">*</span></label>
-                  <p-select inputId="f-depto" [options]="departamentoOptions" [(ngModel)]="form.departamento"
-                    (onChange)="onFormDepartamentoChange()" optionLabel="label" optionValue="value"
-                    [filter]="true" filterBy="label" placeholder="Selecciona un departamento..." appendTo="body"
-                    [class.ng-invalid]="campoInvalido(form.departamento)" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-muni">Municipio <span class="field-required">*</span></label>
-                  <p-select inputId="f-muni" [options]="municipiosFormOptions" [(ngModel)]="form.municipio"
-                    [disabled]="!form.departamento" optionLabel="label" optionValue="value"
-                    [filter]="true" filterBy="label"
-                    placeholder="{{ form.departamento ? 'Selecciona un municipio...' : 'Elija departamento' }}" appendTo="body"
-                    [class.ng-invalid]="campoInvalido(form.municipio)" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-dir">Dirección <span class="field-required">*</span></label>
-                  <input pInputText id="f-dir" [(ngModel)]="form.direccion"
-                    [class.ng-invalid]="campoInvalido(form.direccion)" placeholder="Dirección física" class="w-full" autocomplete="off" />
-                </div>
-
-                <div class="ent-form__field">
-                  <label for="f-cp">Código postal <span class="field-required">*</span></label>
-                  <input pInputText id="f-cp" [(ngModel)]="form.codigoPostal"
-                    [class.ng-invalid]="campoInvalido(form.codigoPostal)" placeholder="Ej: 110001" class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-tel">Teléfono <span class="field-required">*</span></label>
-                  <input pInputText id="f-tel" [(ngModel)]="form.telefono"
-                    [class.ng-invalid]="campoInvalido(form.telefono)" placeholder="Ej: 6011234567" class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-email">E-mail <span class="field-required">*</span></label>
-                  <input pInputText id="f-email" [(ngModel)]="form.email"
-                    [class.ng-invalid]="emailInvalido" placeholder="correo@entidad.gov.co" class="w-full" autocomplete="off" />
-                  @if (emailInvalido) { <small class="ent-form__error">Ingrese un correo electrónico válido.</small> }
-                </div>
-
-                <div class="ent-form__field">
-                  <label for="f-web">Página web</label>
-                  <input pInputText id="f-web" [(ngModel)]="form.paginaWeb" placeholder="https://..." class="w-full" autocomplete="off" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-sector">Sector <span class="field-required">*</span></label>
-                  <p-select inputId="f-sector" [options]="sectorOptions" [(ngModel)]="form.sector"
-                    (onChange)="onFormSectorChange()" optionLabel="label" optionValue="value"
-                    [filter]="true" filterBy="label" placeholder="Selecciona un sector..." appendTo="body"
-                    [class.ng-invalid]="campoInvalido(form.sector)" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-nat">Naturaleza <span class="field-required">*</span></label>
-                  <p-select inputId="f-nat" [options]="naturalezaFormOptions" [(ngModel)]="form.naturaleza"
-                    [disabled]="!form.sector" optionLabel="label" optionValue="value"
-                    [filter]="true" filterBy="label"
-                    placeholder="{{ form.sector ? 'Selecciona naturaleza...' : 'Elija sector' }}" appendTo="body"
-                    [class.ng-invalid]="campoInvalido(form.naturaleza)" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-
-                <div class="ent-form__field">
-                  <label for="f-terrdep">Territorial departamental</label>
-                  <p-select inputId="f-terrdep" [options]="territorialOptions" [(ngModel)]="form.territorialDepartamental"
-                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-terrmun">Territorial municipal</label>
-                  <p-select inputId="f-terrmun" [options]="territorialOptions" [(ngModel)]="form.territorialMunicipal"
-                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-agr">Agregadora</label>
-                  <p-select inputId="f-agr" [options]="siNoOptions" [(ngModel)]="form.agregadora"
-                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-
-                <div class="ent-form__field">
-                  <label for="f-con">Consolidadora</label>
-                  <p-select inputId="f-con" [options]="siNoOptions" [(ngModel)]="form.consolidadora"
-                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-pla">Planeadora</label>
-                  <p-select inputId="f-pla" [options]="siNoOptions" [(ngModel)]="form.planeadora"
-                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
-                </div>
-                <div class="ent-form__field">
-                  <label for="f-usr">Nombre de usuario <span class="field-required">*</span></label>
-                  <input pInputText id="f-usr" [(ngModel)]="form.nombreUsuario"
-                    [class.ng-invalid]="campoInvalido(form.nombreUsuario)" placeholder="Usuario de acceso" class="w-full" autocomplete="off" />
-                </div>
-              </div>
+              <ng-container [ngTemplateOutlet]="infoGeneralCampos" />
 
               <footer class="ent-card__actions">
                 <p-button label="Guardar Información General" icon="pi pi-save" (onClick)="intentarGuardarInfo()" />
@@ -540,7 +411,7 @@
 <p-dialog header="Confirmar guardado" [(visible)]="showConfirmInfo" [modal]="true" [style]="{ width: '460px' }" [draggable]="false">
   <div class="dialog-confirm">
     <i class="pi pi-question-circle dialog-confirm__icon" aria-hidden="true"></i>
-    <p>¿Está seguro de guardar la Información General de la Entidad?</p>
+    <p>{{ vista === 'crear' ? '¿Está seguro de crear la Entidad con la información diligenciada?' : '¿Está seguro de guardar la Información General de la Entidad?' }}</p>
   </div>
   <ng-template #footer>
     <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="showConfirmInfo = false" />
@@ -561,3 +432,167 @@
     <p-button label="Aceptar" icon="pi pi-check" (onClick)="confirmarGuardarEstado()" />
   </ng-template>
 </p-dialog>
+
+
+<!-- ============================================================
+     Campos de Información General — compartidos por las vistas de
+     creación y de edición, para no duplicar el formulario.
+     ============================================================ -->
+<ng-template #infoGeneralCampos>
+              <header class="ent-card__section-head">
+                <h2 class="ent-card__section-title">Información general</h2>
+                <p class="ent-card__section-desc">Diligencie los datos básicos de la entidad. Los campos con <span class="field-required">*</span> son obligatorios.</p>
+              </header>
+
+              <app-form-error-banner [visible]="infoSubmitted && infoErrors.length > 0" [errors]="infoErrors" />
+
+              @if (nitDuplicadoAlerta) {
+                <div class="ent-alert" role="alert">
+                  <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                  El NIT ya se encuentra asociado a otra entidad. Puede continuar con la creación de todos modos.
+                </div>
+              }
+              @if (razonDuplicadaAlerta) {
+                <div class="ent-alert" role="alert">
+                  <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+                  Existe una entidad con la misma razón social. Puede continuar con la creación de todos modos.
+                </div>
+              }
+
+              <div class="ent-form-grid ent-form-grid--3">
+                <div class="ent-form__field">
+                  <label for="f-nit">NIT <span class="field-required">*</span></label>
+                  <input pInputText id="f-nit" [(ngModel)]="form.nit" (ngModelChange)="onNitChange()"
+                    [class.ng-invalid]="campoInvalido(form.nit)" placeholder="Número de identificación tributaria" class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field ent-form__field--sm">
+                  <label for="f-dv">DV</label>
+                  <input pInputText id="f-dv" [value]="form.dv" [disabled]="true" class="w-full" />
+                  <small class="ent-form__help">Calculado automáticamente.</small>
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-sigla">Sigla <span class="field-required">*</span></label>
+                  <input pInputText id="f-sigla" [(ngModel)]="form.sigla"
+                    [class.ng-invalid]="campoInvalido(form.sigla)" placeholder="Sigla de la entidad" class="w-full" autocomplete="off" />
+                </div>
+
+                <div class="ent-form__field ent-form__field--2">
+                  <label for="f-razon">Razón social <span class="field-required">*</span></label>
+                  <input pInputText id="f-razon" [(ngModel)]="form.razonSocial"
+                    [class.ng-invalid]="campoInvalido(form.razonSocial)" placeholder="Nombre oficial de la entidad" maxlength="100" class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-objeto">Objeto <span class="field-required">*</span></label>
+                  <p-select inputId="f-objeto" [options]="objetoOptions" [(ngModel)]="form.objeto"
+                    optionLabel="label" optionValue="value" placeholder="Local / Central" appendTo="body"
+                    [class.ng-invalid]="campoInvalido(form.objeto)" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+
+                <div class="ent-form__field">
+                  <label for="f-doc">Documento de creación <span class="field-required">*</span></label>
+                  <input pInputText id="f-doc" [(ngModel)]="form.documentoCreacion"
+                    [class.ng-invalid]="campoInvalido(form.documentoCreacion)" placeholder="Ej: Ley, Decreto..." class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-numdoc">Número de documento <span class="field-required">*</span></label>
+                  <input pInputText id="f-numdoc" [(ngModel)]="form.numeroDocumento"
+                    [class.ng-invalid]="campoInvalido(form.numeroDocumento)" placeholder="Ej: 298" class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-fecha">Fecha <span class="field-required">*</span></label>
+                  <p-datepicker inputId="f-fecha" [(ngModel)]="form.fecha" dateFormat="dd/mm/yy" [showIcon]="true"
+                    appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" placeholder="dd/mm/aaaa"
+                    [class.ng-invalid]="fechaInvalida" />
+                </div>
+
+                <div class="ent-form__field">
+                  <label for="f-depto">Departamento <span class="field-required">*</span></label>
+                  <p-select inputId="f-depto" [options]="departamentoOptions" [(ngModel)]="form.departamento"
+                    (onChange)="onFormDepartamentoChange()" optionLabel="label" optionValue="value"
+                    [filter]="true" filterBy="label" placeholder="Selecciona un departamento..." appendTo="body"
+                    [class.ng-invalid]="campoInvalido(form.departamento)" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-muni">Municipio <span class="field-required">*</span></label>
+                  <p-select inputId="f-muni" [options]="municipiosFormOptions" [(ngModel)]="form.municipio"
+                    [disabled]="!form.departamento" optionLabel="label" optionValue="value"
+                    [filter]="true" filterBy="label"
+                    placeholder="{{ form.departamento ? 'Selecciona un municipio...' : 'Elija departamento' }}" appendTo="body"
+                    [class.ng-invalid]="campoInvalido(form.municipio)" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-dir">Dirección <span class="field-required">*</span></label>
+                  <input pInputText id="f-dir" [(ngModel)]="form.direccion"
+                    [class.ng-invalid]="campoInvalido(form.direccion)" placeholder="Dirección física" class="w-full" autocomplete="off" />
+                </div>
+
+                <div class="ent-form__field">
+                  <label for="f-cp">Código postal <span class="field-required">*</span></label>
+                  <input pInputText id="f-cp" [(ngModel)]="form.codigoPostal"
+                    [class.ng-invalid]="campoInvalido(form.codigoPostal)" placeholder="Ej: 110001" class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-tel">Teléfono <span class="field-required">*</span></label>
+                  <input pInputText id="f-tel" [(ngModel)]="form.telefono"
+                    [class.ng-invalid]="campoInvalido(form.telefono)" placeholder="Ej: 6011234567" class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-email">E-mail <span class="field-required">*</span></label>
+                  <input pInputText id="f-email" [(ngModel)]="form.email"
+                    [class.ng-invalid]="emailInvalido" placeholder="correo@entidad.gov.co" class="w-full" autocomplete="off" />
+                  @if (emailInvalido) { <small class="ent-form__error">Ingrese un correo electrónico válido.</small> }
+                </div>
+
+                <div class="ent-form__field">
+                  <label for="f-web">Página web</label>
+                  <input pInputText id="f-web" [(ngModel)]="form.paginaWeb" placeholder="https://..." class="w-full" autocomplete="off" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-sector">Sector <span class="field-required">*</span></label>
+                  <p-select inputId="f-sector" [options]="sectorOptions" [(ngModel)]="form.sector"
+                    (onChange)="onFormSectorChange()" optionLabel="label" optionValue="value"
+                    [filter]="true" filterBy="label" placeholder="Selecciona un sector..." appendTo="body"
+                    [class.ng-invalid]="campoInvalido(form.sector)" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-nat">Naturaleza <span class="field-required">*</span></label>
+                  <p-select inputId="f-nat" [options]="naturalezaFormOptions" [(ngModel)]="form.naturaleza"
+                    [disabled]="!form.sector" optionLabel="label" optionValue="value"
+                    [filter]="true" filterBy="label"
+                    placeholder="{{ form.sector ? 'Selecciona naturaleza...' : 'Elija sector' }}" appendTo="body"
+                    [class.ng-invalid]="campoInvalido(form.naturaleza)" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+
+                <div class="ent-form__field">
+                  <label for="f-terrdep">Territorial departamental</label>
+                  <p-select inputId="f-terrdep" [options]="territorialOptions" [(ngModel)]="form.territorialDepartamental"
+                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-terrmun">Territorial municipal</label>
+                  <p-select inputId="f-terrmun" [options]="territorialOptions" [(ngModel)]="form.territorialMunicipal"
+                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-agr">Agregadora</label>
+                  <p-select inputId="f-agr" [options]="siNoOptions" [(ngModel)]="form.agregadora"
+                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+
+                <div class="ent-form__field">
+                  <label for="f-con">Consolidadora</label>
+                  <p-select inputId="f-con" [options]="siNoOptions" [(ngModel)]="form.consolidadora"
+                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-pla">Planeadora</label>
+                  <p-select inputId="f-pla" [options]="siNoOptions" [(ngModel)]="form.planeadora"
+                    optionLabel="label" optionValue="value" appendTo="body" [style]="{ width: '100%' }" styleClass="w-full" />
+                </div>
+                <div class="ent-form__field">
+                  <label for="f-usr">Nombre de usuario <span class="field-required">*</span></label>
+                  <input pInputText id="f-usr" [(ngModel)]="form.nombreUsuario"
+                    [class.ng-invalid]="campoInvalido(form.nombreUsuario)" placeholder="Usuario de acceso" class="w-full" autocomplete="off" />
+                </div>
+              </div>
+</ng-template>
