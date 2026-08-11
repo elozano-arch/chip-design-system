@@ -644,8 +644,9 @@
   padding: 8px 0;
 
   &__icon {
-    font-size: 48px;
-    color: #FBC02D;
+    display: block;
+    font-size: 56px;
+    color: var(--chip-warning);
     margin-bottom: 16px;
   }
 

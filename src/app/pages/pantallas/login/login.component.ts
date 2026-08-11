@@ -14,6 +14,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
+import { SesionService } from '../../../services/sesion.service';
 
 @Component({
   selector: 'app-login',
@@ -48,7 +49,11 @@ export class LoginComponent {
   // Versión del sistema
   versionSistema = 'v2.0.0';
 
-  constructor(private router: Router, private messageService: MessageService) {}
+  constructor(
+    private router: Router,
+    private messageService: MessageService,
+    private sesion: SesionService,
+  ) {}
 
   // ── Validaciones CH-1370 ──
   private readonly USUARIO_REGEX = /^[A-Za-z0-9]{4,20}$/;
@@ -152,6 +157,7 @@ export class LoginComponent {
       }
 
       // Caso 3: ingreso exitoso
+      this.sesion.iniciarSesionDemo(userKey);
       this.messageService.add({
         severity: 'success',
         summary: 'Bienvenido',

@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -9,6 +9,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DividerModule } from 'primeng/divider';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { SesionService } from '../../../services/sesion.service';
 
 interface ModuloAcceso {
   label: string;
@@ -41,24 +42,29 @@ interface ModuloAcceso {
   styleUrl: './perfil-usuario.component.scss',
 })
 export class PerfilUsuarioComponent {
-  /** Datos del usuario logueado (mock — vendría del token/sesión). */
-  perfil = {
-    nombreCompleto: 'Juan Luis Muñoz Martínez',
-    primerNombre: 'Juan Luis',
-    iniciales: 'JM',
-    usuario: 'JLMUNOZ',
-    correo: 'jlmunoz@contaduria.gov.co',
-    rol: 'Administrador General',
-    rolCodigo: 'ADM_CHIP',
-    entidad: {
-      codigo: '210111001',
-      razonSocial: 'Contaduría General de la Nación',
-      tipo: 'Central',
-    },
-    ultimoAcceso: '28/04/2026 — 09:42 a.m.',
-    diasParaVencimiento: 73, // 90 días - 17 transcurridos
-    diasTotalVigencia: 90,
-  };
+  private readonly sesionService = inject(SesionService);
+  private readonly router = inject(Router);
+
+  /** La plantilla sólo se pinta con sesión activa; sin ella se vuelve al login
+   *  (p. ej. al pulsar "atrás" después de cerrar sesión). */
+  get haySesion(): boolean {
+    return this.sesionService.usuario() !== null;
+  }
+
+  /** Datos del usuario en sesión, con los nombres que ya usa la plantilla
+   *  (`rol`/`rolCodigo` en vez de `perfil`/`perfilCodigo`). */
+  get perfil() {
+    const u = this.sesionService.usuario()!;
+    return { ...u, rol: u.perfil, rolCodigo: u.perfilCodigo };
+  }
+
+  /** Navega primero y limpia después, para que la plantilla nunca
+   *  llegue a renderizarse sin sesión. */
+  cerrarSesion(): void {
+    this.router
+      .navigate(['/pantallas/seguridad/login'])
+      .then(() => this.sesionService.cerrarSesion());
+  }
 
   /** Saludo según hora del día — sentence case (más cálido que mayúsculas). */
   get saludo(): string {

@@ -1,154 +1,156 @@
-<div class="prf-page" role="main">
-  <app-breadcrumb />
+@if (haySesion) {
+  <div class="prf-page" role="main">
+    <app-breadcrumb />
 
-  <!-- Hero compacto: saludo + nombre + entidad + acción cerrar sesión -->
-  <section class="prf-hero" aria-labelledby="prf-hero-title">
-    <div class="prf-hero__avatar" aria-hidden="true">{{ perfil.iniciales }}</div>
-    <div class="prf-hero__body">
-      <h1 id="prf-hero-title" class="prf-hero__title">
-        {{ saludo }}, {{ perfil.primerNombre }}
-      </h1>
-      <p class="prf-hero__subtitle">
-        <strong>{{ perfil.entidad.razonSocial }}</strong>
-        <span class="prf-hero__sep" aria-hidden="true">·</span>
-        {{ perfil.rol }}
-      </p>
-    </div>
-    <div class="prf-hero__actions">
-      <p-button label="Cerrar sesión" icon="pi pi-sign-out"
-        [text]="true" severity="secondary" size="small"
-        routerLink="/pantallas/seguridad/login"
-        aria-label="Cerrar sesión" />
-    </div>
-  </section>
-
-  <!-- Alertas accionables: vigencia + último acceso -->
-  <section class="prf-alerts" aria-label="Información de seguridad de la sesión">
-    <div class="prf-alert" [class]="'prf-alert--' + vigenciaSeverity">
-      <div class="prf-alert__icon">
-        <i class="pi pi-key" aria-hidden="true"></i>
+    <!-- Hero compacto: saludo + nombre + entidad + acción cerrar sesión -->
+    <section class="prf-hero" aria-labelledby="prf-hero-title">
+      <div class="prf-hero__avatar" aria-hidden="true">{{ perfil.iniciales }}</div>
+      <div class="prf-hero__body">
+        <h1 id="prf-hero-title" class="prf-hero__title">
+          {{ saludo }}, {{ perfil.primerNombre }}
+        </h1>
+        <p class="prf-hero__subtitle">
+          <strong>{{ perfil.entidad.razonSocial }}</strong>
+          <span class="prf-hero__sep" aria-hidden="true">·</span>
+          {{ perfil.rol }}
+        </p>
       </div>
-      <div class="prf-alert__body">
-        <span class="prf-alert__label">Vigencia de contraseña</span>
-        <strong class="prf-alert__value">{{ vigenciaTexto }}</strong>
-        <span class="prf-alert__hint">
-          {{ perfil.diasParaVencimiento }} de {{ perfil.diasTotalVigencia }} días restantes
-        </span>
+      <div class="prf-hero__actions">
+        <p-button label="Cerrar sesión" icon="pi pi-sign-out"
+          [text]="true" severity="secondary" size="small"
+          (onClick)="cerrarSesion()"
+          aria-label="Cerrar sesión" />
       </div>
-      @if (vigenciaSeverity !== 'success') {
-        <a routerLink="/pantallas/seguridad/cambiar-contrasena"
-          class="prf-alert__action"
-          aria-label="Cambiar contraseña ahora">
-          Cambiar ahora
-          <i class="pi pi-arrow-right" aria-hidden="true"></i>
-        </a>
-      }
-    </div>
+    </section>
 
-    <div class="prf-alert prf-alert--neutral">
-      <div class="prf-alert__icon">
-        <i class="pi pi-clock" aria-hidden="true"></i>
+    <!-- Alertas accionables: vigencia + último acceso -->
+    <section class="prf-alerts" aria-label="Información de seguridad de la sesión">
+      <div class="prf-alert" [class]="'prf-alert--' + vigenciaSeverity">
+        <div class="prf-alert__icon">
+          <i class="pi pi-key" aria-hidden="true"></i>
+        </div>
+        <div class="prf-alert__body">
+          <span class="prf-alert__label">Vigencia de contraseña</span>
+          <strong class="prf-alert__value">{{ vigenciaTexto }}</strong>
+          <span class="prf-alert__hint">
+            {{ perfil.diasParaVencimiento }} de {{ perfil.diasTotalVigencia }} días restantes
+          </span>
+        </div>
+        @if (vigenciaSeverity !== 'success') {
+          <a routerLink="/pantallas/seguridad/cambiar-contrasena"
+            class="prf-alert__action"
+            aria-label="Cambiar contraseña ahora">
+            Cambiar ahora
+            <i class="pi pi-arrow-right" aria-hidden="true"></i>
+          </a>
+        }
       </div>
-      <div class="prf-alert__body">
-        <span class="prf-alert__label">Último acceso</span>
-        <strong class="prf-alert__value">{{ perfil.ultimoAcceso }}</strong>
-        <span class="prf-alert__hint">Si no fue usted, contacte a soporte.</span>
-      </div>
-    </div>
-  </section>
 
-  <!-- Accesos rápidos por rol (above the fold ahora) -->
-  <section class="prf-modulos" aria-label="Módulos disponibles para su rol">
-    <header class="prf-modulos__header">
-      <h2 class="prf-modulos__title">Accesos rápidos</h2>
-      <p class="prf-modulos__hint">
-        El menú se filtra automáticamente según los permisos asignados a su rol.
-      </p>
-    </header>
-
-    <div class="prf-modulos__grid">
-      @for (m of modulos; track m.label) {
-        <a [routerLink]="m.routerLink"
-          class="prf-modulo"
-          [class]="'prf-modulo--' + m.color"
-          [attr.aria-label]="'Ir a ' + m.label">
-          <div class="prf-modulo__icon">
-            <i [class]="m.icono" aria-hidden="true"></i>
-          </div>
-          <div class="prf-modulo__body">
-            <h3 class="prf-modulo__label">{{ m.label }}</h3>
-            <p class="prf-modulo__desc">{{ m.descripcion }}</p>
-          </div>
-          <i class="pi pi-arrow-right prf-modulo__arrow" aria-hidden="true"></i>
-        </a>
-      }
-    </div>
-  </section>
-
-  <!-- Panel colapsable "Mis datos" (info secundaria, se abre solo si el usuario lo pide) -->
-  <section class="prf-datos" aria-label="Mis datos de cuenta">
-    <button type="button" class="prf-datos__toggle"
-      [attr.aria-expanded]="misDatosExpanded"
-      aria-controls="prf-datos-body"
-      (click)="toggleMisDatos()">
-      <i class="pi" [class.pi-chevron-down]="!misDatosExpanded" [class.pi-chevron-up]="misDatosExpanded" aria-hidden="true"></i>
-      <span class="prf-datos__toggle-label">Mis datos</span>
-      <span class="prf-datos__toggle-hint">Información de su cuenta y sesión</span>
-    </button>
-
-    @if (misDatosExpanded) {
-      <div class="prf-datos__body" id="prf-datos-body">
-        <div class="prf-datos__grid">
-          <div class="prf-datos__field">
-            <span class="prf-datos__label">
-              <i class="pi pi-user" aria-hidden="true"></i>
-              Usuario
-            </span>
-            <strong class="prf-datos__value">{{ perfil.usuario }}</strong>
-          </div>
-          <div class="prf-datos__field">
-            <span class="prf-datos__label">
-              <i class="pi pi-id-card" aria-hidden="true"></i>
-              Nombre completo
-            </span>
-            <strong class="prf-datos__value">{{ perfil.nombreCompleto }}</strong>
-          </div>
-          <div class="prf-datos__field">
-            <span class="prf-datos__label">
-              <i class="pi pi-envelope" aria-hidden="true"></i>
-              Correo
-            </span>
-            <strong class="prf-datos__value">{{ perfil.correo }}</strong>
-          </div>
-          <div class="prf-datos__field">
-            <span class="prf-datos__label">
-              <i class="pi pi-shield" aria-hidden="true"></i>
-              Rol
-            </span>
-            <strong class="prf-datos__value">
-              {{ perfil.rol }}
-              <span class="prf-datos__role-code">{{ perfil.rolCodigo }}</span>
-            </strong>
-          </div>
-          <div class="prf-datos__field">
-            <span class="prf-datos__label">
-              <i class="pi pi-building" aria-hidden="true"></i>
-              Entidad
-            </span>
-            <strong class="prf-datos__value">
-              {{ perfil.entidad.razonSocial }}
-              <p-tag [value]="perfil.entidad.tipo" severity="secondary" />
-            </strong>
-          </div>
-          <div class="prf-datos__field">
-            <span class="prf-datos__label">
-              <i class="pi pi-hashtag" aria-hidden="true"></i>
-              Código de entidad
-            </span>
-            <strong class="prf-datos__value">{{ perfil.entidad.codigo }}</strong>
-          </div>
+      <div class="prf-alert prf-alert--neutral">
+        <div class="prf-alert__icon">
+          <i class="pi pi-clock" aria-hidden="true"></i>
+        </div>
+        <div class="prf-alert__body">
+          <span class="prf-alert__label">Último acceso</span>
+          <strong class="prf-alert__value">{{ perfil.ultimoAcceso }}</strong>
+          <span class="prf-alert__hint">Si no fue usted, contacte a soporte.</span>
         </div>
       </div>
-    }
-  </section>
-</div>
+    </section>
+
+    <!-- Accesos rápidos por rol (above the fold ahora) -->
+    <section class="prf-modulos" aria-label="Módulos disponibles para su rol">
+      <header class="prf-modulos__header">
+        <h2 class="prf-modulos__title">Accesos rápidos</h2>
+        <p class="prf-modulos__hint">
+          El menú se filtra automáticamente según los permisos asignados a su rol.
+        </p>
+      </header>
+
+      <div class="prf-modulos__grid">
+        @for (m of modulos; track m.label) {
+          <a [routerLink]="m.routerLink"
+            class="prf-modulo"
+            [class]="'prf-modulo--' + m.color"
+            [attr.aria-label]="'Ir a ' + m.label">
+            <div class="prf-modulo__icon">
+              <i [class]="m.icono" aria-hidden="true"></i>
+            </div>
+            <div class="prf-modulo__body">
+              <h3 class="prf-modulo__label">{{ m.label }}</h3>
+              <p class="prf-modulo__desc">{{ m.descripcion }}</p>
+            </div>
+            <i class="pi pi-arrow-right prf-modulo__arrow" aria-hidden="true"></i>
+          </a>
+        }
+      </div>
+    </section>
+
+    <!-- Panel colapsable "Mis datos" (info secundaria, se abre solo si el usuario lo pide) -->
+    <section class="prf-datos" aria-label="Mis datos de cuenta">
+      <button type="button" class="prf-datos__toggle"
+        [attr.aria-expanded]="misDatosExpanded"
+        aria-controls="prf-datos-body"
+        (click)="toggleMisDatos()">
+        <i class="pi" [class.pi-chevron-down]="!misDatosExpanded" [class.pi-chevron-up]="misDatosExpanded" aria-hidden="true"></i>
+        <span class="prf-datos__toggle-label">Mis datos</span>
+        <span class="prf-datos__toggle-hint">Información de su cuenta y sesión</span>
+      </button>
+
+      @if (misDatosExpanded) {
+        <div class="prf-datos__body" id="prf-datos-body">
+          <div class="prf-datos__grid">
+            <div class="prf-datos__field">
+              <span class="prf-datos__label">
+                <i class="pi pi-user" aria-hidden="true"></i>
+                Usuario
+              </span>
+              <strong class="prf-datos__value">{{ perfil.usuario }}</strong>
+            </div>
+            <div class="prf-datos__field">
+              <span class="prf-datos__label">
+                <i class="pi pi-id-card" aria-hidden="true"></i>
+                Nombre completo
+              </span>
+              <strong class="prf-datos__value">{{ perfil.nombreCompleto }}</strong>
+            </div>
+            <div class="prf-datos__field">
+              <span class="prf-datos__label">
+                <i class="pi pi-envelope" aria-hidden="true"></i>
+                Correo
+              </span>
+              <strong class="prf-datos__value">{{ perfil.correo }}</strong>
+            </div>
+            <div class="prf-datos__field">
+              <span class="prf-datos__label">
+                <i class="pi pi-shield" aria-hidden="true"></i>
+                Rol
+              </span>
+              <strong class="prf-datos__value">
+                {{ perfil.rol }}
+                <span class="prf-datos__role-code">{{ perfil.rolCodigo }}</span>
+              </strong>
+            </div>
+            <div class="prf-datos__field">
+              <span class="prf-datos__label">
+                <i class="pi pi-building" aria-hidden="true"></i>
+                Entidad
+              </span>
+              <strong class="prf-datos__value">
+                {{ perfil.entidad.razonSocial }}
+                <p-tag [value]="perfil.entidad.tipo" severity="secondary" />
+              </strong>
+            </div>
+            <div class="prf-datos__field">
+              <span class="prf-datos__label">
+                <i class="pi pi-hashtag" aria-hidden="true"></i>
+                Código de entidad
+              </span>
+              <strong class="prf-datos__value">{{ perfil.entidad.codigo }}</strong>
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+}
