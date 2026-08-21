@@ -20,13 +20,18 @@ import {
   DirectorioEntidadesComponent,
   Entidad,
 } from '../../../components/directorio-entidades/directorio-entidades.component';
-
-type TipoPeriodo = 'mensual' | 'trimestral' | 'semestral';
+import {
+  OpcionPeriodo,
+  Periodicidad,
+  etiquetaPeriodo,
+  periodosDe,
+} from '../../../services/periodos';
 
 interface Categoria {
   id: string;
   nombre: string;
-  tipoPeriodo: TipoPeriodo;
+  /** Cada categoría reporta con su propia periodicidad. */
+  tipoPeriodo: Periodicidad;
 }
 
 interface Mensaje {
@@ -97,26 +102,9 @@ export class LevantamientoRestriccionesComponent {
   readonly categoriaOptions = this.categorias.map(c => ({ label: c.nombre, value: c.id }));
 
   /** Períodos derivados del tipo de período de la categoría seleccionada. */
-  get periodoOptions(): { label: string; value: string }[] {
+  get periodoOptions(): OpcionPeriodo[] {
     const cat = this.categorias.find(c => c.id === this.filterCategoria);
-    if (!cat) return [];
-    if (cat.tipoPeriodo === 'mensual') {
-      const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-      return meses.map((m, i) => ({ label: m, value: String(i + 1).padStart(2, '0') }));
-    }
-    if (cat.tipoPeriodo === 'trimestral') {
-      return [
-        { label: 'I Trimestre (Ene-Mar)', value: 'T1' },
-        { label: 'II Trimestre (Abr-Jun)', value: 'T2' },
-        { label: 'III Trimestre (Jul-Sep)', value: 'T3' },
-        { label: 'IV Trimestre (Oct-Dic)', value: 'T4' },
-      ];
-    }
-    return [
-      { label: 'I Semestre (Ene-Jun)', value: 'S1' },
-      { label: 'II Semestre (Jul-Dic)', value: 'S2' },
-    ];
+    return cat ? periodosDe(cat.tipoPeriodo) : [];
   }
 
   onCategoriaChange() {
@@ -204,22 +192,10 @@ export class LevantamientoRestriccionesComponent {
 
   get resumenPeriodoLabel(): string {
     if (!this.filtrosAplicados) return '';
-    const cat = this.filtrosAplicados.categoria;
-    const opts = (cat.tipoPeriodo === 'mensual'
-      ? ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-          .map((m, i) => ({ label: m, value: String(i + 1).padStart(2, '0') }))
-      : cat.tipoPeriodo === 'trimestral'
-        ? [
-            { label: 'I Trimestre', value: 'T1' },
-            { label: 'II Trimestre', value: 'T2' },
-            { label: 'III Trimestre', value: 'T3' },
-            { label: 'IV Trimestre', value: 'T4' },
-          ]
-        : [
-            { label: 'I Semestre', value: 'S1' },
-            { label: 'II Semestre', value: 'S2' },
-          ]);
-    return opts.find(o => o.value === this.filtrosAplicados!.periodo)?.label ?? '';
+    return etiquetaPeriodo(
+      this.filtrosAplicados.categoria.tipoPeriodo,
+      this.filtrosAplicados.periodo,
+    );
   }
 
   // ───────────────────────────────────────────────

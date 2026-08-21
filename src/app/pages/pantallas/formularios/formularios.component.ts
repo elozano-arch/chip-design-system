@@ -25,6 +25,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { SesionService } from '../../../services/sesion.service';
+import { PERIODOS_FILTRO } from '../../../services/periodos';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 import {
@@ -1127,14 +1128,8 @@ export class FormulariosComponent implements OnDestroy {
     { label: '2022', value: '2022' },
   ];
 
-  periodoOptions = [
-    { label: 'Seleccione periodo', value: '' },
-    { label: 'Enero - Marzo (Trimestre 1)', value: 'T1' },
-    { label: 'Abril - Junio (Trimestre 2)', value: 'T2' },
-    { label: 'Julio - Septiembre (Trimestre 3)', value: 'T3' },
-    { label: 'Octubre - Diciembre (Trimestre 4)', value: 'T4' },
-    { label: 'Anual', value: 'ANUAL' },
-  ];
+  /** Catálogo compartido: la etiqueta es el rango de meses. Ver periodos.ts. */
+  periodoOptions = PERIODOS_FILTRO;
 
   // ──────────────────────────────────────────────────────────────────────
   // Acciones — agrupadas según el modelo de CRIS:

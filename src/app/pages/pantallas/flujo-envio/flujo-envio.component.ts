@@ -20,6 +20,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { PERIODOS_TRIMESTRALES } from '../../../services/periodos';
 
 type EstadoFormulario = 'pendiente' | 'cargado' | 'validado' | 'con-errores';
 type ModoPaso1 = 'consultar' | 'importar';
@@ -112,12 +113,8 @@ export class FlujoEnvioComponent {
     { label: 'CONVERGENCIA DE LEY', value: 'CONV_LEY' },
   ];
 
-  readonly periodos: OpcionSelect[] = [
-    { label: 'Ene-Mar', value: '01' },
-    { label: 'Abr-Jun', value: '02' },
-    { label: 'Jul-Sep', value: '03' },
-    { label: 'Oct-Dic', value: '04' },
-  ];
+  /** Catálogo compartido: la etiqueta es el rango de meses. Ver periodos.ts. */
+  readonly periodos: OpcionSelect[] = PERIODOS_TRIMESTRALES;
 
   anio = signal<string | null>(null);
   entidad = signal<string | null>(null);
