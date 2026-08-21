@@ -282,7 +282,7 @@
         @if (filtersApplied) {
           <div class="form-wizard__import-row">
             <p-button label="Importar" icon="pi pi-upload"
-              pTooltip="Cargar un archivo .txt para la categoría"
+              pTooltip="Cargar un archivo .txt para el contexto seleccionado"
               tooltipPosition="top"
               (onClick)="abrirImportDialog()" />
           </div>
@@ -1002,8 +1002,9 @@
             <strong>El proceso de reimportación se ha iniciado</strong>
             <p>
               <span class="form-import-done__file">{{ importFileName }}</span>
-              está reemplazando la información de los formularios. El resultado se
-              notificará vía correo electrónico a <strong>{{ correoUsuario }}</strong>.
+              está reemplazando la información de los formularios del contexto
+              seleccionado. El resultado se notificará vía correo electrónico a
+              <strong>{{ correoUsuario }}</strong>.
             </p>
           } @else {
             <strong>El archivo ya inició su proceso de importación</strong>
@@ -1016,21 +1017,24 @@
         </div>
       </div>
     } @else if (importPaso === 'confirmacion') {
-      <!-- Aviso de reemplazo: qué formularios se reimportan y qué se pierde.
-           Va en el mismo diálogo, no en un modal encima de otro. -->
+      <!-- Aviso de reemplazo. La importación trabaja sobre el CONTEXTO
+           (entidad · año · periodo), no sobre la categoría: la categoría sólo
+           entra en juego en la validación central y en el envío. -->
       <div class="form-import-warn" role="alert">
         <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
         <div class="form-import-warn__body">
-          <strong>Esta categoría ya tiene información importada</strong>
+          <strong>Hay formularios con información para el contexto seleccionado</strong>
           <p>
+            De lo que trae <span class="form-import-done__file">{{ importFileName }}</span>,
             {{ formulariosAReimportar.length }}
-            {{ formulariosAReimportar.length === 1 ? 'formulario se va a reimportar' : 'formularios se van a reimportar' }}
-            con <span class="form-import-done__file">{{ importFileName }}</span>.
-            La información actual se reemplaza y no se puede recuperar.
+            {{ formulariosAReimportar.length === 1 ? 'formulario ya cuenta' : 'formularios ya cuentan' }}
+            con información para
+            <strong>{{ entidadLabel }} · {{ selectedAnio }} · {{ periodoLabel }}</strong>.
+            Al continuar, esa información se reemplaza y no se puede recuperar.
           </p>
         </div>
       </div>
-      <ul class="form-import-warn__list" aria-label="Formularios que se van a reimportar">
+      <ul class="form-import-warn__list" aria-label="Formularios con información en el contexto seleccionado">
         @for (f of formulariosAReimportar; track f.id) {
           <li>
             <i class="pi pi-refresh" aria-hidden="true"></i>
@@ -1073,7 +1077,7 @@
       <p class="form-import-zone__hint">
         <i class="pi pi-info-circle" aria-hidden="true"></i>
         Sólo archivos de texto plano (.txt). La importación reemplaza los datos no
-        validados de los formularios para el contexto definido.
+        validados de los formularios para el contexto seleccionado.
       </p>
     }
 

@@ -1217,14 +1217,18 @@ export class FormulariosComponent implements OnDestroy {
    */
   escenarioImport: 'auto' | 'limpio' = 'auto';
   readonly escenarioImportOptions = [
-    { label: 'Con información previa · reimportación', value: 'auto' },
-    { label: 'Sin información previa · importación limpia', value: 'limpio' },
+    { label: 'Con información en el contexto · reimportación', value: 'auto' },
+    { label: 'Sin información en el contexto · importación limpia', value: 'limpio' },
   ];
 
   /**
-   * Formularios del contexto que ya tienen información y, por tanto, serían
-   * reemplazados por el archivo. Si hay al menos uno, la importación es una
-   * reimportación y el diálogo exige confirmación antes de arrancar.
+   * Formularios que ya cuentan con información para el CONTEXTO seleccionado
+   * (entidad · año · periodo) y que, por tanto, el archivo reemplazaría. Si hay
+   * al menos uno, la importación es una reimportación y el diálogo exige
+   * confirmación antes de arrancar.
+   *
+   * Ojo con el alcance: importación y validación local son del contexto, no de
+   * la categoría. La categoría sólo entra en la validación central y el envío.
    */
   get formulariosAReimportar(): Formulario[] {
     if (this.escenarioImport === 'limpio') return [];
@@ -1447,9 +1451,9 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Botón "Importar". Si el contexto ya tiene información importada, no arranca
-   * nada todavía: primero pasa por el aviso de reemplazo. Si no hay nada que
-   * reemplazar, arranca directo.
+   * Botón "Importar". Si hay formularios con información para el contexto
+   * seleccionado, no arranca nada todavía: primero pasa por el aviso de
+   * reemplazo. Si no hay nada que reemplazar, arranca directo.
    */
   confirmImport() {
     if (!this.importFileName || this.importPaso === 'iniciado') return;
@@ -1492,7 +1496,7 @@ export class FormulariosComponent implements OnDestroy {
       severity: 'info',
       summary: this.esReimportacion ? 'Reimportación iniciada' : 'Importación iniciada',
       detail: this.esReimportacion
-        ? `"${this.importFileName}" inició su proceso de reimportación. El resultado se notificará a ${this.correoUsuario}.`
+        ? `"${this.importFileName}" inició su proceso de reimportación sobre el contexto seleccionado. El resultado se notificará a ${this.correoUsuario}.`
         : `"${this.importFileName}" inició su proceso de importación. El resultado se notificará a ${this.correoUsuario}.`,
       life: 6000,
     });
