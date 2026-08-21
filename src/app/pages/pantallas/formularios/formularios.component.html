@@ -282,7 +282,7 @@
         @if (filtersApplied) {
           <div class="form-wizard__import-row">
             <p-button label="Importar" icon="pi pi-upload"
-              pTooltip="Cargar un archivo .xlsx o .csv para la categoría"
+              pTooltip="Cargar un archivo .txt para la categoría"
               tooltipPosition="top"
               (onClick)="abrirImportDialog()" />
           </div>
@@ -372,7 +372,9 @@
                   <th style="width: 44px"><p-tableHeaderCheckbox /></th>
                   <th pSortableColumn="codigo" style="width: 140px">Código <p-sortIcon field="codigo" /></th>
                   <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
-                  <th pSortableColumn="estadoValidacion" style="width: 200px">Estado <p-sortIcon field="estadoValidacion" /></th>
+                  <!-- Etapa ordena por id_etapa_proceso: el orden del listado es el del flujo. -->
+                  <th pSortableColumn="etapa" style="width: 180px">Etapa <p-sortIcon field="etapa" /></th>
+                  <th pSortableColumn="estado" style="width: 190px">Estado <p-sortIcon field="estado" /></th>
                   <th style="width: 110px; text-align: center">Acciones</th>
                 </tr>
               </ng-template>
@@ -382,16 +384,34 @@
                   <td><span class="form-table__code">{{ formItem.codigo }}</span></td>
                   <td><span class="form-table__name">{{ formItem.nombre }}</span></td>
                   <td>
-                    @if (esRechazado(formItem)) {
+                    <span class="form-table__etapa">
+                      <i class="pi" [ngClass]="etapaDe(formItem.etapa).icon" aria-hidden="true"></i>
+                      {{ etapaDe(formItem.etapa).label }}
+                    </span>
+                  </td>
+                  <td>
+                    <!-- Sin estado = sin registro: no se ha importado. Es una
+                         presentación, no un estado del catálogo, por eso va como
+                         texto neutro y no como p-tag. -->
+                    @if (!formItem.estado) {
+                      <span class="form-table__sin-registro"
+                        [pTooltip]="sinRegistroAyuda" tooltipPosition="top">
+                        <i class="pi pi-minus-circle" aria-hidden="true"></i>
+                        {{ sinRegistroLabel }}
+                      </span>
+                    } @else if (esRechazado(formItem)) {
                       <button type="button" class="form-estado-tagbtn"
-                        [attr.aria-label]="'Ver el detalle de la deficiencia de ' + formItem.nombre + ' y cómo corregirla'"
-                        pTooltip="Clic para ver el detalle de la deficiencia"
+                        [attr.aria-label]="'Ver las deficiencias de ' + formItem.nombre + ' en el control de envío'"
+                        pTooltip="Clic para ver las deficiencias en el control de envío"
                         tooltipPosition="top"
-                        (click)="verRechazoDeficiencia(formItem)">
-                        <p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" />
+                        (click)="verControlEnvio(formItem, 'ultimo')">
+                        <p-tag [value]="estadoDe(formItem.estado).label"
+                          [severity]="estadoDe(formItem.estado).severity" />
                       </button>
                     } @else {
-                      <p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" />
+                      <p-tag [value]="estadoDe(formItem.estado).label"
+                        [severity]="estadoDe(formItem.estado).severity"
+                        [pTooltip]="estadoTooltip(formItem.estado)" tooltipPosition="top" />
                     }
                   </td>
                   <td style="text-align: center">
@@ -693,6 +713,17 @@
           </span>
         </div>
 
+        <!-- Simulación (demo): qué responderá la validación central al enviar.
+             Vive junto a "Enviar Categoría", que es la acción que lo aplica.
+             En producción el resultado llega del backend tras enviar. -->
+        <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de la respuesta de validación central">
+          <i class="pi pi-flag" aria-hidden="true"></i>
+          <label for="ce-resp-central">Respuesta central al enviar <span class="form-wizard__demo-tag">demostración</span></label>
+          <p-select inputId="ce-resp-central" [options]="respuestaCentralOptions"
+            [(ngModel)]="respuestaCentral"
+            appendTo="body" styleClass="form-wizard__demo-select" />
+        </div>
+
         <!-- Estado del envío + acción Enviar Categoría. Solo el estado: el detalle
              del rechazo se consulta en el formulario rechazado (columna Estado). -->
         <div class="form-send-bar"
@@ -752,85 +783,198 @@
           </h2>
         </header>
 
-        <div class="form-estado-screen" aria-live="polite">
-          @if (filtersApplied && filterEntidad && filteredFormularios.length > 0) {
-            <!-- Simulación (demo): qué responderá la validación central al enviar.
-                 Al pulsar "Enviar Categoría" (Sección 3) se aplica este resultado;
-                 si es rechazo, se marca un formulario como "Rechazado por Deficiencia".
-                 En producción llega del backend tras enviar. -->
-            <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de la respuesta de validación central">
-              <i class="pi pi-flag" aria-hidden="true"></i>
-              <label for="ce-resp-central">Respuesta central al enviar <span class="form-wizard__demo-tag">demostración</span></label>
-              <p-select inputId="ce-resp-central" [options]="respuestaCentralOptions"
-                [(ngModel)]="respuestaCentral"
-                appendTo="body" styleClass="form-wizard__demo-select" />
-            </div>
+        @if (filtersApplied && filterEntidad && filteredFormularios.length > 0) {
 
-            @if (resultadoEnvio; as rc) {
-              <div class="form-send-bar" [ngClass]="rc.clase">
-                <div class="form-send-bar__info">
-                  <i class="pi {{ rc.icon }}" aria-hidden="true"></i>
-                  <div>
-                    <strong>{{ rc.titulo }}</strong>
-                    <span>{{ rc.detalle }}</span>
-                  </div>
+          <!-- 1 · Contexto: la categoría del Paso 1 y, cuando se entra desde una
+               fila, el formulario cuyas deficiencias se están revisando. -->
+          <dl class="form-estado-ctx form-estado-ctx--wide">
+            <div><dt>Categoría</dt><dd class="cell-ellipsis" [pTooltip]="categoriaLabel" tooltipPosition="top">{{ categoriaLabel }}</dd></div>
+            <div><dt>Entidad</dt><dd class="cell-ellipsis" [pTooltip]="entidadLabel" tooltipPosition="top">{{ entidadLabel }}</dd></div>
+            <div><dt>Periodo</dt><dd>{{ selectedAnio }} · {{ periodoLabel }}</dd></div>
+            @if (controlEnvioFormulario; as f) {
+              <div class="form-estado-ctx__form">
+                <dt>Formulario</dt>
+                <dd class="cell-ellipsis" [pTooltip]="f.codigo + ' · ' + f.nombre" tooltipPosition="top">
+                  {{ f.codigo }} · {{ f.nombre }}
+                </dd>
+              </div>
+            }
+          </dl>
+
+          <!-- 2 · Deficiencias del formulario. Va fuera de .form-estado-screen
+               (max-width 640px): la tabla necesita ancho completo y su propio
+               scroll horizontal. -->
+          <section class="form-defic" role="region" aria-label="Deficiencias de la validación central">
+            <h3 class="form-defic__title">
+              <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+              Deficiencias
+              <button type="button" class="panel-help"
+                pTooltip="Mensajes devueltos por el proceso: estructura o completitud en la importación, y reglas en las validaciones. Los permisibles dejan enviar la categoría; los que exigen comentario necesitan una justificación escrita."
+                tooltipPosition="top" aria-label="Ayuda de la sección Deficiencias">
+                <i class="pi pi-info-circle" aria-hidden="true"></i>
+              </button>
+            </h3>
+
+            @if (!controlEnvioFormulario) {
+              <div class="usr-empty">
+                <i class="pi pi-inbox" aria-hidden="true"></i>
+                <p>Abra el control de envío desde un formulario del listado para ver sus deficiencias.</p>
+              </div>
+            } @else if (deficienciasEnvio.length === 0) {
+              <div class="usr-empty">
+                <i class="pi pi-inbox" aria-hidden="true"></i>
+                <p>Este formulario no tiene deficiencias reportadas.</p>
+              </div>
+            } @else {
+              <!-- Alcance: las deficiencias del último proceso (lo que acaba de
+                   fallar) o el histórico completo del formulario. -->
+              <div class="form-defic__alcance" role="region"
+                aria-label="Alcance de las deficiencias mostradas">
+                <div class="form-defic__alcance-tabs" role="group"
+                  aria-label="Procesos que se muestran">
+                  <p-button label="Último proceso" icon="pi pi-clock" size="small"
+                    [text]="alcanceDeficiencias !== 'ultimo'"
+                    [outlined]="alcanceDeficiencias === 'ultimo'"
+                    severity="secondary"
+                    [attr.aria-pressed]="alcanceDeficiencias === 'ultimo'"
+                    (onClick)="cambiarAlcanceDeficiencias('ultimo')" />
+                  <p-button label="Histórico" icon="pi pi-history" size="small"
+                    [text]="alcanceDeficiencias !== 'historico'"
+                    [outlined]="alcanceDeficiencias === 'historico'"
+                    severity="secondary"
+                    [attr.aria-pressed]="alcanceDeficiencias === 'historico'"
+                    (onClick)="cambiarAlcanceDeficiencias('historico')" />
                 </div>
+                <p class="form-defic__alcance-resumen" aria-live="polite">
+                  {{ resumenDeficiencias }}
+                </p>
+              </div>
+
+              <div class="form-table-scroll">
+                <!-- Sin dataKey: el id es consecutivo POR ETAPA, así que se
+                     repite entre etapas y no sirve como clave única. -->
+                <p-table [value]="deficienciasVisibles" [stripedRows]="true" [rowHover]="true"
+                  styleClass="form-defic-table"
+                  [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+                  [showCurrentPageReport]="true"
+                  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
+                  <ng-template #header>
+                    <tr>
+                      <th scope="col" style="width: 175px">Etapa</th>
+                      <th scope="col" style="width: 120px">Id detalle proceso</th>
+                      <th scope="col" style="width: 64px">Id</th>
+                      <th scope="col" style="width: 130px">Tipo</th>
+                      <th scope="col" style="width: 130px">Cód. mensaje</th>
+                      <th scope="col">Mensaje</th>
+                      <th scope="col" style="width: 110px">Permisible</th>
+                      <th scope="col" style="width: 150px">Requiere comentario</th>
+                      <th scope="col" style="width: 300px">Comentario</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template #body let-d>
+                    <tr>
+                      <td>
+                        <span class="form-table__etapa">
+                          <i class="pi" [ngClass]="etapaDe(d.etapa).icon" aria-hidden="true"></i>
+                          {{ etapaDe(d.etapa).label }}
+                        </span>
+                      </td>
+                      <td><span class="form-table__code">{{ d.idDetalleProceso }}</span></td>
+                      <td>{{ d.id }}</td>
+                      <td>
+                        <!-- Sólo las deficiencias de importación tienen tipo:
+                             las de validación se identifican por su etapa. -->
+                        @if (d.tipo) {
+                          <p-tag [value]="tipoDeficienciaDe(d.tipo).label"
+                            [severity]="tipoDeficienciaDe(d.tipo).severity" />
+                        } @else {
+                          <span class="form-defic__sin-tipo"
+                            pTooltip="Deficiencia de validación, no de importación"
+                            tooltipPosition="top">Validación</span>
+                        }
+                      </td>
+                      <td><span class="form-table__code">{{ d.codMensaje }}</span></td>
+                      <td>{{ d.mensaje }}</td>
+                      <td>
+                        <p-tag [value]="d.permisible ? 'Sí' : 'No'"
+                          [severity]="d.permisible ? 'success' : 'danger'" />
+                      </td>
+                      <td>
+                        <p-tag [value]="d.requiereComentario ? 'Sí' : 'No'"
+                          [severity]="d.requiereComentario ? 'warn' : 'secondary'" />
+                      </td>
+                      <td>
+                        <!-- La caja sólo se habilita cuando el mensaje exige comentario. -->
+                        <div class="form-defic__box">
+                          <textarea pTextarea rows="2" class="form-defic__comentario"
+                            [(ngModel)]="d.comentario"
+                            (ngModelChange)="onComentarioInput(d)"
+                            [disabled]="!d.requiereComentario"
+                            [attr.aria-label]="'Comentario para el mensaje ' + d.codMensaje"
+                            [attr.aria-required]="d.requiereComentario ? 'true' : null"
+                            [attr.aria-invalid]="d.comentarioError ? 'true' : null"
+                            [attr.aria-describedby]="'defic-msg-' + d.etapa + '-' + d.id"
+                            [placeholder]="d.requiereComentario ? 'Justifique la deficiencia' : 'No requiere comentario'"></textarea>
+
+                          @if (d.requiereComentario) {
+                            <div class="form-defic__box-foot">
+                              <small class="form-defic__count"
+                                [class.form-defic__count--corto]="d.comentario.trim().length < COMENTARIO_MIN">
+                                {{ d.comentario.trim().length }}/{{ COMENTARIO_MIN }}
+                              </small>
+                              <p-button label="Guardar" icon="pi pi-check" size="small"
+                                styleClass="form-defic__save"
+                                [disabled]="!comentarioPendiente(d)"
+                                [pTooltip]="comentarioPendiente(d) ? '' : 'No hay cambios por guardar'"
+                                tooltipPosition="top"
+                                (onClick)="guardarComentario(d)" />
+                            </div>
+
+                            <!-- Un solo hueco de mensaje: error de validación o
+                                 confirmación de guardado, nunca los dos. -->
+                            <small [id]="'defic-msg-' + d.etapa + '-' + d.id"
+                              class="form-defic__msg" aria-live="polite">
+                              @if (d.comentarioError) {
+                                <span class="form-defic__msg--error" role="alert">
+                                  <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                                  {{ d.comentarioError }}
+                                </span>
+                              } @else if (d.comentarioGuardado && !comentarioPendiente(d)) {
+                                <span class="form-defic__msg--ok">
+                                  <i class="pi pi-check-circle" aria-hidden="true"></i>
+                                  Guardado
+                                </span>
+                              } @else {
+                                <span class="form-defic__msg--hint">
+                                  Mínimo {{ COMENTARIO_MIN }} caracteres.
+                                </span>
+                              }
+                            </small>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template #emptymessage>
+                    <tr>
+                      <td colspan="9" class="usr-empty">
+                        <i class="pi pi-inbox" aria-hidden="true"></i>
+                        <p>No se encontraron deficiencias en el alcance seleccionado.</p>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
               </div>
             }
+          </section>
+        }
 
-            <!-- Contexto actual de la categoría -->
-            <dl class="form-estado-ctx">
-              <div><dt>Categoría</dt><dd class="cell-ellipsis" [pTooltip]="categoriaLabel" tooltipPosition="top">{{ categoriaLabel }}</dd></div>
-              <div><dt>Entidad</dt><dd class="cell-ellipsis" [pTooltip]="entidadLabel" tooltipPosition="top">{{ entidadLabel }}</dd></div>
-              <div><dt>Periodo</dt><dd>{{ selectedAnio }} · {{ periodoLabel }}</dd></div>
-            </dl>
-
-            <!-- Estado dominante (lifecycle) -->
-            <div class="form-estado-badge">
-              <p-tag [value]="estadoCategoria.label" [severity]="estadoCategoria.severity"
-                [icon]="estadoCategoria.icon" />
-              <p class="form-estado-badge__desc">{{ estadoCategoria.descripcion }}</p>
-            </div>
-
-            <!-- Progreso de validación local -->
-            <div class="form-estado-progress">
-              <div class="form-estado-progress__head">
-                <span>Validación local</span>
-                <span>{{ progresoValidacion.validados }}/{{ progresoValidacion.total }} formularios</span>
-              </div>
-              <p-progressBar [value]="progresoValidacion.pct" [showValue]="false"
-                styleClass="form-estado-progress__bar" />
-            </div>
-
-            <!-- Desglose por estado -->
-            <ul class="form-estado-list">
-              @for (item of desgloseEstados; track item.label) {
-                <li>
-                  <span class="form-estado-list__label">
-                    <i class="pi" [ngClass]="item.icon" aria-hidden="true"></i> {{ item.label }}
-                  </span>
-                  <p-tag [value]="item.cantidad.toString()" [severity]="item.severity" />
-                </li>
-              }
-            </ul>
-
-            <!-- Entidades agregadas (cuando la categoría las gestiona) -->
-            @if (entidadesAgregadasHabilitado) {
-              <div class="form-estado-row">
-                <span class="form-estado-row__label">
-                  <i class="pi pi-sitemap" aria-hidden="true"></i> Entidades agregadas
-                </span>
-                <p-tag [value]="selectedEntidades.length.toString()"
-                  [severity]="selectedEntidades.length ? 'info' : 'warn'" />
-              </div>
-            }
-          } @else {
-            <div class="form-estado-empty">
-              <i class="pi pi-inbox" aria-hidden="true"></i>
-              <p>Aplique los filtros para ver el estado de validación y envío de la categoría.</p>
-            </div>
-          }
-        </div>
+        @if (!(filtersApplied && filterEntidad && filteredFormularios.length > 0)) {
+          <div class="form-estado-empty">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>Aplique los filtros para ver las deficiencias del formulario.</p>
+          </div>
+        }
       </section>
     }
   </div>
@@ -845,31 +989,113 @@
     [draggable]="false"
     [closeOnEscape]="true"
     [style]="{ width: '520px', maxWidth: '95vw' }"
-    header="Importar archivo">
-    <div class="form-import-zone" role="region" aria-label="Carga de archivo">
-      <div class="form-import-zone__pick">
-        <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
-          (onClick)="importDialogInput.click()" />
-        <input #importDialogInput type="file" accept=".xlsx,.csv" hidden
-          (change)="importFileName = $any($event.target).files[0]?.name || ''" />
-        <span class="form-import-zone__filename"
-          [class.form-import-zone__filename--empty]="!importFileName">
-          {{ importFileName || 'Ningún archivo seleccionado' }}
-        </span>
+    [header]="importPaso === 'confirmacion' ? 'Confirmar reimportación' : 'Importar archivo'">
+
+    @if (importPaso === 'iniciado') {
+      <!-- Alerta de proceso iniciado. Es un mensaje de resultado: va visible en
+           el cuerpo del diálogo (no en un toast que se desvanece), porque el
+           usuario tiene que saber que el resultado NO vuelve a esta pantalla. -->
+      <div class="form-import-done" role="status">
+        <i class="pi pi-clock" aria-hidden="true"></i>
+        <div class="form-import-done__body">
+          @if (esReimportacion) {
+            <strong>El proceso de reimportación se ha iniciado</strong>
+            <p>
+              <span class="form-import-done__file">{{ importFileName }}</span>
+              está reemplazando la información de los formularios. El resultado se
+              notificará vía correo electrónico a <strong>{{ correoUsuario }}</strong>.
+            </p>
+          } @else {
+            <strong>El archivo ya inició su proceso de importación</strong>
+            <p>
+              <span class="form-import-done__file">{{ importFileName }}</span>
+              está en la cola de proceso. El resultado se notificará vía correo
+              electrónico a <strong>{{ correoUsuario }}</strong>.
+            </p>
+          }
+        </div>
       </div>
-    </div>
-    <p class="form-import-zone__hint">
-      <i class="pi pi-info-circle" aria-hidden="true"></i>
-      La importación reemplaza los datos no validados de los formularios para el contexto definido.
-    </p>
+    } @else if (importPaso === 'confirmacion') {
+      <!-- Aviso de reemplazo: qué formularios se reimportan y qué se pierde.
+           Va en el mismo diálogo, no en un modal encima de otro. -->
+      <div class="form-import-warn" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <div class="form-import-warn__body">
+          <strong>Esta categoría ya tiene información importada</strong>
+          <p>
+            {{ formulariosAReimportar.length }}
+            {{ formulariosAReimportar.length === 1 ? 'formulario se va a reimportar' : 'formularios se van a reimportar' }}
+            con <span class="form-import-done__file">{{ importFileName }}</span>.
+            La información actual se reemplaza y no se puede recuperar.
+          </p>
+        </div>
+      </div>
+      <ul class="form-import-warn__list" aria-label="Formularios que se van a reimportar">
+        @for (f of formulariosAReimportar; track f.id) {
+          <li>
+            <i class="pi pi-refresh" aria-hidden="true"></i>
+            <span class="form-table__code">{{ f.codigo }}</span>
+            <span class="cell-ellipsis" [pTooltip]="f.nombre" tooltipPosition="top">{{ f.nombre }}</span>
+          </li>
+        }
+      </ul>
+      <p class="form-import-zone__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        ¿Desea continuar?
+      </p>
+    } @else {
+      <!-- Simulación (demo): el sistema real decide si hay información previa
+           mirando el contexto. Aquí se fuerza para poder ver los dos mensajes,
+           el de importación limpia y el de reimportación. -->
+      <div class="form-wizard__demo-switch" role="group" aria-label="Simulación del escenario de importación">
+        <i class="pi pi-flag" aria-hidden="true"></i>
+        <label for="imp-escenario">Escenario <span class="form-wizard__demo-tag">demostración</span></label>
+        <p-select inputId="imp-escenario" [options]="escenarioImportOptions"
+          [(ngModel)]="escenarioImport"
+          appendTo="body" styleClass="form-wizard__demo-select" />
+      </div>
+
+      <div class="form-import-zone" role="region" aria-label="Carga de archivo">
+        <div class="form-import-zone__pick">
+          <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
+            (onClick)="importDialogInput.click()" />
+          <input #importDialogInput type="file" accept=".txt" hidden
+            (change)="seleccionarArchivoImport($event)" />
+          <span class="form-import-zone__filename"
+            [class.form-import-zone__filename--empty]="!importFileName">
+            {{ importFileName || 'Ningún archivo seleccionado' }}
+          </span>
+        </div>
+      </div>
+      @if (importFileError) {
+        <p-message severity="error" styleClass="w-full" [text]="importFileError" />
+      }
+      <p class="form-import-zone__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Sólo archivos de texto plano (.txt). La importación reemplaza los datos no
+        validados de los formularios para el contexto definido.
+      </p>
+    }
+
     <ng-template #footer>
-      <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
-        (onClick)="cerrarImportDialog()" />
-      <p-button label="Importar" icon="pi pi-upload"
-        [disabled]="!importFileName"
-        [pTooltip]="!importFileName ? 'Seleccione un archivo primero' : ''"
-        tooltipPosition="top"
-        (onClick)="confirmImport()" />
+      @if (importPaso === 'iniciado') {
+        <p-button label="Cerrar" icon="pi pi-check"
+          (onClick)="cerrarImportDialog()" />
+      } @else if (importPaso === 'confirmacion') {
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cancelarReimportacion()" />
+        <!-- Reemplaza información existente: acción destructiva. -->
+        <p-button label="Sí, reimportar" icon="pi pi-refresh" severity="danger"
+          (onClick)="confirmImport()" />
+      } @else {
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cerrarImportDialog()" />
+        <p-button label="Importar" icon="pi pi-upload"
+          [disabled]="!importFileName"
+          [pTooltip]="!importFileName ? 'Seleccione un archivo .txt primero' : ''"
+          tooltipPosition="top"
+          (onClick)="confirmImport()" />
+      }
     </ng-template>
   </p-dialog>
 
@@ -1312,46 +1538,6 @@
           </button>
         </ng-template>
       </p-menu>
-    </ng-template>
-  </p-dialog>
-
-  <!-- ============================================================= -->
-  <!-- MODAL "RECHAZO POR DEFICIENCIA" — motivos del rechazo (V3)     -->
-  <!-- Se abre desde la acción "Ver motivo" de la columna Estado.     -->
-  <!-- ============================================================= -->
-  <p-dialog
-    [visible]="!!rechazoDetalle"
-    (visibleChange)="$event === false && cerrarRechazoDetalle()"
-    [modal]="true"
-    [draggable]="false"
-    [closeOnEscape]="true"
-    [style]="{ width: '640px', maxWidth: '96vw' }"
-    [header]="rechazoDetalle ? 'Rechazo por deficiencia · ' + rechazoDetalle.nombre : 'Rechazo por deficiencia'">
-    @if (rechazoDetalle) {
-      <div class="form-rechazo">
-        <p-message severity="error" styleClass="w-full"
-          text="Corrija los motivos y valide de nuevo antes de reenviar." />
-        <ul class="form-rechazo__list">
-          @for (d of deficienciasMock; track d.tipo) {
-            <li class="form-rechazo__item">
-              <p-tag [value]="d.tipo" severity="danger" />
-              <div class="form-rechazo__body">
-                <p class="form-rechazo__detalle">{{ d.detalle }}</p>
-                <p class="form-rechazo__fix">
-                  <i class="pi pi-check-circle" aria-hidden="true"></i>
-                  {{ d.correccion }}
-                </p>
-              </div>
-            </li>
-          }
-        </ul>
-      </div>
-    }
-    <ng-template #footer>
-      <p-button label="Cerrar" [text]="true" severity="secondary"
-        (onClick)="cerrarRechazoDetalle()" />
-      <p-button label="Ir al registro manual" icon="pi pi-table"
-        (onClick)="irARegistroDesdeRechazo()" />
     </ng-template>
   </p-dialog>
 

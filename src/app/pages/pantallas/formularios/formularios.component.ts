@@ -14,7 +14,6 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DividerModule } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
-import { ProgressBarModule } from 'primeng/progressbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
@@ -22,7 +21,10 @@ import { StepperModule } from 'primeng/stepper';
 import { TabsModule } from 'primeng/tabs';
 import { DialogModule } from 'primeng/dialog';
 import { PaginatorModule } from 'primeng/paginator';
+import { TextareaModule } from 'primeng/textarea';
 import { MessageService, MenuItem } from 'primeng/api';
+
+import { SesionService } from '../../../services/sesion.service';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 import {
@@ -38,7 +40,14 @@ interface Formulario {
   categoria: string;
   periodo: string;
   anio: number;
-  estadoValidacion: string;
+  /** Etapa del proceso en que está el formulario — `tab_etapa_proceso`. */
+  etapa: EtapaId;
+  /**
+   * Estado dentro de esa etapa — `tab_estado`, válido según `ESTADOS_POR_ETAPA`.
+   * `null` = el formulario todavía no tiene registro (no se ha importado). No es
+   * un estado del catálogo: la UI lo presenta como "Sin registro".
+   */
+  estado: EstadoId | null;
   ultimaModificacion: string;
 }
 
@@ -175,6 +184,87 @@ interface DownloadFormat {
 /** Severity admitida por los `p-tag` del panel de estado. */
 type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 
+/* ═══════════════════════════════════════════════════════════════════════
+   Etapa y estado del proceso — espejo del modelo de datos del backend.
+   Tres tablas replicadas aquí como catálogo del demo:
+     • tab_etapa_proceso  → id_etapa_proceso 1..4 (fase del flujo)
+     • tab_estado         → id_estado (char) + nombre + descripción
+     • cruce etapa↔estado → qué estados son válidos en cada etapa
+   El listado de formularios muestra el par: la etapa dice en qué fase del
+   flujo va el formulario y el estado qué pasó dentro de esa fase.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/** `tab_etapa_proceso.id_etapa_proceso`. */
+type EtapaId = 1 | 2 | 3 | 4;
+
+/** `tab_estado.id_estado`. */
+type EstadoId = 'V' | 'M' | 'D' | 'A' | 'E' | 'G' | 'W' | 'S' | 'N';
+
+interface EtapaProceso {
+  id: EtapaId;
+  /** `tab_etapa_proceso.nombre`, tal cual está en BD. */
+  nombre: string;
+  /** Etiqueta legible para la UI (la de BD viene en snake_case). */
+  label: string;
+  icon: string;
+}
+
+interface EstadoProceso {
+  id: EstadoId;
+  /** `tab_estado.nombre`, tal cual está en BD. */
+  nombre: string;
+  /** `tab_estado.descripcion`, tal cual está en BD. */
+  descripcion: string;
+  /** Etiqueta legible para el `p-tag` (la de BD viene en mayúsculas). */
+  label: string;
+  severity: TagSeverity;
+}
+
+const ETAPAS_PROCESO: readonly EtapaProceso[] = [
+  { id: 1, nombre: 'Importacion',        label: 'Importación',        icon: 'pi pi-file-import' },
+  { id: 2, nombre: 'Validacion_Local',   label: 'Validación local',   icon: 'pi pi-check-square' },
+  { id: 3, nombre: 'Validacion_Central', label: 'Validación central', icon: 'pi pi-building' },
+  { id: 4, nombre: 'Envio',              label: 'Envío',              icon: 'pi pi-send' },
+];
+
+const ESTADOS_PROCESO: readonly EstadoProceso[] = [
+  { id: 'V', nombre: 'VALIDACION',          descripcion: 'PROCESO EN VALIDACION',           label: 'En validación',       severity: 'info' },
+  { id: 'M', nombre: 'REQUIERE_COMENTARIO', descripcion: 'DEFICIENCIA REQUIERE COMENTARIO', label: 'Requiere comentario', severity: 'warn' },
+  { id: 'D', nombre: 'DEFICIENCIA',         descripcion: 'ERROR DE DEFICIENCIA',            label: 'Deficiencia',         severity: 'danger' },
+  { id: 'A', nombre: 'ACEPTADO',            descripcion: 'ACEPTADO',                        label: 'Aceptado',            severity: 'success' },
+  { id: 'E', nombre: 'ERROR_TECNICO',       descripcion: 'ERROR TECNICO',                   label: 'Error técnico',       severity: 'danger' },
+  { id: 'G', nombre: 'CARGA_ARCHIVO',       descripcion: 'CARGANDO ARCHIVO',                label: 'Importando',          severity: 'info' },
+  { id: 'W', nombre: 'EN ESPERA',           descripcion: 'PROCESO EN ESPERA',               label: 'En espera',           severity: 'warn' },
+  { id: 'S', nombre: 'ENVIADO',             descripcion: 'PROCESO ENVIADO A CENTRAL',       label: 'Enviado',             severity: 'info' },
+  { id: 'N', nombre: 'REIMPORTANDO',        descripcion: 'REIMPORTACION DE INFORMACION',    label: 'Reimportando',        severity: 'warn' },
+];
+
+/**
+ * "Sin registro" NO es un estado del catálogo: es una presentación. Se muestra
+ * cuando el formulario no tiene registro en el detalle, para comunicar que está
+ * en la etapa 1 (Importación) sin haberse importado todavía. Por eso se pinta
+ * como texto neutro y no como `p-tag` — un tag lo haría parecer un estado más.
+ *
+ * IMPORTANTE — un formulario sin registro SÍ se puede seleccionar y validar:
+ * cuando la categoría no exige archivo, pasa a validado y la entidad lo
+ * presenta vacío. No bloquear su checkbox ni el botón "Validar formulario".
+ */
+const SIN_REGISTRO_LABEL = 'Sin registro';
+const SIN_REGISTRO_AYUDA =
+  'El formulario aún no se ha importado. Si la categoría no exige archivo, '
+  + 'puede validarse y presentarse vacío.';
+
+/**
+ * Estados válidos en cada etapa — cruce etapa↔estado del modelo. Ningún
+ * formulario puede quedar en un par (etapa, estado) fuera de esta matriz.
+ */
+const ESTADOS_POR_ETAPA: Readonly<Record<EtapaId, readonly EstadoId[]>> = {
+  1: ['A', 'D', 'E', 'G', 'N', 'V', 'W'],
+  2: ['A', 'D', 'M', 'N', 'V', 'W'],
+  3: ['A', 'D', 'M', 'N', 'V', 'W'],
+  4: ['E', 'S', 'W'],
+};
+
 /**
  * Resultado de la validación central de la categoría (simulación demo).
  *   ninguna    → aún no enviado / sin respuesta
@@ -184,30 +274,59 @@ type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
  */
 type RespuestaCentral = 'ninguna' | 'enProceso' | 'aceptado' | 'rechazado';
 
-/** Estado dominante (lifecycle) de la categoría seleccionada. */
-type EstadoCategoriaClave =
-  | 'sin-contexto'
-  | 'importado'
-  | 'validado'
-  | 'rechazado'
-  | 'enviado';
+/**
+ * Naturaleza del error con el que cierra un proceso de importación. Cada tipo
+ * tiene su propia familia de códigos de mensaje, y un mismo proceso no mezcla
+ * las dos: o el archivo está mal formado (estructura) o le falta información
+ * exigida por la categoría (completitud).
+ *   • estructura  → `EST-###`  (longitud, tipo de dato, concepto inexistente…)
+ *   • completitud → `COMP-###` (concepto obligatorio ausente, periodo incompleto…)
+ */
+type TipoDeficiencia = 'estructura' | 'completitud';
 
-/** Resumen del estado dominante de la categoría para el panel lateral. */
-interface EstadoCategoriaResumen {
-  clave: EstadoCategoriaClave;
-  label: string;
-  severity: TagSeverity;
-  icon: string;
-  descripcion: string;
+const TIPOS_DEFICIENCIA: Readonly<
+  Record<TipoDeficiencia, { label: string; severity: TagSeverity }>
+> = {
+  estructura: { label: 'Estructura', severity: 'danger' },
+  completitud: { label: 'Completitud', severity: 'warn' },
+};
+
+/**
+ * Deficiencia listada en el control de envío. Cada una se produce dentro de una
+ * etapa del proceso y cuelga de un registro del detalle del proceso:
+ *   • `etapa`            → en qué etapa se generó (`tab_etapa_proceso`)
+ *   • `idDetalleProceso` → registro del detalle del proceso al que pertenece
+ *   • `id`               → consecutivo DENTRO de esa etapa, no global: dos
+ *                          etapas distintas pueden tener ambas un id 1
+ *   • `tipo`             → sólo en las deficiencias de importación: qué familia
+ *                          de códigos las produjo. Las de validación local y
+ *                          central no lo llevan.
+ * `permisible` indica que la categoría se puede enviar aun con la deficiencia
+ * presente; `requiereComentario` obliga a justificarla y es lo único que
+ * habilita la caja de comentario de esa fila.
+ */
+interface DeficienciaEnvio {
+  etapa: EtapaId;
+  idDetalleProceso: number;
+  id: number;
+  tipo?: TipoDeficiencia;
+  codMensaje: string;
+  mensaje: string;
+  permisible: boolean;
+  requiereComentario: boolean;
+  /** Texto en edición. */
+  comentario: string;
+  /** Último texto guardado; comparado con `comentario` revela cambios sin guardar. */
+  comentarioGuardado: string;
+  /** Mensaje de validación bajo la caja (vacío = sin error). */
+  comentarioError: string;
 }
 
-/** Una fila del desglose por estado de los formularios (panel lateral). */
-interface DesgloseEstado {
-  label: string;
-  cantidad: number;
-  icon: string;
-  severity: TagSeverity;
-}
+/** Deficiencia tal como llega del proceso, antes de abrirle caja de comentario. */
+type PlantillaDeficiencia = Omit<
+  DeficienciaEnvio, 'comentario' | 'comentarioGuardado' | 'comentarioError'
+>;
+
 
 @Component({
   selector: 'app-formularios',
@@ -227,7 +346,6 @@ interface DesgloseEstado {
     InputIconModule,
     DividerModule,
     MessageModule,
-    ProgressBarModule,
     CheckboxModule,
     MenuModule,
     ChipModule,
@@ -235,6 +353,7 @@ interface DesgloseEstado {
     TabsModule,
     DialogModule,
     PaginatorModule,
+    TextareaModule,
     AppBreadcrumbComponent,
     DirectorioEntidadesComponent,
   ],
@@ -246,8 +365,16 @@ export class FormulariosComponent implements OnDestroy {
   @ViewChild('menuFormulario') menuFormulario: any;
   selectedFormularioForMenu: Formulario | null = null;
 
-  constructor(private messageService: MessageService) {
+  constructor(
+    private messageService: MessageService,
+    private sesion: SesionService,
+  ) {
     this.setupColumnasResponsivas();
+  }
+
+  /** Correo del usuario en sesión — es a donde llega el resultado de la importación. */
+  get correoUsuario(): string {
+    return this.sesion.usuario()?.correo ?? 'su correo registrado';
   }
 
   // ── Responsive: columnas visibles de la matriz de registro manual ──
@@ -275,6 +402,7 @@ export class FormulariosComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.mqlTablet?.removeEventListener('change', this.onViewportChange);
     this.mqlPhone?.removeEventListener('change', this.onViewportChange);
+    this.cancelarAvanceProceso();
   }
 
   /**
@@ -474,7 +602,7 @@ export class FormulariosComponent implements OnDestroy {
 
   /**
    * Validar el formulario abierto desde el detalle. Patrón UX: al ser el
-   * "cierre" del trabajo en este formulario, lo marcamos como Validado,
+   * "cierre" del trabajo en este formulario, lo pasamos a Validación local,
    * regresamos al listado (o al paso 2 en wizard) y mostramos toast para
    * que el usuario vea el estado actualizado y pueda elegir el siguiente.
    */
@@ -483,14 +611,14 @@ export class FormulariosComponent implements OnDestroy {
     const id = this.detalleAbierto.id;
     const nombre = this.detalleAbierto.nombre;
     this._formulariosBase = this._formulariosBase.map(f =>
-      f.id === id ? { ...f, estadoValidacion: 'Validado' } : f,
+      f.id === id ? { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId } : f,
     );
     // Al re-validar tras un rechazo, el resultado del envío anterior deja de aplicar.
     this.categoriaEnviada = false;
     this.messageService.add({
       severity: 'success',
       summary: 'Formulario validado',
-      detail: `"${nombre}" quedó en estado Validado. Continúe con los demás formularios o envíe la categoría.`,
+      detail: `"${nombre}" pasó a Validación local · Aceptado. Continúe con los demás formularios o envíe la categoría.`,
       life: 4500,
     });
     this.cerrarDetalle();
@@ -608,7 +736,7 @@ export class FormulariosComponent implements OnDestroy {
     {
       label: 'Ver control de envío',
       icon: 'pi pi-send',
-      command: () => this.verControlEnvio(),
+      command: () => this.verControlEnvio(this.selectedFormularioForMenu),
     },
     { separator: true },
     {
@@ -630,8 +758,26 @@ export class FormulariosComponent implements OnDestroy {
    */
   controlEnvioAbierto = false;
 
-  verControlEnvio(): void {
+  /**
+   * Formulario cuyas deficiencias se están viendo. Las dos entradas al control
+   * de envío llevan aquí: la acción ⋮ de la fila y el tag "Deficiencia" de la
+   * columna Estado. Su nombre encabeza el contexto de la pantalla.
+   */
+  controlEnvioFormulario: Formulario | null = null;
+
+  /**
+   * Abre el control de envío. El alcance depende de por dónde se entre: desde
+   * el tag "Deficiencia" del listado interesa el último proceso; desde la
+   * acción ⋮, el histórico completo del formulario.
+   */
+  verControlEnvio(
+    form: Formulario | null = null,
+    alcance: 'ultimo' | 'historico' = 'historico',
+  ): void {
     if (!this.filtersApplied) return;
+    this.controlEnvioFormulario = form ?? this.selectedFormularioForMenu;
+    this.alcanceDeficiencias = alcance;
+    this.refrescarDeficienciasVisibles();
     this.cerrarDetalle();
     this.cerrarProtocolo();
     this.controlEnvioAbierto = true;
@@ -640,50 +786,209 @@ export class FormulariosComponent implements OnDestroy {
 
   cerrarControlEnvio(): void {
     this.controlEnvioAbierto = false;
+    this.controlEnvioFormulario = null;
+    this.deficienciasVisibles = [];
   }
 
-  // ── Rechazo por deficiencia (V3) ──────────────────────────────────────────
-  // Desde la columna Estado, las filas "Rechazado por Deficiencia" abren un
-  // diálogo con los motivos del rechazo y cómo corregirlos. Datos de demo.
-  rechazoDetalle: Formulario | null = null;
+  /**
+   * Deficiencias del ÚLTIMO proceso de importación, por tipo de error. Un
+   * proceso cierra con una sola familia de códigos —o el archivo está mal
+   * formado (estructura) o le falta información exigida por la categoría
+   * (completitud)—, y cada familia cuelga de su propio detalle de proceso.
+   * En producción esto llega del backend por formulario.
+   */
+  private readonly deficienciasUltimoProceso: Readonly<
+    Record<TipoDeficiencia, readonly PlantillaDeficiencia[]>
+  > = {
+    // Etapa 1 · Importación — detalle de proceso 4831. Errores de ESTRUCTURA:
+    // el archivo no cumple el protocolo de importación.
+    estructura: [
+      { etapa: 1, idDetalleProceso: 4831, id: 1, tipo: 'estructura', codMensaje: 'EST-004', mensaje: 'Longitud de registro distinta a la declarada en el protocolo de importación.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4831, id: 2, tipo: 'estructura', codMensaje: 'EST-011', mensaje: 'Campo numérico con caracteres no válidos.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4831, id: 3, tipo: 'estructura', codMensaje: 'EST-019', mensaje: 'Código de concepto inexistente en la lista de la categoría.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4831, id: 4, tipo: 'estructura', codMensaje: 'EST-023', mensaje: 'Registro duplicado para el mismo concepto y tercero.', permisible: true, requiereComentario: true },
+    ],
+    // Etapa 1 · Importación — detalle de proceso 4832. Errores de COMPLETITUD:
+    // el archivo está bien formado, pero no trae todo lo que la categoría exige.
+    completitud: [
+      { etapa: 1, idDetalleProceso: 4832, id: 1, tipo: 'completitud', codMensaje: 'COMP-002', mensaje: 'Concepto obligatorio de la categoría sin registro en el archivo.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4832, id: 2, tipo: 'completitud', codMensaje: 'COMP-014', mensaje: 'El archivo no incluye todos los periodos exigidos por la categoría.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4832, id: 3, tipo: 'completitud', codMensaje: 'COMP-021', mensaje: 'Registro sin el tercero obligatorio para el concepto reportado.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4832, id: 4, tipo: 'completitud', codMensaje: 'COMP-036', mensaje: 'Concepto informado sin la nota explicativa que exige la categoría.', permisible: true, requiereComentario: true },
+    ],
+  };
 
-  /** True si el formulario fue rechazado por deficiencia (habilita "Ver motivo"). */
-  esRechazado(form: Formulario): boolean {
-    return form.estadoValidacion === 'Rechazado por Deficiencia';
-  }
+  /**
+   * Procesos ANTERIORES del formulario (histórico). Son las deficiencias de
+   * validación local y central: no llevan tipo, porque el tipo describe cómo
+   * cerró una importación, no una validación.
+   */
+  private readonly historialDeficiencias: readonly PlantillaDeficiencia[] = [
+    // Etapa 2 · Validación local — detalle de proceso 4822. El consecutivo
+    // vuelve a empezar en 1: es por etapa, no global.
+    { etapa: 2, idDetalleProceso: 4822, id: 1, codMensaje: 'VAL-001', mensaje: 'El total de débitos no coincide con el total de créditos del formulario.', permisible: false, requiereComentario: false },
+    { etapa: 2, idDetalleProceso: 4822, id: 2, codMensaje: 'VAL-032', mensaje: 'Concepto obligatorio sin valor diligenciado.', permisible: false, requiereComentario: false },
+    { etapa: 2, idDetalleProceso: 4822, id: 3, codMensaje: 'VAL-045', mensaje: 'Saldo negativo en una cuenta que no admite naturaleza contraria.', permisible: true, requiereComentario: false },
+    { etapa: 2, idDetalleProceso: 4822, id: 4, codMensaje: 'VAL-051', mensaje: 'El saldo inicial no coincide con el saldo final del periodo anterior.', permisible: false, requiereComentario: false },
 
-  /** Motivos del rechazo por deficiencia (mock de demostración). */
-  readonly deficienciasMock: { tipo: string; detalle: string; correccion: string }[] = [
-    {
-      tipo: 'Saldo descuadrado',
-      detalle: 'El total de débitos no coincide con el total de créditos del formulario.',
-      correccion: 'Revise los movimientos del periodo y ajuste hasta que el cuadre dé cero.',
-    },
-    {
-      tipo: 'Concepto obligatorio vacío',
-      detalle: 'Faltan valores en conceptos marcados como obligatorios por la CGN.',
-      correccion: 'Diligencie los conceptos obligatorios pendientes antes de reenviar.',
-    },
-    {
-      tipo: 'Operación recíproca sin par',
-      detalle: 'Una operación recíproca no tiene su contraparte reportada.',
-      correccion: 'Verifique la entidad recíproca y el valor reportado del movimiento.',
-    },
+    // Etapa 3 · Validación central — detalle de proceso 4823.
+    { etapa: 3, idDetalleProceso: 4823, id: 1, codMensaje: 'CEN-014', mensaje: 'Variación superior al 50% frente al periodo anterior.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 2, codMensaje: 'CEN-027', mensaje: 'Operación recíproca sin contraparte reportada por la entidad par.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 3, codMensaje: 'CEN-063', mensaje: 'Valor reportado en cero en un concepto con movimiento en el periodo anterior.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 4, codMensaje: 'CEN-078', mensaje: 'Tercero reportado sin identificación válida.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 5, codMensaje: 'CEN-084', mensaje: 'Cuenta reportada que no aplica para la naturaleza jurídica de la entidad.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 6, codMensaje: 'CEN-092', mensaje: 'Depreciación acumulada mayor al valor bruto del activo.', permisible: false, requiereComentario: false },
+    { etapa: 3, idDetalleProceso: 4823, id: 7, codMensaje: 'CEN-105', mensaje: 'Concepto informado sin nota explicativa asociada.', permisible: true, requiereComentario: true },
   ];
 
-  verRechazoDeficiencia(form: Formulario): void {
-    this.rechazoDetalle = form;
+  /**
+   * Deficiencias por formulario (id → filas). Se crean la primera vez que se
+   * abre el control de envío de ese formulario y se conservan, de modo que el
+   * getter devuelve SIEMPRE el mismo array: si recreara la lista en cada ciclo
+   * de detección de cambios, la tabla y los comentarios se reiniciarían solos.
+   */
+  private readonly deficienciasPorFormulario = new Map<number, DeficienciaEnvio[]>();
+
+  /**
+   * Tipo de error con el que cerró el último proceso de importación de cada
+   * formulario. Lo asigna el resultado de la importación; sin entrada aquí, el
+   * formulario no tiene deficiencias de importación.
+   */
+  private readonly tipoDeficienciaPorFormulario = new Map<number, TipoDeficiencia>();
+
+  /** Deficiencias del formulario abierto en el control de envío. */
+  get deficienciasEnvio(): DeficienciaEnvio[] {
+    const form = this.controlEnvioFormulario;
+    if (!form) return [];
+    const existentes = this.deficienciasPorFormulario.get(form.id);
+    if (existentes) return existentes;
+    const filas = this.construirDeficiencias(form).map(d => ({
+      ...d, comentario: '', comentarioGuardado: '', comentarioError: '',
+    }));
+    this.deficienciasPorFormulario.set(form.id, filas);
+    return filas;
   }
 
-  cerrarRechazoDetalle(): void {
-    this.rechazoDetalle = null;
+  /**
+   * Arma el expediente de un formulario: primero el último proceso (la
+   * importación que acaba de cerrar, con su familia de códigos) y detrás los
+   * procesos anteriores. Un formulario sin deficiencias devuelve lista vacía —
+   * no todos los formularios de la categoría tienen por qué tener errores.
+   */
+  private construirDeficiencias(form: Formulario): readonly PlantillaDeficiencia[] {
+    const tipo = this.tipoDeficienciaPorFormulario.get(form.id);
+    if (tipo) return [...this.deficienciasUltimoProceso[tipo], ...this.historialDeficiencias];
+    // Rechazado por la validación central (sin importación fallida detrás):
+    // sólo tiene el expediente de validaciones.
+    if (form.estado === 'D') return this.historialDeficiencias;
+    return [];
   }
 
-  /** Desde el diálogo de rechazo, salta al registro manual del formulario. */
-  irARegistroDesdeRechazo(): void {
-    const form = this.rechazoDetalle;
-    this.cerrarRechazoDetalle();
-    if (form) this.abrirDetalle(form);
+  // ── Alcance de la tabla de deficiencias ───────────────────────────────────
+  // El mismo control de envío se abre desde dos sitios y no muestran lo mismo:
+  //   • tag "Deficiencia" del listado → las del ÚLTIMO proceso, que es lo que
+  //     el usuario acaba de ver fallar;
+  //   • acción ⋮ "Ver control de envío" → el histórico completo del formulario.
+  // El selector deja pasar de una vista a la otra sin salir de la pantalla.
+
+  /** Alcance activo de la tabla de deficiencias. */
+  alcanceDeficiencias: 'ultimo' | 'historico' = 'historico';
+
+  /** Filas que ve la tabla — recalculadas al abrir o al cambiar de alcance. */
+  deficienciasVisibles: DeficienciaEnvio[] = [];
+
+  /** Id del detalle de proceso más reciente del formulario abierto (0 = ninguno). */
+  get ultimoProcesoId(): number {
+    return this.deficienciasEnvio.reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
+  }
+
+  /** Tipo de error del último proceso del formulario abierto, si lo tuvo. */
+  get tipoUltimoProceso(): TipoDeficiencia | null {
+    const form = this.controlEnvioFormulario;
+    return (form && this.tipoDeficienciaPorFormulario.get(form.id)) || null;
+  }
+
+  /** Presentación (label + severity) de un tipo de deficiencia. */
+  tipoDeficienciaDe(tipo: TipoDeficiencia): { label: string; severity: TagSeverity } {
+    return TIPOS_DEFICIENCIA[tipo];
+  }
+
+  cambiarAlcanceDeficiencias(alcance: 'ultimo' | 'historico'): void {
+    this.alcanceDeficiencias = alcance;
+    this.refrescarDeficienciasVisibles();
+  }
+
+  /** Aplica el alcance activo sobre el expediente del formulario abierto. */
+  private refrescarDeficienciasVisibles(): void {
+    const todas = this.deficienciasEnvio;
+    this.deficienciasVisibles =
+      this.alcanceDeficiencias === 'ultimo'
+        ? todas.filter(d => d.idDetalleProceso === this.ultimoProcesoId)
+        : todas;
+  }
+
+  /** Resumen del alcance activo, para el encabezado de la tabla. */
+  get resumenDeficiencias(): string {
+    const total = this.deficienciasVisibles.length;
+    const plural = total === 1 ? 'deficiencia' : 'deficiencias';
+    if (this.alcanceDeficiencias === 'ultimo') {
+      const tipo = this.tipoUltimoProceso;
+      const detalle = tipo ? ` de ${TIPOS_DEFICIENCIA[tipo].label.toLowerCase()}` : '';
+      return `Proceso ${this.ultimoProcesoId} · ${total} ${plural}${detalle}`;
+    }
+    const procesos = new Set(this.deficienciasEnvio.map(d => d.idDetalleProceso)).size;
+    return `${procesos} proceso(s) · ${total} ${plural}`;
+  }
+
+  /** Longitud mínima exigida al comentario de una deficiencia. */
+  readonly COMENTARIO_MIN = 30;
+
+  /** True si el texto en edición difiere de lo último guardado. */
+  comentarioPendiente(d: DeficienciaEnvio): boolean {
+    return d.comentario.trim() !== d.comentarioGuardado;
+  }
+
+  /** Limpia el error mientras el usuario corrige, para no regañarlo al escribir. */
+  onComentarioInput(d: DeficienciaEnvio): void {
+    d.comentarioError = '';
+  }
+
+  /**
+   * Guarda el comentario de una deficiencia. Exige `COMENTARIO_MIN` caracteres:
+   * la justificación viaja a la CGN, y un "ok" de tres letras no justifica nada.
+   */
+  guardarComentario(d: DeficienciaEnvio): void {
+    const texto = d.comentario.trim();
+    if (texto.length < this.COMENTARIO_MIN) {
+      d.comentarioError =
+        `Escriba al menos ${this.COMENTARIO_MIN} caracteres: lleva ${texto.length}.`;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Comentario demasiado corto',
+        detail: `${d.codMensaje}: la justificación debe tener mínimo ${this.COMENTARIO_MIN} caracteres.`,
+        life: 4500,
+      });
+      return;
+    }
+    d.comentario = texto;
+    d.comentarioGuardado = texto;
+    d.comentarioError = '';
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Comentario guardado',
+      detail: `Se guardó la justificación del mensaje ${d.codMensaje}.`,
+      life: 3500,
+    });
+  }
+
+  // ── Rechazo por deficiencia ───────────────────────────────────────────────
+  // Desde la columna Estado, las filas con estado Deficiencia (D) abren el
+  // control de envío de ESE formulario, que es donde vive el detalle de las
+  // deficiencias (mismo destino que la acción ⋮ "Ver control de envío").
+
+  /** True si el formulario fue rechazado por deficiencia (hace clicable el tag). */
+  esRechazado(form: Formulario): boolean {
+    return form.estado === 'D';
   }
 
   // ── Tipo de usuario (mock de demostración) ──
@@ -783,8 +1088,7 @@ export class FormulariosComponent implements OnDestroy {
   private resetContextoEntidad() {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
-    this.panelEstadoAbierto = false;
-    this.controlEnvioAbierto = false;
+    this.cerrarControlEnvio();
     this.showImportDialog = false;
     this.cerrarPanelesPaso1();
   }
@@ -838,7 +1142,7 @@ export class FormulariosComponent implements OnDestroy {
   //    Entidades Agregadas, Generar protocolo, Exportar, Consultar Envíos.
   //  • Sobre seleccionados (1+ formularios marcados): Validar.
   //  • Terminal: Enviar Categoría — habilitada solo cuando TODOS los
-  //    formularios del listado están en estado "Validado".
+  //    formularios del listado están validados localmente (etapa 2 / estado A).
   // ──────────────────────────────────────────────────────────────────────
   accionesGlobales: AccionPermiso[] = [
     { key: 'importar', label: 'Importar', icon: 'pi pi-upload', enabled: true },
@@ -862,7 +1166,24 @@ export class FormulariosComponent implements OnDestroy {
   selectedFormularios: Formulario[] = [];
 
   // ── Importar (acción transversal de los 3 pasos) ──
+  //
+  // La importación sólo admite TXT (plano, según el protocolo de importación) y
+  // es asíncrona: al confirmar, el archivo entra a la cola de proceso y el
+  // resultado se notifica por correo. El diálogo recorre hasta tres momentos:
+  //   1. 'seleccion'    → se elige el archivo y se valida la extensión
+  //   2. 'confirmacion' → SÓLO si el contexto ya tiene información importada:
+  //                       avisa qué formularios se reemplazan y pide confirmar
+  //   3. 'iniciado'     → alerta de proceso (o reproceso) iniciado + correo
+  /** Única extensión admitida por la importación. */
+  private readonly EXTENSION_IMPORT = '.txt';
+
   importFileName = '';
+  /** Mensaje de rechazo del archivo elegido (extensión no admitida). */
+  importFileError = '';
+  /** Momento del diálogo de importación. */
+  importPaso: 'seleccion' | 'confirmacion' | 'iniciado' = 'seleccion';
+  /** True cuando lo iniciado reemplaza información ya importada. */
+  esReimportacion = false;
 
   /** Diálogo de importación, accesible desde el botón transversal. */
   showImportDialog = false;
@@ -870,12 +1191,71 @@ export class FormulariosComponent implements OnDestroy {
   /** Abre el diálogo de importación (gateado por el contexto del Paso 1). */
   abrirImportDialog() {
     if (!this.filtersApplied) return;
-    this.importFileName = '';
+    this.resetImportDialog();
     this.showImportDialog = true;
   }
 
   cerrarImportDialog() {
     this.showImportDialog = false;
+    this.resetImportDialog();
+  }
+
+  private resetImportDialog() {
+    this.importFileName = '';
+    this.importFileError = '';
+    this.importPaso = 'seleccion';
+    this.esReimportacion = false;
+  }
+
+  /**
+   * Escenario de importación (SÓLO demostración). En producción esto no existe:
+   * que haya o no información previa lo decide el estado del contexto. Como el
+   * demo arranca con formularios ya importados, sin este switch nunca se vería
+   * el mensaje de importación limpia.
+   *   'auto'   → según los datos (lo que hará el sistema real)
+   *   'limpio' → fuerza "sin información previa": importación de primera vez
+   */
+  escenarioImport: 'auto' | 'limpio' = 'auto';
+  readonly escenarioImportOptions = [
+    { label: 'Con información previa · reimportación', value: 'auto' },
+    { label: 'Sin información previa · importación limpia', value: 'limpio' },
+  ];
+
+  /**
+   * Formularios del contexto que ya tienen información y, por tanto, serían
+   * reemplazados por el archivo. Si hay al menos uno, la importación es una
+   * reimportación y el diálogo exige confirmación antes de arrancar.
+   */
+  get formulariosAReimportar(): Formulario[] {
+    if (this.escenarioImport === 'limpio') return [];
+    return this.filteredFormularios.filter(f => f.estado !== null);
+  }
+
+  /**
+   * Validación de la extensión en el momento de elegir el archivo: si no es
+   * .txt no se acepta, se explica por qué y se limpia el input para que el
+   * usuario pueda volver a elegir (incluso el mismo archivo).
+   */
+  seleccionarArchivoImport(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    this.importFileName = '';
+    this.importFileError = '';
+    if (!archivo) return;
+
+    if (!archivo.name.toLowerCase().endsWith(this.EXTENSION_IMPORT)) {
+      this.importFileError =
+        `"${archivo.name}" no es un archivo .txt. La importación sólo admite archivos de texto plano (.txt).`;
+      input.value = '';
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo no admitido',
+        detail: 'Seleccione un archivo con extensión .txt.',
+        life: 5000,
+      });
+      return;
+    }
+    this.importFileName = archivo.name;
   }
 
   // ── Exportar ──
@@ -930,108 +1310,27 @@ export class FormulariosComponent implements OnDestroy {
 
   /**
    * Envío final de la categoría — solo habilitado cuando todos los
-   * formularios del listado están en estado "Validado". Reflejo del
+   * formularios del listado están validados localmente. Reflejo del
    * flujo descrito por CRIS: validación local → envío central.
    */
   get todosValidados(): boolean {
     const lista = this.filteredFormularios;
-    return lista.length > 0 && lista.every(f => f.estadoValidacion === 'Validado');
+    return lista.length > 0 && lista.every(f => this.esValidadoLocal(f));
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     Panel lateral "Estado de la categoría" — único en el layout, visible
-     y toggleable en los 3 pasos (toggle, NO modal). No introduce estado
-     nuevo más allá del flag de apertura: TODO lo que muestra se deriva de
-     la única fuente de verdad que ya comparten los pasos:
-       • filtersApplied + contexto (categoría/entidad/año/periodo)
-       • _formulariosBase / filteredFormularios (estadoValidacion)
-       • selectedEntidades (entidades agregadas, Paso 3)
-     Al navegar entre pasos el estado se conserva solo, porque se recalcula
-     de esas mismas propiedades.
-     ═══════════════════════════════════════════════════════════════════ */
-
-  /** Apertura del panel lateral (toggle). Único estado propio del panel. */
-  panelEstadoAbierto = false;
-
-  togglePanelEstado(): void {
-    // El control de envío sólo se habilita con un contexto aplicado.
-    if (!this.filtersApplied) return;
-    this.panelEstadoAbierto = !this.panelEstadoAbierto;
+  /** Validado localmente: etapa Validación local (2) + estado Aceptado (A). */
+  private esValidadoLocal(form: Formulario): boolean {
+    return form.etapa === 2 && form.estado === 'A';
   }
 
-  /** Etiqueta legible del periodo seleccionado (para el contexto del panel). */
+  /** Enviado a validación central: etapa Envío (4) + estado Enviado (S). */
+  private esEnviado(form: Formulario): boolean {
+    return form.etapa === 4 && form.estado === 'S';
+  }
+
+  /** Etiqueta legible del periodo seleccionado (para el contexto de la pantalla). */
   get periodoLabel(): string {
     return this.periodoOptions.find(o => o.value === this.selectedPeriodo)?.label ?? '';
-  }
-
-  /**
-   * Estado dominante (lifecycle) de la categoría. Se calcula a partir del
-   * listado de formularios y de la verificación central — misma fuente que
-   * usan los pasos para habilitar Validar / Enviar.
-   */
-  get estadoCategoria(): EstadoCategoriaResumen {
-    const lista = this.filteredFormularios;
-    if (!this.filtersApplied || lista.length === 0) {
-      return {
-        clave: 'sin-contexto', label: 'Sin contexto', severity: 'secondary',
-        icon: 'pi pi-inbox',
-        descripcion: 'Aplique los filtros en el Paso 1 para cargar la categoría.',
-      };
-    }
-    // Tras el envío central todos los formularios quedan en "Enviado".
-    if (lista.every(f => f.estadoValidacion === 'Enviado')) {
-      return {
-        clave: 'enviado', label: 'Enviada a validación central', severity: 'info',
-        icon: 'pi pi-send',
-        descripcion: 'La categoría fue enviada. El resultado (aceptado o rechazado) llegará en Consultar envíos.',
-      };
-    }
-    // Rechazo: formularios marcados con deficiencia. El detalle del motivo se
-    // consulta en el formulario rechazado del listado (columna Estado → Ver motivo).
-    if (lista.some(f => f.estadoValidacion === 'Rechazado por Deficiencia')) {
-      return {
-        clave: 'rechazado', label: 'Rechazado por deficiencia', severity: 'danger',
-        icon: 'pi pi-times-circle',
-        descripcion: 'Hay formularios rechazados. Abra el formulario rechazado para ver el motivo y corregirlo.',
-      };
-    }
-    if (lista.every(f => f.estadoValidacion === 'Validado')) {
-      return {
-        clave: 'validado', label: 'Validada · lista para enviar', severity: 'success',
-        icon: 'pi pi-check-circle',
-        descripcion: 'Todos los formularios están validados. Puede enviar la categoría en el Paso 3.',
-      };
-    }
-    return {
-      clave: 'importado', label: 'Importada · en diligenciamiento', severity: 'warn',
-      icon: 'pi pi-file-import',
-      descripcion: 'Formularios cargados. Valide cada uno para poder enviar la categoría.',
-    };
-  }
-
-  /** Desglose por estado de los formularios (solo los estados presentes). */
-  get desgloseEstados(): DesgloseEstado[] {
-    const lista = this.filteredFormularios;
-    const cuenta = (estado: string) => lista.filter(f => f.estadoValidacion === estado).length;
-    const buckets: { label: string; estado: string; icon: string; severity: TagSeverity }[] = [
-      { label: 'Importado / pendiente', estado: 'Pendiente de validar', icon: 'pi pi-file-import', severity: 'warn' },
-      { label: 'Validado', estado: 'Validado', icon: 'pi pi-check-circle', severity: 'success' },
-      { label: 'Rechazado por deficiencia', estado: 'Rechazado por Deficiencia', icon: 'pi pi-times-circle', severity: 'danger' },
-      { label: 'Enviado', estado: 'Enviado', icon: 'pi pi-send', severity: 'info' },
-    ];
-    return buckets
-      .map(b => ({ label: b.label, cantidad: cuenta(b.estado), icon: b.icon, severity: b.severity }))
-      .filter(b => b.cantidad > 0);
-  }
-
-  /** Progreso de validación local: validados (o enviados) sobre el total. */
-  get progresoValidacion(): { validados: number; total: number; pct: number } {
-    const lista = this.filteredFormularios;
-    const total = lista.length;
-    const validados = lista.filter(
-      f => f.estadoValidacion === 'Validado' || f.estadoValidacion === 'Enviado',
-    ).length;
-    return { validados, total, pct: total ? Math.round((validados / total) * 100) : 0 };
   }
 
   /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
@@ -1064,7 +1363,7 @@ export class FormulariosComponent implements OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Categoría no enviable',
-        detail: 'Todos los formularios deben estar en estado "Validado" antes de enviar la categoría.',
+        detail: 'Todos los formularios deben estar en Validación local · Aceptado antes de enviar la categoría.',
         life: 5000,
       });
       return;
@@ -1108,14 +1407,15 @@ export class FormulariosComponent implements OnDestroy {
     this.categoriaEnviada = true;
 
     if (this.respuestaCentral === 'rechazado') {
-      // Rechazo por deficiencia: se marca UN formulario como rechazado (los demás
-      // quedan Validado, para poder reenviar tras corregirlo). El motivo se consulta
-      // en ese formulario desde el listado (Sección 2 → "Ver motivo").
+      // Rechazo por deficiencia: UN formulario vuelve con etapa Validación
+      // central (3) y estado Deficiencia (D); los demás quedan como estaban,
+      // para poder reenviar tras corregirlo. El motivo se consulta en ese
+      // formulario desde el listado (Sección 2 → "Ver motivo").
       let marcado = false;
       this._formulariosBase = this._formulariosBase.map(f => {
         if (!marcado) {
           marcado = true;
-          return { ...f, estadoValidacion: 'Rechazado por Deficiencia' };
+          return { ...f, etapa: 3 as EtapaId, estado: 'D' as EstadoId };
         }
         return f;
       });
@@ -1128,8 +1428,10 @@ export class FormulariosComponent implements OnDestroy {
       return;
     }
 
-    // Aceptado / En proceso: todos los formularios pasan a "Enviado".
-    this._formulariosBase = this._formulariosBase.map(f => ({ ...f, estadoValidacion: 'Enviado' }));
+    // Aceptado / En proceso: todos pasan a etapa Envío (4) / estado Enviado (S).
+    this._formulariosBase = this._formulariosBase.map(f => ({
+      ...f, etapa: 4 as EtapaId, estado: 'S' as EstadoId,
+    }));
     this.messageService.add({
       severity: this.respuestaCentral === 'aceptado' ? 'success' : 'info',
       summary: this.respuestaCentral === 'aceptado' ? 'Categoría aceptada' : 'Categoría enviada',
@@ -1144,12 +1446,141 @@ export class FormulariosComponent implements OnDestroy {
     this.activePanel = null;
   }
 
+  /**
+   * Botón "Importar". Si el contexto ya tiene información importada, no arranca
+   * nada todavía: primero pasa por el aviso de reemplazo. Si no hay nada que
+   * reemplazar, arranca directo.
+   */
   confirmImport() {
-    if (!this.importFileName) return;
-    this.messageService.add({ severity: 'success', summary: 'Importación iniciada', detail: `Importando archivo "${this.importFileName}"...` });
-    this.importFileName = '';
+    if (!this.importFileName || this.importPaso === 'iniciado') return;
+    if (this.importPaso === 'seleccion' && this.formulariosAReimportar.length > 0) {
+      this.importPaso = 'confirmacion';
+      return;
+    }
+    this.iniciarProcesoImportacion();
+  }
+
+  /** Vuelve del aviso de reemplazo a la selección de archivo, sin arrancar nada. */
+  cancelarReimportacion() {
+    this.importPaso = 'seleccion';
+  }
+
+  /**
+   * Arranca el proceso. No se cierra el diálogo — se reemplaza su cuerpo por la
+   * alerta, porque el usuario tiene que enterarse de que el proceso ya arrancó
+   * y de que el resultado NO llega a esta pantalla sino a su correo.
+   */
+  private iniciarProcesoImportacion() {
+    // Se calcula ANTES de tocar los estados: después, todos tienen registro.
+    this.esReimportacion = this.formulariosAReimportar.length > 0;
+
+    // Todo el contexto vuelve a la etapa Importación. Sólo una reimportación
+    // arranca en Reimportando (N), y sólo para lo que ya tenía información; en
+    // una importación limpia todo el contexto arranca en Importando (G).
+    this._formulariosBase = this._formulariosBase.map(f => ({
+      ...f,
+      etapa: 1 as EtapaId,
+      estado: (this.esReimportacion && f.estado !== null ? 'N' : 'G') as EstadoId,
+    }));
+    this.selectedFormularios = [];
+    this.categoriaEnviada = false;
+    this.programarAvanceProceso();
+
+    this.importPaso = 'iniciado';
     this.activePanel = null;
-    this.showImportDialog = false;
+    this.messageService.add({
+      severity: 'info',
+      summary: this.esReimportacion ? 'Reimportación iniciada' : 'Importación iniciada',
+      detail: this.esReimportacion
+        ? `"${this.importFileName}" inició su proceso de reimportación. El resultado se notificará a ${this.correoUsuario}.`
+        : `"${this.importFileName}" inició su proceso de importación. El resultado se notificará a ${this.correoUsuario}.`,
+      life: 6000,
+    });
+  }
+
+  // ── Avance del proceso de importación (simulación de demostración) ────────
+  // En producción el proceso corre en el servidor y el resultado llega por
+  // correo; aquí se anima la secuencia real de estados para que la pantalla
+  // muestre por dónde va cada formulario:
+  //   limpia        →  Importando → En espera → Validando → Aceptado/Deficiencia
+  //   reimportación →  Reimportando → Importando → En espera → Validando → …
+  // Todo ocurre dentro de la etapa 1 (Importación).
+
+  /** Duración de cada paso de la secuencia, en ms. */
+  private readonly PASO_PROCESO_MS = 2200;
+
+  /** Temporizadores en curso: se cancelan al reimportar, al filtrar y al destruir. */
+  private timersProceso: number[] = [];
+
+  /**
+   * Con qué cierra el archivo demo cada formulario (id → tipo de error). Los
+   * que no aparecen aquí terminan Aceptados. Se deja uno de cada familia para
+   * poder comparar los dos juegos de códigos en el control de envío.
+   */
+  private readonly RESULTADO_IMPORTACION: Readonly<Record<number, TipoDeficiencia>> = {
+    2: 'estructura',   // Balance General
+    3: 'completitud',  // Estado de Resultados
+  };
+
+  /** Encadena los pasos restantes de la secuencia a partir del estado inicial. */
+  private programarAvanceProceso(): void {
+    this.cancelarAvanceProceso();
+    const pasos: Array<() => void> = [];
+    // La reimportación gasta un paso extra: primero Reimportando, luego ya
+    // entra al mismo carril que una importación limpia.
+    if (this.esReimportacion) pasos.push(() => this.aplicarEstadoATodos('G'));
+    pasos.push(() => this.aplicarEstadoATodos('W'));
+    pasos.push(() => this.aplicarEstadoATodos('V'));
+    pasos.push(() => this.aplicarResultadoImportacion());
+
+    pasos.forEach((paso, i) => {
+      this.timersProceso.push(
+        window.setTimeout(paso, this.PASO_PROCESO_MS * (i + 1)),
+      );
+    });
+  }
+
+  private cancelarAvanceProceso(): void {
+    this.timersProceso.forEach(id => window.clearTimeout(id));
+    this.timersProceso = [];
+  }
+
+  /** Mueve todo el contexto al mismo estado dentro de la etapa Importación. */
+  private aplicarEstadoATodos(estado: EstadoId): void {
+    this._formulariosBase = this._formulariosBase.map(f => ({
+      ...f, etapa: 1 as EtapaId, estado,
+    }));
+  }
+
+  /**
+   * Cierra el proceso: reparte Aceptado / Deficiencia y deja registrado con qué
+   * familia de códigos falló cada formulario. Las deficiencias cacheadas se
+   * descartan: son de un proceso que ya no es el último.
+   */
+  private aplicarResultadoImportacion(): void {
+    let conDeficiencia = 0;
+    this._formulariosBase = this._formulariosBase.map(f => {
+      const tipo = this.RESULTADO_IMPORTACION[f.id];
+      this.deficienciasPorFormulario.delete(f.id);
+      if (tipo) {
+        this.tipoDeficienciaPorFormulario.set(f.id, tipo);
+        conDeficiencia++;
+        return { ...f, etapa: 1 as EtapaId, estado: 'D' as EstadoId };
+      }
+      this.tipoDeficienciaPorFormulario.delete(f.id);
+      return { ...f, etapa: 1 as EtapaId, estado: 'A' as EstadoId };
+    });
+    // Si el control de envío está abierto, que muestre ya el proceso nuevo.
+    this.refrescarDeficienciasVisibles();
+
+    const aceptados = this._formulariosBase.length - conDeficiencia;
+    this.messageService.add({
+      severity: conDeficiencia ? 'warn' : 'success',
+      summary: 'Proceso de importación finalizado',
+      detail: `${aceptados} formulario(s) aceptados y ${conDeficiencia} con deficiencias. `
+        + 'Abra el estado "Deficiencia" para ver los mensajes del proceso.',
+      life: 7000,
+    });
   }
 
   confirmExport() {
@@ -1159,10 +1590,12 @@ export class FormulariosComponent implements OnDestroy {
 
   confirmValidation() {
     const count = this.selectedFormularios.length;
-    // Marca los seleccionados como Validado en el listado base.
+    // Los seleccionados avanzan a etapa Validación local (2) / estado Aceptado (A).
+    // Incluye los que están "Sin registro": si la categoría no exige archivo,
+    // se validan igual y la entidad los presenta vacíos.
     const seleccionadosIds = new Set(this.selectedFormularios.map(f => f.id));
     this._formulariosBase = this._formulariosBase.map(f =>
-      seleccionadosIds.has(f.id) ? { ...f, estadoValidacion: 'Validado' } : f,
+      seleccionadosIds.has(f.id) ? { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId } : f,
     );
     this.selectedFormularios = [];
     this.activePanel = null;
@@ -1175,11 +1608,11 @@ export class FormulariosComponent implements OnDestroy {
       this.messageService.add({
         severity: 'success',
         summary: 'Todos los formularios validados',
-        detail: `${count} formulario(s) marcados como Validado. Puede continuar al paso Envíos.`,
+        detail: `${count} formulario(s) pasaron a Validación local · Aceptado. Puede continuar al paso Envíos.`,
         life: 5000,
       });
     } else {
-      const pendientes = this.filteredFormularios.filter(f => f.estadoValidacion !== 'Validado').length;
+      const pendientes = this.filteredFormularios.filter(f => !this.esValidadoLocal(f)).length;
       this.messageService.add({
         severity: 'success',
         summary: 'Validación exitosa',
@@ -1198,13 +1631,23 @@ export class FormulariosComponent implements OnDestroy {
    * `filteredFormularios` según los filtros aplicados. Esto evita que el demo
    * salga vacío para combinaciones que no estén "cableadas" en el mock.
    */
-  private readonly plantillasFormulario: Array<{ nombre: string; estado: string }> = [
-    { nombre: 'Balance General', estado: 'Pendiente de validar' },
-    { nombre: 'Estado de Resultados', estado: 'Pendiente de validar' },
-    { nombre: 'Flujo de Efectivo', estado: 'Pendiente de validar' },
-    { nombre: 'Estado de Cambios en el Patrimonio', estado: 'Validado' },
-    { nombre: 'Notas a los Estados Financieros', estado: 'Pendiente de validar' },
-    { nombre: 'Información Complementaria', estado: 'Rechazado por Deficiencia' },
+  private readonly plantillasFormulario: Array<{
+    nombre: string; etapa: EtapaId; estado: EstadoId | null;
+  }> = [
+    // El orden sigue el ciclo de vida, para que el listado del demo muestre de
+    // arriba a abajo todos los casos que la columna Estado sabe representar.
+    //
+    // Sin registro: está en la etapa 1 pero todavía no se ha importado. Puede
+    // validarse igual si la categoría no exige archivo (se presenta vacío).
+    { nombre: 'Notas a los Estados Financieros', etapa: 1, estado: null },
+    // Importados sin validar: la importación quedó Aceptada, falta validar local.
+    { nombre: 'Balance General', etapa: 1, estado: 'A' },
+    { nombre: 'Estado de Resultados', etapa: 1, estado: 'A' },
+    { nombre: 'Flujo de Efectivo', etapa: 1, estado: 'A' },
+    // Ya validado localmente.
+    { nombre: 'Estado de Cambios en el Patrimonio', etapa: 2, estado: 'A' },
+    // Devuelto por la validación central con deficiencia.
+    { nombre: 'Información Complementaria', etapa: 3, estado: 'D' },
   ];
 
   searchFormulario = '';
@@ -1232,6 +1675,10 @@ export class FormulariosComponent implements OnDestroy {
 
   /** Recalcula el listado base a partir de los filtros aplicados. */
   private recomputarFormulariosBase() {
+    // Contexto nuevo: se abandona el proceso en curso y su expediente.
+    this.cancelarAvanceProceso();
+    this.deficienciasPorFormulario.clear();
+    this.tipoDeficienciaPorFormulario.clear();
     const periodoLabel = this.selectedPeriodo || 'T1';
     const anioNum = this.selectedAnio ? +this.selectedAnio : 2024;
     const catCode = this.selectedCategoria || 'ICP';
@@ -1244,7 +1691,8 @@ export class FormulariosComponent implements OnDestroy {
       categoria: catCode,
       periodo: periodoLabel,
       anio: anioNum,
-      estadoValidacion: plantilla.estado,
+      etapa: plantilla.etapa,
+      estado: plantilla.estado,
       ultimaModificacion: `0${(idx % 9) + 1}/${(idx % 12) + 1}/${anioNum}`,
     }));
     // Contexto nuevo: aún no se ha enviado.
@@ -1270,8 +1718,7 @@ export class FormulariosComponent implements OnDestroy {
   onFiltroModificado() {
     if (this.filtersApplied) {
       this.filtersApplied = false;
-      this.panelEstadoAbierto = false;
-      this.controlEnvioAbierto = false;
+      this.cerrarControlEnvio();
       this.showImportDialog = false;
       this.categoriaEnviada = false;
       this.cerrarPanelesPaso1();
@@ -1313,8 +1760,7 @@ export class FormulariosComponent implements OnDestroy {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.searchFormulario = '';
-    this.panelEstadoAbierto = false;
-    this.controlEnvioAbierto = false;
+    this.cerrarControlEnvio();
     this.showImportDialog = false;
     this.categoriaEnviada = false;
     this.cerrarPanelesPaso1();
@@ -2025,19 +2471,32 @@ export class FormulariosComponent implements OnDestroy {
     });
   }
 
-  getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
-    // Ciclo de vida descrito por CRIS:
-    // Pendiente → Validado → Enviado → Aceptado / Rechazado
-    const map: Record<string, 'success' | 'warn' | 'danger' | 'info' | 'secondary'> = {
-      'Pendiente de validar': 'warn',
-      'Rechazado por Deficiencia': 'danger',
-      'Rechazado': 'danger',
-      'Validado': 'success',
-      'Enviado': 'info',
-      'En validación central': 'info',
-      'Aceptado': 'success',
-      'En proceso': 'info',
-    };
-    return map[estado] || 'secondary';
+  /* ── Catálogo etapa/estado — accesores para el listado ────────────────── */
+
+  /** Presentación (no estado) de un formulario todavía sin registro. */
+  readonly sinRegistroLabel = SIN_REGISTRO_LABEL;
+  readonly sinRegistroAyuda = SIN_REGISTRO_AYUDA;
+
+  /** Fila de `tab_etapa_proceso` que corresponde a la etapa del formulario. */
+  etapaDe(id: EtapaId): EtapaProceso {
+    return ETAPAS_PROCESO.find(e => e.id === id) ?? ETAPAS_PROCESO[0];
+  }
+
+  /** Fila de `tab_estado` que corresponde al estado del formulario. */
+  estadoDe(id: EstadoId): EstadoProceso {
+    return ESTADOS_PROCESO.find(e => e.id === id) ?? ESTADOS_PROCESO[0];
+  }
+
+  /**
+   * Tooltip del tag de estado: código y nombre exactos del catálogo, más la
+   * descripción cuando aporta algo distinto al nombre. El dato esencial ya
+   * está visible en el tag; esto es sólo la referencia al modelo de datos.
+   */
+  estadoTooltip(id: EstadoId): string {
+    const estado = this.estadoDe(id);
+    const base = `${estado.id} · ${estado.nombre}`;
+    return estado.descripcion === estado.nombre
+      ? base
+      : `${base} — ${estado.descripcion}`;
   }
 }

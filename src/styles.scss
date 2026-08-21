@@ -42,6 +42,13 @@
   --chip-danger: #F44336;
   --chip-info: #0943B5;
 
+  /* Variantes oscuras de los informativos, para TEXTO. Los tonos del Kit son
+     de relleno (fondos, bordes, iconos ≥3:1) y como texto sobre blanco no
+     llegan a 4.5:1 — #F44336 da 3.69:1 y #4CAF50 apenas 2.78:1. Estos mantienen
+     el mismo matiz y pasan AA también sobre la fila rayada (#F5F5F5). */
+  --chip-danger-700: #C62828;   /* 5.63:1 sobre blanco · 5.17:1 sobre #F5F5F5 */
+  --chip-success-700: #2E7D32;  /* 5.19:1 sobre blanco · 4.76:1 sobre #F5F5F5 */
+
   /* --- Backgrounds (Kit UI v9.2) --- */
   --chip-bg-solitude: #EBF0FA;
   --chip-bg-corn-silk: #FFF8E1;

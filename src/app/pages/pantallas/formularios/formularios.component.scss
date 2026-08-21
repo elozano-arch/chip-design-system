@@ -334,6 +334,45 @@
   color: var(--chip-grey-500);
 }
 
+/* "Sin registro": el formulario no se ha importado todavía. Es la AUSENCIA de
+   registro, no un estado del catálogo — texto gris, sin fondo de tag, para que
+   no compita con los estados reales ni parezca uno más. */
+.form-table__sin-registro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  /* grey-600 y no 500: el texto tiene que pasar 4.5:1 también sobre la fila
+     rayada (#F5F5F5), donde grey-500 se queda en 4.23:1. */
+  color: var(--chip-grey-600);
+  cursor: help;
+
+  i {
+    font-size: 14px;
+    color: var(--chip-grey-500);
+    flex-shrink: 0;
+  }
+}
+
+/* Etapa del proceso (tab_etapa_proceso): texto + icono, NO un segundo tag.
+   La etapa es la fase del flujo; el color se reserva para el estado, que es
+   el dato que exige atención. Dos tags de color seguidos compiten entre sí. */
+.form-table__etapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--chip-grey-800);
+
+  i {
+    font-size: 14px;
+    color: var(--chip-grey-500);
+    flex-shrink: 0;
+  }
+}
+
 /* --- Summary Cards --- */
 .form-summary {
   display: flex;
@@ -2453,55 +2492,220 @@ $estado-panel-width: 300px;
   }
 }
 
-/* ── Diálogo "Rechazo por deficiencia" (V3) ── */
-.form-rechazo {
+/* ── Alerta "proceso de importación iniciado" (cuerpo del diálogo) ── */
+.form-import-done {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--chip-grey-200, #d6d6d6);
+  border-left: 3px solid var(--chip-cobalt-700, #0943b5);
+  border-radius: 8px;
+  background: var(--chip-bg-solitude, #ebf0fa);
 
-  &__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  &__item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 14px;
-    border: 1px solid var(--chip-grey-200, #e0e0e0);
-    border-left: 3px solid var(--chip-danger, #f44336);
-    border-radius: 8px;
-    background: var(--chip-bg-white-smoke, #f5f5f5);
+  > i {
+    font-size: 22px;
+    color: var(--chip-cobalt-700, #0943b5);
+    flex-shrink: 0;
+    margin-top: 2px;
   }
 
   &__body {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-  }
-
-  &__detalle {
-    margin: 0;
-    color: var(--chip-grey-800, #303030);
-  }
-
-  &__fix {
-    margin: 0;
-    display: flex;
-    align-items: center;
     gap: 6px;
-    color: var(--chip-cobalt-700, #0943b5);
 
-    i { font-size: 14px; }
+    strong { color: var(--chip-grey-900, #2b2b2b); }
+    p { margin: 0; line-height: 1.55; color: var(--chip-grey-800, #3b3b3b); }
+  }
+
+  &__file {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #fff;
+    border: 1px solid var(--chip-grey-200, #d6d6d6);
   }
 }
 
-/* ── Pantalla dedicada "Control de envío" (V3, desde acción ⋮) ── */
+/* ── Aviso de reemplazo antes de reimportar (cuerpo del diálogo) ── */
+.form-import-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--chip-grey-200, #d6d6d6);
+  border-left: 3px solid var(--chip-warning, #fbc02d);
+  border-radius: 8px;
+  background: var(--chip-bg-corn-silk, #fff8e1);
+
+  > i {
+    font-size: 22px;
+    /* grey-700 y no el amarillo del token: #FBC02D sobre corn-silk no llega a
+       3:1. El color de aviso lo da el borde, que no transporta información. */
+    color: var(--chip-grey-700);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    strong { color: var(--chip-grey-900, #2b2b2b); }
+    p { margin: 0; line-height: 1.55; color: var(--chip-grey-800, #3b3b3b); }
+  }
+
+  /* Lista de formularios afectados: acotada, con scroll si son muchos. */
+  &__list {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    max-height: 190px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      font-size: 13px;
+      color: var(--chip-grey-800, #3b3b3b);
+    }
+
+    i {
+      font-size: 13px;
+      color: var(--chip-grey-600);
+      flex-shrink: 0;
+    }
+  }
+}
+
+/* Contexto del control de envío a ancho completo (fuera del panel de 640px).
+   El formulario abierto ocupa toda la fila: su nombre es lo más largo. */
+.form-estado-ctx--wide {
+  max-width: none;
+  display: grid;
+  /* minmax(0,1fr) y no 1fr: sin el 0 las celdas no se dejan encoger y
+     .cell-ellipsis nunca llega a truncar. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 24px;
+
+  /* P2 del mínimo viable tablet: máx. 2 columnas en tablet, 1 en móvil. */
+  @include bp.down('lg') { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @include bp.down('md') { grid-template-columns: minmax(0, 1fr); }
+
+  /* El formulario abierto ocupa la fila entera: su nombre es el valor largo. */
+  .form-estado-ctx__form { grid-column: 1 / -1; }
+}
+
+/* ── Deficiencias de la validación central (Control de envío) ── */
+.form-defic {
+  margin-top: 24px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--chip-grey-900, #2b2b2b);
+
+    i { color: var(--chip-warning, #fbc02d); }
+  }
+
+  /* Selector de alcance: último proceso vs histórico del formulario. */
+  &__alcance {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+  }
+
+  &__alcance-tabs {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__alcance-resumen {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--chip-grey-600);
+  }
+
+  /* Deficiencia sin tipo (viene de una validación, no de la importación). */
+  &__sin-tipo {
+    font-size: 12.5px;
+    color: var(--chip-grey-600);
+  }
+
+  /* Celda de comentario: caja + pie (contador y Guardar) + mensaje. */
+  &__box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Caja de comentario: se habilita sólo si el mensaje lo exige. */
+  &__comentario {
+    width: 100%;
+    max-width: 100%;
+    min-height: 56px;
+    resize: vertical;
+    font-size: 13px;
+  }
+
+  &__box-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__count {
+    font-size: 11.5px;
+    color: var(--chip-grey-600);
+    font-variant-numeric: tabular-nums;
+
+    &--corto { color: var(--chip-grey-700); }
+  }
+
+  /* Hueco fijo de mensaje: evita que la fila salte al aparecer el error. */
+  &__msg {
+    display: block;
+    min-height: 16px;
+    font-size: 11.5px;
+    line-height: 1.35;
+
+    i { font-size: 12px; margin-right: 3px; }
+
+    &--error {
+      color: var(--chip-danger-700);
+      display: inline-flex;
+      align-items: flex-start;
+    }
+    &--ok {
+      color: var(--chip-success-700);
+      display: inline-flex;
+      align-items: center;
+    }
+    &--hint { color: var(--chip-grey-600); }
+  }
+}
+/* 9 columnas: Etapa 175 + Id detalle 120 + Id 64 + Tipo 130 + Cód. 130 +
+   Permisible 110 + Requiere 150 + Comentario 300, más el resto para Mensaje.
+   Por debajo de 1370px el contenedor scrollea (no el <body>). */
+:host ::ng-deep .form-defic-table table { min-width: 1370px; }
+:host ::ng-deep .form-defic-table td { vertical-align: top; }
+
+/* ── Pantalla dedicada "Control de envío" (desde acción ⋮ o tag Deficiencia) ── */
 .form-estado-screen {
   display: flex;
   flex-direction: column;
@@ -2526,7 +2730,9 @@ $estado-panel-width: 300px;
 .form-table-scroll {
   @include bp.scroll-x;
 }
-:host ::ng-deep .form-list-table table { min-width: 520px; }
+/* 700px = checkbox 44 + Código 140 + Etapa 180 + Estado 190 + Acciones 110,
+   más el resto para Nombre. Por debajo de eso el contenedor scrollea. */
+:host ::ng-deep .form-list-table table { min-width: 700px; }
 
 /* P2 · Filtros: en tablet landscape usar 2 columnas en vez de saltar a 1.
    (El global colapsa a 1col recién en ≤768.) */
@@ -2564,6 +2770,8 @@ $estado-panel-width: 300px;
 /* P3 · Touch targets ≥44×44 en tablet-y-abajo (WCAG 2.5.5 / Kit UI). */
 @include bp.down('lg') {
   :host ::ng-deep .p-button.p-button-icon-only { @include bp.touch-target; }
+  /* "Guardar" de la celda de comentario: es size="small", hay que subirlo. */
+  :host ::ng-deep .form-defic__save { min-height: bp.$chip-touch-target; }
   .form-estado-tagbtn { min-height: bp.$chip-touch-target; }
   .chip-colpager__btn { @include bp.touch-target; }
 
