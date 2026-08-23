@@ -1,0 +1,162 @@
+<div class="form-detalle" aria-label="Registro manual del formulario">
+  <div class="form-detalle__header">
+    <p-button label="Volver al listado" icon="pi pi-arrow-left" [text]="true" severity="secondary"
+      (onClick)="volver.emit()" />
+    <div class="form-detalle__title">
+      <span class="form-detalle__codigo">{{ formulario.codigo }}</span>
+      <h2>{{ formulario.nombre }}</h2>
+      <p class="form-detalle__meta">
+        {{ formulario.categoria }} · {{ formulario.periodo }} · {{ formulario.anio }}
+      </p>
+    </div>
+    <div class="form-detalle__title-actions">
+      <p-button label="Guardar cambios" icon="pi pi-save" [outlined]="true" size="small"
+        severity="secondary"
+        (onClick)="guardarCambios()" />
+      <p-button label="Validar formulario" icon="pi pi-check-circle" size="small"
+        (onClick)="validar.emit()"
+        pTooltip="Marca este formulario como Validado y regresa al listado"
+        tooltipPosition="bottom" />
+    </div>
+  </div>
+
+  <!-- Paginador global de columnas (periodos visibles) -->
+  <div class="form-detalle__cols-pager" aria-label="Paginador de columnas">
+    <span class="form-detalle__cols-label">
+      <i class="pi pi-th-large" aria-hidden="true"></i>
+      Periodos visibles
+    </span>
+    <p-button icon="pi pi-chevron-left" [text]="true" severity="secondary" size="small"
+      [disabled]="paginaColumnas === 0"
+      (onClick)="paginaColumnasAnterior()"
+      aria-label="Periodos anteriores" />
+    <span class="form-detalle__cols-info" aria-live="polite">
+      {{ paginaColumnas + 1 }} de {{ totalPaginasColumnas }}
+      <span class="form-detalle__cols-range">
+        ({{ columnasVisibles[0].label }} — {{ columnasVisibles[columnasVisibles.length - 1].label }})
+      </span>
+    </span>
+    <p-button icon="pi pi-chevron-right" [text]="true" severity="secondary" size="small"
+      [disabled]="paginaColumnas >= totalPaginasColumnas - 1"
+      (onClick)="paginaColumnasSiguiente()"
+      aria-label="Periodos siguientes" />
+  </div>
+
+  <p-message severity="info" class="form-detalle__edit-hint">
+    <strong>Edición en modal:</strong> use el botón <i class="pi pi-pencil" aria-hidden="true"></i> de cada fila para abrir la ventana de edición.
+  </p-message>
+
+  <!-- Conceptos padres — cada uno con su propio paginador interno -->
+  @for (concepto of conceptos; track concepto.id) {
+    <section class="form-concepto" [attr.aria-label]="'Concepto ' + concepto.nombre">
+      <header class="form-concepto__header">
+        <div class="form-concepto__title">
+          <span class="form-concepto__codigo">{{ concepto.codigo }}</span>
+          <h3>{{ concepto.nombre }}</h3>
+          <span class="form-concepto__count">({{ concepto.variables.length }} variables)</span>
+        </div>
+      </header>
+
+      <div class="form-concepto__table-wrap">
+        <table class="form-concepto__table">
+          <thead>
+            <tr>
+              <th class="form-concepto__th-fixed">Código</th>
+              <th class="form-concepto__th-fixed form-concepto__th-name">Variable</th>
+              @for (col of columnasVisibles; track col.key) {
+                <th class="form-concepto__th-val">{{ col.label }}</th>
+              }
+              <th class="form-concepto__th-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (variable of variablesVisibles(concepto); track variable.id) {
+              <tr>
+                <td class="form-concepto__td-codigo">{{ variable.id }}</td>
+                <td class="form-concepto__td-nombre" [pTooltip]="variable.nombre" tooltipPosition="top">{{ variable.nombre }}</td>
+                @for (col of columnasVisibles; track col.key) {
+                  <td class="form-concepto__td-val">
+                    @if (variable.valores[col.key] !== null) {
+                      {{ variable.valores[col.key] | number:'1.0-0' }}
+                    } @else {
+                      <span class="form-concepto__val-empty">—</span>
+                    }
+                  </td>
+                }
+                <td class="form-concepto__td-actions">
+                  <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small"
+                    severity="secondary"
+                    [attr.aria-label]="'Editar registro ' + variable.nombre"
+                    (onClick)="abrirModalEditar(concepto, variable)" />
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginador interno del concepto (independiente de los demás) -->
+      @if (totalPaginasConcepto(concepto) > 1) {
+        <footer class="form-concepto__footer">
+          <span class="form-concepto__footer-label">{{ concepto.nombre }}</span>
+          <div class="form-concepto__footer-pager">
+            <p-button icon="pi pi-chevron-left" [text]="true" size="small" severity="secondary"
+              [disabled]="concepto.pagina === 0"
+              (onClick)="paginaConceptoAnterior(concepto)"
+              aria-label="Página anterior" />
+            <span class="form-concepto__footer-info" aria-live="polite">
+              Página {{ concepto.pagina + 1 }} de {{ totalPaginasConcepto(concepto) }}
+            </span>
+            <p-button icon="pi pi-chevron-right" [text]="true" size="small" severity="secondary"
+              [disabled]="concepto.pagina >= totalPaginasConcepto(concepto) - 1"
+              (onClick)="paginaConceptoSiguiente(concepto)"
+              aria-label="Página siguiente" />
+          </div>
+        </footer>
+      }
+    </section>
+  }
+</div>
+
+<p-dialog
+  [visible]="!!modalEditar"
+  (visibleChange)="$event === false && cerrarModalEditar()"
+  [modal]="true"
+  [draggable]="false"
+  [closeOnEscape]="true"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  [header]="modalEditar ? 'Editar registro · ' + modalEditar.variable.nombre : 'Editar registro'">
+  @if (modalEditar) {
+    <div class="form-modal-edit">
+      <div class="form-modal-edit__meta">
+        <div>
+          <span class="form-modal-edit__label">Concepto</span>
+          <strong>{{ modalEditar.concepto.codigo }} · {{ modalEditar.concepto.nombre }}</strong>
+        </div>
+        <div>
+          <span class="form-modal-edit__label">Variable</span>
+          <strong>{{ modalEditar.variable.id }}</strong>
+        </div>
+      </div>
+      <div class="form-modal-edit__grid">
+        @for (col of columnasVisibles; track col.key) {
+          <div class="form-modal-edit__field">
+            <label [for]="'edit-' + col.key">{{ col.label }}</label>
+            <p-inputNumber
+              [(ngModel)]="modalEditar.variable.valores[col.key]"
+              [inputId]="'edit-' + col.key"
+              mode="decimal"
+              [useGrouping]="true"
+              [showButtons]="false" />
+          </div>
+        }
+      </div>
+    </div>
+  }
+  <ng-template #footer>
+    <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+      (onClick)="cerrarModalEditar()" />
+    <p-button label="Guardar" icon="pi pi-check"
+      (onClick)="guardarModalEditar()" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,161 @@
+@use 'breakpoints' as bp;
+
+:host { display: block; }
+
+/* Scroll horizontal controlado: .p-datatable-table-container de
+   PrimeNG 19 no trae overflow salvo con [scrollable]="true". */
+.form-table-scroll {
+  @include bp.scroll-x;
+}
+
+/* Copia de la celda de etapa del listado: la misma presentación en
+   los dos sitios, pero la encapsulación de vista no la cruza. */
+.form-table__etapa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--chip-grey-800);
+
+  i {
+    font-size: 14px;
+    color: var(--chip-grey-500);
+    flex-shrink: 0;
+  }
+}
+
+/* ── Deficiencias de la validación central (Control de envío) ── */
+.form-defic {
+  margin-top: 24px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: var(--chip-grey-900, #2b2b2b);
+
+    i { color: var(--chip-warning, #fbc02d); }
+  }
+
+  /* Selector de alcance: último proceso vs histórico del formulario. */
+  &__alcance {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: 12px;
+  }
+
+  &__alcance-tabs {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__alcance-resumen {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--chip-grey-600);
+  }
+
+  /* Deficiencia sin tipo (viene de una validación, no de la importación). */
+  &__sin-tipo {
+    font-size: 12.5px;
+    color: var(--chip-grey-600);
+  }
+
+  /* Celda de comentario: caja + pie (contador y Guardar) + mensaje. */
+  &__box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* Caja de comentario: se habilita sólo si el mensaje lo exige. */
+  &__comentario {
+    width: 100%;
+    max-width: 100%;
+    min-height: 56px;
+    resize: vertical;
+    font-size: 13px;
+  }
+
+  &__box-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__count {
+    font-size: 11.5px;
+    color: var(--chip-grey-600);
+    font-variant-numeric: tabular-nums;
+
+    &--corto { color: var(--chip-grey-700); }
+  }
+
+  /* Hueco fijo de mensaje: evita que la fila salte al aparecer el error. */
+  &__msg {
+    display: block;
+    min-height: 16px;
+    font-size: 11.5px;
+    line-height: 1.35;
+
+    i { font-size: 12px; margin-right: 3px; }
+
+    &--error {
+      color: var(--chip-danger-700);
+      display: inline-flex;
+      align-items: flex-start;
+    }
+    &--ok {
+      color: var(--chip-success-700);
+      display: inline-flex;
+      align-items: center;
+    }
+    &--hint { color: var(--chip-grey-600); }
+  }
+}
+/* 9 columnas: Etapa 175 + Id detalle 120 + Id 64 + Tipo 130 + Cód. 130 +
+   Permisible 110 + Requiere 150 + Comentario 300, más el resto para Mensaje.
+   Por debajo de 1370px el contenedor scrollea (no el <body>). */
+:host ::ng-deep .form-defic-table table { min-width: 1370px; }
+:host ::ng-deep .form-defic-table td { vertical-align: top; }
+
+/* P3 · Touch target del "Guardar" de la celda de comentario:
+   es size="small", hay que subirlo en tablet y abajo. */
+@include bp.down('lg') {
+  :host ::ng-deep .form-defic__save { min-height: bp.$chip-touch-target; }
+}
+
+/* Helper de ayuda contextual del título. Es el mismo patrón del DS que usa la
+   pantalla de formularios; la encapsulación de vista obliga a repetirlo aquí
+   (igual que ya ocurre en historico-envios). */
+.panel-help {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-left: 6px;
+  cursor: help;
+  color: var(--chip-grey-500, #6b6b6b);
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  line-height: 1;
+  transition: color .15s ease;
+
+  i { font-size: 15px; }
+  &:hover { color: var(--chip-cobalt-700, #0943b5); }
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+@include bp.down('lg') {
+  .panel-help { @include bp.touch-target; justify-content: center; }
+}

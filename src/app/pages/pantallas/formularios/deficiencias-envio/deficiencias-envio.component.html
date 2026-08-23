@@ -1,0 +1,163 @@
+<section class="form-defic" role="region" aria-label="Deficiencias de la validación central">
+  <h3 class="form-defic__title">
+    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+    Deficiencias
+    <button type="button" class="panel-help"
+      pTooltip="Mensajes devueltos por el proceso: estructura o completitud en la importación, y reglas en las validaciones. Los permisibles dejan enviar la categoría; los que exigen comentario necesitan una justificación escrita."
+      tooltipPosition="top" aria-label="Ayuda de la sección Deficiencias">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+    </button>
+  </h3>
+
+  @if (!formulario) {
+    <div class="usr-empty">
+      <i class="pi pi-inbox" aria-hidden="true"></i>
+      <p>Abra el control de envío desde un formulario del listado para ver sus deficiencias.</p>
+    </div>
+  } @else if (total === 0) {
+    <div class="usr-empty">
+      <i class="pi pi-inbox" aria-hidden="true"></i>
+      <p>Este formulario no tiene deficiencias reportadas.</p>
+    </div>
+  } @else {
+    <!-- Alcance: las deficiencias del último proceso (lo que acaba de
+         fallar) o el histórico completo del formulario. -->
+    <div class="form-defic__alcance" role="region"
+      aria-label="Alcance de las deficiencias mostradas">
+      <div class="form-defic__alcance-tabs" role="group"
+        aria-label="Procesos que se muestran">
+        <p-button label="Último proceso" icon="pi pi-clock" size="small"
+          [text]="alcance !== 'ultimo'"
+          [outlined]="alcance === 'ultimo'"
+          severity="secondary"
+          [attr.aria-pressed]="alcance === 'ultimo'"
+          (onClick)="alcanceChange.emit('ultimo')" />
+        <p-button label="Histórico" icon="pi pi-history" size="small"
+          [text]="alcance !== 'historico'"
+          [outlined]="alcance === 'historico'"
+          severity="secondary"
+          [attr.aria-pressed]="alcance === 'historico'"
+          (onClick)="alcanceChange.emit('historico')" />
+      </div>
+      <p class="form-defic__alcance-resumen" aria-live="polite">
+        {{ resumen }}
+      </p>
+    </div>
+
+    <div class="form-table-scroll">
+      <!-- Sin dataKey: el id es consecutivo POR ETAPA, así que se
+           repite entre etapas y no sirve como clave única. -->
+      <p-table [value]="visibles" [stripedRows]="true" [rowHover]="true"
+        styleClass="form-defic-table"
+        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
+        <ng-template #header>
+          <tr>
+            <th scope="col" style="width: 175px">Etapa</th>
+            <th scope="col" style="width: 120px">Id detalle proceso</th>
+            <th scope="col" style="width: 64px">Id</th>
+            <th scope="col" style="width: 130px">Tipo</th>
+            <th scope="col" style="width: 130px">Cód. mensaje</th>
+            <th scope="col">Mensaje</th>
+            <th scope="col" style="width: 110px">Permisible</th>
+            <th scope="col" style="width: 150px">Requiere comentario</th>
+            <th scope="col" style="width: 300px">Comentario</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-d>
+          <tr>
+            <td>
+              <span class="form-table__etapa">
+                <i class="pi" [ngClass]="etapaDe(d.etapa).icon" aria-hidden="true"></i>
+                {{ etapaDe(d.etapa).label }}
+              </span>
+            </td>
+            <td><span class="form-table__code">{{ d.idDetalleProceso }}</span></td>
+            <td>{{ d.id }}</td>
+            <td>
+              <!-- Sólo las deficiencias de importación tienen tipo:
+                   las de validación se identifican por su etapa. -->
+              @if (d.tipo) {
+                <p-tag [value]="tipoDeficienciaDe(d.tipo).label"
+                  [severity]="tipoDeficienciaDe(d.tipo).severity" />
+              } @else {
+                <span class="form-defic__sin-tipo"
+                  pTooltip="Deficiencia de validación, no de importación"
+                  tooltipPosition="top">Validación</span>
+              }
+            </td>
+            <td><span class="form-table__code">{{ d.codMensaje }}</span></td>
+            <td>{{ d.mensaje }}</td>
+            <td>
+              <p-tag [value]="d.permisible ? 'Sí' : 'No'"
+                [severity]="d.permisible ? 'success' : 'danger'" />
+            </td>
+            <td>
+              <p-tag [value]="d.requiereComentario ? 'Sí' : 'No'"
+                [severity]="d.requiereComentario ? 'warn' : 'secondary'" />
+            </td>
+            <td>
+              <!-- La caja sólo se habilita cuando el mensaje exige comentario. -->
+              <div class="form-defic__box">
+                <textarea pTextarea rows="2" class="form-defic__comentario"
+                  [(ngModel)]="d.comentario"
+                  (ngModelChange)="onComentarioInput(d)"
+                  [disabled]="!d.requiereComentario"
+                  [attr.aria-label]="'Comentario para el mensaje ' + d.codMensaje"
+                  [attr.aria-required]="d.requiereComentario ? 'true' : null"
+                  [attr.aria-invalid]="d.comentarioError ? 'true' : null"
+                  [attr.aria-describedby]="'defic-msg-' + d.etapa + '-' + d.id"
+                  [placeholder]="d.requiereComentario ? 'Justifique la deficiencia' : 'No requiere comentario'"></textarea>
+
+                @if (d.requiereComentario) {
+                  <div class="form-defic__box-foot">
+                    <small class="form-defic__count"
+                      [class.form-defic__count--corto]="d.comentario.trim().length < COMENTARIO_MIN">
+                      {{ d.comentario.trim().length }}/{{ COMENTARIO_MIN }}
+                    </small>
+                    <p-button label="Guardar" icon="pi pi-check" size="small"
+                      styleClass="form-defic__save"
+                      [disabled]="!comentarioPendiente(d)"
+                      [pTooltip]="comentarioPendiente(d) ? '' : 'No hay cambios por guardar'"
+                      tooltipPosition="top"
+                      (onClick)="guardarComentario(d)" />
+                  </div>
+
+                  <!-- Un solo hueco de mensaje: error de validación o
+                       confirmación de guardado, nunca los dos. -->
+                  <small [id]="'defic-msg-' + d.etapa + '-' + d.id"
+                    class="form-defic__msg" aria-live="polite">
+                    @if (d.comentarioError) {
+                      <span class="form-defic__msg--error" role="alert">
+                        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                        {{ d.comentarioError }}
+                      </span>
+                    } @else if (d.comentarioGuardado && !comentarioPendiente(d)) {
+                      <span class="form-defic__msg--ok">
+                        <i class="pi pi-check-circle" aria-hidden="true"></i>
+                        Guardado
+                      </span>
+                    } @else {
+                      <span class="form-defic__msg--hint">
+                        Mínimo {{ COMENTARIO_MIN }} caracteres.
+                      </span>
+                    }
+                  </small>
+                }
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr>
+            <td colspan="9" class="usr-empty">
+              <i class="pi pi-inbox" aria-hidden="true"></i>
+              <p>No se encontraron deficiencias en el alcance seleccionado.</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+</section>
