@@ -2529,6 +2529,58 @@ $estado-panel-width: 300px;
   }
 }
 
+/* ── Formulario "Justificación del reenvío" (cuerpo del diálogo) ── */
+.form-reenvio {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  &__textarea {
+    width: 100%;
+    max-width: 100%;
+    min-height: 108px;
+    resize: vertical;
+    font-size: 13px;
+  }
+
+  /* Hueco fijo: el contador y el error se turnan sin mover el diálogo. */
+  &__msg {
+    display: block;
+    min-height: 16px;
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  &__count {
+    color: var(--chip-grey-600);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__error {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 3px;
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--chip-danger-700);
+
+    i { font-size: 12px; }
+  }
+}
+
 /* ── Aviso de reemplazo antes de reimportar (cuerpo del diálogo) ── */
 .form-import-warn {
   display: flex;

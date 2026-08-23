@@ -989,7 +989,9 @@
     [draggable]="false"
     [closeOnEscape]="true"
     [style]="{ width: '520px', maxWidth: '95vw' }"
-    [header]="importPaso === 'confirmacion' ? 'Confirmar reimportación' : 'Importar archivo'">
+    [header]="importPaso === 'justificacion'
+      ? 'Justificación del reenvío'
+      : importPaso === 'confirmacion' ? 'Confirmar reimportación' : 'Importar archivo'">
 
     @if (importPaso === 'iniciado') {
       <!-- Alerta de proceso iniciado. Es un mensaje de resultado: va visible en
@@ -1016,6 +1018,72 @@
           }
         </div>
       </div>
+    } @else if (importPaso === 'justificacion') {
+      <!-- Reenvío: la categoría ya se reportó a la CGN, así que volver a
+           importar modifica información reportada y hay que motivarlo. -->
+      <div class="form-import-warn" role="alert">
+        <i class="pi pi-question-circle" aria-hidden="true"></i>
+        <div class="form-import-warn__body">
+          <strong>Está modificando información ya reportada</strong>
+          <p>
+            La categoría <strong>{{ categoriaLabel }}</strong> ya fue enviada a la
+            CGN. Justifique el motivo de su reenvío para continuar.
+          </p>
+        </div>
+      </div>
+
+      <div class="form-reenvio">
+        <div class="form-reenvio__field">
+          <label for="reenvio-motivo">
+            Motivo <span class="field-required" aria-hidden="true">*</span>
+          </label>
+          <p-select inputId="reenvio-motivo" [options]="reenvioMotivoOptions"
+            [(ngModel)]="reenvioMotivo" (onChange)="reenvioMotivoError = ''"
+            placeholder="Seleccione el motivo del reenvío"
+            appendTo="body" class="w-full" aria-required="true"
+            [attr.aria-invalid]="reenvioMotivoError ? 'true' : null"
+            [attr.aria-describedby]="reenvioMotivoError ? 'reenvio-motivo-error' : null" />
+          @if (reenvioMotivoError) {
+            <small id="reenvio-motivo-error" class="form-reenvio__error" role="alert">
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              {{ reenvioMotivoError }}
+            </small>
+          }
+        </div>
+
+        <div class="form-reenvio__field">
+          <label for="reenvio-justificacion">
+            Justificación <span class="field-required" aria-hidden="true">*</span>
+          </label>
+          <textarea pTextarea id="reenvio-justificacion" rows="5"
+            class="form-reenvio__textarea"
+            [(ngModel)]="reenvioJustificacion"
+            (ngModelChange)="reenvioJustificacionError = ''"
+            [maxlength]="REENVIO_JUSTIFICACION_MAX"
+            aria-required="true"
+            [attr.aria-invalid]="reenvioJustificacionError ? 'true' : null"
+            aria-describedby="reenvio-justificacion-msg"
+            placeholder="Describa el motivo del reenvío"></textarea>
+          <small id="reenvio-justificacion-msg" class="form-reenvio__msg" aria-live="polite">
+            @if (reenvioJustificacionError) {
+              <span class="form-reenvio__error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                {{ reenvioJustificacionError }}
+              </span>
+            } @else {
+              <span class="form-reenvio__count">
+                {{ reenvioJustificacion.length }}/{{ REENVIO_JUSTIFICACION_MAX }} caracteres
+              </span>
+            }
+          </small>
+        </div>
+      </div>
+
+      <p class="form-import-zone__hint">
+        <i class="pi pi-file" aria-hidden="true"></i>
+        Archivo a reenviar:
+        <span class="form-import-done__file">{{ importFileName }}</span>
+      </p>
     } @else if (importPaso === 'confirmacion') {
       <!-- Aviso de reemplazo. La importación trabaja sobre el CONTEXTO
            (entidad · año · periodo), no sobre la categoría: la categoría sólo
@@ -1085,6 +1153,11 @@
       @if (importPaso === 'iniciado') {
         <p-button label="Cerrar" icon="pi pi-check"
           (onClick)="cerrarImportDialog()" />
+      } @else if (importPaso === 'justificacion') {
+        <p-button label="Cancelar reenvío" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cancelarReenvio()" />
+        <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right"
+          (onClick)="confirmImport()" />
       } @else if (importPaso === 'confirmacion') {
         <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
           (onClick)="cancelarReimportacion()" />

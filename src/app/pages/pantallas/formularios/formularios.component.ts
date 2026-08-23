@@ -1165,10 +1165,12 @@ export class FormulariosComponent implements OnDestroy {
   // La importación sólo admite TXT (plano, según el protocolo de importación) y
   // es asíncrona: al confirmar, el archivo entra a la cola de proceso y el
   // resultado se notifica por correo. El diálogo recorre hasta tres momentos:
-  //   1. 'seleccion'    → se elige el archivo y se valida la extensión
-  //   2. 'confirmacion' → SÓLO si el contexto ya tiene información importada:
-  //                       avisa qué formularios se reemplazan y pide confirmar
-  //   3. 'iniciado'     → alerta de proceso (o reproceso) iniciado + correo
+  //   1. 'seleccion'     → se elige el archivo y se valida la extensión
+  //   2. 'justificacion' → SÓLO si la categoría ya fue enviada: reimportar
+  //                        modifica información YA REPORTADA y hay que motivarlo
+  //   3. 'confirmacion'  → SÓLO si el contexto ya tiene información importada:
+  //                        avisa qué formularios se reemplazan y pide confirmar
+  //   4. 'iniciado'      → alerta de proceso (o reproceso) iniciado + correo
   /** Única extensión admitida por la importación. */
   private readonly EXTENSION_IMPORT = '.txt';
 
@@ -1176,9 +1178,34 @@ export class FormulariosComponent implements OnDestroy {
   /** Mensaje de rechazo del archivo elegido (extensión no admitida). */
   importFileError = '';
   /** Momento del diálogo de importación. */
-  importPaso: 'seleccion' | 'confirmacion' | 'iniciado' = 'seleccion';
+  importPaso: 'seleccion' | 'justificacion' | 'confirmacion' | 'iniciado' = 'seleccion';
   /** True cuando lo iniciado reemplaza información ya importada. */
   esReimportacion = false;
+
+  /* ── Justificación del reenvío ─────────────────────────────────────────
+     Si la categoría ya se envió a la CGN, volver a importar modifica
+     información YA REPORTADA. No se bloquea, pero exige motivo Y justificación
+     escrita: los dos campos son obligatorios.
+     El envío es, junto con la validación central, lo único que se razona
+     por categoría; el resto del flujo es del contexto. */
+  readonly REENVIO_JUSTIFICACION_MAX = 500;
+  readonly reenvioMotivoOptions = [
+    { label: 'Por error en el reporte de información', value: 'error' },
+    { label: 'Solicitud de requerimiento por parte de la CGN', value: 'requerimiento' },
+    { label: 'Conciliación de saldos pendientes', value: 'conciliacion' },
+    { label: 'Otra', value: 'otra' },
+  ];
+  reenvioMotivo: string | null = null;
+  reenvioJustificacion = '';
+  reenvioMotivoError = '';
+  reenvioJustificacionError = '';
+
+  /** True si la categoría ya fue enviada a validación central. */
+  get categoriaYaEnviada(): boolean {
+    if (this.escenarioImport === 'reenvio') return true;
+    return this.categoriaEnviada
+      || this.filteredFormularios.some(f => this.esEnviado(f));
+  }
 
   /** Diálogo de importación, accesible desde el botón transversal. */
   showImportDialog = false;
@@ -1200,6 +1227,10 @@ export class FormulariosComponent implements OnDestroy {
     this.importFileError = '';
     this.importPaso = 'seleccion';
     this.esReimportacion = false;
+    this.reenvioMotivo = null;
+    this.reenvioJustificacion = '';
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
   }
 
   /**
@@ -1207,13 +1238,15 @@ export class FormulariosComponent implements OnDestroy {
    * que haya o no información previa lo decide el estado del contexto. Como el
    * demo arranca con formularios ya importados, sin este switch nunca se vería
    * el mensaje de importación limpia.
-   *   'auto'   → según los datos (lo que hará el sistema real)
-   *   'limpio' → fuerza "sin información previa": importación de primera vez
+   *   'auto'    → según los datos (lo que hará el sistema real)
+   *   'limpio'  → fuerza "sin información previa": importación de primera vez
+   *   'reenvio' → fuerza "categoría ya enviada": pide justificar el reenvío
    */
-  escenarioImport: 'auto' | 'limpio' = 'auto';
+  escenarioImport: 'auto' | 'limpio' | 'reenvio' = 'auto';
   readonly escenarioImportOptions = [
     { label: 'Con información en el contexto · reimportación', value: 'auto' },
     { label: 'Sin información en el contexto · importación limpia', value: 'limpio' },
+    { label: 'Categoría ya enviada · reenvío', value: 'reenvio' },
   ];
 
   /**
@@ -1446,17 +1479,62 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Botón "Importar". Si hay formularios con información para el contexto
-   * seleccionado, no arranca nada todavía: primero pasa por el aviso de
-   * reemplazo. Si no hay nada que reemplazar, arranca directo.
+   * Botón "Importar" / "Continuar". Antes de arrancar nada pasa por los filtros
+   * que apliquen, en este orden: justificar el reenvío si la categoría ya se
+   * reportó, y avisar del reemplazo si el contexto ya tiene información.
    */
   confirmImport() {
     if (!this.importFileName || this.importPaso === 'iniciado') return;
-    if (this.importPaso === 'seleccion' && this.formulariosAReimportar.length > 0) {
+
+    if (this.importPaso === 'seleccion' && this.categoriaYaEnviada) {
+      this.importPaso = 'justificacion';
+      return;
+    }
+    if (this.importPaso === 'justificacion' && !this.validarJustificacionReenvio()) {
+      return;
+    }
+    if (this.importPaso !== 'confirmacion' && this.formulariosAReimportar.length > 0) {
       this.importPaso = 'confirmacion';
       return;
     }
     this.iniciarProcesoImportacion();
+  }
+
+  /**
+   * Motivo y justificación son obligatorios los dos. El tope de caracteres lo
+   * impone además el maxlength del textarea: esto es el cinturón por si el
+   * valor llegara por otra vía.
+   */
+  private validarJustificacionReenvio(): boolean {
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
+
+    if (!this.reenvioMotivo) {
+      this.reenvioMotivoError = 'Seleccione el motivo del reenvío.';
+    }
+    const detalle = this.reenvioJustificacion.trim();
+    if (!detalle) {
+      this.reenvioJustificacionError = 'Describa la justificación del reenvío.';
+    } else if (detalle.length > this.REENVIO_JUSTIFICACION_MAX) {
+      this.reenvioJustificacionError =
+        `La justificación no puede superar los ${this.REENVIO_JUSTIFICACION_MAX} caracteres.`;
+    }
+
+    const valido = !this.reenvioMotivoError && !this.reenvioJustificacionError;
+    if (!valido) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Justificación incompleta',
+        detail: 'Diligencie el motivo y la justificación del reenvío para continuar.',
+        life: 4500,
+      });
+    }
+    return valido;
+  }
+
+  /** "Cancelar reenvío": aborta la importación completa y cierra el diálogo. */
+  cancelarReenvio() {
+    this.cerrarImportDialog();
   }
 
   /** Vuelve del aviso de reemplazo a la selección de archivo, sin arrancar nada. */
