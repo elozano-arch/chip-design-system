@@ -791,6 +791,9 @@ export class FormulariosComponent implements OnDestroy {
   reenvioMotivoError = '';
   reenvioJustificacionError = '';
 
+  /** El reenvío de esta importación ya quedó justificado: no se vuelve a pedir. */
+  reenvioJustificado = false;
+
   /** True si la categoría ya fue enviada a validación central. */
   get categoriaYaEnviada(): boolean {
     if (this.escenarioImport === 'reenvio') return true;
@@ -805,7 +808,35 @@ export class FormulariosComponent implements OnDestroy {
   abrirImportDialog() {
     if (!this.filtersApplied) return;
     this.resetImportDialog();
+    this.evaluarReenvio();
     this.showImportDialog = true;
+  }
+
+  /**
+   * El contexto del Paso 1 ya dice si la categoría se envió, así que el reenvío
+   * se sabe antes de elegir archivo: cuando aplica, el diálogo abre en la
+   * justificación y el archivo se pide después.
+   */
+  private evaluarReenvio(): void {
+    if (this.categoriaYaEnviada && !this.reenvioJustificado) {
+      this.importPaso = 'justificacion';
+    } else if (this.importPaso === 'justificacion') {
+      this.importPaso = 'seleccion';
+    }
+  }
+
+  /**
+   * El switch de demostración cambia el contexto simulado, así que rehace la
+   * validación en el acto — que es lo que hará el sistema real al aplicar los
+   * filtros. Lo ya diligenciado se descarta: corresponde a otro escenario.
+   */
+  onEscenarioImportChange(): void {
+    this.reenvioJustificado = false;
+    this.reenvioMotivo = null;
+    this.reenvioJustificacion = '';
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
+    this.evaluarReenvio();
   }
 
   cerrarImportDialog() {
@@ -818,6 +849,7 @@ export class FormulariosComponent implements OnDestroy {
     this.importFileError = '';
     this.importPaso = 'seleccion';
     this.esReimportacion = false;
+    this.reenvioJustificado = false;
     this.reenvioMotivo = null;
     this.reenvioJustificacion = '';
     this.reenvioMotivoError = '';
@@ -1070,18 +1102,25 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Botón "Importar" / "Continuar". Antes de arrancar nada pasa por los filtros
-   * que apliquen, en este orden: justificar el reenvío si la categoría ya se
-   * reportó, y avisar del reemplazo si el contexto ya tiene información.
+   * Botón "Continuar" / "Importar". La justificación del reenvío va primero y
+   * no necesita archivo: el contexto ya dijo que la categoría se envió. Con eso
+   * resuelto se pide el archivo y, si el contexto ya tiene información, se
+   * avisa del reemplazo antes de arrancar.
    */
   confirmImport() {
-    if (!this.importFileName || this.importPaso === 'iniciado') return;
+    if (this.importPaso === 'iniciado') return;
 
-    if (this.importPaso === 'seleccion' && this.categoriaYaEnviada) {
-      this.importPaso = 'justificacion';
+    if (this.importPaso === 'justificacion') {
+      if (!this.validarJustificacionReenvio()) return;
+      this.reenvioJustificado = true;
+      this.importPaso = 'seleccion';
       return;
     }
-    if (this.importPaso === 'justificacion' && !this.validarJustificacionReenvio()) {
+
+    if (!this.importFileName) return;
+
+    if (this.importPaso === 'seleccion' && this.categoriaYaEnviada && !this.reenvioJustificado) {
+      this.importPaso = 'justificacion';
       return;
     }
     if (this.importPaso !== 'confirmacion' && this.formulariosAReimportar.length > 0) {
@@ -1123,7 +1162,8 @@ export class FormulariosComponent implements OnDestroy {
     return valido;
   }
 
-  /** "Cancelar reenvío": aborta la importación completa y cierra el diálogo. */
+  /** "Cancelar" en la justificación: sin motivo no hay reenvío, así que se
+      abandona la importación entera. */
   cancelarReenvio() {
     this.cerrarImportDialog();
   }

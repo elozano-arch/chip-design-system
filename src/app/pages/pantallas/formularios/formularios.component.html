@@ -510,6 +510,22 @@
       ? 'Justificación del reenvío'
       : importPaso === 'confirmacion' ? 'Confirmar reimportación' : 'Importar archivo'">
 
+    <!-- Simulación (demo): el sistema real decide con el contexto si hay
+         información previa y si la categoría ya se envió. Aquí se fuerza para
+         poder ver los tres caminos: importación limpia, reimportación y
+         reenvío. Va fuera de los pasos porque el diálogo puede abrir
+         directamente en la justificación, y desde ahí hay que poder cambiarlo. -->
+    @if (importPaso !== 'iniciado') {
+      <div class="form-wizard__demo-switch" role="group" aria-label="Simulación del escenario de importación">
+        <i class="pi pi-flag" aria-hidden="true"></i>
+        <label for="imp-escenario">Escenario <span class="form-wizard__demo-tag">demostración</span></label>
+        <p-select inputId="imp-escenario" [options]="escenarioImportOptions"
+          [(ngModel)]="escenarioImport"
+          (onChange)="onEscenarioImportChange()"
+          appendTo="body" styleClass="form-wizard__demo-select" />
+      </div>
+    }
+
     @if (importPaso === 'iniciado') {
       <!-- Alerta de proceso iniciado. Es un mensaje de resultado: va visible en
            el cuerpo del diálogo (no en un toast que se desvanece), porque el
@@ -633,17 +649,6 @@
         ¿Desea continuar?
       </p>
     } @else {
-      <!-- Simulación (demo): el sistema real decide si hay información previa
-           mirando el contexto. Aquí se fuerza para poder ver los dos mensajes,
-           el de importación limpia y el de reimportación. -->
-      <div class="form-wizard__demo-switch" role="group" aria-label="Simulación del escenario de importación">
-        <i class="pi pi-flag" aria-hidden="true"></i>
-        <label for="imp-escenario">Escenario <span class="form-wizard__demo-tag">demostración</span></label>
-        <p-select inputId="imp-escenario" [options]="escenarioImportOptions"
-          [(ngModel)]="escenarioImport"
-          appendTo="body" styleClass="form-wizard__demo-select" />
-      </div>
-
       <div class="form-import-zone" role="region" aria-label="Carga de archivo">
         <div class="form-import-zone__pick">
           <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
@@ -671,7 +676,7 @@
         <p-button label="Cerrar" icon="pi pi-check"
           (onClick)="cerrarImportDialog()" />
       } @else if (importPaso === 'justificacion') {
-        <p-button label="Cancelar reenvío" icon="pi pi-times" [text]="true" severity="secondary"
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
           (onClick)="cancelarReenvio()" />
         <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right"
           (onClick)="confirmImport()" />
