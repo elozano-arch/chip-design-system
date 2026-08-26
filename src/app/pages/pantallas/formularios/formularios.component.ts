@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnDestroy, signal, computed } from '@angular/core';
+import { Component, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -14,17 +14,41 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { DividerModule } from 'primeng/divider';
 import { MessageModule } from 'primeng/message';
-import { ProgressBarModule } from 'primeng/progressbar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MenuModule } from 'primeng/menu';
 import { ChipModule } from 'primeng/chip';
 import { StepperModule } from 'primeng/stepper';
-import { TabsModule } from 'primeng/tabs';
 import { DialogModule } from 'primeng/dialog';
 import { PaginatorModule } from 'primeng/paginator';
+import { TextareaModule } from 'primeng/textarea';
 import { MessageService, MenuItem } from 'primeng/api';
 
+import { SesionService } from '../../../services/sesion.service';
+import { PERIODOS_FILTRO } from '../../../services/periodos';
+
+import {
+  EtapaId,
+  EstadoId,
+  EtapaProceso,
+  EstadoProceso,
+  ETAPAS_PROCESO,
+  ESTADOS_PROCESO,
+  SIN_REGISTRO_LABEL,
+  SIN_REGISTRO_AYUDA,
+  ESTADOS_POR_ETAPA,
+  RespuestaCentral,
+  TipoDeficiencia,
+  TIPOS_DEFICIENCIA,
+  DeficienciaEnvio,
+  PlantillaDeficiencia,
+  etapaDe,
+  estadoDe,
+} from './catalogo-proceso';
+
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { ProtocoloImportacionComponent } from './protocolo-importacion/protocolo-importacion.component';
+import { RegistroManualComponent } from './registro-manual/registro-manual.component';
+import { DeficienciasEnvioComponent } from './deficiencias-envio/deficiencias-envio.component';
 import {
   DirectorioEntidadesComponent,
   Entidad,
@@ -38,7 +62,14 @@ interface Formulario {
   categoria: string;
   periodo: string;
   anio: number;
-  estadoValidacion: string;
+  /** Etapa del proceso en que está el formulario — `tab_etapa_proceso`. */
+  etapa: EtapaId;
+  /**
+   * Estado dentro de esa etapa — `tab_estado`, válido según `ESTADOS_POR_ETAPA`.
+   * `null` = el formulario todavía no tiene registro (no se ha importado). No es
+   * un estado del catálogo: la UI lo presenta como "Sin registro".
+   */
+  estado: EstadoId | null;
   ultimaModificacion: string;
 }
 
@@ -47,39 +78,6 @@ interface AccionPermiso {
   label: string;
   icon: string;
   enabled: boolean;
-}
-
-/**
- * Variable de un concepto en la vista Registro Manual.
- * `valores` es indexado por la clave de la columna (ej. 'ene', 'feb', etc.).
- */
-interface Variable {
-  id: string;
-  nombre: string;
-  unidad: string;
-  valores: Record<string, number | null>;
-}
-
-/**
- * Cada "concepto padre" tiene sus propias variables y su propio paginador interno.
- * Esto refleja la POC de Wilmar: cada padre maneja su paginación de filas
- * independiente del resto.
- */
-interface ConceptoPadre {
-  id: string;
-  codigo: string;
-  nombre: string;
-  variables: Variable[];
-  /** Página actual del paginador interno (0-based). */
-  pagina: number;
-  /** Filas por página. */
-  filasPorPagina: number;
-}
-
-/** Columna del registro manual (periodos). El paginador global decide cuáles son visibles. */
-interface ColumnaRegistro {
-  key: string;
-  label: string;
 }
 
 /**
@@ -111,103 +109,6 @@ interface EntidadAgregada {
  */
 type TipoUsuario = 'L' | 'L_INACTIVA' | 'ACE';
 
-/* ── Protocolo de Importación — sub-vista del Paso 2 ── */
-type ProtocoloTipoDato = 'Numérico' | 'Texto' | 'Fecha' | 'Lista';
-type ProtocoloTipoRegistro = 'Cabecera' | 'Detalle';
-
-interface ProtocoloVariable {
-  numero: number;
-  tipoRegistro: ProtocoloTipoRegistro;
-  nombre: string;
-  tipoDato: ProtocoloTipoDato;
-  longitud: number;
-  decimales: number | null;
-  unidad: string;
-  observaciones: string;
-  listaKey?: string;
-}
-
-/**
- * Tipo de dato de un campo (columna) de una lista — equivale a `tab_field.field_type`.
- *   S = texto · N = numérico · B = booleano · D = fecha · L = lista
- * Sólo se usa, por ahora, para alinear los numéricos a la derecha.
- */
-type ProtocoloFieldType = 'S' | 'N' | 'B' | 'D' | 'L';
-
-/**
- * Definición de una columna de la lista — simula una fila de `tab_field`.
- * `code`  → field_code   (encabezado de la columna; también la llave en cada registro)
- * `order` → orden de despliegue definido en tab_field
- * `type`  → field_type   (N alinea a la derecha)
- * `len`   → field_len    (de aquí sale el ancho proporcional de la columna)
- */
-interface ProtocoloField {
-  code: string;
-  order: number;
-  type: ProtocoloFieldType;
-  len: number;
-  decimals?: number;
-}
-
-/** Un registro de la lista — simula `result`: un valor por field_code. */
-type ProtocoloRegistro = Record<string, string>;
-
-interface ProtocoloLista {
-  key: string;
-  nombre: string;
-  /** Columnas de la lista, en el orden de tab_field. */
-  fields: ProtocoloField[];
-  /** Valores: cada registro está llaveado por field_code. */
-  valores: ProtocoloRegistro[];
-}
-
-/** Formatos soportados por el botón estándar "Descargar". */
-type DownloadFormatId = 'csv' | 'xlsx' | 'pdf' | 'txt';
-
-interface DownloadFormat {
-  label: string;
-  icon: string;
-  format: DownloadFormatId;
-  /** Texto de tooltip con restricciones/características del formato. */
-  info: string;
-}
-
-/** Severity admitida por los `p-tag` del panel de estado. */
-type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
-
-/**
- * Resultado de la validación central de la categoría (simulación demo).
- *   ninguna    → aún no enviado / sin respuesta
- *   enProceso  → enviado, en validación central
- *   aceptado   → aceptado por la CGN
- *   rechazado  → rechazado por deficiencia
- */
-type RespuestaCentral = 'ninguna' | 'enProceso' | 'aceptado' | 'rechazado';
-
-/** Estado dominante (lifecycle) de la categoría seleccionada. */
-type EstadoCategoriaClave =
-  | 'sin-contexto'
-  | 'importado'
-  | 'validado'
-  | 'rechazado'
-  | 'enviado';
-
-/** Resumen del estado dominante de la categoría para el panel lateral. */
-interface EstadoCategoriaResumen {
-  clave: EstadoCategoriaClave;
-  label: string;
-  severity: TagSeverity;
-  icon: string;
-  descripcion: string;
-}
-
-/** Una fila del desglose por estado de los formularios (panel lateral). */
-interface DesgloseEstado {
-  label: string;
-  cantidad: number;
-  icon: string;
-  severity: TagSeverity;
-}
 
 @Component({
   selector: 'app-formularios',
@@ -227,16 +128,18 @@ interface DesgloseEstado {
     InputIconModule,
     DividerModule,
     MessageModule,
-    ProgressBarModule,
     CheckboxModule,
     MenuModule,
     ChipModule,
     StepperModule,
-    TabsModule,
     DialogModule,
     PaginatorModule,
+    TextareaModule,
     AppBreadcrumbComponent,
     DirectorioEntidadesComponent,
+    ProtocoloImportacionComponent,
+    RegistroManualComponent,
+    DeficienciasEnvioComponent,
   ],
   providers: [MessageService],
   templateUrl: './formularios.component.html',
@@ -246,35 +149,18 @@ export class FormulariosComponent implements OnDestroy {
   @ViewChild('menuFormulario') menuFormulario: any;
   selectedFormularioForMenu: Formulario | null = null;
 
-  constructor(private messageService: MessageService) {
-    this.setupColumnasResponsivas();
-  }
+  constructor(
+    private messageService: MessageService,
+    private sesion: SesionService,
+  ) {}
 
-  // ── Responsive: columnas visibles de la matriz de registro manual ──
-  // En tablet/phone caben menos periodos; el paginador de columnas se ajusta
-  // al viewport (4 desktop · 3 ≤992 · 2 ≤768) con matchMedia nativo (sin CDK).
-  private mqlTablet?: MediaQueryList;
-  private mqlPhone?: MediaQueryList;
-  private readonly onViewportChange = () => this.ajustarColumnasPorViewport();
-
-  private setupColumnasResponsivas(): void {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    this.mqlTablet = window.matchMedia('(max-width: 992px)');
-    this.mqlPhone = window.matchMedia('(max-width: 768px)');
-    this.mqlTablet.addEventListener('change', this.onViewportChange);
-    this.mqlPhone.addEventListener('change', this.onViewportChange);
-    this.ajustarColumnasPorViewport();
-  }
-
-  private ajustarColumnasPorViewport(): void {
-    this.columnasPorPagina = this.mqlPhone?.matches ? 2 : this.mqlTablet?.matches ? 3 : 4;
-    const maxPagina = Math.max(0, this.totalPaginasColumnas - 1);
-    if (this.paginaColumnas > maxPagina) this.paginaColumnas = maxPagina;
+  /** Correo del usuario en sesión — es a donde llega el resultado de la importación. */
+  get correoUsuario(): string {
+    return this.sesion.usuario()?.correo ?? 'su correo registrado';
   }
 
   ngOnDestroy(): void {
-    this.mqlTablet?.removeEventListener('change', this.onViewportChange);
-    this.mqlPhone?.removeEventListener('change', this.onViewportChange);
+    this.cancelarAvanceProceso();
   }
 
   /**
@@ -359,122 +245,17 @@ export class FormulariosComponent implements OnDestroy {
   // ─────────────────────────────────────────────────────────────────────────
   detalleAbierto: Formulario | null = null;
 
-  /** 12 periodos mockeados (meses). En producción vendría del backend. */
-  readonly columnasRegistro: ColumnaRegistro[] = [
-    { key: 'ene', label: 'Ene 2024' }, { key: 'feb', label: 'Feb 2024' },
-    { key: 'mar', label: 'Mar 2024' }, { key: 'abr', label: 'Abr 2024' },
-    { key: 'may', label: 'May 2024' }, { key: 'jun', label: 'Jun 2024' },
-    { key: 'jul', label: 'Jul 2024' }, { key: 'ago', label: 'Ago 2024' },
-    { key: 'sep', label: 'Sep 2024' }, { key: 'oct', label: 'Oct 2024' },
-    { key: 'nov', label: 'Nov 2024' }, { key: 'dic', label: 'Dic 2024' },
-  ];
-
-  /** Paginador global de columnas: cuántas columnas se muestran a la vez. */
-  columnasPorPagina = 4;
-  paginaColumnas = 0;
-
-  get totalPaginasColumnas(): number {
-    return Math.ceil(this.columnasRegistro.length / this.columnasPorPagina);
-  }
-  get columnasVisibles(): ColumnaRegistro[] {
-    const inicio = this.paginaColumnas * this.columnasPorPagina;
-    return this.columnasRegistro.slice(inicio, inicio + this.columnasPorPagina);
-  }
-  paginaColumnasAnterior() {
-    if (this.paginaColumnas > 0) this.paginaColumnas--;
-  }
-  paginaColumnasSiguiente() {
-    if (this.paginaColumnas < this.totalPaginasColumnas - 1) this.paginaColumnas++;
-  }
-
-  /** Mock de conceptos padre (cada uno con su tabla y paginador independiente). */
-  conceptos: ConceptoPadre[] = [
-    {
-      id: 'c1',
-      codigo: '1.1.05',
-      nombre: 'Caja',
-      pagina: 0,
-      filasPorPagina: 5,
-      variables: this.generarVariablesMock('CAJA', 8),
-    },
-    {
-      id: 'c2',
-      codigo: '1.1.10',
-      nombre: 'Bancos y corporaciones de ahorro',
-      pagina: 0,
-      filasPorPagina: 5,
-      variables: this.generarVariablesMock('BAN', 12),
-    },
-    {
-      id: 'c3',
-      codigo: '1.1.20',
-      nombre: 'Inversiones administración de liquidez',
-      pagina: 0,
-      filasPorPagina: 5,
-      variables: this.generarVariablesMock('INV', 6),
-    },
-  ];
-
-  /** Genera N variables mockeadas con valores aleatorios por periodo. */
-  private generarVariablesMock(prefijo: string, cantidad: number): Variable[] {
-    const variables: Variable[] = [];
-    for (let i = 1; i <= cantidad; i++) {
-      const valores: Record<string, number | null> = {};
-      this.columnasRegistro.forEach(col => {
-        // Algunas celdas vacías para simular registros incompletos
-        valores[col.key] = Math.random() < 0.15 ? null : Math.round(Math.random() * 9000000) + 100000;
-      });
-      variables.push({
-        id: `${prefijo}-${String(i).padStart(3, '0')}`,
-        nombre: `${prefijo} variable ${i}`,
-        unidad: 'COP',
-        valores,
-      });
-    }
-    return variables;
-  }
-
-  variablesVisibles(concepto: ConceptoPadre): Variable[] {
-    const inicio = concepto.pagina * concepto.filasPorPagina;
-    return concepto.variables.slice(inicio, inicio + concepto.filasPorPagina);
-  }
-  totalPaginasConcepto(concepto: ConceptoPadre): number {
-    return Math.ceil(concepto.variables.length / concepto.filasPorPagina);
-  }
-  paginaConceptoAnterior(concepto: ConceptoPadre) {
-    if (concepto.pagina > 0) concepto.pagina--;
-  }
-  paginaConceptoSiguiente(concepto: ConceptoPadre) {
-    if (concepto.pagina < this.totalPaginasConcepto(concepto) - 1) concepto.pagina++;
-  }
-
   abrirDetalle(form: Formulario) {
     this.controlEnvioAbierto = false;
     this.detalleAbierto = form;
-    this.paginaColumnas = 0;
-    this.conceptos.forEach(c => c.pagina = 0);
     // En el wizard de 3 pasos, abrir un formulario NO cambia de paso:
     // el registro manual vive dentro del paso "Formularios" (step 1).
     queueMicrotask(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
   /**
-   * Guarda cambios desde el detalle. Patrón UX: el usuario sigue editando
-   * variables en otros conceptos, así que NO cerramos el detalle — solo
-   * confirmamos con un toast no intrusivo.
-   */
-  guardarCambiosDetalle() {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Cambios guardados',
-      detail: 'Los valores del formulario fueron guardados. Puede seguir editando o validar cuando termine.',
-      life: 3500,
-    });
-  }
-
-  /**
    * Validar el formulario abierto desde el detalle. Patrón UX: al ser el
-   * "cierre" del trabajo en este formulario, lo marcamos como Validado,
+   * "cierre" del trabajo en este formulario, lo pasamos a Validación local,
    * regresamos al listado (o al paso 2 en wizard) y mostramos toast para
    * que el usuario vea el estado actualizado y pueda elegir el siguiente.
    */
@@ -483,21 +264,20 @@ export class FormulariosComponent implements OnDestroy {
     const id = this.detalleAbierto.id;
     const nombre = this.detalleAbierto.nombre;
     this._formulariosBase = this._formulariosBase.map(f =>
-      f.id === id ? { ...f, estadoValidacion: 'Validado' } : f,
+      f.id === id ? { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId } : f,
     );
     // Al re-validar tras un rechazo, el resultado del envío anterior deja de aplicar.
     this.categoriaEnviada = false;
     this.messageService.add({
       severity: 'success',
       summary: 'Formulario validado',
-      detail: `"${nombre}" quedó en estado Validado. Continúe con los demás formularios o envíe la categoría.`,
+      detail: `"${nombre}" pasó a Validación local · Aceptado. Continúe con los demás formularios o envíe la categoría.`,
       life: 4500,
     });
     this.cerrarDetalle();
   }
   cerrarDetalle() {
     this.detalleAbierto = null;
-    this.modalEditar = null;
     // En el wizard de 3 pasos, el listado y el registro manual viven en
     // el mismo paso (Formularios). Cerrar el detalle sólo limpia el estado;
     // el step se mantiene en 1.
@@ -582,19 +362,6 @@ export class FormulariosComponent implements OnDestroy {
     this.protocoloAbierto = null;
   }
 
-  // ── Edición modal del registro ──
-  modalEditar: { concepto: ConceptoPadre; variable: Variable } | null = null;
-  abrirModalEditar(concepto: ConceptoPadre, variable: Variable) {
-    this.modalEditar = { concepto, variable };
-  }
-  cerrarModalEditar() {
-    this.modalEditar = null;
-  }
-  guardarModalEditar() {
-    this.modalEditar = null;
-    this.messageService.add({ severity: 'success', summary: 'Guardado', detail: 'Registro actualizado correctamente.', life: 2500 });
-  }
-
   /**
    * Menú ⋮ por fila — sólo acciones que NO se pueden aplicar masivamente desde
    * la toolbar (Exportar y Validar viven en la toolbar y operan sobre la selección).
@@ -608,7 +375,7 @@ export class FormulariosComponent implements OnDestroy {
     {
       label: 'Ver control de envío',
       icon: 'pi pi-send',
-      command: () => this.verControlEnvio(),
+      command: () => this.verControlEnvio(this.selectedFormularioForMenu),
     },
     { separator: true },
     {
@@ -630,8 +397,26 @@ export class FormulariosComponent implements OnDestroy {
    */
   controlEnvioAbierto = false;
 
-  verControlEnvio(): void {
+  /**
+   * Formulario cuyas deficiencias se están viendo. Las dos entradas al control
+   * de envío llevan aquí: la acción ⋮ de la fila y el tag "Deficiencia" de la
+   * columna Estado. Su nombre encabeza el contexto de la pantalla.
+   */
+  controlEnvioFormulario: Formulario | null = null;
+
+  /**
+   * Abre el control de envío. El alcance depende de por dónde se entre: desde
+   * el tag "Deficiencia" del listado interesa el último proceso; desde la
+   * acción ⋮, el histórico completo del formulario.
+   */
+  verControlEnvio(
+    form: Formulario | null = null,
+    alcance: 'ultimo' | 'historico' = 'historico',
+  ): void {
     if (!this.filtersApplied) return;
+    this.controlEnvioFormulario = form ?? this.selectedFormularioForMenu;
+    this.alcanceDeficiencias = alcance;
+    this.refrescarDeficienciasVisibles();
     this.cerrarDetalle();
     this.cerrarProtocolo();
     this.controlEnvioAbierto = true;
@@ -640,50 +425,162 @@ export class FormulariosComponent implements OnDestroy {
 
   cerrarControlEnvio(): void {
     this.controlEnvioAbierto = false;
+    this.controlEnvioFormulario = null;
+    this.deficienciasVisibles = [];
   }
 
-  // ── Rechazo por deficiencia (V3) ──────────────────────────────────────────
-  // Desde la columna Estado, las filas "Rechazado por Deficiencia" abren un
-  // diálogo con los motivos del rechazo y cómo corregirlos. Datos de demo.
-  rechazoDetalle: Formulario | null = null;
+  /**
+   * Deficiencias del ÚLTIMO proceso de importación, por tipo de error. Un
+   * proceso cierra con una sola familia de códigos —o el archivo está mal
+   * formado (estructura) o le falta información exigida por la categoría
+   * (completitud)—, y cada familia cuelga de su propio detalle de proceso.
+   * En producción esto llega del backend por formulario.
+   */
+  private readonly deficienciasUltimoProceso: Readonly<
+    Record<TipoDeficiencia, readonly PlantillaDeficiencia[]>
+  > = {
+    // Etapa 1 · Importación — detalle de proceso 4831. Errores de ESTRUCTURA:
+    // el archivo no cumple el protocolo de importación.
+    estructura: [
+      { etapa: 1, idDetalleProceso: 4831, id: 1, tipo: 'estructura', codMensaje: 'EST-004', mensaje: 'Longitud de registro distinta a la declarada en el protocolo de importación.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4831, id: 2, tipo: 'estructura', codMensaje: 'EST-011', mensaje: 'Campo numérico con caracteres no válidos.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4831, id: 3, tipo: 'estructura', codMensaje: 'EST-019', mensaje: 'Código de concepto inexistente en la lista de la categoría.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4831, id: 4, tipo: 'estructura', codMensaje: 'EST-023', mensaje: 'Registro duplicado para el mismo concepto y tercero.', permisible: true, requiereComentario: true },
+    ],
+    // Etapa 1 · Importación — detalle de proceso 4832. Errores de COMPLETITUD:
+    // el archivo está bien formado, pero no trae todo lo que la categoría exige.
+    completitud: [
+      { etapa: 1, idDetalleProceso: 4832, id: 1, tipo: 'completitud', codMensaje: 'COMP-002', mensaje: 'Concepto obligatorio de la categoría sin registro en el archivo.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4832, id: 2, tipo: 'completitud', codMensaje: 'COMP-014', mensaje: 'El archivo no incluye todos los periodos exigidos por la categoría.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4832, id: 3, tipo: 'completitud', codMensaje: 'COMP-021', mensaje: 'Registro sin el tercero obligatorio para el concepto reportado.', permisible: false, requiereComentario: false },
+      { etapa: 1, idDetalleProceso: 4832, id: 4, tipo: 'completitud', codMensaje: 'COMP-036', mensaje: 'Concepto informado sin la nota explicativa que exige la categoría.', permisible: true, requiereComentario: true },
+    ],
+  };
 
-  /** True si el formulario fue rechazado por deficiencia (habilita "Ver motivo"). */
-  esRechazado(form: Formulario): boolean {
-    return form.estadoValidacion === 'Rechazado por Deficiencia';
-  }
+  /**
+   * Procesos ANTERIORES del formulario (histórico). Son las deficiencias de
+   * validación local y central: no llevan tipo, porque el tipo describe cómo
+   * cerró una importación, no una validación.
+   */
+  private readonly historialDeficiencias: readonly PlantillaDeficiencia[] = [
+    // Etapa 2 · Validación local — detalle de proceso 4822. El consecutivo
+    // vuelve a empezar en 1: es por etapa, no global.
+    { etapa: 2, idDetalleProceso: 4822, id: 1, codMensaje: 'VAL-001', mensaje: 'El total de débitos no coincide con el total de créditos del formulario.', permisible: false, requiereComentario: false },
+    { etapa: 2, idDetalleProceso: 4822, id: 2, codMensaje: 'VAL-032', mensaje: 'Concepto obligatorio sin valor diligenciado.', permisible: false, requiereComentario: false },
+    { etapa: 2, idDetalleProceso: 4822, id: 3, codMensaje: 'VAL-045', mensaje: 'Saldo negativo en una cuenta que no admite naturaleza contraria.', permisible: true, requiereComentario: false },
+    { etapa: 2, idDetalleProceso: 4822, id: 4, codMensaje: 'VAL-051', mensaje: 'El saldo inicial no coincide con el saldo final del periodo anterior.', permisible: false, requiereComentario: false },
 
-  /** Motivos del rechazo por deficiencia (mock de demostración). */
-  readonly deficienciasMock: { tipo: string; detalle: string; correccion: string }[] = [
-    {
-      tipo: 'Saldo descuadrado',
-      detalle: 'El total de débitos no coincide con el total de créditos del formulario.',
-      correccion: 'Revise los movimientos del periodo y ajuste hasta que el cuadre dé cero.',
-    },
-    {
-      tipo: 'Concepto obligatorio vacío',
-      detalle: 'Faltan valores en conceptos marcados como obligatorios por la CGN.',
-      correccion: 'Diligencie los conceptos obligatorios pendientes antes de reenviar.',
-    },
-    {
-      tipo: 'Operación recíproca sin par',
-      detalle: 'Una operación recíproca no tiene su contraparte reportada.',
-      correccion: 'Verifique la entidad recíproca y el valor reportado del movimiento.',
-    },
+    // Etapa 3 · Validación central — detalle de proceso 4823.
+    { etapa: 3, idDetalleProceso: 4823, id: 1, codMensaje: 'CEN-014', mensaje: 'Variación superior al 50% frente al periodo anterior.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 2, codMensaje: 'CEN-027', mensaje: 'Operación recíproca sin contraparte reportada por la entidad par.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 3, codMensaje: 'CEN-063', mensaje: 'Valor reportado en cero en un concepto con movimiento en el periodo anterior.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 4, codMensaje: 'CEN-078', mensaje: 'Tercero reportado sin identificación válida.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 5, codMensaje: 'CEN-084', mensaje: 'Cuenta reportada que no aplica para la naturaleza jurídica de la entidad.', permisible: true, requiereComentario: true },
+    { etapa: 3, idDetalleProceso: 4823, id: 6, codMensaje: 'CEN-092', mensaje: 'Depreciación acumulada mayor al valor bruto del activo.', permisible: false, requiereComentario: false },
+    { etapa: 3, idDetalleProceso: 4823, id: 7, codMensaje: 'CEN-105', mensaje: 'Concepto informado sin nota explicativa asociada.', permisible: true, requiereComentario: true },
   ];
 
-  verRechazoDeficiencia(form: Formulario): void {
-    this.rechazoDetalle = form;
+  /**
+   * Deficiencias por formulario (id → filas). Se crean la primera vez que se
+   * abre el control de envío de ese formulario y se conservan, de modo que el
+   * getter devuelve SIEMPRE el mismo array: si recreara la lista en cada ciclo
+   * de detección de cambios, la tabla y los comentarios se reiniciarían solos.
+   */
+  private readonly deficienciasPorFormulario = new Map<number, DeficienciaEnvio[]>();
+
+  /**
+   * Tipo de error con el que cerró el último proceso de importación de cada
+   * formulario. Lo asigna el resultado de la importación; sin entrada aquí, el
+   * formulario no tiene deficiencias de importación.
+   */
+  private readonly tipoDeficienciaPorFormulario = new Map<number, TipoDeficiencia>();
+
+  /** Deficiencias del formulario abierto en el control de envío. */
+  get deficienciasEnvio(): DeficienciaEnvio[] {
+    const form = this.controlEnvioFormulario;
+    if (!form) return [];
+    const existentes = this.deficienciasPorFormulario.get(form.id);
+    if (existentes) return existentes;
+    const filas = this.construirDeficiencias(form).map(d => ({
+      ...d, comentario: '', comentarioGuardado: '', comentarioError: '',
+    }));
+    this.deficienciasPorFormulario.set(form.id, filas);
+    return filas;
   }
 
-  cerrarRechazoDetalle(): void {
-    this.rechazoDetalle = null;
+  /**
+   * Arma el expediente de un formulario: primero el último proceso (la
+   * importación que acaba de cerrar, con su familia de códigos) y detrás los
+   * procesos anteriores. Un formulario sin deficiencias devuelve lista vacía —
+   * no todos los formularios de la categoría tienen por qué tener errores.
+   */
+  private construirDeficiencias(form: Formulario): readonly PlantillaDeficiencia[] {
+    const tipo = this.tipoDeficienciaPorFormulario.get(form.id);
+    if (tipo) return [...this.deficienciasUltimoProceso[tipo], ...this.historialDeficiencias];
+    // Rechazado por la validación central (sin importación fallida detrás):
+    // sólo tiene el expediente de validaciones.
+    if (form.estado === 'D') return this.historialDeficiencias;
+    return [];
   }
 
-  /** Desde el diálogo de rechazo, salta al registro manual del formulario. */
-  irARegistroDesdeRechazo(): void {
-    const form = this.rechazoDetalle;
-    this.cerrarRechazoDetalle();
-    if (form) this.abrirDetalle(form);
+  // ── Alcance de la tabla de deficiencias ───────────────────────────────────
+  // El mismo control de envío se abre desde dos sitios y no muestran lo mismo:
+  //   • tag "Deficiencia" del listado → las del ÚLTIMO proceso, que es lo que
+  //     el usuario acaba de ver fallar;
+  //   • acción ⋮ "Ver control de envío" → el histórico completo del formulario.
+  // El selector deja pasar de una vista a la otra sin salir de la pantalla.
+
+  /** Alcance activo de la tabla de deficiencias. */
+  alcanceDeficiencias: 'ultimo' | 'historico' = 'historico';
+
+  /** Filas que ve la tabla — recalculadas al abrir o al cambiar de alcance. */
+  deficienciasVisibles: DeficienciaEnvio[] = [];
+
+  /** Id del detalle de proceso más reciente del formulario abierto (0 = ninguno). */
+  get ultimoProcesoId(): number {
+    return this.deficienciasEnvio.reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
+  }
+
+  /** Tipo de error del último proceso del formulario abierto, si lo tuvo. */
+  get tipoUltimoProceso(): TipoDeficiencia | null {
+    const form = this.controlEnvioFormulario;
+    return (form && this.tipoDeficienciaPorFormulario.get(form.id)) || null;
+  }
+  cambiarAlcanceDeficiencias(alcance: 'ultimo' | 'historico'): void {
+    this.alcanceDeficiencias = alcance;
+    this.refrescarDeficienciasVisibles();
+  }
+
+  /** Aplica el alcance activo sobre el expediente del formulario abierto. */
+  private refrescarDeficienciasVisibles(): void {
+    const todas = this.deficienciasEnvio;
+    this.deficienciasVisibles =
+      this.alcanceDeficiencias === 'ultimo'
+        ? todas.filter(d => d.idDetalleProceso === this.ultimoProcesoId)
+        : todas;
+  }
+
+  /** Resumen del alcance activo, para el encabezado de la tabla. */
+  get resumenDeficiencias(): string {
+    const total = this.deficienciasVisibles.length;
+    const plural = total === 1 ? 'deficiencia' : 'deficiencias';
+    if (this.alcanceDeficiencias === 'ultimo') {
+      const tipo = this.tipoUltimoProceso;
+      const detalle = tipo ? ` de ${TIPOS_DEFICIENCIA[tipo].label.toLowerCase()}` : '';
+      return `Proceso ${this.ultimoProcesoId} · ${total} ${plural}${detalle}`;
+    }
+    const procesos = new Set(this.deficienciasEnvio.map(d => d.idDetalleProceso)).size;
+    return `${procesos} proceso(s) · ${total} ${plural}`;
+  }
+
+  // ── Rechazo por deficiencia ───────────────────────────────────────────────
+  // Desde la columna Estado, las filas con estado Deficiencia (D) abren el
+  // control de envío de ESE formulario, que es donde vive el detalle de las
+  // deficiencias (mismo destino que la acción ⋮ "Ver control de envío").
+
+  /** True si el formulario fue rechazado por deficiencia (hace clicable el tag). */
+  esRechazado(form: Formulario): boolean {
+    return form.estado === 'D';
   }
 
   // ── Tipo de usuario (mock de demostración) ──
@@ -783,8 +680,7 @@ export class FormulariosComponent implements OnDestroy {
   private resetContextoEntidad() {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
-    this.panelEstadoAbierto = false;
-    this.controlEnvioAbierto = false;
+    this.cerrarControlEnvio();
     this.showImportDialog = false;
     this.cerrarPanelesPaso1();
   }
@@ -823,14 +719,8 @@ export class FormulariosComponent implements OnDestroy {
     { label: '2022', value: '2022' },
   ];
 
-  periodoOptions = [
-    { label: 'Seleccione periodo', value: '' },
-    { label: 'Enero - Marzo (Trimestre 1)', value: 'T1' },
-    { label: 'Abril - Junio (Trimestre 2)', value: 'T2' },
-    { label: 'Julio - Septiembre (Trimestre 3)', value: 'T3' },
-    { label: 'Octubre - Diciembre (Trimestre 4)', value: 'T4' },
-    { label: 'Anual', value: 'ANUAL' },
-  ];
+  /** Catálogo compartido: la etiqueta es el rango de meses. Ver periodos.ts. */
+  periodoOptions = PERIODOS_FILTRO;
 
   // ──────────────────────────────────────────────────────────────────────
   // Acciones — agrupadas según el modelo de CRIS:
@@ -838,7 +728,7 @@ export class FormulariosComponent implements OnDestroy {
   //    Entidades Agregadas, Generar protocolo, Exportar, Consultar Envíos.
   //  • Sobre seleccionados (1+ formularios marcados): Validar.
   //  • Terminal: Enviar Categoría — habilitada solo cuando TODOS los
-  //    formularios del listado están en estado "Validado".
+  //    formularios del listado están validados localmente (etapa 2 / estado A).
   // ──────────────────────────────────────────────────────────────────────
   accionesGlobales: AccionPermiso[] = [
     { key: 'importar', label: 'Importar', icon: 'pi pi-upload', enabled: true },
@@ -862,7 +752,54 @@ export class FormulariosComponent implements OnDestroy {
   selectedFormularios: Formulario[] = [];
 
   // ── Importar (acción transversal de los 3 pasos) ──
+  //
+  // La importación sólo admite TXT (plano, según el protocolo de importación) y
+  // es asíncrona: al confirmar, el archivo entra a la cola de proceso y el
+  // resultado se notifica por correo. El diálogo recorre hasta tres momentos:
+  //   1. 'seleccion'     → se elige el archivo y se valida la extensión
+  //   2. 'justificacion' → SÓLO si la categoría ya fue enviada: reimportar
+  //                        modifica información YA REPORTADA y hay que motivarlo
+  //   3. 'confirmacion'  → SÓLO si el contexto ya tiene información importada:
+  //                        avisa qué formularios se reemplazan y pide confirmar
+  //   4. 'iniciado'      → alerta de proceso (o reproceso) iniciado + correo
+  /** Única extensión admitida por la importación. */
+  private readonly EXTENSION_IMPORT = '.txt';
+
   importFileName = '';
+  /** Mensaje de rechazo del archivo elegido (extensión no admitida). */
+  importFileError = '';
+  /** Momento del diálogo de importación. */
+  importPaso: 'seleccion' | 'justificacion' | 'confirmacion' | 'iniciado' = 'seleccion';
+  /** True cuando lo iniciado reemplaza información ya importada. */
+  esReimportacion = false;
+
+  /* ── Justificación del reenvío ─────────────────────────────────────────
+     Si la categoría ya se envió a la CGN, volver a importar modifica
+     información YA REPORTADA. No se bloquea, pero exige motivo Y justificación
+     escrita: los dos campos son obligatorios.
+     El envío es, junto con la validación central, lo único que se razona
+     por categoría; el resto del flujo es del contexto. */
+  readonly REENVIO_JUSTIFICACION_MAX = 500;
+  readonly reenvioMotivoOptions = [
+    { label: 'Por error en el reporte de información', value: 'error' },
+    { label: 'Solicitud de requerimiento por parte de la CGN', value: 'requerimiento' },
+    { label: 'Conciliación de saldos pendientes', value: 'conciliacion' },
+    { label: 'Otra', value: 'otra' },
+  ];
+  reenvioMotivo: string | null = null;
+  reenvioJustificacion = '';
+  reenvioMotivoError = '';
+  reenvioJustificacionError = '';
+
+  /** El reenvío de esta importación ya quedó justificado: no se vuelve a pedir. */
+  reenvioJustificado = false;
+
+  /** True si la categoría ya fue enviada a validación central. */
+  get categoriaYaEnviada(): boolean {
+    if (this.escenarioImport === 'reenvio') return true;
+    return this.categoriaEnviada
+      || this.filteredFormularios.some(f => this.esEnviado(f));
+  }
 
   /** Diálogo de importación, accesible desde el botón transversal. */
   showImportDialog = false;
@@ -870,12 +807,110 @@ export class FormulariosComponent implements OnDestroy {
   /** Abre el diálogo de importación (gateado por el contexto del Paso 1). */
   abrirImportDialog() {
     if (!this.filtersApplied) return;
-    this.importFileName = '';
+    this.resetImportDialog();
+    this.evaluarReenvio();
     this.showImportDialog = true;
+  }
+
+  /**
+   * El contexto del Paso 1 ya dice si la categoría se envió, así que el reenvío
+   * se sabe antes de elegir archivo: cuando aplica, el diálogo abre en la
+   * justificación y el archivo se pide después.
+   */
+  private evaluarReenvio(): void {
+    if (this.categoriaYaEnviada && !this.reenvioJustificado) {
+      this.importPaso = 'justificacion';
+    } else if (this.importPaso === 'justificacion') {
+      this.importPaso = 'seleccion';
+    }
+  }
+
+  /**
+   * El switch de demostración cambia el contexto simulado, así que rehace la
+   * validación en el acto — que es lo que hará el sistema real al aplicar los
+   * filtros. Lo ya diligenciado se descarta: corresponde a otro escenario.
+   */
+  onEscenarioImportChange(): void {
+    this.reenvioJustificado = false;
+    this.reenvioMotivo = null;
+    this.reenvioJustificacion = '';
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
+    this.evaluarReenvio();
   }
 
   cerrarImportDialog() {
     this.showImportDialog = false;
+    this.resetImportDialog();
+  }
+
+  private resetImportDialog() {
+    this.importFileName = '';
+    this.importFileError = '';
+    this.importPaso = 'seleccion';
+    this.esReimportacion = false;
+    this.reenvioJustificado = false;
+    this.reenvioMotivo = null;
+    this.reenvioJustificacion = '';
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
+  }
+
+  /**
+   * Escenario de importación (SÓLO demostración). En producción esto no existe:
+   * que haya o no información previa lo decide el estado del contexto. Como el
+   * demo arranca con formularios ya importados, sin este switch nunca se vería
+   * el mensaje de importación limpia.
+   *   'auto'    → según los datos (lo que hará el sistema real)
+   *   'limpio'  → fuerza "sin información previa": importación de primera vez
+   *   'reenvio' → fuerza "categoría ya enviada": pide justificar el reenvío
+   */
+  escenarioImport: 'auto' | 'limpio' | 'reenvio' = 'auto';
+  readonly escenarioImportOptions = [
+    { label: 'Con información en el contexto · reimportación', value: 'auto' },
+    { label: 'Sin información en el contexto · importación limpia', value: 'limpio' },
+    { label: 'Categoría ya enviada · reenvío', value: 'reenvio' },
+  ];
+
+  /**
+   * Formularios que ya cuentan con información para el CONTEXTO seleccionado
+   * (entidad · año · periodo) y que, por tanto, el archivo reemplazaría. Si hay
+   * al menos uno, la importación es una reimportación y el diálogo exige
+   * confirmación antes de arrancar.
+   *
+   * Ojo con el alcance: importación y validación local son del contexto, no de
+   * la categoría. La categoría sólo entra en la validación central y el envío.
+   */
+  get formulariosAReimportar(): Formulario[] {
+    if (this.escenarioImport === 'limpio') return [];
+    return this.filteredFormularios.filter(f => f.estado !== null);
+  }
+
+  /**
+   * Validación de la extensión en el momento de elegir el archivo: si no es
+   * .txt no se acepta, se explica por qué y se limpia el input para que el
+   * usuario pueda volver a elegir (incluso el mismo archivo).
+   */
+  seleccionarArchivoImport(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    this.importFileName = '';
+    this.importFileError = '';
+    if (!archivo) return;
+
+    if (!archivo.name.toLowerCase().endsWith(this.EXTENSION_IMPORT)) {
+      this.importFileError =
+        `"${archivo.name}" no es un archivo .txt. La importación sólo admite archivos de texto plano (.txt).`;
+      input.value = '';
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo no admitido',
+        detail: 'Seleccione un archivo con extensión .txt.',
+        life: 5000,
+      });
+      return;
+    }
+    this.importFileName = archivo.name;
   }
 
   // ── Exportar ──
@@ -930,108 +965,27 @@ export class FormulariosComponent implements OnDestroy {
 
   /**
    * Envío final de la categoría — solo habilitado cuando todos los
-   * formularios del listado están en estado "Validado". Reflejo del
+   * formularios del listado están validados localmente. Reflejo del
    * flujo descrito por CRIS: validación local → envío central.
    */
   get todosValidados(): boolean {
     const lista = this.filteredFormularios;
-    return lista.length > 0 && lista.every(f => f.estadoValidacion === 'Validado');
+    return lista.length > 0 && lista.every(f => this.esValidadoLocal(f));
   }
 
-  /* ═══════════════════════════════════════════════════════════════════
-     Panel lateral "Estado de la categoría" — único en el layout, visible
-     y toggleable en los 3 pasos (toggle, NO modal). No introduce estado
-     nuevo más allá del flag de apertura: TODO lo que muestra se deriva de
-     la única fuente de verdad que ya comparten los pasos:
-       • filtersApplied + contexto (categoría/entidad/año/periodo)
-       • _formulariosBase / filteredFormularios (estadoValidacion)
-       • selectedEntidades (entidades agregadas, Paso 3)
-     Al navegar entre pasos el estado se conserva solo, porque se recalcula
-     de esas mismas propiedades.
-     ═══════════════════════════════════════════════════════════════════ */
-
-  /** Apertura del panel lateral (toggle). Único estado propio del panel. */
-  panelEstadoAbierto = false;
-
-  togglePanelEstado(): void {
-    // El control de envío sólo se habilita con un contexto aplicado.
-    if (!this.filtersApplied) return;
-    this.panelEstadoAbierto = !this.panelEstadoAbierto;
+  /** Validado localmente: etapa Validación local (2) + estado Aceptado (A). */
+  private esValidadoLocal(form: Formulario): boolean {
+    return form.etapa === 2 && form.estado === 'A';
   }
 
-  /** Etiqueta legible del periodo seleccionado (para el contexto del panel). */
+  /** Enviado a validación central: etapa Envío (4) + estado Enviado (S). */
+  private esEnviado(form: Formulario): boolean {
+    return form.etapa === 4 && form.estado === 'S';
+  }
+
+  /** Etiqueta legible del periodo seleccionado (para el contexto de la pantalla). */
   get periodoLabel(): string {
     return this.periodoOptions.find(o => o.value === this.selectedPeriodo)?.label ?? '';
-  }
-
-  /**
-   * Estado dominante (lifecycle) de la categoría. Se calcula a partir del
-   * listado de formularios y de la verificación central — misma fuente que
-   * usan los pasos para habilitar Validar / Enviar.
-   */
-  get estadoCategoria(): EstadoCategoriaResumen {
-    const lista = this.filteredFormularios;
-    if (!this.filtersApplied || lista.length === 0) {
-      return {
-        clave: 'sin-contexto', label: 'Sin contexto', severity: 'secondary',
-        icon: 'pi pi-inbox',
-        descripcion: 'Aplique los filtros en el Paso 1 para cargar la categoría.',
-      };
-    }
-    // Tras el envío central todos los formularios quedan en "Enviado".
-    if (lista.every(f => f.estadoValidacion === 'Enviado')) {
-      return {
-        clave: 'enviado', label: 'Enviada a validación central', severity: 'info',
-        icon: 'pi pi-send',
-        descripcion: 'La categoría fue enviada. El resultado (aceptado o rechazado) llegará en Consultar envíos.',
-      };
-    }
-    // Rechazo: formularios marcados con deficiencia. El detalle del motivo se
-    // consulta en el formulario rechazado del listado (columna Estado → Ver motivo).
-    if (lista.some(f => f.estadoValidacion === 'Rechazado por Deficiencia')) {
-      return {
-        clave: 'rechazado', label: 'Rechazado por deficiencia', severity: 'danger',
-        icon: 'pi pi-times-circle',
-        descripcion: 'Hay formularios rechazados. Abra el formulario rechazado para ver el motivo y corregirlo.',
-      };
-    }
-    if (lista.every(f => f.estadoValidacion === 'Validado')) {
-      return {
-        clave: 'validado', label: 'Validada · lista para enviar', severity: 'success',
-        icon: 'pi pi-check-circle',
-        descripcion: 'Todos los formularios están validados. Puede enviar la categoría en el Paso 3.',
-      };
-    }
-    return {
-      clave: 'importado', label: 'Importada · en diligenciamiento', severity: 'warn',
-      icon: 'pi pi-file-import',
-      descripcion: 'Formularios cargados. Valide cada uno para poder enviar la categoría.',
-    };
-  }
-
-  /** Desglose por estado de los formularios (solo los estados presentes). */
-  get desgloseEstados(): DesgloseEstado[] {
-    const lista = this.filteredFormularios;
-    const cuenta = (estado: string) => lista.filter(f => f.estadoValidacion === estado).length;
-    const buckets: { label: string; estado: string; icon: string; severity: TagSeverity }[] = [
-      { label: 'Importado / pendiente', estado: 'Pendiente de validar', icon: 'pi pi-file-import', severity: 'warn' },
-      { label: 'Validado', estado: 'Validado', icon: 'pi pi-check-circle', severity: 'success' },
-      { label: 'Rechazado por deficiencia', estado: 'Rechazado por Deficiencia', icon: 'pi pi-times-circle', severity: 'danger' },
-      { label: 'Enviado', estado: 'Enviado', icon: 'pi pi-send', severity: 'info' },
-    ];
-    return buckets
-      .map(b => ({ label: b.label, cantidad: cuenta(b.estado), icon: b.icon, severity: b.severity }))
-      .filter(b => b.cantidad > 0);
-  }
-
-  /** Progreso de validación local: validados (o enviados) sobre el total. */
-  get progresoValidacion(): { validados: number; total: number; pct: number } {
-    const lista = this.filteredFormularios;
-    const total = lista.length;
-    const validados = lista.filter(
-      f => f.estadoValidacion === 'Validado' || f.estadoValidacion === 'Enviado',
-    ).length;
-    return { validados, total, pct: total ? Math.round((validados / total) * 100) : 0 };
   }
 
   /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
@@ -1064,7 +1018,7 @@ export class FormulariosComponent implements OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Categoría no enviable',
-        detail: 'Todos los formularios deben estar en estado "Validado" antes de enviar la categoría.',
+        detail: 'Todos los formularios deben estar en Validación local · Aceptado antes de enviar la categoría.',
         life: 5000,
       });
       return;
@@ -1108,14 +1062,15 @@ export class FormulariosComponent implements OnDestroy {
     this.categoriaEnviada = true;
 
     if (this.respuestaCentral === 'rechazado') {
-      // Rechazo por deficiencia: se marca UN formulario como rechazado (los demás
-      // quedan Validado, para poder reenviar tras corregirlo). El motivo se consulta
-      // en ese formulario desde el listado (Sección 2 → "Ver motivo").
+      // Rechazo por deficiencia: UN formulario vuelve con etapa Validación
+      // central (3) y estado Deficiencia (D); los demás quedan como estaban,
+      // para poder reenviar tras corregirlo. El motivo se consulta en ese
+      // formulario desde el listado (Sección 2 → "Ver motivo").
       let marcado = false;
       this._formulariosBase = this._formulariosBase.map(f => {
         if (!marcado) {
           marcado = true;
-          return { ...f, estadoValidacion: 'Rechazado por Deficiencia' };
+          return { ...f, etapa: 3 as EtapaId, estado: 'D' as EstadoId };
         }
         return f;
       });
@@ -1128,8 +1083,10 @@ export class FormulariosComponent implements OnDestroy {
       return;
     }
 
-    // Aceptado / En proceso: todos los formularios pasan a "Enviado".
-    this._formulariosBase = this._formulariosBase.map(f => ({ ...f, estadoValidacion: 'Enviado' }));
+    // Aceptado / En proceso: todos pasan a etapa Envío (4) / estado Enviado (S).
+    this._formulariosBase = this._formulariosBase.map(f => ({
+      ...f, etapa: 4 as EtapaId, estado: 'S' as EstadoId,
+    }));
     this.messageService.add({
       severity: this.respuestaCentral === 'aceptado' ? 'success' : 'info',
       summary: this.respuestaCentral === 'aceptado' ? 'Categoría aceptada' : 'Categoría enviada',
@@ -1144,12 +1101,194 @@ export class FormulariosComponent implements OnDestroy {
     this.activePanel = null;
   }
 
+  /**
+   * Botón "Continuar" / "Importar". La justificación del reenvío va primero y
+   * no necesita archivo: el contexto ya dijo que la categoría se envió. Con eso
+   * resuelto se pide el archivo y, si el contexto ya tiene información, se
+   * avisa del reemplazo antes de arrancar.
+   */
   confirmImport() {
+    if (this.importPaso === 'iniciado') return;
+
+    if (this.importPaso === 'justificacion') {
+      if (!this.validarJustificacionReenvio()) return;
+      this.reenvioJustificado = true;
+      this.importPaso = 'seleccion';
+      return;
+    }
+
     if (!this.importFileName) return;
-    this.messageService.add({ severity: 'success', summary: 'Importación iniciada', detail: `Importando archivo "${this.importFileName}"...` });
-    this.importFileName = '';
+
+    if (this.importPaso === 'seleccion' && this.categoriaYaEnviada && !this.reenvioJustificado) {
+      this.importPaso = 'justificacion';
+      return;
+    }
+    if (this.importPaso !== 'confirmacion' && this.formulariosAReimportar.length > 0) {
+      this.importPaso = 'confirmacion';
+      return;
+    }
+    this.iniciarProcesoImportacion();
+  }
+
+  /**
+   * Motivo y justificación son obligatorios los dos. El tope de caracteres lo
+   * impone además el maxlength del textarea: esto es el cinturón por si el
+   * valor llegara por otra vía.
+   */
+  private validarJustificacionReenvio(): boolean {
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
+
+    if (!this.reenvioMotivo) {
+      this.reenvioMotivoError = 'Seleccione el motivo del reenvío.';
+    }
+    const detalle = this.reenvioJustificacion.trim();
+    if (!detalle) {
+      this.reenvioJustificacionError = 'Describa la justificación del reenvío.';
+    } else if (detalle.length > this.REENVIO_JUSTIFICACION_MAX) {
+      this.reenvioJustificacionError =
+        `La justificación no puede superar los ${this.REENVIO_JUSTIFICACION_MAX} caracteres.`;
+    }
+
+    const valido = !this.reenvioMotivoError && !this.reenvioJustificacionError;
+    if (!valido) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Justificación incompleta',
+        detail: 'Diligencie el motivo y la justificación del reenvío para continuar.',
+        life: 4500,
+      });
+    }
+    return valido;
+  }
+
+  /** "Cancelar" en la justificación: sin motivo no hay reenvío, así que se
+      abandona la importación entera. */
+  cancelarReenvio() {
+    this.cerrarImportDialog();
+  }
+
+  /** Vuelve del aviso de reemplazo a la selección de archivo, sin arrancar nada. */
+  cancelarReimportacion() {
+    this.importPaso = 'seleccion';
+  }
+
+  /**
+   * Arranca el proceso. No se cierra el diálogo — se reemplaza su cuerpo por la
+   * alerta, porque el usuario tiene que enterarse de que el proceso ya arrancó
+   * y de que el resultado NO llega a esta pantalla sino a su correo.
+   */
+  private iniciarProcesoImportacion() {
+    // Se calcula ANTES de tocar los estados: después, todos tienen registro.
+    this.esReimportacion = this.formulariosAReimportar.length > 0;
+
+    // Todo el contexto vuelve a la etapa Importación. Sólo una reimportación
+    // arranca en Reimportando (N), y sólo para lo que ya tenía información; en
+    // una importación limpia todo el contexto arranca en Importando (G).
+    this._formulariosBase = this._formulariosBase.map(f => ({
+      ...f,
+      etapa: 1 as EtapaId,
+      estado: (this.esReimportacion && f.estado !== null ? 'N' : 'G') as EstadoId,
+    }));
+    this.selectedFormularios = [];
+    this.categoriaEnviada = false;
+    this.programarAvanceProceso();
+
+    this.importPaso = 'iniciado';
     this.activePanel = null;
-    this.showImportDialog = false;
+    this.messageService.add({
+      severity: 'info',
+      summary: this.esReimportacion ? 'Reimportación iniciada' : 'Importación iniciada',
+      detail: this.esReimportacion
+        ? `"${this.importFileName}" inició su proceso de reimportación sobre el contexto seleccionado. El resultado se notificará a ${this.correoUsuario}.`
+        : `"${this.importFileName}" inició su proceso de importación. El resultado se notificará a ${this.correoUsuario}.`,
+      life: 6000,
+    });
+  }
+
+  // ── Avance del proceso de importación (simulación de demostración) ────────
+  // En producción el proceso corre en el servidor y el resultado llega por
+  // correo; aquí se anima la secuencia real de estados para que la pantalla
+  // muestre por dónde va cada formulario:
+  //   limpia        →  Importando → En espera → Validando → Aceptado/Deficiencia
+  //   reimportación →  Reimportando → Importando → En espera → Validando → …
+  // Todo ocurre dentro de la etapa 1 (Importación).
+
+  /** Duración de cada paso de la secuencia, en ms. */
+  private readonly PASO_PROCESO_MS = 2200;
+
+  /** Temporizadores en curso: se cancelan al reimportar, al filtrar y al destruir. */
+  private timersProceso: number[] = [];
+
+  /**
+   * Con qué cierra el archivo demo cada formulario (id → tipo de error). Los
+   * que no aparecen aquí terminan Aceptados. Se deja uno de cada familia para
+   * poder comparar los dos juegos de códigos en el control de envío.
+   */
+  private readonly RESULTADO_IMPORTACION: Readonly<Record<number, TipoDeficiencia>> = {
+    2: 'estructura',   // Balance General
+    3: 'completitud',  // Estado de Resultados
+  };
+
+  /** Encadena los pasos restantes de la secuencia a partir del estado inicial. */
+  private programarAvanceProceso(): void {
+    this.cancelarAvanceProceso();
+    const pasos: Array<() => void> = [];
+    // La reimportación gasta un paso extra: primero Reimportando, luego ya
+    // entra al mismo carril que una importación limpia.
+    if (this.esReimportacion) pasos.push(() => this.aplicarEstadoATodos('G'));
+    pasos.push(() => this.aplicarEstadoATodos('W'));
+    pasos.push(() => this.aplicarEstadoATodos('V'));
+    pasos.push(() => this.aplicarResultadoImportacion());
+
+    pasos.forEach((paso, i) => {
+      this.timersProceso.push(
+        window.setTimeout(paso, this.PASO_PROCESO_MS * (i + 1)),
+      );
+    });
+  }
+
+  private cancelarAvanceProceso(): void {
+    this.timersProceso.forEach(id => window.clearTimeout(id));
+    this.timersProceso = [];
+  }
+
+  /** Mueve todo el contexto al mismo estado dentro de la etapa Importación. */
+  private aplicarEstadoATodos(estado: EstadoId): void {
+    this._formulariosBase = this._formulariosBase.map(f => ({
+      ...f, etapa: 1 as EtapaId, estado,
+    }));
+  }
+
+  /**
+   * Cierra el proceso: reparte Aceptado / Deficiencia y deja registrado con qué
+   * familia de códigos falló cada formulario. Las deficiencias cacheadas se
+   * descartan: son de un proceso que ya no es el último.
+   */
+  private aplicarResultadoImportacion(): void {
+    let conDeficiencia = 0;
+    this._formulariosBase = this._formulariosBase.map(f => {
+      const tipo = this.RESULTADO_IMPORTACION[f.id];
+      this.deficienciasPorFormulario.delete(f.id);
+      if (tipo) {
+        this.tipoDeficienciaPorFormulario.set(f.id, tipo);
+        conDeficiencia++;
+        return { ...f, etapa: 1 as EtapaId, estado: 'D' as EstadoId };
+      }
+      this.tipoDeficienciaPorFormulario.delete(f.id);
+      return { ...f, etapa: 1 as EtapaId, estado: 'A' as EstadoId };
+    });
+    // Si el control de envío está abierto, que muestre ya el proceso nuevo.
+    this.refrescarDeficienciasVisibles();
+
+    const aceptados = this._formulariosBase.length - conDeficiencia;
+    this.messageService.add({
+      severity: conDeficiencia ? 'warn' : 'success',
+      summary: 'Proceso de importación finalizado',
+      detail: `${aceptados} formulario(s) aceptados y ${conDeficiencia} con deficiencias. `
+        + 'Abra el estado "Deficiencia" para ver los mensajes del proceso.',
+      life: 7000,
+    });
   }
 
   confirmExport() {
@@ -1159,10 +1298,12 @@ export class FormulariosComponent implements OnDestroy {
 
   confirmValidation() {
     const count = this.selectedFormularios.length;
-    // Marca los seleccionados como Validado en el listado base.
+    // Los seleccionados avanzan a etapa Validación local (2) / estado Aceptado (A).
+    // Incluye los que están "Sin registro": si la categoría no exige archivo,
+    // se validan igual y la entidad los presenta vacíos.
     const seleccionadosIds = new Set(this.selectedFormularios.map(f => f.id));
     this._formulariosBase = this._formulariosBase.map(f =>
-      seleccionadosIds.has(f.id) ? { ...f, estadoValidacion: 'Validado' } : f,
+      seleccionadosIds.has(f.id) ? { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId } : f,
     );
     this.selectedFormularios = [];
     this.activePanel = null;
@@ -1175,11 +1316,11 @@ export class FormulariosComponent implements OnDestroy {
       this.messageService.add({
         severity: 'success',
         summary: 'Todos los formularios validados',
-        detail: `${count} formulario(s) marcados como Validado. Puede continuar al paso Envíos.`,
+        detail: `${count} formulario(s) pasaron a Validación local · Aceptado. Puede continuar al paso Envíos.`,
         life: 5000,
       });
     } else {
-      const pendientes = this.filteredFormularios.filter(f => f.estadoValidacion !== 'Validado').length;
+      const pendientes = this.filteredFormularios.filter(f => !this.esValidadoLocal(f)).length;
       this.messageService.add({
         severity: 'success',
         summary: 'Validación exitosa',
@@ -1198,13 +1339,23 @@ export class FormulariosComponent implements OnDestroy {
    * `filteredFormularios` según los filtros aplicados. Esto evita que el demo
    * salga vacío para combinaciones que no estén "cableadas" en el mock.
    */
-  private readonly plantillasFormulario: Array<{ nombre: string; estado: string }> = [
-    { nombre: 'Balance General', estado: 'Pendiente de validar' },
-    { nombre: 'Estado de Resultados', estado: 'Pendiente de validar' },
-    { nombre: 'Flujo de Efectivo', estado: 'Pendiente de validar' },
-    { nombre: 'Estado de Cambios en el Patrimonio', estado: 'Validado' },
-    { nombre: 'Notas a los Estados Financieros', estado: 'Pendiente de validar' },
-    { nombre: 'Información Complementaria', estado: 'Rechazado por Deficiencia' },
+  private readonly plantillasFormulario: Array<{
+    nombre: string; etapa: EtapaId; estado: EstadoId | null;
+  }> = [
+    // El orden sigue el ciclo de vida, para que el listado del demo muestre de
+    // arriba a abajo todos los casos que la columna Estado sabe representar.
+    //
+    // Sin registro: está en la etapa 1 pero todavía no se ha importado. Puede
+    // validarse igual si la categoría no exige archivo (se presenta vacío).
+    { nombre: 'Notas a los Estados Financieros', etapa: 1, estado: null },
+    // Importados sin validar: la importación quedó Aceptada, falta validar local.
+    { nombre: 'Balance General', etapa: 1, estado: 'A' },
+    { nombre: 'Estado de Resultados', etapa: 1, estado: 'A' },
+    { nombre: 'Flujo de Efectivo', etapa: 1, estado: 'A' },
+    // Ya validado localmente.
+    { nombre: 'Estado de Cambios en el Patrimonio', etapa: 2, estado: 'A' },
+    // Devuelto por la validación central con deficiencia.
+    { nombre: 'Información Complementaria', etapa: 3, estado: 'D' },
   ];
 
   searchFormulario = '';
@@ -1232,6 +1383,10 @@ export class FormulariosComponent implements OnDestroy {
 
   /** Recalcula el listado base a partir de los filtros aplicados. */
   private recomputarFormulariosBase() {
+    // Contexto nuevo: se abandona el proceso en curso y su expediente.
+    this.cancelarAvanceProceso();
+    this.deficienciasPorFormulario.clear();
+    this.tipoDeficienciaPorFormulario.clear();
     const periodoLabel = this.selectedPeriodo || 'T1';
     const anioNum = this.selectedAnio ? +this.selectedAnio : 2024;
     const catCode = this.selectedCategoria || 'ICP';
@@ -1244,7 +1399,8 @@ export class FormulariosComponent implements OnDestroy {
       categoria: catCode,
       periodo: periodoLabel,
       anio: anioNum,
-      estadoValidacion: plantilla.estado,
+      etapa: plantilla.etapa,
+      estado: plantilla.estado,
       ultimaModificacion: `0${(idx % 9) + 1}/${(idx % 12) + 1}/${anioNum}`,
     }));
     // Contexto nuevo: aún no se ha enviado.
@@ -1270,8 +1426,7 @@ export class FormulariosComponent implements OnDestroy {
   onFiltroModificado() {
     if (this.filtersApplied) {
       this.filtersApplied = false;
-      this.panelEstadoAbierto = false;
-      this.controlEnvioAbierto = false;
+      this.cerrarControlEnvio();
       this.showImportDialog = false;
       this.categoriaEnviada = false;
       this.cerrarPanelesPaso1();
@@ -1313,8 +1468,7 @@ export class FormulariosComponent implements OnDestroy {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.searchFormulario = '';
-    this.panelEstadoAbierto = false;
-    this.controlEnvioAbierto = false;
+    this.cerrarControlEnvio();
     this.showImportDialog = false;
     this.categoriaEnviada = false;
     this.cerrarPanelesPaso1();
@@ -1440,604 +1594,27 @@ export class FormulariosComponent implements OnDestroy {
     return `${s.slice(0, 3)}.${s.slice(3, 6)}.${s.slice(6, 9)}-${dv}`;
   }
 
-  // ──────────────────────────────────────────────────────────────────────
-  // Protocolo de Importación — datos, modal Ver Lista y descargas.
-  // El contexto (entidad/categoría/año/periodo + formulario seleccionado)
-  // proviene del Paso 1 del wizard — no hay selects propios.
-  // ──────────────────────────────────────────────────────────────────────
+  /* ── Catálogo etapa/estado — accesores para el listado ────────────────── */
+
+  /** Presentación (no estado) de un formulario todavía sin registro. */
+  readonly sinRegistroLabel = SIN_REGISTRO_LABEL;
+  readonly sinRegistroAyuda = SIN_REGISTRO_AYUDA;
+
+  /* Accesores del catálogo, expuestos como campos para poder llamarlos
+     desde la plantilla. */
+  readonly etapaDe = etapaDe;
+  readonly estadoDe = estadoDe;
 
   /**
-   * Tab "Registro de Encabezado" — estructura de la fila S (única por archivo).
-   * Formato del legacy CHIP: ejemplo destacado + lista descriptiva de campos.
+   * Tooltip del tag de estado: código y nombre exactos del catálogo, más la
+   * descripción cuando aporta algo distinto al nombre. El dato esencial ya
+   * está visible en el tag; esto es sólo la referencia al modelo de datos.
    */
-  readonly ejemploCabecera =
-    'S 210641006 10103 2025 CGN001_BALANCE_GENERAL Fecha de envío';
-
-  readonly camposCabecera: Array<{ token: string; nombre: string; desc: string }> = [
-    { token: 'S', nombre: 'Tipo de Registro',
-      desc: 'Marca de inicio. Indica que la fila corresponde al registro de cabecera.' },
-    { token: '210641006', nombre: 'Código de la Entidad',
-      desc: 'Identificador DANE de la entidad reportante.' },
-    { token: '10103', nombre: 'Periodo',
-      desc: 'Periodo contable del reporte. Ej: 10103 = trimestre Ene–Mar (mes inicial 01, mes final 03).' },
-    { token: '2025', nombre: 'Año',
-      desc: 'Año al que pertenece el periodo reportado.' },
-    { token: 'CGN001_BALANCE_GENERAL', nombre: 'Nombre del Formulario',
-      desc: 'Identificador único del formulario que se está reportando.' },
-    { token: 'Fecha de envío', nombre: 'Fecha de Envío',
-      desc: 'Fecha de generación de la información en formato dd-mm-aaaa.' },
-  ];
-
-  /**
-   * Tab "Registro de Detalle" — estructura de las filas D (una por concepto).
-   * Las variables concretas (SLDO_INC, MOV_DB, ENT_RECIP, etc.) se documentan
-   * en el tab "Variables".
-   */
-  readonly ejemploDetalle = 'D Concepto Variables';
-
-  readonly camposDetalle: Array<{ token: string; nombre: string; desc: string }> = [
-    { token: 'D', nombre: 'Tipo de Registro',
-      desc: 'Marca de inicio. Indica que la fila corresponde al registro de detalle.' },
-    { token: 'Concepto', nombre: 'Código del Concepto',
-      desc: 'Código contable del concepto a reportar. Ver tab "Conceptos" para los valores válidos.' },
-    { token: 'Variables', nombre: 'Valores de las Variables',
-      desc: 'Valores de las variables específicas del formulario. Ver tab "Variables" para su definición.' },
-  ];
-
-  /**
-   * Tab "Variables" — variables técnicas del registro de detalle.
-   * No incluye "Tipo de Registro" (D) ni "Concepto" (ya documentados en el tab Detalle).
-   */
-  readonly variables: ProtocoloVariable[] = [
-    { numero: 1, tipoRegistro: 'Detalle', nombre: 'SLDO_INC',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Saldo inicial del concepto.' },
-    { numero: 2, tipoRegistro: 'Detalle', nombre: 'MOV_DB',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Movimiento débito del período.' },
-    { numero: 3, tipoRegistro: 'Detalle', nombre: 'MOV_CR',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Movimiento crédito del período.' },
-    { numero: 4, tipoRegistro: 'Detalle', nombre: 'ENT_RECIP',
-      tipoDato: 'Lista', longitud: 14, decimales: null, unidad: '—',
-      observaciones: 'Entidad recíproca asociada al movimiento.',
-      listaKey: 'ENTIDADES_RECIPROCAS' },
-    { numero: 5, tipoRegistro: 'Detalle', nombre: 'VR_CTE',
-      tipoDato: 'Numérico', longitud: 25, decimales: 2, unidad: 'Pesos',
-      observaciones: 'Valor corriente del movimiento.' },
-
-    // ── Variables de ejemplo para validar los 4 casos del modal "Ver Lista".
-    //    (En el mock el tab Variables comparte un solo array; cada una indica
-    //     de qué formulario/variable colgaría en producción.)
-    { numero: 6, tipoRegistro: 'Detalle', nombre: 'PERIODO_REP',
-      tipoDato: 'Lista', longitud: 2, decimales: null, unidad: '—',
-      observaciones: 'Periodo del reporte — caso lista simple (2 campos).',
-      listaKey: 'PERIODOS' },                       // form. CGN001_BALANCE_GENERAL / var. PERIODO_REP
-    { numero: 7, tipoRegistro: 'Detalle', nombre: 'TERCERO',
-      tipoDato: 'Lista', longitud: 16, decimales: null, unidad: '—',
-      observaciones: 'Tercero asociado — caso 8 campos (dispara paginador de columnas).',
-      listaKey: 'TERCEROS' },                       // form. CGN015_OPERACIONES_RECIPROCAS / var. TERCERO
-    { numero: 8, tipoRegistro: 'Detalle', nombre: 'CTA_CONTABLE',
-      tipoDato: 'Lista', longitud: 12, decimales: null, unidad: '—',
-      observaciones: 'Cuenta del plan contable — caso con campo Descripción largo (truncado).',
-      listaKey: 'PLAN_CUENTAS' },                   // form. CGN001_BALANCE_GENERAL / var. CTA_CONTABLE
-  ];
-
-  /** Conteo total de variables (para el chip del header del protocolo). */
-  get totalVariables(): number {
-    return this.camposCabecera.length + this.camposDetalle.length + this.variables.length;
-  }
-
-  /** Buscador del tab Conceptos (filtrado en memoria sobre listas.CONCEPTOS.valores). */
-  busquedaConceptos = signal('');
-
-  conceptosFiltrados = computed<ProtocoloRegistro[]>(() => {
-    const q = this.busquedaConceptos().trim().toLowerCase();
-    const todos = this.listas['CONCEPTOS'].valores;
-    if (!q) return todos;
-    return todos.filter(r =>
-      Object.values(r).some(v => v.toLowerCase().includes(q)),
-    );
-  });
-
-  /**
-   * Descarga el catálogo CONCEPTOS en el formato indicado.
-   * CSV se genera en cliente (mock real). Excel/PDF/TXT muestran toast de simulación.
-   */
-  descargarConceptos(format: DownloadFormatId = 'csv'): void {
-    if (format === 'csv') {
-      this.descargarValoresCSV(this.listas['CONCEPTOS']);
-      return;
-    }
-    this.toastDescargaSimulada('CONCEPTOS', format);
-  }
-
-  /**
-   * Catálogos referenciados por las variables tipo Lista.
-   * Cada lista define sus columnas en `fields` (simula tab_field) y sus
-   * registros en `valores` (simula result, llaveados por field_code).
-   */
-  readonly listas: Record<string, ProtocoloLista> = {
-    // Caso simple: 2 campos (código + nombre) → sin paginador de columnas.
-    PERIODOS: {
-      key: 'PERIODOS',
-      nombre: 'PERIODOS',
-      fields: [
-        { code: 'Código', order: 1, type: 'S', len: 2 },
-        { code: 'Nombre', order: 2, type: 'S', len: 20 },
-      ],
-      valores: [
-        { 'Código': '01', 'Nombre': 'Ene-Mar' },
-        { 'Código': '02', 'Nombre': 'Abr-Jun' },
-        { 'Código': '03', 'Nombre': 'Jul-Sep' },
-        { 'Código': '04', 'Nombre': 'Oct-Dic' },
-      ],
-    },
-    CONCEPTOS: {
-      key: 'CONCEPTOS',
-      nombre: 'CONCEPTOS',
-      fields: [
-        { code: 'Código', order: 1, type: 'S', len: 8 },
-        { code: 'Nombre', order: 2, type: 'S', len: 60 },
-      ],
-      valores: this.generarConceptosProtocolo(),
-    },
-    // Caso máximo actual: 6 campos → se muestra completo, sin paginador.
-    ENTIDADES_RECIPROCAS: {
-      key: 'ENTIDADES_RECIPROCAS',
-      nombre: 'ENTIDADES_RECIPROCAS',
-      fields: [
-        { code: 'Código', order: 1, type: 'S', len: 9 },
-        { code: 'NIT', order: 2, type: 'S', len: 11 },
-        { code: 'Razón social', order: 3, type: 'S', len: 60 },
-        { code: 'Tipo', order: 4, type: 'S', len: 12 },
-        { code: 'Departamento', order: 5, type: 'S', len: 20 },
-        { code: 'Estado', order: 6, type: 'S', len: 10 },
-      ],
-      valores: this.generarEntidadesReciprocasProtocolo(),
-    },
-    // Caso 8 campos → dispara el paginador de columnas (6 + 2).
-    TERCEROS: {
-      key: 'TERCEROS',
-      nombre: 'TERCEROS',
-      fields: [
-        { code: 'Tipo doc.', order: 1, type: 'S', len: 4 },
-        { code: 'Documento', order: 2, type: 'S', len: 12 },
-        { code: 'DV', order: 3, type: 'N', len: 1 },
-        { code: 'Razón social', order: 4, type: 'S', len: 60 },
-        { code: 'Ciudad', order: 5, type: 'S', len: 20 },
-        { code: 'Dirección', order: 6, type: 'S', len: 40 },
-        { code: 'Teléfono', order: 7, type: 'S', len: 14 },
-        { code: 'Estado', order: 8, type: 'S', len: 10 },
-      ],
-      valores: this.generarTercerosProtocolo(),
-    },
-    // Caso campo largo: 5 campos, uno de longitud 180 (Descripción) → truncado
-    // con "…" + tooltip; las demás columnas se reajustan. Cabe en una página.
-    PLAN_CUENTAS: {
-      key: 'PLAN_CUENTAS',
-      nombre: 'PLAN_CUENTAS',
-      fields: [
-        { code: 'Código', order: 1, type: 'S', len: 12 },
-        { code: 'Nombre', order: 2, type: 'S', len: 40 },
-        { code: 'Descripción', order: 3, type: 'S', len: 180 },
-        { code: 'Naturaleza', order: 4, type: 'S', len: 8 },
-        { code: 'Nivel', order: 5, type: 'N', len: 2 },
-      ],
-      valores: this.generarPlanCuentasProtocolo(),
-    },
-  };
-
-  /** Modal "Ver Lista" — signal para reaccionar al filtro de búsqueda. */
-  listaActiva = signal<ProtocoloLista | null>(null);
-  busquedaLista = signal('');
-
-  /** Filtra por CUALQUIER campo del registro (no sólo código/nombre). */
-  valoresFiltrados = computed<ProtocoloRegistro[]>(() => {
-    const lista = this.listaActiva();
-    if (!lista) return [];
-    const q = this.busquedaLista().trim().toLowerCase();
-    if (!q) return lista.valores;
-    return lista.valores.filter(r =>
-      Object.values(r).some(v => v.toLowerCase().includes(q)),
-    );
-  });
-
-  // ── Columnas dinámicas del modal "Ver Lista" ──────────────────────────────
-  // El modal es estático (820px); quien se adapta es el datatable interno.
-  // Cada columna toma el ancho necesario para que su NOMBRE (header) quepa sin
-  // exprimirse, acotado por un techo (los textos largos se truncan con "…").
-  // Las columnas se empacan por presupuesto de ancho (sin scroll horizontal) y
-  // con un tope de 6; si sobran campos se habilita el paginador de columnas.
-  private readonly LISTA_COLS_MAX = 6;        // tope para no recargar el modal
-  private readonly LISTA_COL_BUDGET = 740;    // ancho útil del datatable (px)
-  private readonly LISTA_COL_MIN = 56;        // piso de columna
-  private readonly LISTA_COL_MAX = 220;       // techo: a partir de aquí trunca
-
-  /** Página de columnas activa del modal (0-based), como el pager del treetable. */
-  paginaColumnasLista = 0;
-
-  /** Campos de la lista activa, ordenados por `order` (tab_field). */
-  private get camposListaOrdenados(): ProtocoloField[] {
-    const lista = this.listaActiva();
-    return lista ? [...lista.fields].sort((a, b) => a.order - b.order) : [];
-  }
-
-  /**
-   * Ancho (px) que necesita una columna: el mayor entre lo que ocupa su nombre
-   * (header en mayúsculas) y lo sugerido por field_len, acotado por piso/techo.
-   */
-  anchoColumnaListaPx(field: ProtocoloField): number {
-    const headerNeed = Math.round(field.code.length * 8.5) + 30;
-    const contentNeed = Math.min(field.len, 28) * 8 + 24;
-    return Math.min(this.LISTA_COL_MAX, Math.max(this.LISTA_COL_MIN, headerNeed, contentNeed));
-  }
-
-  /**
-   * Campos repartidos en páginas: se acumulan columnas hasta llegar al tope (6)
-   * o agotar el presupuesto de ancho, lo que ocurra primero.
-   */
-  get paginasColumnasLista(): ProtocoloField[][] {
-    const campos = this.camposListaOrdenados;
-    if (!campos.length) return [[]];
-    const paginas: ProtocoloField[][] = [];
-    let actual: ProtocoloField[] = [];
-    let ancho = 0;
-    for (const campo of campos) {
-      const w = this.anchoColumnaListaPx(campo);
-      const llena = actual.length >= this.LISTA_COLS_MAX;
-      const excede = actual.length > 0 && ancho + w > this.LISTA_COL_BUDGET;
-      if (llena || excede) {
-        paginas.push(actual);
-        actual = [];
-        ancho = 0;
-      }
-      actual.push(campo);
-      ancho += w;
-    }
-    if (actual.length) paginas.push(actual);
-    return paginas.length ? paginas : [[]];
-  }
-
-  get totalPaginasColumnasLista(): number {
-    return this.paginasColumnasLista.length;
-  }
-
-  /** Sólo se muestra el pager de columnas si hay más de una página. */
-  get mostrarPagerColumnasLista(): boolean {
-    return this.totalPaginasColumnasLista > 1;
-  }
-
-  get columnasVisiblesLista(): ProtocoloField[] {
-    const paginas = this.paginasColumnasLista;
-    const idx = Math.min(this.paginaColumnasLista, paginas.length - 1);
-    return paginas[idx] ?? [];
-  }
-
-  /** Etiqueta del pager de columnas: "Columnas 1–6 de 8". */
-  rangoColumnasListaTxt(): string {
-    const campos = this.camposListaOrdenados;
-    const vis = this.columnasVisiblesLista;
-    if (!vis.length) return '';
-    const desde = campos.indexOf(vis[0]) + 1;
-    const hasta = campos.indexOf(vis[vis.length - 1]) + 1;
-    return `Columnas ${desde}–${hasta} de ${campos.length}`;
-  }
-
-  paginaColumnasListaAnterior(): void {
-    if (this.paginaColumnasLista > 0) this.paginaColumnasLista--;
-  }
-  paginaColumnasListaSiguiente(): void {
-    if (this.paginaColumnasLista < this.totalPaginasColumnasLista - 1) this.paginaColumnasLista++;
-  }
-
-  // ── Paginador de registros del modal (recicla el look del treetable) ──────
-  listaPagina = signal(0);
-  listaTamPagina = signal(5);
-  readonly opcionesTamPaginaLista = [
-    { label: '5', value: 5 },
-    { label: '10', value: 10 },
-    { label: '25', value: 25 },
-  ];
-
-  /** Filas de la página actual (paginación manual, igual que el treetable). */
-  valoresPaginados = computed<ProtocoloRegistro[]>(() => {
-    const filas = this.valoresFiltrados();
-    const size = this.listaTamPagina();
-    const totalPag = Math.max(1, Math.ceil(filas.length / size));
-    const page = Math.min(this.listaPagina(), totalPag - 1);
-    const start = page * size;
-    return filas.slice(start, start + size);
-  });
-
-  get totalPaginasFilasLista(): number {
-    return Math.max(1, Math.ceil(this.valoresFiltrados().length / this.listaTamPagina()));
-  }
-
-  /** Etiqueta "Mostrando X a Y de Z valores". */
-  rangoFilasListaTxt(): string {
-    const total = this.valoresFiltrados().length;
-    if (!total) return 'Sin valores';
-    const size = this.listaTamPagina();
-    const page = Math.min(this.listaPagina(), this.totalPaginasFilasLista - 1);
-    const desde = page * size + 1;
-    const hasta = Math.min(total, desde + size - 1);
-    return `Mostrando ${desde} a ${hasta} de ${total} valores`;
-  }
-
-  cambiarPaginaFilasLista(delta: number): void {
-    const next = this.listaPagina() + delta;
-    if (next >= 0 && next < this.totalPaginasFilasLista) this.listaPagina.set(next);
-  }
-  cambiarTamPaginaLista(size: number): void {
-    this.listaTamPagina.set(size);
-    this.listaPagina.set(0);
-  }
-
-  /** La búsqueda resetea la paginación de filas. */
-  onBuscarLista(q: string): void {
-    this.busquedaLista.set(q);
-    this.listaPagina.set(0);
-  }
-
-  abrirLista(listaKey: string | undefined): void {
-    if (!listaKey) return;
-    const lista = this.listas[listaKey];
-    if (!lista) return;
-    this.busquedaLista.set('');
-    this.paginaColumnasLista = 0;
-    this.listaPagina.set(0);
-    this.listaActiva.set(lista);
-  }
-
-  cerrarLista(): void {
-    this.listaActiva.set(null);
-    this.busquedaLista.set('');
-    this.paginaColumnasLista = 0;
-    this.listaPagina.set(0);
-  }
-
-  /** Descarga el catálogo activo del modal Ver Lista en el formato indicado. */
-  descargarLista(format: DownloadFormatId = 'csv'): void {
-    const lista = this.listaActiva();
-    if (!lista) return;
-    if (format === 'csv') {
-      this.descargarValoresCSV(lista);
-      return;
-    }
-    this.toastDescargaSimulada(lista.nombre, format);
-  }
-
-  /** Descarga el protocolo (archivo plano) en el formato indicado. */
-  descargarProtocolo(format: DownloadFormatId = 'txt'): void {
-    this.toastDescargaSimulada('PROTOCOLO', format);
-  }
-
-  // ── Helpers de descarga reutilizables ──
-
-  /**
-   * Genera CSV con BOM UTF-8 (compatible Excel) y dispara la descarga.
-   * Las columnas y su orden salen de `lista.fields` (tab_field).
-   */
-  private descargarValoresCSV(lista: ProtocoloLista): void {
-    const cols = [...lista.fields].sort((a, b) => a.order - b.order);
-    const filas = [
-      cols.map(c => c.code),
-      ...lista.valores.map(r => cols.map(c => r[c.code] ?? '')),
-    ];
-    const csv = filas
-      .map(fila => fila.map(c => `"${c.replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${lista.nombre}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Archivo descargado',
-      detail: `${lista.nombre}.csv`,
-      life: 3000,
-    });
-  }
-
-  /** Toast informativo para formatos no implementados en cliente (XLSX/PDF/TXT). */
-  private toastDescargaSimulada(nombre: string, format: DownloadFormatId): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Descarga en proceso',
-      detail: `Generando ${nombre} en formato ${format.toUpperCase()}…`,
-      life: 3000,
-    });
-  }
-
-  // ── Botón "Descargar" estándar: formatos disponibles + menús por destino ──
-  readonly downloadFormats: DownloadFormat[] = [
-    { label: 'CSV — Valores separados por comas', icon: 'pi pi-file', format: 'csv',
-      info: 'Sin límite de filas. Encoding UTF-8. Encabezados incluidos.' },
-    { label: 'Excel (XLSX)', icon: 'pi pi-file-excel', format: 'xlsx',
-      info: 'Máximo 50 MB por archivo. Hasta 1.048.576 filas por hoja. Múltiples hojas permitidas.' },
-    { label: 'PDF', icon: 'pi pi-file-pdf', format: 'pdf',
-      info: 'Máximo 10.000 líneas por archivo. División automática si excede el límite.' },
-    { label: 'TXT', icon: 'pi pi-file', format: 'txt',
-      info: 'Sin límite de filas. Encoding UTF-8. Formato de texto plano.' },
-  ];
-
-  // Para evitar que PrimeNG renderice un tooltip nativo sobre el item entero
-  // y duplique al del icono `?`, el texto del info viaja en `data` (campo
-  // libre del MenuItem) y se enlaza con [pTooltip] sólo sobre el icono.
-
-  /** MenuItem[] para el botón "Descargar" del tab Conceptos. */
-  readonly downloadItemsConceptos: MenuItem[] = this.downloadFormats.map(f => ({
-    label: f.label,
-    icon: f.icon,
-    command: () => this.descargarConceptos(f.format),
-    data: { info: f.info },
-  }));
-
-  /** MenuItem[] para el botón "Descargar" del modal Ver Lista. */
-  readonly downloadItemsLista: MenuItem[] = this.downloadFormats.map(f => ({
-    label: f.label,
-    icon: f.icon,
-    command: () => this.descargarLista(f.format),
-    data: { info: f.info },
-  }));
-
-  /** MenuItem[] para el botón "Descargar protocolo" del header del protocolo. */
-  readonly downloadItemsProtocolo: MenuItem[] = this.downloadFormats.map(f => ({
-    label: f.label,
-    icon: f.icon,
-    command: () => this.descargarProtocolo(f.format),
-    data: { info: f.info },
-  }));
-
-  private generarConceptosProtocolo(): ProtocoloRegistro[] {
-    return [
-      { 'Código': '1.1.05', 'Nombre': 'CAJA' },
-      { 'Código': '1.1.10', 'Nombre': 'BANCOS' },
-      { 'Código': '1.1.20', 'Nombre': 'INVERSIONES' },
-      { 'Código': '1.4.07', 'Nombre': 'PRESTACIÓN DE SERVICIOS' },
-      { 'Código': '1.4.13', 'Nombre': 'TRANSFERENCIAS POR COBRAR' },
-      { 'Código': '2.4.01', 'Nombre': 'ADQUISICIÓN DE BIENES Y SERVICIOS' },
-      { 'Código': '2.4.36', 'Nombre': 'RETENCIÓN EN LA FUENTE' },
-      { 'Código': '3.1.05', 'Nombre': 'CAPITAL FISCAL' },
-      { 'Código': '3.1.10', 'Nombre': 'RESULTADO DEL EJERCICIO' },
-      { 'Código': '4.4.08', 'Nombre': 'INGRESOS FINANCIEROS' },
-      { 'Código': '5.1.01', 'Nombre': 'SUELDOS Y SALARIOS' },
-      { 'Código': '5.1.11', 'Nombre': 'GENERALES' },
-    ];
-  }
-
-  /**
-   * Caso 8 campos (dispara el paginador de columnas). Datos derivados a partir
-   * de un set base de terceros para no escribir 8 valores por fila a mano.
-   */
-  private generarTercerosProtocolo(): ProtocoloRegistro[] {
-    const base: Array<[string, string, string]> = [
-      ['NIT', '830053105', 'EMPRESA DE ENERGÍA DE BOGOTÁ S.A. E.S.P.'],
-      ['NIT', '899999068', 'EMPRESA DE ACUEDUCTO Y ALCANTARILLADO DE BOGOTÁ'],
-      ['NIT', '860002503', 'ETB S.A. E.S.P.'],
-      ['NIT', '800153993', 'COLPENSIONES'],
-      ['CC', '79853012', 'GÓMEZ RAMÍREZ, ANDRÉS FELIPE'],
-      ['CC', '52154879', 'TORRES MORENO, DIANA CAROLINA'],
-      ['NIT', '901037916', 'AGENCIA NACIONAL DE CONTRATACIÓN PÚBLICA'],
-      ['NIT', '830115226', 'POSITIVA COMPAÑÍA DE SEGUROS S.A.'],
-      ['CC', '1018412339', 'RINCÓN VARGAS, JUAN SEBASTIÁN'],
-      ['NIT', '800197268', 'FINDETER S.A.'],
-      ['NIT', '899999063', 'INSTITUTO DE DESARROLLO URBANO — IDU'],
-      ['CC', '41672901', 'CASTAÑO LÓPEZ, MARÍA FERNANDA'],
-    ];
-    const ciudades = ['Bogotá D.C.', 'Medellín', 'Cali', 'Barranquilla', 'Bucaramanga'];
-    return base.map(([tipoDoc, doc, razon], i) => ({
-      'Tipo doc.': tipoDoc,
-      'Documento': doc,
-      'DV': String((i * 7 + 3) % 10),
-      'Razón social': razon,
-      'Ciudad': ciudades[i % ciudades.length],
-      'Dirección': `Calle ${10 + i} # ${20 + i}-${30 + i}`,
-      'Teléfono': `60(1) ${3000000 + i * 7531}`,
-      'Estado': i % 6 === 0 ? 'Inactivo' : 'Activo',
-    }));
-  }
-
-  /**
-   * Caso con un campo de longitud grande (Descripción, field_len 180) junto a
-   * campos cortos, para validar el truncado con "…" + tooltip.
-   */
-  private generarPlanCuentasProtocolo(): ProtocoloRegistro[] {
-    return [
-      { 'Código': '1.1.05.01', 'Nombre': 'CAJA PRINCIPAL', 'Naturaleza': 'Débito', 'Nivel': '4',
-        'Descripción': 'Representa el efectivo en moneda nacional y extranjera disponible en la caja principal de la entidad para cubrir pagos menores y operaciones inmediatas de tesorería.' },
-      { 'Código': '1.1.10.06', 'Nombre': 'CUENTA CORRIENTE BANCARIA', 'Naturaleza': 'Débito', 'Nivel': '4',
-        'Descripción': 'Comprende los depósitos constituidos por la entidad en cuentas corrientes de establecimientos bancarios y demás entidades financieras vigiladas por la Superintendencia Financiera de Colombia.' },
-      { 'Código': '1.4.07.01', 'Nombre': 'PRESTACIÓN DE SERVICIOS', 'Naturaleza': 'Débito', 'Nivel': '4',
-        'Descripción': 'Valor de los derechos a favor de la entidad originados en la prestación de servicios, pendientes de recaudo al cierre del período contable que se reporta.' },
-      { 'Código': '2.4.01.01', 'Nombre': 'BIENES Y SERVICIOS', 'Naturaleza': 'Crédito', 'Nivel': '4',
-        'Descripción': 'Obligaciones contraídas por la entidad por concepto de adquisición de bienes y servicios pendientes de pago a proveedores y contratistas al corte del período.' },
-      { 'Código': '3.1.10.01', 'Nombre': 'RESULTADO DEL EJERCICIO', 'Naturaleza': 'Crédito', 'Nivel': '4',
-        'Descripción': 'Corresponde al valor del excedente o déficit obtenido por la entidad como resultado de la diferencia entre los ingresos y los gastos del período contable.' },
-      { 'Código': '5.1.01.01', 'Nombre': 'SUELDOS Y SALARIOS', 'Naturaleza': 'Débito', 'Nivel': '4',
-        'Descripción': 'Gastos asociados a la remuneración del personal vinculado mediante relación laboral, incluyendo asignación básica y demás factores salariales reconocidos.' },
-    ];
-  }
-
-  private generarEntidadesReciprocasProtocolo(): ProtocoloRegistro[] {
-    const base: Array<{ codigo: string; nombre: string }> = [
-      { codigo: '102000000', nombre: 'CONTRALORÍA GENERAL DE LA REPÚBLICA' },
-      { codigo: '104500000', nombre: 'DEPARTAMENTO ADMINISTRATIVO NACIONAL DE ESTADÍSTICA' },
-      { codigo: '105000000', nombre: 'DEPARTAMENTO NACIONAL DE PLANEACIÓN' },
-      { codigo: '106000000', nombre: 'DEPARTAMENTO ADMINISTRATIVO DE LA PRESIDENCIA DE LA REPÚBLICA' },
-      { codigo: '106500000', nombre: 'DEPARTAMENTO ADMINISTRATIVO DE LA FUNCIÓN PÚBLICA' },
-      { codigo: '110000000', nombre: 'MINISTERIO DE AGRICULTURA Y DESARROLLO RURAL' },
-      { codigo: '110500000', nombre: 'MINISTERIO DE TECNOLOGÍAS DE LA INFORMACIÓN Y LAS COMUNICACIONES' },
-      { codigo: '111000000', nombre: 'MINISTERIO DE DEFENSA NACIONAL' },
-      { codigo: '111500000', nombre: 'GOBERNACIÓN DE ANTIOQUIA' },
-      { codigo: '111600000', nombre: 'GOBERNACIÓN DEL ATLÁNTICO' },
-      { codigo: '111700000', nombre: 'GOBERNACIÓN DE BOLÍVAR' },
-      { codigo: '111800000', nombre: 'GOBERNACIÓN DE BOYACÁ' },
-      { codigo: '111900000', nombre: 'GOBERNACIÓN DE CALDAS' },
-      { codigo: '112000000', nombre: 'GOBERNACIÓN DEL CAQUETÁ' },
-      { codigo: '112100000', nombre: 'GOBERNACIÓN DEL CAUCA' },
-      { codigo: '112200000', nombre: 'GOBERNACIÓN DEL CESAR' },
-      { codigo: '112300000', nombre: 'GOBERNACIÓN DE CÓRDOBA' },
-      { codigo: '112400000', nombre: 'GOBERNACIÓN DE CUNDINAMARCA' },
-      { codigo: '112500000', nombre: 'GOBERNACIÓN DEL CHOCÓ' },
-      { codigo: '112600000', nombre: 'GOBERNACIÓN DEL HUILA' },
-      { codigo: '112700000', nombre: 'GOBERNACIÓN DE LA GUAJIRA' },
-      { codigo: '112800000', nombre: 'GOBERNACIÓN DEL MAGDALENA' },
-      { codigo: '112900000', nombre: 'GOBERNACIÓN DEL META' },
-      { codigo: '113000000', nombre: 'GOBERNACIÓN DE NARIÑO' },
-      { codigo: '113100000', nombre: 'GOBERNACIÓN DE NORTE DE SANTANDER' },
-      { codigo: '113200000', nombre: 'GOBERNACIÓN DEL PUTUMAYO' },
-      { codigo: '113300000', nombre: 'GOBERNACIÓN DEL QUINDÍO' },
-      { codigo: '113400000', nombre: 'GOBERNACIÓN DE RISARALDA' },
-      { codigo: '113500000', nombre: 'GOBERNACIÓN DE SANTANDER' },
-      { codigo: '113600000', nombre: 'GOBERNACIÓN DE SUCRE' },
-      { codigo: '113700000', nombre: 'GOBERNACIÓN DEL TOLIMA' },
-      { codigo: '113800000', nombre: 'GOBERNACIÓN DEL VALLE DEL CAUCA' },
-      { codigo: '113900000', nombre: 'GOBERNACIÓN DEL VAUPÉS' },
-      { codigo: '114000000', nombre: 'GOBERNACIÓN DEL VICHADA' },
-      { codigo: '114100000', nombre: 'ALCALDÍA MAYOR DE BOGOTÁ' },
-      { codigo: '114200000', nombre: 'ALCALDÍA DE MEDELLÍN' },
-      { codigo: '114300000', nombre: 'ALCALDÍA DE CALI' },
-      { codigo: '114400000', nombre: 'ALCALDÍA DE BARRANQUILLA' },
-      { codigo: '114500000', nombre: 'ALCALDÍA DE CARTAGENA' },
-      { codigo: '114600000', nombre: 'ALCALDÍA DE BUCARAMANGA' },
-    ];
-    // Enriquecemos cada entidad con los 6 campos de la lista (NIT, Tipo,
-    // Departamento, Estado) derivados de forma determinística sobre el set base.
-    const deptos = [
-      'Bogotá D.C.', 'Antioquia', 'Atlántico', 'Bolívar', 'Boyacá', 'Caldas',
-      'Cundinamarca', 'Santander', 'Valle del Cauca', 'Nariño', 'Tolima',
-    ];
-    return base.map(({ codigo, nombre }, i) => {
-      const territorial = nombre.startsWith('GOBERNACIÓN') || nombre.startsWith('ALCALDÍA');
-      return {
-        'Código': codigo,
-        'NIT': `${codigo.slice(0, 9)}-${(i % 9) + 1}`,
-        'Razón social': nombre,
-        'Tipo': territorial ? 'Territorial' : 'Nacional',
-        'Departamento': deptos[i % deptos.length],
-        'Estado': i % 7 === 0 ? 'Inactiva' : 'Activa',
-      };
-    });
-  }
-
-  getEstadoSeverity(estado: string): 'success' | 'warn' | 'danger' | 'info' | 'secondary' {
-    // Ciclo de vida descrito por CRIS:
-    // Pendiente → Validado → Enviado → Aceptado / Rechazado
-    const map: Record<string, 'success' | 'warn' | 'danger' | 'info' | 'secondary'> = {
-      'Pendiente de validar': 'warn',
-      'Rechazado por Deficiencia': 'danger',
-      'Rechazado': 'danger',
-      'Validado': 'success',
-      'Enviado': 'info',
-      'En validación central': 'info',
-      'Aceptado': 'success',
-      'En proceso': 'info',
-    };
-    return map[estado] || 'secondary';
+  estadoTooltip(id: EstadoId): string {
+    const estado = this.estadoDe(id);
+    const base = `${estado.id} · ${estado.nombre}`;
+    return estado.descripcion === estado.nombre
+      ? base
+      : `${base} — ${estado.descripcion}`;
   }
 }

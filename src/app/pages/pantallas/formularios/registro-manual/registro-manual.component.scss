@@ -1,0 +1,325 @@
+@use 'breakpoints' as bp;
+
+/* El host es la vista completa; el padre sólo aporta el marco del panel. */
+:host { display: block; }
+
+/* ============================================================
+   Vista detalle "Registro Manual"
+   ============================================================ */
+.form-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-lg);
+  }
+
+  &__title {
+    flex: 1;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    h2 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+      margin: 0;
+    }
+  }
+
+  &__codigo {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--chip-cobalt-700);
+    background: var(--chip-cobalt-50);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    align-self: flex-start;
+  }
+
+  &__meta {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+    margin: 0;
+  }
+
+  &__title-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  &__cols-pager {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 14px;
+    background: var(--chip-cobalt-50);
+    border: 1px solid var(--chip-cobalt-200);
+    border-radius: var(--radius-md);
+  }
+
+  &__cols-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-right: auto;
+  }
+
+  &__cols-info {
+    font-size: 13px;
+    color: var(--chip-grey-700);
+    font-weight: 600;
+    min-width: 220px;
+    text-align: center;
+  }
+
+  &__cols-range {
+    font-weight: 400;
+    color: var(--chip-grey-500);
+    font-size: 12px;
+  }
+
+  &__edit-hint {
+    width: 100%;
+
+    ::ng-deep i.pi-pencil {
+      vertical-align: middle;
+      color: var(--chip-cobalt-700);
+    }
+  }
+}
+
+/* ============================================================
+   Concepto padre (cada uno con paginador propio)
+   ============================================================ */
+.form-concepto {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+
+  &__header {
+    padding: 12px 16px;
+    background: var(--chip-bg-white-smoke);
+    border-bottom: 1px solid var(--chip-grey-200);
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    h3 {
+      margin: 0;
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  &__codigo {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--chip-cobalt-700);
+    background: var(--chip-cobalt-50);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  &__count {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--chip-grey-100);
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    thead th {
+      background: var(--chip-grey-50);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--chip-grey-700);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    tbody tr:hover {
+      background: var(--chip-bg-solitude);
+    }
+  }
+
+  &__th-fixed {
+    position: sticky;
+    left: 0;
+    background: var(--chip-grey-50) !important;
+    z-index: 1;
+  }
+  &__th-name {
+    left: 90px;
+    min-width: 200px;
+  }
+  &__th-val {
+    text-align: right !important;
+    min-width: 110px;
+  }
+  &__th-actions {
+    width: 70px;
+    text-align: center !important;
+  }
+
+  &__td-codigo {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--chip-grey-700);
+    position: sticky;
+    left: 0;
+    background: #fff;
+    width: 90px;
+  }
+  &__td-nombre {
+    position: sticky;
+    left: 90px;
+    background: #fff;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+    color: var(--chip-grey-800);
+  }
+  &__td-val {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--chip-grey-800);
+  }
+  &__td-actions {
+    text-align: center;
+  }
+
+  &__val-empty {
+    color: var(--chip-grey-400);
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--chip-bg-white-smoke);
+    border-top: 1px solid var(--chip-grey-200);
+  }
+
+  &__footer-label {
+    font-size: 12px;
+    color: var(--chip-grey-500);
+    font-style: italic;
+  }
+
+  &__footer-pager {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__footer-info {
+    font-size: 12px;
+    color: var(--chip-grey-700);
+    font-weight: 600;
+    min-width: 130px;
+    text-align: center;
+  }
+}
+
+/* ============================================================
+   Modal de edición inline de registro
+   ============================================================ */
+.form-modal-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__meta {
+    display: flex;
+    gap: 24px;
+    padding: 12px 14px;
+    background: var(--chip-bg-solitude);
+    border-radius: var(--radius-md);
+    flex-wrap: wrap;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+
+  &__label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--chip-grey-500);
+    font-weight: 600;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 16px;
+
+    @include bp.down('sm') {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--chip-grey-700);
+    }
+
+    ::ng-deep .p-inputnumber input {
+      width: 100%;
+      text-align: right;
+    }
+  }
+}

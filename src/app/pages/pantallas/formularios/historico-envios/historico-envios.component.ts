@@ -18,6 +18,7 @@ import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../../components/app-breadcrumb/app-breadcrumb.component';
+import { PERIODOS_FILTRO } from '../../../../services/periodos';
 import {
   DirectorioEntidadesComponent,
   Entidad,
@@ -195,14 +196,8 @@ export class HistoricoEnviosComponent {
     { label: '2022', value: '2022' },
   ];
 
-  periodoOptions = [
-    { label: 'Seleccione periodo', value: '' },
-    { label: 'Enero - Marzo (Trimestre 1)', value: 'T1' },
-    { label: 'Abril - Junio (Trimestre 2)', value: 'T2' },
-    { label: 'Julio - Septiembre (Trimestre 3)', value: 'T3' },
-    { label: 'Octubre - Diciembre (Trimestre 4)', value: 'T4' },
-    { label: 'Anual', value: 'ANUAL' },
-  ];
+  /** Catálogo compartido: la etiqueta es el rango de meses. Ver periodos.ts. */
+  periodoOptions = PERIODOS_FILTRO;
 
   /** Etiqueta legible del periodo seleccionado (para el contexto). */
   get periodoLabel(): string {
@@ -367,10 +362,10 @@ export class HistoricoEnviosComponent {
     // Entradas del contexto, de la más antigua a la más reciente. La más
     // reciente (10501) es el "ejemplo" con el flujo completo.
     const entradas: { id: number; periodo: string; base: string; ejemplo: boolean }[] = [
-      { id: 10355, periodo: 'Enero - Marzo (Trimestre 1)', base: '2025-03-12T09:00', ejemplo: false },
-      { id: 10410, periodo: 'Abril - Junio (Trimestre 2)', base: '2025-04-02T15:00', ejemplo: false },
-      { id: 10482, periodo: 'Abril - Junio (Trimestre 2)', base: '2025-04-21T08:30', ejemplo: false },
-      { id: 10501, periodo: 'Julio - Septiembre (Trimestre 3)', base: '2025-07-28T16:00', ejemplo: true },
+      { id: 10355, periodo: 'Enero - Marzo', base: '2025-03-12T09:00', ejemplo: false },
+      { id: 10410, periodo: 'Abril - Junio', base: '2025-04-02T15:00', ejemplo: false },
+      { id: 10482, periodo: 'Abril - Junio', base: '2025-04-21T08:30', ejemplo: false },
+      { id: 10501, periodo: 'Julio - Septiembre', base: '2025-07-28T16:00', ejemplo: true },
     ];
 
     const rows: HistoricoRow[] = [];

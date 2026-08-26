@@ -11,133 +11,6 @@
   </div>
 
   <!-- ============================================================= -->
-  <!-- VISTA DETALLE "REGISTRO MANUAL" (template reutilizable)         -->
-  <!-- ============================================================= -->
-  <ng-template #detalleTpl>
-    @if (detalleAbierto; as detalle) {
-    <div class="form-detalle" aria-label="Registro manual del formulario">
-      <div class="form-detalle__header">
-        <p-button label="Volver al listado" icon="pi pi-arrow-left" [text]="true" severity="secondary"
-          (onClick)="cerrarDetalle()" />
-        <div class="form-detalle__title">
-          <span class="form-detalle__codigo">{{ detalle.codigo }}</span>
-          <h2>{{ detalle.nombre }}</h2>
-          <p class="form-detalle__meta">
-            {{ detalle.categoria }} · {{ detalle.periodo }} · {{ detalle.anio }}
-          </p>
-        </div>
-        <div class="form-detalle__title-actions">
-          <p-button label="Guardar cambios" icon="pi pi-save" [outlined]="true" size="small"
-            severity="secondary"
-            (onClick)="guardarCambiosDetalle()" />
-          <p-button label="Validar formulario" icon="pi pi-check-circle" size="small"
-            (onClick)="validarFormularioActual()"
-            pTooltip="Marca este formulario como Validado y regresa al listado"
-            tooltipPosition="bottom" />
-        </div>
-      </div>
-
-      <!-- Paginador global de columnas (periodos visibles) -->
-      <div class="form-detalle__cols-pager" aria-label="Paginador de columnas">
-        <span class="form-detalle__cols-label">
-          <i class="pi pi-th-large" aria-hidden="true"></i>
-          Periodos visibles
-        </span>
-        <p-button icon="pi pi-chevron-left" [text]="true" severity="secondary" size="small"
-          [disabled]="paginaColumnas === 0"
-          (onClick)="paginaColumnasAnterior()"
-          aria-label="Periodos anteriores" />
-        <span class="form-detalle__cols-info" aria-live="polite">
-          {{ paginaColumnas + 1 }} de {{ totalPaginasColumnas }}
-          <span class="form-detalle__cols-range">
-            ({{ columnasVisibles[0].label }} — {{ columnasVisibles[columnasVisibles.length - 1].label }})
-          </span>
-        </span>
-        <p-button icon="pi pi-chevron-right" [text]="true" severity="secondary" size="small"
-          [disabled]="paginaColumnas >= totalPaginasColumnas - 1"
-          (onClick)="paginaColumnasSiguiente()"
-          aria-label="Periodos siguientes" />
-      </div>
-
-      <p-message severity="info" class="form-detalle__edit-hint">
-        <strong>Edición en modal:</strong> use el botón <i class="pi pi-pencil" aria-hidden="true"></i> de cada fila para abrir la ventana de edición.
-      </p-message>
-
-      <!-- Conceptos padres — cada uno con su propio paginador interno -->
-      @for (concepto of conceptos; track concepto.id) {
-        <section class="form-concepto" [attr.aria-label]="'Concepto ' + concepto.nombre">
-          <header class="form-concepto__header">
-            <div class="form-concepto__title">
-              <span class="form-concepto__codigo">{{ concepto.codigo }}</span>
-              <h3>{{ concepto.nombre }}</h3>
-              <span class="form-concepto__count">({{ concepto.variables.length }} variables)</span>
-            </div>
-          </header>
-
-          <div class="form-concepto__table-wrap">
-            <table class="form-concepto__table">
-              <thead>
-                <tr>
-                  <th class="form-concepto__th-fixed">Código</th>
-                  <th class="form-concepto__th-fixed form-concepto__th-name">Variable</th>
-                  @for (col of columnasVisibles; track col.key) {
-                    <th class="form-concepto__th-val">{{ col.label }}</th>
-                  }
-                  <th class="form-concepto__th-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (variable of variablesVisibles(concepto); track variable.id) {
-                  <tr>
-                    <td class="form-concepto__td-codigo">{{ variable.id }}</td>
-                    <td class="form-concepto__td-nombre" [pTooltip]="variable.nombre" tooltipPosition="top">{{ variable.nombre }}</td>
-                    @for (col of columnasVisibles; track col.key) {
-                      <td class="form-concepto__td-val">
-                        @if (variable.valores[col.key] !== null) {
-                          {{ variable.valores[col.key] | number:'1.0-0' }}
-                        } @else {
-                          <span class="form-concepto__val-empty">—</span>
-                        }
-                      </td>
-                    }
-                    <td class="form-concepto__td-actions">
-                      <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small"
-                        severity="secondary"
-                        [attr.aria-label]="'Editar registro ' + variable.nombre"
-                        (onClick)="abrirModalEditar(concepto, variable)" />
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Paginador interno del concepto (independiente de los demás) -->
-          @if (totalPaginasConcepto(concepto) > 1) {
-            <footer class="form-concepto__footer">
-              <span class="form-concepto__footer-label">{{ concepto.nombre }}</span>
-              <div class="form-concepto__footer-pager">
-                <p-button icon="pi pi-chevron-left" [text]="true" size="small" severity="secondary"
-                  [disabled]="concepto.pagina === 0"
-                  (onClick)="paginaConceptoAnterior(concepto)"
-                  aria-label="Página anterior" />
-                <span class="form-concepto__footer-info" aria-live="polite">
-                  Página {{ concepto.pagina + 1 }} de {{ totalPaginasConcepto(concepto) }}
-                </span>
-                <p-button icon="pi pi-chevron-right" [text]="true" size="small" severity="secondary"
-                  [disabled]="concepto.pagina >= totalPaginasConcepto(concepto) - 1"
-                  (onClick)="paginaConceptoSiguiente(concepto)"
-                  aria-label="Página siguiente" />
-              </div>
-            </footer>
-          }
-        </section>
-      }
-    </div>
-    }
-  </ng-template>
-
-  <!-- ============================================================= -->
   <!-- WIZARD — PASO A PASO                                           -->
   <!-- ============================================================= -->
   <div class="form-wizard" role="region" aria-label="Asistente paso a paso de gestión de formularios">
@@ -282,7 +155,7 @@
         @if (filtersApplied) {
           <div class="form-wizard__import-row">
             <p-button label="Importar" icon="pi pi-upload"
-              pTooltip="Cargar un archivo .xlsx o .csv para la categoría"
+              pTooltip="Cargar un archivo .txt para el contexto seleccionado"
               tooltipPosition="top"
               (onClick)="abrirImportDialog()" />
           </div>
@@ -372,7 +245,9 @@
                   <th style="width: 44px"><p-tableHeaderCheckbox /></th>
                   <th pSortableColumn="codigo" style="width: 140px">Código <p-sortIcon field="codigo" /></th>
                   <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
-                  <th pSortableColumn="estadoValidacion" style="width: 200px">Estado <p-sortIcon field="estadoValidacion" /></th>
+                  <!-- Etapa ordena por id_etapa_proceso: el orden del listado es el del flujo. -->
+                  <th pSortableColumn="etapa" style="width: 180px">Etapa <p-sortIcon field="etapa" /></th>
+                  <th pSortableColumn="estado" style="width: 190px">Estado <p-sortIcon field="estado" /></th>
                   <th style="width: 110px; text-align: center">Acciones</th>
                 </tr>
               </ng-template>
@@ -382,16 +257,34 @@
                   <td><span class="form-table__code">{{ formItem.codigo }}</span></td>
                   <td><span class="form-table__name">{{ formItem.nombre }}</span></td>
                   <td>
-                    @if (esRechazado(formItem)) {
+                    <span class="form-table__etapa">
+                      <i class="pi" [ngClass]="etapaDe(formItem.etapa).icon" aria-hidden="true"></i>
+                      {{ etapaDe(formItem.etapa).label }}
+                    </span>
+                  </td>
+                  <td>
+                    <!-- Sin estado = sin registro: no se ha importado. Es una
+                         presentación, no un estado del catálogo, por eso va como
+                         texto neutro y no como p-tag. -->
+                    @if (!formItem.estado) {
+                      <span class="form-table__sin-registro"
+                        [pTooltip]="sinRegistroAyuda" tooltipPosition="top">
+                        <i class="pi pi-minus-circle" aria-hidden="true"></i>
+                        {{ sinRegistroLabel }}
+                      </span>
+                    } @else if (esRechazado(formItem)) {
                       <button type="button" class="form-estado-tagbtn"
-                        [attr.aria-label]="'Ver el detalle de la deficiencia de ' + formItem.nombre + ' y cómo corregirla'"
-                        pTooltip="Clic para ver el detalle de la deficiencia"
+                        [attr.aria-label]="'Ver las deficiencias de ' + formItem.nombre + ' en el control de envío'"
+                        pTooltip="Clic para ver las deficiencias en el control de envío"
                         tooltipPosition="top"
-                        (click)="verRechazoDeficiencia(formItem)">
-                        <p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" />
+                        (click)="verControlEnvio(formItem, 'ultimo')">
+                        <p-tag [value]="estadoDe(formItem.estado).label"
+                          [severity]="estadoDe(formItem.estado).severity" />
                       </button>
                     } @else {
-                      <p-tag [value]="formItem.estadoValidacion" [severity]="getEstadoSeverity(formItem.estadoValidacion)" />
+                      <p-tag [value]="estadoDe(formItem.estado).label"
+                        [severity]="estadoDe(formItem.estado).severity"
+                        [pTooltip]="estadoTooltip(formItem.estado)" tooltipPosition="top" />
                     }
                   </td>
                   <td style="text-align: center">
@@ -435,209 +328,7 @@
           </h2>
         </header>
 
-        <!-- Info general del archivo plano + acción descargar -->
-        <div class="prot-info">
-          <div class="prot-info__head">
-            <i class="pi pi-info-circle" aria-hidden="true"></i>
-            <div>
-              <h3 class="prot-info__title">Estructura del archivo plano</h3>
-              <p class="prot-info__desc">
-                El archivo de importación contiene dos tipos de registros separados por el carácter
-                <strong>TAB</strong>. Cada fila inicia con <code>S</code> (cabecera) o <code>D</code>
-                (detalle). La existencia de dos TABs consecutivos se interpreta como nulo, lo cual
-                invalida el registro por completitud (excepto si corresponde a una variable
-                calculada).
-              </p>
-            </div>
-          </div>
-
-          <div class="prot-info__chips">
-            <span class="prot-chip">
-              <i class="pi pi-tag" aria-hidden="true"></i>
-              Separador: <strong>TAB</strong>
-            </span>
-            <span class="prot-chip">
-              <i class="pi pi-file" aria-hidden="true"></i>
-              Codificación: <strong>UTF-8</strong>
-            </span>
-            <span class="prot-chip">
-              <i class="pi pi-list" aria-hidden="true"></i>
-              {{ totalVariables }} campos en total
-            </span>
-          </div>
-
-          <div class="prot-info__actions">
-            <p-button [outlined]="true" severity="secondary"
-              styleClass="prot-download-trigger"
-              ariaLabel="Descargar protocolo en distintos formatos"
-              (onClick)="dlMenuProtocolo.toggle($event)">
-              <ng-template #content>
-                <i class="pi pi-download" aria-hidden="true"></i>
-                <span>Descargar protocolo</span>
-                <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
-              </ng-template>
-            </p-button>
-            <p-menu #dlMenuProtocolo [model]="downloadItemsProtocolo" [popup]="true" appendTo="body"
-              styleClass="prot-download-menu">
-              <ng-template #item let-item>
-                <button type="button" class="prot-download-item" (click)="item.command()">
-                  <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
-                  <span class="prot-download-item__label">{{ item.label }}</span>
-                  <i class="pi pi-info-circle prot-download-item__info"
-                    [pTooltip]="item.data?.info"
-                    tooltipPosition="left"
-                    aria-hidden="true"></i>
-                </button>
-              </ng-template>
-            </p-menu>
-          </div>
-        </div>
-
-        <!-- Tabs: Encabezado | Detalle | Variables | Conceptos -->
-        <p-tabs value="encabezado" styleClass="prot-tabs">
-          <p-tablist>
-            <p-tab value="encabezado">
-              <i class="pi pi-tag" aria-hidden="true"></i>
-              Registro de Encabezado
-            </p-tab>
-            <p-tab value="detalle">
-              <i class="pi pi-list" aria-hidden="true"></i>
-              Registro de Detalle
-            </p-tab>
-            <p-tab value="variables">
-              <i class="pi pi-database" aria-hidden="true"></i>
-              Variables ({{ variables.length }})
-            </p-tab>
-            <p-tab value="conceptos">
-              <i class="pi pi-book" aria-hidden="true"></i>
-              Conceptos ({{ listas['CONCEPTOS'].valores.length }})
-            </p-tab>
-          </p-tablist>
-
-          <p-tabpanels>
-            <!-- ───── Tab 1: Registro de Encabezado ───── -->
-            <p-tabpanel value="encabezado">
-              <p class="prot-tabs__desc">
-                Una sola fila al inicio del archivo. Identifica el contexto general del envío
-                (entidad reportante, periodo, año y formulario).
-              </p>
-
-              <div class="prot-example" role="region" aria-label="Ejemplo de fila de encabezado">
-                <span class="prot-example__label">Ejemplo</span>
-                <code class="prot-example__line">{{ ejemploCabecera }}</code>
-              </div>
-
-              <ng-container
-                *ngTemplateOutlet="camposList; context: { $implicit: camposCabecera, ariaLabel: 'Campos del encabezado' }"></ng-container>
-            </p-tabpanel>
-
-            <!-- ───── Tab 2: Registro de Detalle ───── -->
-            <p-tabpanel value="detalle">
-              <p class="prot-tabs__desc">
-                Una fila por cada concepto contable a reportar. Cada detalle contiene un código de
-                concepto y los valores de las variables específicas del formulario.
-              </p>
-
-              <div class="prot-example" role="region" aria-label="Ejemplo de fila de detalle">
-                <span class="prot-example__label">Ejemplo</span>
-                <code class="prot-example__line">{{ ejemploDetalle }}</code>
-              </div>
-
-              <ng-container
-                *ngTemplateOutlet="camposList; context: { $implicit: camposDetalle, ariaLabel: 'Campos del detalle' }"></ng-container>
-            </p-tabpanel>
-
-            <!-- ───── Tab 3: Variables ───── -->
-            <p-tabpanel value="variables">
-              <p class="prot-tabs__desc">
-                Variables técnicas que componen cada fila de detalle. Las variables tipo
-                <strong>Lista</strong> solo aceptan los códigos del catálogo correspondiente —
-                consúltalos haciendo clic en el enlace de la columna <em>Observaciones</em>.
-              </p>
-              <ng-container
-                *ngTemplateOutlet="tablaVariables; context: { $implicit: variables, tipo: 'variables' }"></ng-container>
-            </p-tabpanel>
-
-            <!-- ───── Tab 4: Conceptos ───── -->
-            <p-tabpanel value="conceptos">
-              <p class="prot-tabs__desc">
-                Catálogo de conceptos contables válidos para la variable <code>Concepto</code> del
-                registro de detalle.
-              </p>
-
-              <div class="prot-conceptos__toolbar">
-                <p-iconfield iconPosition="left" styleClass="prot-conceptos__search">
-                  <p-inputicon styleClass="pi pi-search" />
-                  <input pInputText type="text"
-                    [ngModel]="busquedaConceptos()"
-                    (ngModelChange)="busquedaConceptos.set($event)"
-                    placeholder="Buscar por código o nombre del concepto…"
-                    aria-label="Buscar concepto" />
-                </p-iconfield>
-                <span class="prot-conceptos__count" aria-live="polite">
-                  {{ conceptosFiltrados().length }} de {{ listas['CONCEPTOS'].valores.length }} conceptos
-                </span>
-                <p-button [outlined]="true" severity="secondary" size="small"
-                  styleClass="prot-download-trigger"
-                  ariaLabel="Descargar conceptos en distintos formatos"
-                  (onClick)="dlMenuConceptos.toggle($event)">
-                  <ng-template #content>
-                    <i class="pi pi-download" aria-hidden="true"></i>
-                    <span>Descargar</span>
-                    <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
-                  </ng-template>
-                </p-button>
-                <p-menu #dlMenuConceptos [model]="downloadItemsConceptos" [popup]="true" appendTo="body"
-                  styleClass="prot-download-menu">
-                  <ng-template #item let-item>
-                    <button type="button" class="prot-download-item" (click)="item.command()">
-                      <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
-                      <span class="prot-download-item__label">{{ item.label }}</span>
-                      <i class="pi pi-info-circle prot-download-item__info"
-                        [pTooltip]="item.data?.info"
-                        tooltipPosition="left"
-                        aria-hidden="true"></i>
-                    </button>
-                  </ng-template>
-                </p-menu>
-              </div>
-
-              <div class="form-table-scroll">
-              <p-table [value]="conceptosFiltrados()"
-                [stripedRows]="true" [rowHover]="true"
-                [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]"
-                [showCurrentPageReport]="true"
-                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} conceptos"
-                styleClass="prot-table"
-                [tableStyle]="{ 'min-width': '480px' }">
-                <ng-template #caption>
-                  <span class="sr-only">Catálogo de conceptos contables válidos</span>
-                </ng-template>
-                <ng-template #header>
-                  <tr>
-                    <th style="width: 180px" scope="col">Código</th>
-                    <th scope="col">Nombre</th>
-                  </tr>
-                </ng-template>
-                <ng-template #body let-c>
-                  <tr>
-                    <td><code class="prot-table__code">{{ c['Código'] }}</code></td>
-                    <td>{{ c['Nombre'] }}</td>
-                  </tr>
-                </ng-template>
-                <ng-template #emptymessage>
-                  <tr>
-                    <td colspan="2" class="prot-lista__empty">
-                      <i class="pi pi-inbox" aria-hidden="true"></i>
-                      <p>No se encontraron conceptos con ese criterio de búsqueda.</p>
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-              </div>
-            </p-tabpanel>
-          </p-tabpanels>
-        </p-tabs>
+        <app-protocolo-importacion />
       </section>
     }
 
@@ -653,7 +344,9 @@
             </button>
           </h2>
         </header>
-        <ng-container *ngTemplateOutlet="detalleTpl" />
+        <app-registro-manual [formulario]="detalleAbierto"
+          (volver)="cerrarDetalle()"
+          (validar)="validarFormularioActual()" />
       </section>
     }
 
@@ -691,6 +384,17 @@
               </span>
             }
           </span>
+        </div>
+
+        <!-- Simulación (demo): qué responderá la validación central al enviar.
+             Vive junto a "Enviar Categoría", que es la acción que lo aplica.
+             En producción el resultado llega del backend tras enviar. -->
+        <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de la respuesta de validación central">
+          <i class="pi pi-flag" aria-hidden="true"></i>
+          <label for="ce-resp-central">Respuesta central al enviar <span class="form-wizard__demo-tag">demostración</span></label>
+          <p-select inputId="ce-resp-central" [options]="respuestaCentralOptions"
+            [(ngModel)]="respuestaCentral"
+            appendTo="body" styleClass="form-wizard__demo-select" />
         </div>
 
         <!-- Estado del envío + acción Enviar Categoría. Solo el estado: el detalle
@@ -752,85 +456,42 @@
           </h2>
         </header>
 
-        <div class="form-estado-screen" aria-live="polite">
-          @if (filtersApplied && filterEntidad && filteredFormularios.length > 0) {
-            <!-- Simulación (demo): qué responderá la validación central al enviar.
-                 Al pulsar "Enviar Categoría" (Sección 3) se aplica este resultado;
-                 si es rechazo, se marca un formulario como "Rechazado por Deficiencia".
-                 En producción llega del backend tras enviar. -->
-            <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de la respuesta de validación central">
-              <i class="pi pi-flag" aria-hidden="true"></i>
-              <label for="ce-resp-central">Respuesta central al enviar <span class="form-wizard__demo-tag">demostración</span></label>
-              <p-select inputId="ce-resp-central" [options]="respuestaCentralOptions"
-                [(ngModel)]="respuestaCentral"
-                appendTo="body" styleClass="form-wizard__demo-select" />
-            </div>
+        @if (filtersApplied && filterEntidad && filteredFormularios.length > 0) {
 
-            @if (resultadoEnvio; as rc) {
-              <div class="form-send-bar" [ngClass]="rc.clase">
-                <div class="form-send-bar__info">
-                  <i class="pi {{ rc.icon }}" aria-hidden="true"></i>
-                  <div>
-                    <strong>{{ rc.titulo }}</strong>
-                    <span>{{ rc.detalle }}</span>
-                  </div>
-                </div>
+          <!-- 1 · Contexto: la categoría del Paso 1 y, cuando se entra desde una
+               fila, el formulario cuyas deficiencias se están revisando. -->
+          <dl class="form-estado-ctx form-estado-ctx--wide">
+            <div><dt>Categoría</dt><dd class="cell-ellipsis" [pTooltip]="categoriaLabel" tooltipPosition="top">{{ categoriaLabel }}</dd></div>
+            <div><dt>Entidad</dt><dd class="cell-ellipsis" [pTooltip]="entidadLabel" tooltipPosition="top">{{ entidadLabel }}</dd></div>
+            <div><dt>Periodo</dt><dd>{{ selectedAnio }} · {{ periodoLabel }}</dd></div>
+            @if (controlEnvioFormulario; as f) {
+              <div class="form-estado-ctx__form">
+                <dt>Formulario</dt>
+                <dd class="cell-ellipsis" [pTooltip]="f.codigo + ' · ' + f.nombre" tooltipPosition="top">
+                  {{ f.codigo }} · {{ f.nombre }}
+                </dd>
               </div>
             }
+          </dl>
 
-            <!-- Contexto actual de la categoría -->
-            <dl class="form-estado-ctx">
-              <div><dt>Categoría</dt><dd class="cell-ellipsis" [pTooltip]="categoriaLabel" tooltipPosition="top">{{ categoriaLabel }}</dd></div>
-              <div><dt>Entidad</dt><dd class="cell-ellipsis" [pTooltip]="entidadLabel" tooltipPosition="top">{{ entidadLabel }}</dd></div>
-              <div><dt>Periodo</dt><dd>{{ selectedAnio }} · {{ periodoLabel }}</dd></div>
-            </dl>
+          <!-- 2 · Deficiencias del formulario. Va fuera de .form-estado-screen
+               (max-width 640px): la tabla necesita ancho completo y su propio
+               scroll horizontal. -->
+          <app-deficiencias-envio
+            [formulario]="controlEnvioFormulario"
+            [visibles]="deficienciasVisibles"
+            [total]="deficienciasEnvio.length"
+            [alcance]="alcanceDeficiencias"
+            [resumen]="resumenDeficiencias"
+            (alcanceChange)="cambiarAlcanceDeficiencias($event)" />
+        }
 
-            <!-- Estado dominante (lifecycle) -->
-            <div class="form-estado-badge">
-              <p-tag [value]="estadoCategoria.label" [severity]="estadoCategoria.severity"
-                [icon]="estadoCategoria.icon" />
-              <p class="form-estado-badge__desc">{{ estadoCategoria.descripcion }}</p>
-            </div>
-
-            <!-- Progreso de validación local -->
-            <div class="form-estado-progress">
-              <div class="form-estado-progress__head">
-                <span>Validación local</span>
-                <span>{{ progresoValidacion.validados }}/{{ progresoValidacion.total }} formularios</span>
-              </div>
-              <p-progressBar [value]="progresoValidacion.pct" [showValue]="false"
-                styleClass="form-estado-progress__bar" />
-            </div>
-
-            <!-- Desglose por estado -->
-            <ul class="form-estado-list">
-              @for (item of desgloseEstados; track item.label) {
-                <li>
-                  <span class="form-estado-list__label">
-                    <i class="pi" [ngClass]="item.icon" aria-hidden="true"></i> {{ item.label }}
-                  </span>
-                  <p-tag [value]="item.cantidad.toString()" [severity]="item.severity" />
-                </li>
-              }
-            </ul>
-
-            <!-- Entidades agregadas (cuando la categoría las gestiona) -->
-            @if (entidadesAgregadasHabilitado) {
-              <div class="form-estado-row">
-                <span class="form-estado-row__label">
-                  <i class="pi pi-sitemap" aria-hidden="true"></i> Entidades agregadas
-                </span>
-                <p-tag [value]="selectedEntidades.length.toString()"
-                  [severity]="selectedEntidades.length ? 'info' : 'warn'" />
-              </div>
-            }
-          } @else {
-            <div class="form-estado-empty">
-              <i class="pi pi-inbox" aria-hidden="true"></i>
-              <p>Aplique los filtros para ver el estado de validación y envío de la categoría.</p>
-            </div>
-          }
-        </div>
+        @if (!(filtersApplied && filterEntidad && filteredFormularios.length > 0)) {
+          <div class="form-estado-empty">
+            <i class="pi pi-inbox" aria-hidden="true"></i>
+            <p>Aplique los filtros para ver las deficiencias del formulario.</p>
+          </div>
+        }
       </section>
     }
   </div>
@@ -845,31 +506,195 @@
     [draggable]="false"
     [closeOnEscape]="true"
     [style]="{ width: '520px', maxWidth: '95vw' }"
-    header="Importar archivo">
-    <div class="form-import-zone" role="region" aria-label="Carga de archivo">
-      <div class="form-import-zone__pick">
-        <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
-          (onClick)="importDialogInput.click()" />
-        <input #importDialogInput type="file" accept=".xlsx,.csv" hidden
-          (change)="importFileName = $any($event.target).files[0]?.name || ''" />
-        <span class="form-import-zone__filename"
-          [class.form-import-zone__filename--empty]="!importFileName">
-          {{ importFileName || 'Ningún archivo seleccionado' }}
-        </span>
+    [header]="importPaso === 'justificacion'
+      ? 'Justificación del reenvío'
+      : importPaso === 'confirmacion' ? 'Confirmar reimportación' : 'Importar archivo'">
+
+    <!-- Simulación (demo): el sistema real decide con el contexto si hay
+         información previa y si la categoría ya se envió. Aquí se fuerza para
+         poder ver los tres caminos: importación limpia, reimportación y
+         reenvío. Va fuera de los pasos porque el diálogo puede abrir
+         directamente en la justificación, y desde ahí hay que poder cambiarlo. -->
+    @if (importPaso !== 'iniciado') {
+      <div class="form-wizard__demo-switch" role="group" aria-label="Simulación del escenario de importación">
+        <i class="pi pi-flag" aria-hidden="true"></i>
+        <label for="imp-escenario">Escenario <span class="form-wizard__demo-tag">demostración</span></label>
+        <p-select inputId="imp-escenario" [options]="escenarioImportOptions"
+          [(ngModel)]="escenarioImport"
+          (onChange)="onEscenarioImportChange()"
+          appendTo="body" styleClass="form-wizard__demo-select" />
       </div>
-    </div>
-    <p class="form-import-zone__hint">
-      <i class="pi pi-info-circle" aria-hidden="true"></i>
-      La importación reemplaza los datos no validados de los formularios para el contexto definido.
-    </p>
+    }
+
+    @if (importPaso === 'iniciado') {
+      <!-- Alerta de proceso iniciado. Es un mensaje de resultado: va visible en
+           el cuerpo del diálogo (no en un toast que se desvanece), porque el
+           usuario tiene que saber que el resultado NO vuelve a esta pantalla. -->
+      <div class="form-import-done" role="status">
+        <i class="pi pi-clock" aria-hidden="true"></i>
+        <div class="form-import-done__body">
+          @if (esReimportacion) {
+            <strong>El proceso de reimportación se ha iniciado</strong>
+            <p>
+              <span class="form-import-done__file">{{ importFileName }}</span>
+              está reemplazando la información de los formularios del contexto
+              seleccionado. El resultado se notificará vía correo electrónico a
+              <strong>{{ correoUsuario }}</strong>.
+            </p>
+          } @else {
+            <strong>El archivo ya inició su proceso de importación</strong>
+            <p>
+              <span class="form-import-done__file">{{ importFileName }}</span>
+              está en la cola de proceso. El resultado se notificará vía correo
+              electrónico a <strong>{{ correoUsuario }}</strong>.
+            </p>
+          }
+        </div>
+      </div>
+    } @else if (importPaso === 'justificacion') {
+      <!-- Reenvío: la categoría ya se reportó a la CGN, así que volver a
+           importar modifica información reportada y hay que motivarlo. -->
+      <div class="form-import-warn" role="alert">
+        <i class="pi pi-question-circle" aria-hidden="true"></i>
+        <div class="form-import-warn__body">
+          <strong>Está modificando información ya reportada</strong>
+          <p>
+            La categoría <strong>{{ categoriaLabel }}</strong> ya fue enviada a la
+            CGN. Justifique el motivo de su reenvío para continuar.
+          </p>
+        </div>
+      </div>
+
+      <div class="form-reenvio">
+        <div class="form-reenvio__field">
+          <label for="reenvio-motivo">
+            Motivo <span class="field-required" aria-hidden="true">*</span>
+          </label>
+          <p-select inputId="reenvio-motivo" [options]="reenvioMotivoOptions"
+            [(ngModel)]="reenvioMotivo" (onChange)="reenvioMotivoError = ''"
+            placeholder="Seleccione el motivo del reenvío"
+            appendTo="body" class="w-full" aria-required="true"
+            [attr.aria-invalid]="reenvioMotivoError ? 'true' : null"
+            [attr.aria-describedby]="reenvioMotivoError ? 'reenvio-motivo-error' : null" />
+          @if (reenvioMotivoError) {
+            <small id="reenvio-motivo-error" class="form-reenvio__error" role="alert">
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              {{ reenvioMotivoError }}
+            </small>
+          }
+        </div>
+
+        <div class="form-reenvio__field">
+          <label for="reenvio-justificacion">
+            Justificación <span class="field-required" aria-hidden="true">*</span>
+          </label>
+          <textarea pTextarea id="reenvio-justificacion" rows="5"
+            class="form-reenvio__textarea"
+            [(ngModel)]="reenvioJustificacion"
+            (ngModelChange)="reenvioJustificacionError = ''"
+            [maxlength]="REENVIO_JUSTIFICACION_MAX"
+            aria-required="true"
+            [attr.aria-invalid]="reenvioJustificacionError ? 'true' : null"
+            aria-describedby="reenvio-justificacion-msg"
+            placeholder="Describa el motivo del reenvío"></textarea>
+          <small id="reenvio-justificacion-msg" class="form-reenvio__msg" aria-live="polite">
+            @if (reenvioJustificacionError) {
+              <span class="form-reenvio__error" role="alert">
+                <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+                {{ reenvioJustificacionError }}
+              </span>
+            } @else {
+              <span class="form-reenvio__count">
+                {{ reenvioJustificacion.length }}/{{ REENVIO_JUSTIFICACION_MAX }} caracteres
+              </span>
+            }
+          </small>
+        </div>
+      </div>
+
+      <p class="form-import-zone__hint">
+        <i class="pi pi-file" aria-hidden="true"></i>
+        Archivo a reenviar:
+        <span class="form-import-done__file">{{ importFileName }}</span>
+      </p>
+    } @else if (importPaso === 'confirmacion') {
+      <!-- Aviso de reemplazo. La importación trabaja sobre el CONTEXTO
+           (entidad · año · periodo), no sobre la categoría: la categoría sólo
+           entra en juego en la validación central y en el envío. -->
+      <div class="form-import-warn" role="alert">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <div class="form-import-warn__body">
+          <strong>Hay formularios con información para el contexto seleccionado</strong>
+          <p>
+            De lo que trae <span class="form-import-done__file">{{ importFileName }}</span>,
+            {{ formulariosAReimportar.length }}
+            {{ formulariosAReimportar.length === 1 ? 'formulario ya cuenta' : 'formularios ya cuentan' }}
+            con información para
+            <strong>{{ entidadLabel }} · {{ selectedAnio }} · {{ periodoLabel }}</strong>.
+            Al continuar, esa información se reemplaza y no se puede recuperar.
+          </p>
+        </div>
+      </div>
+      <ul class="form-import-warn__list" aria-label="Formularios con información en el contexto seleccionado">
+        @for (f of formulariosAReimportar; track f.id) {
+          <li>
+            <i class="pi pi-refresh" aria-hidden="true"></i>
+            <span class="form-table__code">{{ f.codigo }}</span>
+            <span class="cell-ellipsis" [pTooltip]="f.nombre" tooltipPosition="top">{{ f.nombre }}</span>
+          </li>
+        }
+      </ul>
+      <p class="form-import-zone__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        ¿Desea continuar?
+      </p>
+    } @else {
+      <div class="form-import-zone" role="region" aria-label="Carga de archivo">
+        <div class="form-import-zone__pick">
+          <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
+            (onClick)="importDialogInput.click()" />
+          <input #importDialogInput type="file" accept=".txt" hidden
+            (change)="seleccionarArchivoImport($event)" />
+          <span class="form-import-zone__filename"
+            [class.form-import-zone__filename--empty]="!importFileName">
+            {{ importFileName || 'Ningún archivo seleccionado' }}
+          </span>
+        </div>
+      </div>
+      @if (importFileError) {
+        <p-message severity="error" styleClass="w-full" [text]="importFileError" />
+      }
+      <p class="form-import-zone__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Sólo archivos de texto plano (.txt). La importación reemplaza los datos no
+        validados de los formularios para el contexto seleccionado.
+      </p>
+    }
+
     <ng-template #footer>
-      <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
-        (onClick)="cerrarImportDialog()" />
-      <p-button label="Importar" icon="pi pi-upload"
-        [disabled]="!importFileName"
-        [pTooltip]="!importFileName ? 'Seleccione un archivo primero' : ''"
-        tooltipPosition="top"
-        (onClick)="confirmImport()" />
+      @if (importPaso === 'iniciado') {
+        <p-button label="Cerrar" icon="pi pi-check"
+          (onClick)="cerrarImportDialog()" />
+      } @else if (importPaso === 'justificacion') {
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cancelarReenvio()" />
+        <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right"
+          (onClick)="confirmImport()" />
+      } @else if (importPaso === 'confirmacion') {
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cancelarReimportacion()" />
+        <!-- Reemplaza información existente: acción destructiva. -->
+        <p-button label="Sí, reimportar" icon="pi pi-refresh" severity="danger"
+          (onClick)="confirmImport()" />
+      } @else {
+        <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cerrarImportDialog()" />
+        <p-button label="Importar" icon="pi pi-upload"
+          [disabled]="!importFileName"
+          [pTooltip]="!importFileName ? 'Seleccione un archivo .txt primero' : ''"
+          tooltipPosition="top"
+          (onClick)="confirmImport()" />
+      }
     </ng-template>
   </p-dialog>
 
@@ -904,52 +729,6 @@
         (onClick)="cancelarEnvioAgregadora()" />
       <p-button label="Continuar y enviar" icon="pi pi-send" iconPos="right"
         (onClick)="confirmarEnvioAgregadora()" />
-    </ng-template>
-  </p-dialog>
-
-  <!-- ============================================================= -->
-  <!-- MODAL DE EDICIÓN INLINE DE REGISTRO                            -->
-  <!-- ============================================================= -->
-  <p-dialog
-    [visible]="!!modalEditar"
-    (visibleChange)="$event === false && cerrarModalEditar()"
-    [modal]="true"
-    [draggable]="false"
-    [closeOnEscape]="true"
-    [style]="{ width: '560px', maxWidth: '95vw' }"
-    [header]="modalEditar ? 'Editar registro · ' + modalEditar.variable.nombre : 'Editar registro'">
-    @if (modalEditar) {
-      <div class="form-modal-edit">
-        <div class="form-modal-edit__meta">
-          <div>
-            <span class="form-modal-edit__label">Concepto</span>
-            <strong>{{ modalEditar.concepto.codigo }} · {{ modalEditar.concepto.nombre }}</strong>
-          </div>
-          <div>
-            <span class="form-modal-edit__label">Variable</span>
-            <strong>{{ modalEditar.variable.id }}</strong>
-          </div>
-        </div>
-        <div class="form-modal-edit__grid">
-          @for (col of columnasVisibles; track col.key) {
-            <div class="form-modal-edit__field">
-              <label [for]="'edit-' + col.key">{{ col.label }}</label>
-              <p-inputNumber
-                [(ngModel)]="modalEditar.variable.valores[col.key]"
-                [inputId]="'edit-' + col.key"
-                mode="decimal"
-                [useGrouping]="true"
-                [showButtons]="false" />
-            </div>
-          }
-        </div>
-      </div>
-    }
-    <ng-template #footer>
-      <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
-        (onClick)="cerrarModalEditar()" />
-      <p-button label="Guardar" icon="pi pi-check"
-        (onClick)="guardarModalEditar()" />
     </ng-template>
   </p-dialog>
 
@@ -1057,301 +836,6 @@
         icon="pi pi-check"
         [disabled]="selectedEntidades.length === 0"
         (onClick)="confirmarAsignacionEntidades()" />
-    </ng-template>
-  </p-dialog>
-
-  <!-- ============================================================= -->
-  <!-- TEMPLATE: lista de campos del protocolo (tokens + descripción) -->
-  <!-- Usado en los tabs 'Registro de Encabezado' y 'Registro de Detalle' -->
-  <!-- ============================================================= -->
-  <ng-template #camposList let-campos let-ariaLabel="ariaLabel">
-    <ul class="prot-fields" [attr.aria-label]="ariaLabel">
-      @for (campo of campos; track campo.token) {
-        <li class="prot-fields__item">
-          <code class="prot-fields__token">{{ campo.token }}</code>
-          <div class="prot-fields__body">
-            <strong class="prot-fields__name">{{ campo.nombre }}</strong>
-            <p class="prot-fields__desc">{{ campo.desc }}</p>
-          </div>
-        </li>
-      }
-    </ul>
-  </ng-template>
-
-  <!-- ============================================================= -->
-  <!-- TEMPLATE: tabla horizontal de variables del protocolo          -->
-  <!-- ============================================================= -->
-  <ng-template #tablaVariables let-variables let-tipo="tipo">
-    <div class="form-table-scroll">
-    <p-table [value]="variables"
-      [stripedRows]="true"
-      [rowHover]="true"
-      [tableStyle]="{ 'min-width': '960px' }"
-      styleClass="prot-table">
-      <ng-template #caption>
-        <span class="sr-only">Variables del registro de {{ tipo }}</span>
-      </ng-template>
-      <ng-template #header>
-        <tr>
-          <th class="prot-table__th-num" scope="col">#</th>
-          <th scope="col">Nombre del campo</th>
-          <th scope="col">Tipo de dato</th>
-          <th class="prot-table__th-num" scope="col">Longitud</th>
-          <th class="prot-table__th-num" scope="col">Decimales</th>
-          <th scope="col">Unidad</th>
-          <th scope="col">Observaciones</th>
-        </tr>
-      </ng-template>
-      <ng-template #body let-v>
-        <tr>
-          <td class="prot-table__td-num">{{ v.numero }}</td>
-          <td><code class="prot-table__code">{{ v.nombre }}</code></td>
-          <td>
-            @switch (v.tipoDato) {
-              @case ('Numérico') {
-                <p-tag value="Numérico" severity="info" [rounded]="true" />
-              }
-              @case ('Lista') {
-                <p-tag value="Lista" severity="warn" [rounded]="true" />
-              }
-              @case ('Fecha') {
-                <p-tag value="Fecha" severity="success" [rounded]="true" />
-              }
-              @default {
-                <p-tag value="Texto" severity="secondary" [rounded]="true" />
-              }
-            }
-          </td>
-          <td class="prot-table__td-num">{{ v.longitud }}</td>
-          <td class="prot-table__td-num">{{ v.decimales ?? '—' }}</td>
-          <td>{{ v.unidad }}</td>
-          <td class="prot-table__td-obs">
-            <span>{{ v.observaciones }}</span>
-            @if (v.tipoDato === 'Lista' && v.listaKey) {
-              <button type="button" class="prot-link"
-                (click)="abrirLista(v.listaKey)"
-                [attr.aria-label]="'Ver lista de valores válidos para ' + v.nombre">
-                <i class="pi pi-external-link" aria-hidden="true"></i>
-                Ver lista <strong>{{ listas[v.listaKey].nombre }}</strong>
-                <span class="prot-link__count">({{ listas[v.listaKey].valores.length }})</span>
-              </button>
-            }
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-    </div>
-  </ng-template>
-
-  <!-- ============================================================= -->
-  <!-- MODAL "VER LISTA" — valores válidos del catálogo seleccionado  -->
-  <!-- ============================================================= -->
-  <p-dialog
-    [visible]="!!listaActiva()"
-    (visibleChange)="$event === false && cerrarLista()"
-    [modal]="true"
-    [draggable]="false"
-    [closeOnEscape]="true"
-    [style]="{ width: '820px', maxWidth: '96vw' }"
-    [header]="listaActiva() ? 'Valores de la lista · ' + listaActiva()!.nombre : 'Valores de la lista'">
-
-    @if (listaActiva(); as lista) {
-      <div class="prot-lista">
-        <p class="prot-lista__desc">
-          Valores válidos para la variable tipo Lista <strong>{{ lista.nombre }}</strong>.
-          Sólo estos códigos son aceptados en el archivo de importación.
-        </p>
-
-        <div class="prot-lista__search">
-          <p-iconfield iconPosition="left">
-            <p-inputicon styleClass="pi pi-search" />
-            <input pInputText type="text"
-              [ngModel]="busquedaLista()"
-              (ngModelChange)="onBuscarLista($event)"
-              placeholder="Buscar en cualquier campo…"
-              aria-label="Buscar dentro de la lista" />
-          </p-iconfield>
-          <span class="prot-lista__count" aria-live="polite">
-            {{ valoresFiltrados().length }} de {{ lista.valores.length }} valores
-          </span>
-        </div>
-
-        <!-- Paginador horizontal de columnas (reciclado del tree-table estándar):
-             sólo cuando la lista tiene más campos de los que caben en el datatable. -->
-        @if (mostrarPagerColumnasLista) {
-          <div class="chip-colpager" role="region" aria-label="Paginador de columnas">
-            <span class="chip-colpager__label">{{ rangoColumnasListaTxt() }}</span>
-            <div class="chip-colpager__controls">
-              <button type="button" class="chip-colpager__btn"
-                (click)="paginaColumnasListaAnterior()"
-                [disabled]="paginaColumnasLista === 0"
-                aria-label="Columnas anteriores">
-                <i class="pi pi-chevron-left" aria-hidden="true"></i>
-              </button>
-              <span class="chip-colpager__pageinfo">
-                Página {{ paginaColumnasLista + 1 }} / {{ totalPaginasColumnasLista }}
-              </span>
-              <button type="button" class="chip-colpager__btn"
-                (click)="paginaColumnasListaSiguiente()"
-                [disabled]="paginaColumnasLista >= totalPaginasColumnasLista - 1"
-                aria-label="Siguientes columnas">
-                <i class="pi pi-chevron-right" aria-hidden="true"></i>
-              </button>
-            </div>
-          </div>
-        }
-
-        <p-table [value]="valoresPaginados()"
-          [stripedRows]="true"
-          [rowHover]="true"
-          styleClass="prot-lista__table"
-          [class.prot-lista__table--colpaged]="mostrarPagerColumnasLista"
-          [tableStyle]="{ 'table-layout': 'fixed', width: '100%' }">
-          <ng-template #caption>
-            <span class="sr-only">Valores válidos para la variable tipo lista</span>
-          </ng-template>
-          <ng-template #header>
-            <tr>
-              @for (col of columnasVisiblesLista; track col.code) {
-                <th scope="col"
-                  [style.width.px]="anchoColumnaListaPx(col)"
-                  [class.prot-lista__th--num]="col.type === 'N'">
-                  <span class="prot-lista__cell"
-                    [pTooltip]="col.code"
-                    tooltipPosition="top">
-                    {{ col.code }}
-                  </span>
-                </th>
-              }
-            </tr>
-          </ng-template>
-          <ng-template #body let-valor>
-            <tr>
-              @for (col of columnasVisiblesLista; track col.code) {
-                <td [class.prot-lista__td--num]="col.type === 'N'">
-                  <span class="prot-lista__cell"
-                    [pTooltip]="valor[col.code]"
-                    tooltipPosition="top"
-                    [tooltipDisabled]="!valor[col.code]">
-                    @if (col.order === 1) {
-                      <code class="prot-table__code">{{ valor[col.code] }}</code>
-                    } @else {
-                      {{ valor[col.code] }}
-                    }
-                  </span>
-                </td>
-              }
-            </tr>
-          </ng-template>
-          <ng-template #emptymessage>
-            <tr>
-              <td [attr.colspan]="columnasVisiblesLista.length" class="prot-lista__empty">
-                <i class="pi pi-inbox" aria-hidden="true"></i>
-                <p>No se encontraron valores con ese criterio de búsqueda.</p>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-
-        <!-- Paginador de registros (reciclado del tree-table estándar): etiqueta
-             "Mostrando X a Y de Z" + controles + selector de tamaño de página. -->
-        @if (valoresFiltrados().length > 0) {
-          <div class="chip-listpager" role="region" aria-label="Paginador de registros">
-            <span class="chip-listpager__label">{{ rangoFilasListaTxt() }}</span>
-            <div class="chip-listpager__controls">
-              <button type="button" class="chip-listpager__btn"
-                (click)="cambiarPaginaFilasLista(-1)"
-                [disabled]="listaPagina() === 0"
-                aria-label="Página anterior">
-                <i class="pi pi-chevron-left" aria-hidden="true"></i>
-              </button>
-              <span class="chip-listpager__page">
-                {{ listaPagina() + 1 }} / {{ totalPaginasFilasLista }}
-              </span>
-              <button type="button" class="chip-listpager__btn"
-                (click)="cambiarPaginaFilasLista(1)"
-                [disabled]="listaPagina() >= totalPaginasFilasLista - 1"
-                aria-label="Página siguiente">
-                <i class="pi pi-chevron-right" aria-hidden="true"></i>
-              </button>
-              <p-select [options]="opcionesTamPaginaLista"
-                optionLabel="label" optionValue="value"
-                [ngModel]="listaTamPagina()"
-                (ngModelChange)="cambiarTamPaginaLista($event)"
-                styleClass="chip-listpager__select"
-                appendTo="body"
-                [style]="{ minWidth: '70px' }" />
-            </div>
-          </div>
-        }
-      </div>
-    }
-
-    <ng-template #footer>
-      <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
-        (onClick)="cerrarLista()" />
-      <p-button styleClass="prot-download-trigger"
-        ariaLabel="Descargar lista en distintos formatos"
-        (onClick)="dlMenuLista.toggle($event)">
-        <ng-template #content>
-          <i class="pi pi-download" aria-hidden="true"></i>
-          <span>Descargar</span>
-          <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
-        </ng-template>
-      </p-button>
-      <p-menu #dlMenuLista [model]="downloadItemsLista" [popup]="true" appendTo="body"
-        styleClass="prot-download-menu">
-        <ng-template #item let-item>
-          <button type="button" class="prot-download-item" (click)="item.command()">
-            <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
-            <span class="prot-download-item__label">{{ item.label }}</span>
-            <i class="pi pi-info-circle prot-download-item__info"
-              [pTooltip]="item.data?.info"
-              tooltipPosition="left"
-              aria-hidden="true"></i>
-          </button>
-        </ng-template>
-      </p-menu>
-    </ng-template>
-  </p-dialog>
-
-  <!-- ============================================================= -->
-  <!-- MODAL "RECHAZO POR DEFICIENCIA" — motivos del rechazo (V3)     -->
-  <!-- Se abre desde la acción "Ver motivo" de la columna Estado.     -->
-  <!-- ============================================================= -->
-  <p-dialog
-    [visible]="!!rechazoDetalle"
-    (visibleChange)="$event === false && cerrarRechazoDetalle()"
-    [modal]="true"
-    [draggable]="false"
-    [closeOnEscape]="true"
-    [style]="{ width: '640px', maxWidth: '96vw' }"
-    [header]="rechazoDetalle ? 'Rechazo por deficiencia · ' + rechazoDetalle.nombre : 'Rechazo por deficiencia'">
-    @if (rechazoDetalle) {
-      <div class="form-rechazo">
-        <p-message severity="error" styleClass="w-full"
-          text="Corrija los motivos y valide de nuevo antes de reenviar." />
-        <ul class="form-rechazo__list">
-          @for (d of deficienciasMock; track d.tipo) {
-            <li class="form-rechazo__item">
-              <p-tag [value]="d.tipo" severity="danger" />
-              <div class="form-rechazo__body">
-                <p class="form-rechazo__detalle">{{ d.detalle }}</p>
-                <p class="form-rechazo__fix">
-                  <i class="pi pi-check-circle" aria-hidden="true"></i>
-                  {{ d.correccion }}
-                </p>
-              </div>
-            </li>
-          }
-        </ul>
-      </div>
-    }
-    <ng-template #footer>
-      <p-button label="Cerrar" [text]="true" severity="secondary"
-        (onClick)="cerrarRechazoDetalle()" />
-      <p-button label="Ir al registro manual" icon="pi pi-table"
-        (onClick)="irARegistroDesdeRechazo()" />
     </ng-template>
   </p-dialog>
 

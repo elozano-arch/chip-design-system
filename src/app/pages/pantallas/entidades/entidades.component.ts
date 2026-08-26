@@ -22,6 +22,7 @@ import { StepperModule } from 'primeng/stepper';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { PERIODO_ANUAL, PERIODOS_TRIMESTRALES } from '../../../services/periodos';
 import { FormErrorBannerComponent } from '../../../components/form-error-banner/form-error-banner.component';
 
 /* ════════════════ Modelo ════════════════ */
@@ -189,8 +190,10 @@ export class EntidadesComponent {
     Regalías: ['SGR - Regalías', 'DNP - Inversión'],
   };
   readonly anioOptions = [2026, 2025, 2024, 2023].map(a => ({ label: String(a), value: a }));
-  readonly periodoOptions = ['Anual', 'Trimestre I', 'Trimestre II', 'Trimestre III', 'Trimestre IV']
-    .map(p => ({ label: p, value: p }));
+  /** Catálogo compartido (ver periodos.ts). Aquí el periodo se guarda por su
+   *  etiqueta, así que label y value son lo mismo. */
+  readonly periodoOptions = [PERIODO_ANUAL, ...PERIODOS_TRIMESTRALES]
+    .map(p => ({ label: p.label, value: p.label }));
 
   /* ═══════════════ Datos mock ═══════════════ */
   entidades: Entidad[] = [
@@ -218,8 +221,8 @@ export class EntidadesComponent {
       actoAdministrativo: '', observaciones: '',
       ambitos: id === 1
         ? [
-            { id: 1, categoria: 'Contabilidad', ambito: 'CGN - Convergencia', anio: 2025, periodo: 'Anual' },
-            { id: 2, categoria: 'Presupuesto', ambito: 'CGR - Presupuestal', anio: 2025, periodo: 'Trimestre IV' },
+            { id: 1, categoria: 'Contabilidad', ambito: 'CGN - Convergencia', anio: 2025, periodo: 'Enero - Diciembre' },
+            { id: 2, categoria: 'Presupuesto', ambito: 'CGR - Presupuestal', anio: 2025, periodo: 'Octubre - Diciembre' },
           ]
         : [],
     };

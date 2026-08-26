@@ -1,0 +1,547 @@
+@use 'breakpoints' as bp;
+
+/* El panel es la columna del protocolo; el host queda neutro para no
+   sumar un gap extra dentro del .form-wizard__panel--protocolo del padre. */
+:host { display: block; }
+
+.prot-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Tablas densas: scroll horizontal controlado (mismo contrato de tablet
+   que el listado del padre). .p-datatable-table-container de PrimeNG 19
+   no trae overflow salvo con [scrollable]="true". */
+.form-table-scroll {
+  @include bp.scroll-x;
+}
+
+/* Info general del archivo plano + acción descargar */
+.prot-info {
+  background: #fff;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  box-shadow: var(--shadow-sm);
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+
+    > i {
+      color: var(--chip-cobalt-700);
+      font-size: 20px;
+      margin-top: 2px;
+    }
+  }
+
+  &__title {
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0 0 4px;
+  }
+
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: 0;
+    line-height: 1.55;
+
+    code {
+      background: var(--chip-bg-white-smoke);
+      border: 1px solid var(--chip-grey-200);
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 13px;
+      font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--chip-grey-100);
+  }
+}
+
+.prot-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--chip-bg-solitude);
+  color: var(--chip-cobalt-700);
+  border: 1px solid var(--chip-cobalt-100);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+
+  i { font-size: 12px; }
+  strong { font-weight: 700; }
+}
+
+/* Tabs Cabecera/Detalle */
+.prot-tabs {
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: var(--space-4) 0;
+    padding: 0 var(--space-2);
+  }
+}
+
+:host ::ng-deep .prot-tabs {
+  .p-tablist {
+    border-bottom: 2px solid var(--chip-grey-200);
+  }
+
+  .p-tab {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    padding: var(--space-3) var(--space-5);
+    color: var(--chip-grey-600);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    i { font-size: 14px; }
+
+    &[data-p-active="true"] {
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  .p-tabpanels {
+    padding: 0;
+    background: transparent;
+  }
+}
+
+/* Tabla horizontal de variables */
+:host ::ng-deep .prot-table {
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+
+  .p-datatable-thead > tr > th {
+    background: var(--chip-bg-solitude);
+    color: var(--chip-cobalt-800);
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--chip-cobalt-100);
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: var(--space-3) var(--space-4);
+    font-size: 14px;
+    color: var(--chip-grey-800);
+    vertical-align: middle;
+  }
+}
+
+.prot-table {
+  &__th-num,
+  &__td-num {
+    text-align: center;
+    width: 90px;
+  }
+
+  &__code {
+    display: inline-block;
+    background: var(--chip-bg-white-smoke);
+    border: 1px solid var(--chip-grey-200);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+    font-size: 13px;
+    color: var(--chip-cobalt-700);
+    font-weight: 600;
+  }
+
+  &__td-obs {
+    color: var(--chip-grey-700);
+    line-height: 1.45;
+
+    span {
+      display: block;
+      margin-bottom: 6px;
+    }
+  }
+}
+
+/* Hipervínculo para abrir el modal de la lista */
+.prot-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--chip-cobalt-200);
+  color: var(--chip-cobalt-700);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: var(--font-body);
+
+  i { font-size: 12px; }
+  strong {
+    font-weight: 700;
+    font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+  }
+
+  &__count {
+    color: var(--chip-grey-500);
+    font-weight: 400;
+  }
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    border-color: var(--chip-cobalt-400);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+  }
+}
+
+/* Modal "Ver Lista" */
+.prot-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  &__desc {
+    font-size: 14px;
+    color: var(--chip-grey-600);
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--chip-bg-solitude);
+    border-left: 3px solid var(--chip-cobalt-500);
+    border-radius: var(--radius-sm);
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+
+    p-iconfield {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    input { width: 100%; }
+  }
+
+  &__count {
+    font-size: 13px;
+    color: var(--chip-grey-500);
+    white-space: nowrap;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: var(--space-7);
+    color: var(--chip-grey-500);
+
+    i {
+      font-size: 32px;
+      display: block;
+      margin-bottom: var(--space-2);
+      color: var(--chip-grey-300);
+    }
+
+    p { margin: 0; font-size: 14px; }
+  }
+}
+
+:host ::ng-deep .prot-lista__table {
+  .p-datatable-thead > tr > th {
+    background: var(--chip-bg-white-smoke);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--chip-grey-700);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: var(--space-2) var(--space-3);
+    font-size: 13px;
+  }
+
+  /* Columnas dinámicas: con table-layout fixed el ancho lo dictan los <th>
+     (proporcional a field_len). El contenido largo se trunca con "…". */
+  .p-datatable-tbody > tr > td,
+  .p-datatable-thead > tr > th {
+    overflow: hidden;
+  }
+}
+
+/* Celda truncable de las columnas dinámicas: una sola línea + elipsis.
+   El valor completo queda disponible en el tooltip (pTooltip). */
+.prot-lista__cell {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Campos numéricos (field_type = 'N') alineados a la derecha. */
+.prot-lista__th--num,
+.prot-lista__td--num {
+  text-align: right;
+
+  .prot-lista__cell { text-align: right; }
+}
+
+/* ─────────── Tab "Registro de Encabezado/Detalle" — ejemplo + lista de campos ─────────── */
+.prot-example {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--chip-bg-solitude);
+  border: 1px solid var(--chip-cobalt-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  overflow-x: auto;
+
+  &__label {
+    flex-shrink: 0;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--chip-cobalt-700);
+    padding: 4px 10px;
+    background: #fff;
+    border-radius: 999px;
+    border: 1px solid var(--chip-cobalt-200);
+  }
+
+  &__line {
+    flex: 1;
+    font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+    font-size: 14px;
+    color: var(--chip-grey-900);
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+}
+
+.prot-fields {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  &__item {
+    display: grid;
+    grid-template-columns: minmax(120px, auto) 1fr;
+    gap: var(--space-3);
+    align-items: start;
+    padding: var(--space-3) var(--space-4);
+    background: #fff;
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-md);
+    transition: border-color 0.15s, background 0.15s;
+
+    &:hover {
+      border-color: var(--chip-cobalt-200);
+      background: var(--chip-bg-solitude);
+    }
+  }
+
+  &__token {
+    display: inline-block;
+    background: var(--chip-bg-white-smoke);
+    border: 1px solid var(--chip-grey-200);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-family: 'SFMono-Regular', Consolas, Monaco, monospace;
+    font-size: 13px;
+    color: var(--chip-cobalt-700);
+    font-weight: 700;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+  }
+
+  &__desc {
+    font-size: 13px;
+    color: var(--chip-grey-600);
+    margin: 0;
+    line-height: 1.45;
+  }
+}
+
+/* ─────────── Tab "Conceptos" — toolbar de búsqueda + descarga ─────────── */
+.prot-conceptos {
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  &__search {
+    flex: 1;
+    min-width: 240px;
+
+    :host ::ng-deep & input {
+      width: 100%;
+    }
+  }
+
+  &__count {
+    font-size: 13px;
+    color: var(--chip-grey-500);
+    white-space: nowrap;
+  }
+}
+
+/* ─────────── Botón estándar "Descargar" con dropdown de formatos ─────────── */
+/* El trigger es un p-button con template content (icono download + label + chevron). */
+:host ::ng-deep .prot-download-trigger {
+  .p-button {
+    gap: 8px;
+
+    .pi-download { font-size: 14px; }
+  }
+}
+
+.prot-download-trigger__chevron {
+  font-size: 0.75em;
+  opacity: 0.75;
+  margin-left: 2px;
+}
+
+/* Menu popup que aparece al clickear el trigger. */
+:host ::ng-deep .prot-download-menu {
+  &.p-menu {
+    min-width: 280px;
+    padding: 6px 0;
+  }
+
+  .p-menu-list {
+    padding: 0;
+  }
+
+  .p-menuitem {
+    padding: 0;
+  }
+
+  /* Anulamos el padding default del item link porque renderizamos un <button>
+     con nuestros propios paddings (custom template). */
+  .p-menuitem-link,
+  .p-menuitem-content {
+    padding: 0;
+    background: transparent;
+  }
+}
+
+.prot-download-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--chip-grey-800);
+  text-align: left;
+  transition: background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-700);
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: -2px;
+  }
+
+  &__icon {
+    font-size: 16px;
+    color: var(--chip-cobalt-700);
+    flex-shrink: 0;
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__info {
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--chip-grey-400);
+    cursor: help;
+    transition: color 0.15s;
+
+    &:hover {
+      color: var(--chip-cobalt-700);
+    }
+  }
+}
