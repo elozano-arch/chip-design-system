@@ -350,6 +350,53 @@ p-breadcrumb .p-breadcrumb {
   max-width: min(1680px, calc(100vw - 280px));
 }
 
+/* ============================================================
+   Avatar de iniciales — componente compartido
+   ------------------------------------------------------------
+   Círculo cobalto con las iniciales del usuario. Estaba repetido
+   en el cabezote, el perfil y las propuestas de sesión con los
+   mismos valores; aquí queda una sola definición.
+
+   Uso:
+     <span class="chip-avatar" aria-hidden="true">JM</span>
+     <span class="chip-avatar chip-avatar--lg" aria-hidden="true">JM</span>
+
+   Siempre aria-hidden: las iniciales son decorativas y el nombre
+   completo debe estar en el texto o en el aria-label del contenedor.
+   ============================================================ */
+.chip-avatar {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--chip-cobalt-700);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* 48px — cabecera de una ficha o card de usuario. */
+.chip-avatar--lg {
+  width: 48px;
+  height: 48px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+/* 64px — foco de un panel o pantalla dedicada al usuario. */
+.chip-avatar--xl {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  letter-spacing: 0.5px;
+}
+
 /* Pantallas — header compartido */
 .chip-header,
 .usr-header,
@@ -364,6 +411,7 @@ p-breadcrumb .p-breadcrumb {
 .ttr-header,
 .plt-header,
 .ent-header,
+.dsu-header,
 .lvr-header {
   margin-bottom: 28px;
 }
@@ -381,6 +429,7 @@ p-breadcrumb .p-breadcrumb {
 .ttr-header__title,
 .plt-header__title,
 .ent-header__title,
+.dsu-header__title,
 .lvr-header__title {
   font-family: var(--font-heading);
   font-size: 28px;
@@ -420,6 +469,7 @@ p-breadcrumb .p-breadcrumb {
 .ttr-header__desc,
 .plt-header__desc,
 .ent-header__desc,
+.dsu-header__desc,
 .lvr-header__desc {
   font-size: 15px;
   color: var(--chip-grey-500);
@@ -639,6 +689,7 @@ textarea.p-inputtext {
   .aud-header__title,
   .roles-header__title,
   .flt-header__title,
+  .dsu-header__title,
   .lvr-header__title {
     font-size: 24px;
   }

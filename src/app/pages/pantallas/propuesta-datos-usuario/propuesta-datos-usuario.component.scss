@@ -1,0 +1,785 @@
+@use 'breakpoints' as bp;
+
+/* ============================================================
+   Propuesta · Datos del usuario en el cabezote (CH-1737)
+   Pantalla comparativa: simula cuatro variantes del bloque de
+   sesión sin tocar el cabezote real.
+   ============================================================ */
+
+.dsu-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px;
+
+  @include bp.down('md') { padding: 16px; }
+}
+
+/* El resto del header viene de la lista compartida en src/styles.scss. */
+.dsu-header__desc {
+  max-width: 900px;
+  line-height: 1.6;
+}
+
+.dsu-nota {
+  display: block;
+  margin-bottom: 24px;
+}
+
+.dsu-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--chip-grey-800);
+  margin: 0 0 16px;
+
+  i {
+    color: var(--chip-cobalt-700);
+    font-size: 18px;
+  }
+}
+
+/* ── Selector de ancho simulado ─────────────────────────────── */
+.dsu-viewport {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  padding: 14px 18px;
+  margin-bottom: 32px;
+  background: var(--chip-bg-solitude);
+  border-radius: var(--radius-lg);
+
+  &__label {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+  }
+
+  &__hint {
+    font-size: 13px;
+    color: var(--chip-grey-600);
+  }
+}
+
+/* El botón de PrimeNG queda por debajo del área táctil mínima (WCAG 2.5.5). */
+:host ::ng-deep .dsu-viewport .p-togglebutton,
+:host ::ng-deep .dsu-esc__switch .p-togglebutton {
+  min-height: 44px;
+
+  .p-togglebutton-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+/* Las etiquetas de escenario son frases, no palabras: se dejan envolver en
+   lugar de forzar un scroll horizontal. */
+:host ::ng-deep .dsu-esc__switch .p-selectbutton {
+  flex-wrap: wrap;
+}
+
+:host ::ng-deep .dsu-esc__switch .p-togglebutton-label {
+  white-space: normal;
+  text-align: left;
+}
+
+/* ── Tarjeta de cada opción ─────────────────────────────────── */
+.dsu-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 44px;
+}
+
+.dsu-opcion {
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  background: #ffffff;
+
+  @include bp.down('md') { padding: 16px; }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  &__num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--chip-cobalt-700);
+    color: #ffffff;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 800;
+  }
+
+  &__title {
+    flex: 1 1 auto;
+    font-family: var(--font-heading);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+  }
+
+  &__resumen {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--chip-grey-700);
+    margin: 0 0 20px;
+    max-width: 860px;
+  }
+}
+
+/* ── Marco de la simulación ─────────────────────────────────── */
+.dsu-mock {
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--chip-grey-50);
+  margin-bottom: 24px;
+  transition: max-width 0.2s ease;
+
+  /* Vista tablet simulada: el ancho no puede depender de media queries
+     porque la página se ve en escritorio. */
+  &--tablet {
+    max-width: 768px;
+  }
+}
+
+/* Cabezote simulado — mismas medidas que .app-header del layout real. */
+.dsu-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--chip-grey-200);
+
+  /* Placeholder del co-branding: conserva el alto real (56px) sin usar la
+     marca fuera del cabezote. */
+  &__brand {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 56px;
+    width: 190px;
+    padding: 0 12px;
+    border: 1px dashed var(--chip-grey-300);
+    border-radius: var(--radius-sm);
+    background: var(--chip-grey-100);
+    font-size: 11px;
+    color: var(--chip-grey-600);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  &__a11y {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border: 1px dashed var(--chip-grey-300);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: var(--chip-grey-600);
+    white-space: nowrap;
+  }
+
+  @include bp.down('sm') {
+    padding: 8px 12px;
+
+    &__brand { width: 120px; height: 36px; }
+    &__a11y { display: none; }
+  }
+}
+
+/* ── Opción A: píldora (réplica de .app-session) ────────────── */
+.dsu-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 320px;
+  padding: 4px 10px 4px 4px;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: 999px;
+
+  &__data {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.3;
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__user {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+  }
+
+  &__context {
+    font-size: 11px;
+    color: var(--chip-grey-600);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* El colapso real ocurre a ≤992px; aquí se simula con la clase de vista
+   para que se vea el efecto sin cambiar el ancho del navegador. */
+.dsu-mock--tablet .dsu-pill {
+  max-width: none;
+  padding: 0;
+  border: none;
+
+  &__data { display: none; }
+}
+
+/* ── Opciones B, C y D: disparador del panel ────────────────── */
+.dsu-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 10px 4px 4px;
+  background: none;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: 999px;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    border-color: var(--chip-cobalt-300);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: 2px;
+  }
+
+  /* La opción C no abre panel: es una etiqueta, no un control. */
+  &--estatico {
+    cursor: default;
+    &:hover { background: none; border-color: var(--chip-grey-200); }
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    white-space: nowrap;
+  }
+
+  /* Sigla de la entidad activa (opción D). */
+  &__entidad {
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-800);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  i {
+    font-size: 12px;
+    color: var(--chip-grey-600);
+  }
+}
+
+/* ── Opción C: barra de contexto bajo el cabezote ───────────── */
+.dsu-ctxbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 10px 24px;
+  background: var(--chip-bg-solitude);
+  border-bottom: 1px solid var(--chip-grey-200);
+  font-size: 12px;
+  color: var(--chip-grey-700);
+
+  &__crumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--chip-cobalt-700);
+  }
+
+  &__actual {
+    color: var(--chip-grey-700);
+    font-weight: 700;
+  }
+
+  &__ctx {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+  }
+
+  &__dato {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+
+    i { color: var(--chip-cobalt-700); }
+
+    /* Entidad activa cuando es cambiable: se destaca para que el cambio de
+       contexto no pase inadvertido. */
+    &--activo {
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: var(--chip-cobalt-700);
+      color: #ffffff;
+      font-weight: 700;
+
+      i { color: #ffffff; }
+    }
+  }
+
+  @include bp.down('sm') { padding: 10px 12px; }
+}
+
+/* ── Panel desplegable (opciones B y D) ─────────────────────────
+   p-popover se monta en <body>, fuera del árbol del componente, así que
+   estas reglas no pueden colgar de :host. Las clases van prefijadas con
+   `dsu-` para que el alcance global no colisione con otras pantallas. */
+::ng-deep .dsu-pop .p-popover-content { padding: 0; }
+
+.dsu-pop {
+  /* El avatar compartido va centrado y con aire antes del nombre. */
+  .chip-avatar { margin-bottom: 12px; }
+
+  &__body {
+    width: min(320px, calc(100vw - 32px));
+    padding: 20px;
+    text-align: center;
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+  }
+
+  &__user {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 2px 0 0;
+  }
+
+  /* Perfil / entidad / último acceso — etiqueta arriba, valor debajo. */
+  &__datos {
+    margin: 0;
+    text-align: left;
+
+    dt {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--chip-grey-600);
+    }
+
+    dd {
+      margin: 2px 0 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--chip-grey-800);
+    }
+
+    dd:last-child { margin-bottom: 0; }
+  }
+
+  &__campo {
+    text-align: left;
+    margin-bottom: 16px;
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  &__ayuda {
+    display: block;
+    margin-top: 6px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--chip-grey-600);
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* El selector de entidad ocupa el ancho del panel. */
+::ng-deep .dsu-pop__campo p-select { width: 100%; }
+
+/* Las acciones del panel ocupan el ancho y alinean el texto a la izquierda,
+   como un menú. */
+::ng-deep .dsu-pop__accion {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 44px;
+}
+
+/* ── Balance a favor / a tener en cuenta ────────────────────── */
+.dsu-balance {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @include bp.down('md') { grid-template-columns: 1fr; }
+
+  &__col {
+    padding: 16px 18px;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0 0 10px;
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--chip-grey-700);
+
+      i {
+        flex-shrink: 0;
+        margin-top: 3px;
+        font-size: 12px;
+      }
+    }
+
+    &--pro {
+      background: #E8F5E9;
+      border-left-color: var(--chip-success);
+
+      h3, li i { color: #2E7D32; }
+    }
+
+    &--contra {
+      background: var(--chip-bg-corn-silk);
+      border-left-color: var(--chip-warning);
+
+      h3, li i { color: #8D6E00; }
+    }
+  }
+}
+
+/* ── Comparativa ────────────────────────────────────────────── */
+.dsu-comparativa { margin-bottom: 44px; }
+
+/* La tabla tiene 5 columnas: en tablet hace scroll dentro de su caja,
+   nunca empuja el ancho del body. */
+.dsu-tabla-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: var(--radius-lg);
+}
+
+:host ::ng-deep .dsu-tabla {
+  min-width: 900px;
+
+  /* Reparto fijo: sin esto el navegador reparte por contenido y una celda
+     larga estrecha a las demás, que entonces envuelven sin necesidad. */
+  table-layout: fixed;
+  width: 100%;
+
+  th, td {
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 14px 18px;
+    /* Centrado vertical: las celdas son de 1 o 2 líneas, y con `top` las
+       cortas quedaban colgando de la esquina superior de una fila alta. */
+    vertical-align: middle;
+  }
+
+  thead th {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    white-space: nowrap;
+    vertical-align: bottom;
+    padding-bottom: 12px;
+  }
+
+  /* 24% para el criterio y 19% para cada propuesta: las cuatro columnas
+     quedan iguales y el texto envuelve en el mismo punto en todas. */
+  .dsu-tabla__criterio {
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    text-align: left;
+    width: 24%;
+  }
+
+  thead th:not(:first-child),
+  tbody td { width: 19%; }
+}
+
+/* ── Los dos escenarios ─────────────────────────────────────── */
+.dsu-esc {
+  &__intro {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--chip-grey-700);
+    margin: 0 0 20px;
+    max-width: 900px;
+  }
+
+  &__switch {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin-bottom: 24px;
+  }
+
+  &__switch-label {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+  }
+
+  &__panel {
+    padding: 24px;
+    border: 1px solid var(--chip-grey-200);
+    border-radius: var(--radius-xl);
+    background: #ffffff;
+
+    @include bp.down('md') { padding: 16px; }
+  }
+
+  &__premisa {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 18px;
+    margin: 0 0 24px;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--chip-cobalt-700);
+    background: var(--chip-bg-solitude);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--chip-grey-800);
+
+    i {
+      flex-shrink: 0;
+      margin-top: 3px;
+      color: var(--chip-cobalt-700);
+    }
+  }
+
+  &__subtitle {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    margin: 0 0 12px;
+  }
+
+  &__veredictos {
+    list-style: none;
+    margin: 0 0 28px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Pista bajo el mockup del escenario multi-entidad. */
+  &__pista {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--chip-grey-600);
+    margin: -8px 0 24px;
+    max-width: 760px;
+  }
+
+  &__reco {
+    padding: 20px 22px;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--chip-success);
+    background: #E8F5E9;
+    margin-bottom: 16px;
+
+    @include bp.down('md') { padding: 16px 18px; }
+  }
+
+  &__reco-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    font-weight: 700;
+    color: #2E7D32;
+    margin: 0 0 12px;
+  }
+
+  &__lead {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--chip-grey-800);
+    margin: 0 0 14px;
+  }
+
+  &__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--chip-grey-700);
+    }
+
+    i {
+      flex-shrink: 0;
+      margin-top: 4px;
+      font-size: 13px;
+      color: #2E7D32;
+    }
+  }
+
+  &__riesgo {
+    padding: 16px 20px;
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--chip-warning);
+    background: var(--chip-bg-corn-silk);
+
+    p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--chip-grey-700);
+      margin: 0;
+    }
+  }
+
+  &__riesgo-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    /* Ámbar oscurecido: el #C77800 que usa propuesta-diseno para este mismo
+       bloque da 3.2:1 sobre corn-silk y no pasa AA en texto de 14px. */
+    color: #8D6E00;
+    margin: 0 0 8px;
+  }
+}
+
+/* Veredicto de una propuesta bajo el escenario activo. */
+.dsu-veredicto {
+  display: grid;
+  grid-template-columns: 170px auto 1fr;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--chip-grey-300);
+  background: var(--chip-grey-50);
+
+  &__opcion {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+  }
+
+  &__razon {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--chip-grey-700);
+  }
+
+  &--recomendada { border-left-color: var(--chip-success); }
+  &--sirve { border-left-color: var(--chip-cobalt-700); }
+  &--descartada { border-left-color: var(--chip-warning); }
+
+  /* En tablet la razón baja a su propia línea, a todo el ancho. */
+  @include bp.down('md') {
+    grid-template-columns: auto 1fr;
+
+    &__razon { grid-column: 1 / -1; }
+  }
+}

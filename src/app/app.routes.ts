@@ -176,6 +176,17 @@ export const routes: Routes = [
       import('./pages/componentes/inputs/inputs.component').then(m => m.InputsComponent),
   },
   {
+    path: 'componentes/panel-sesion',
+    data: {
+      breadcrumb: [
+        { label: 'Componentes', icon: 'pi pi-box', routerLink: '/componentes/data-table' },
+        { label: 'Avatar y panel desplegable' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/componentes/panel-sesion/panel-sesion.component').then(m => m.PanelSesionComponent),
+  },
+  {
     path: 'tokens',
     data: {
       breadcrumb: [
@@ -371,6 +382,17 @@ export const routes: Routes = [
     },
     loadComponent: () =>
       import('./pages/pantallas/propuesta-diseno/propuesta-diseno.component').then(m => m.PropuestaDisenoComponent),
+  },
+  {
+    path: 'pantallas/propuesta-datos-usuario',
+    data: {
+      breadcrumb: [
+        { label: 'Pantallas', icon: 'pi pi-th-large', routerLink: '/pantallas/correos' },
+        { label: 'Datos de usuario en el cabezote' },
+      ],
+    },
+    loadComponent: () =>
+      import('./pages/pantallas/propuesta-datos-usuario/propuesta-datos-usuario.component').then(m => m.PropuestaDatosUsuarioComponent),
   },
   {
     path: 'pantallas/parametrizacion-listas',

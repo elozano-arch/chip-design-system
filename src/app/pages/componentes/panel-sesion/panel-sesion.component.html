@@ -1,0 +1,146 @@
+<main class="ds-main" role="main">
+  <app-breadcrumb />
+
+  <!-- HEADER -->
+  <div class="ds-page-header">
+    <i class="pi pi-user ds-page-header__icon" aria-hidden="true"></i>
+    <div>
+      <h1 class="ds-page-header__title">Avatar y panel desplegable</h1>
+      <p class="ds-page-header__subtitle">
+        Dos piezas que salieron de la propuesta de datos de usuario en el cabezote:
+        el <strong>avatar de iniciales</strong>, que estaba duplicado en cinco lugares
+        con los mismos valores, y el <strong>panel desplegable</strong>
+        (<code>p-popover</code>), que antes no se usaba en el proyecto.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════════ AVATAR ══════════ -->
+  <section class="ds-section" aria-labelledby="ps-av">
+    <h2 id="ps-av" class="ds-section__title">Avatar de iniciales</h2>
+    <p class="cmp-variant__desc">
+      Círculo cobalto con las iniciales. Tres tamaños sobre la escala de 8px — no crear otros.
+      Vive en <code>src/styles.scss</code>, así que no hay que importar nada.
+    </p>
+
+    <table class="ds-umbral">
+      <thead>
+        <tr><th>Clase</th><th>Tamaño</th><th>Dónde se usa</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>.chip-avatar</code></td><td>36px</td><td>Cabezote, filas de tabla, listas</td></tr>
+        <tr><td><code>.chip-avatar--lg</code></td><td>48px</td><td>Cabecera de una ficha o card de usuario</td></tr>
+        <tr><td><code>.chip-avatar--xl</code></td><td>64px</td><td>Foco de un panel o pantalla del usuario</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cmp-variant__demo ps-demo-row">
+      <span class="chip-avatar" aria-hidden="true">JM</span>
+      <span class="chip-avatar chip-avatar--lg" aria-hidden="true">JM</span>
+      <span class="chip-avatar chip-avatar--xl" aria-hidden="true">JM</span>
+    </div>
+
+    <p class="ds-note">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Siempre <code>aria-hidden="true"</code>: las iniciales son decorativas. El nombre completo
+      tiene que estar en el texto visible o en el <code>aria-label</code> del contenedor — un lector
+      de pantalla que sólo oye "JM" no sabe de quién se trata.
+    </p>
+
+    <app-code-block [code]="snAvatar" language="markup" />
+  </section>
+
+  <!-- ══════════ PANEL DESPLEGABLE ══════════ -->
+  <section class="cmp-variant" aria-labelledby="ps-pop">
+    <header class="cmp-variant__header">
+      <span class="cmp-variant__id">01</span>
+      <h2 id="ps-pop" class="cmp-variant__title">Panel desplegable de sesión</h2>
+    </header>
+    <p class="cmp-variant__desc">
+      Un <code>p-popover</code> anclado a un botón con el avatar. Agrupa el detalle de la sesión
+      y sus acciones sin ocupar espacio permanente en el cabezote. Pruébelo:
+    </p>
+
+    <div class="cmp-variant__demo ps-demo-row">
+      <button type="button" class="ps-trigger" (click)="panelDemo.toggle($event)"
+        [attr.aria-expanded]="demoAbierto" aria-haspopup="dialog"
+        aria-label="Sesión de Juan Luis Muñoz Martínez. Abrir el menú de la cuenta">
+        <span class="chip-avatar" aria-hidden="true">JM</span>
+        <span class="ps-trigger__name">Juan Luis</span>
+        <i class="pi pi-chevron-down" aria-hidden="true"></i>
+      </button>
+
+      <p-popover #panelDemo styleClass="ps-pop" ariaLabel="Detalle de la sesión"
+        (onShow)="demoAbierto = true" (onHide)="demoAbierto = false">
+        <div class="ps-panel">
+          <span class="chip-avatar chip-avatar--xl" aria-hidden="true">JM</span>
+          <p class="ps-panel__name">Juan Luis Muñoz Martínez</p>
+          <p class="ps-panel__user">JLMUNOZ</p>
+
+          <p-divider />
+
+          <dl class="ps-panel__datos">
+            <dt>Perfil</dt>
+            <dd>Administrador General</dd>
+            <dt>Entidad</dt>
+            <dd>Contaduría General de la Nación</dd>
+          </dl>
+
+          <p-divider />
+
+          <div class="ps-panel__acciones">
+            <p-button label="Mi perfil" icon="pi pi-user"
+              [outlined]="true" severity="secondary" size="small" styleClass="ps-panel__accion" />
+            <p-button label="Cerrar sesión" icon="pi pi-sign-out"
+              [text]="true" severity="secondary" size="small" styleClass="ps-panel__accion" />
+          </div>
+        </div>
+      </p-popover>
+    </div>
+
+    <app-code-block [code]="snPopover" language="markup" />
+    <app-code-block [code]="snTs" language="typescript" />
+  </section>
+
+  <!-- ══════════ REGLAS ══════════ -->
+  <section class="ds-section" aria-labelledby="ps-reglas">
+    <h2 id="ps-reglas" class="ds-section__title">Reglas de uso</h2>
+
+    <table class="ds-umbral">
+      <thead>
+        <tr><th>Regla</th><th>Por qué</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>No poner <code>role="dialog"</code> dentro del popover</td>
+          <td><code>p-popover</code> ya lo aplica en su contenedor. Otro adentro crea un diálogo anidado — la etiqueta va en el input <code>ariaLabel</code></td>
+        </tr>
+        <tr>
+          <td><code>aria-expanded</code> en el botón que abre</td>
+          <td>Sin él, un lector de pantalla no sabe si el panel está abierto. Se sincroniza con <code>(onShow)</code> y <code>(onHide)</code></td>
+        </tr>
+        <tr>
+          <td><code>aria-haspopup="dialog"</code></td>
+          <td>Anuncia qué tipo de cosa se va a abrir antes de activarla</td>
+        </tr>
+        <tr>
+          <td>Acciones con <code>min-height: 44px</code></td>
+          <td>Área táctil mínima (WCAG 2.5.5) — los botones <code>size="small"</code> quedan por debajo</td>
+        </tr>
+        <tr>
+          <td>Estilos con <code>::ng-deep</code> sin <code>:host</code></td>
+          <td>El popover se monta en <code>&lt;body&gt;</code>: colgar de <code>:host</code> no aplica. Prefije la clase para acotar el alcance</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <app-code-block [code]="snEstilos" language="markup" />
+
+    <p class="ds-note">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <strong>Nunca dejar aquí información esencial.</strong> Lo que vive dentro del panel exige un clic
+      para verse. El dato que el usuario necesita para operar —con qué entidad está trabajando, por
+      ejemplo— va visible en la pantalla, no escondido en el desplegable.
+    </p>
+  </section>
+</main>

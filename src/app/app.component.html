@@ -29,7 +29,7 @@
     @if (mostrarSesion() && usuarioSesion(); as sesion) {
       <a class="app-session" routerLink="/pantallas/seguridad/perfil-usuario"
         [attr.aria-label]="'Sesión de ' + sesion.nombreCompleto + ', perfil ' + sesion.perfil + ', entidad ' + sesion.entidad.razonSocial + '. Ir a mi perfil'">
-        <span class="app-session__avatar" aria-hidden="true">{{ sesion.iniciales }}</span>
+        <span class="chip-avatar" aria-hidden="true">{{ sesion.iniciales }}</span>
         <span class="app-session__data">
           <span class="app-session__name">
             {{ sesion.nombreCompleto }}
@@ -120,6 +120,9 @@
           <a routerLink="/componentes/inputs" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-pencil"></i> <span class="app-sidebar__label">Inputs de formulario</span>
           </a>
+          <a routerLink="/componentes/panel-sesion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-user"></i> <span class="app-sidebar__label">Avatar y panel</span>
+          </a>
           <a routerLink="/tree-tables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-sitemap"></i> <span class="app-sidebar__label">Tree-tables</span>
           </a>
@@ -155,6 +158,9 @@
         </a>
         <a routerLink="/componentes/inputs" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Inputs de formulario" tooltipPosition="right">
           <i class="pi pi-pencil"></i> <span class="app-sidebar__label">Inputs de formulario</span>
+        </a>
+        <a routerLink="/componentes/panel-sesion" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Avatar y panel desplegable" tooltipPosition="right">
+          <i class="pi pi-user"></i> <span class="app-sidebar__label">Avatar y panel</span>
         </a>
         <a routerLink="/tree-tables" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Tree-tables" tooltipPosition="right">
           <i class="pi pi-sitemap"></i> <span class="app-sidebar__label">Tree-tables</span>
@@ -344,6 +350,11 @@
       <!-- ══ PROPUESTA DE DISEÑO ══ -->
       <a routerLink="/pantallas/propuesta-diseno" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Propuesta de Diseño' : ''" tooltipPosition="right">
         <i class="pi pi-palette"></i> <span class="app-sidebar__label">Propuesta de Diseño</span>
+      </a>
+
+      <!-- ══ PROPUESTA DATOS DE USUARIO ══ -->
+      <a routerLink="/pantallas/propuesta-datos-usuario" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" (click)="mobileMenuOpen = false" [pTooltip]="sidebarCollapsed ? 'Datos de usuario en el cabezote' : ''" tooltipPosition="right">
+        <i class="pi pi-user"></i> <span class="app-sidebar__label">Datos de usuario</span>
       </a>
 
       <!-- ══ PARAMETRIZACIÓN DE LISTAS ══ -->

@@ -1,0 +1,104 @@
+/* Catálogo · Avatar y panel desplegable.
+   El chrome (ds-main, ds-section, cmp-variant, ds-umbral, ds-note) es global. */
+
+.ps-demo-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Botón que abre el panel. */
+.ps-trigger {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 10px 4px 4px;
+  background: none;
+  border: 1px solid var(--chip-grey-200);
+  border-radius: 999px;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--chip-cobalt-50);
+    border-color: var(--chip-cobalt-300);
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--chip-grey-800);
+    white-space: nowrap;
+  }
+
+  i {
+    font-size: 12px;
+    color: var(--chip-grey-600);
+  }
+}
+
+/* Contenido del panel. */
+.ps-panel {
+  width: min(320px, calc(100vw - 32px));
+  padding: 20px;
+  text-align: center;
+
+  .chip-avatar { margin-bottom: 12px; }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+  }
+
+  &__user {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 2px 0 0;
+  }
+
+  &__datos {
+    margin: 0;
+    text-align: left;
+
+    dt {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--chip-grey-600);
+    }
+
+    dd {
+      margin: 2px 0 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--chip-grey-800);
+    }
+
+    dd:last-child { margin-bottom: 0; }
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* p-popover se monta en <body>: no puede colgar de :host. */
+::ng-deep .ps-pop .p-popover-content { padding: 0; }
+
+::ng-deep .ps-panel__accion {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 44px;
+}
