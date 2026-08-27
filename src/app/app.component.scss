@@ -213,22 +213,6 @@ $sidebar-width-collapsed: 60px;
     outline-offset: 2px;
   }
 
-  &__avatar {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--chip-cobalt-700);
-    color: #ffffff;
-    font-family: var(--font-heading);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-  }
-
   &__data {
     display: flex;
     flex-direction: column;
