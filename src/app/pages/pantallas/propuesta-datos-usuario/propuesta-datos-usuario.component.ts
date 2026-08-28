@@ -153,11 +153,11 @@ export class PropuestaDatosUsuarioComponent {
       d: 'Igual en todos los anchos',
     },
     {
-      criterio: 'Acciones de sesión',
+      criterio: 'Acciones de sesión (perfil, clave, salir)',
       a: 'No las ofrece',
-      b: 'Cerrar sesión, dentro del panel',
+      b: 'Sí, dentro del panel',
       c: 'No las ofrece',
-      d: 'Cerrar sesión, dentro del panel',
+      d: 'Sí, dentro del panel',
     },
     {
       criterio: 'Usuario con varias entidades',
@@ -205,7 +205,7 @@ export class PropuestaDatosUsuarioComponent {
         {
           opcion: 'B · Panel',
           estado: 'recomendada',
-          razon: 'Elegida en la revisión del 27/08/2026. Resuelve la identidad con el patrón que el usuario ya conoce.',
+          razon: 'Resuelve identidad y acciones con el patrón que el usuario ya conoce.',
         },
         {
           opcion: 'C · Dos niveles',
@@ -219,7 +219,7 @@ export class PropuestaDatosUsuarioComponent {
         },
       ],
       conclusion:
-        'B + C. El panel se lleva la identidad y el cierre de sesión; la barra de contexto deja ' +
+        'B + C. El panel se lleva la identidad y las acciones de sesión; la barra de contexto deja ' +
         'el perfil y la entidad a la vista sin abrir nada.',
       puntos: [
         'La entidad se muestra como texto, nunca como control: si no se puede cambiar, no debe parecer clicable.',
