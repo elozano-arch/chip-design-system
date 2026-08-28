@@ -97,13 +97,22 @@
       <article class="dsu-opcion" aria-labelledby="dsu-op-b">
         <header class="dsu-opcion__head">
           <span class="dsu-opcion__num" aria-hidden="true">B</span>
-          <h2 class="dsu-opcion__title" id="dsu-op-b">Avatar con panel desplegable</h2>
-          <p-tag value="Propuesta" severity="info" />
+          <h2 class="dsu-opcion__title" id="dsu-op-b">Nombre con panel desplegable</h2>
+          <p-tag value="Elegida · ajustada" severity="success" />
         </header>
         <p class="dsu-opcion__resumen">
-          El patrón de Gmail. En el cabezote sólo el avatar y el nombre; al abrirlo,
-          un panel con el detalle de la sesión y las acciones. Haga clic en el avatar
-          para probarlo.
+          El patrón de Gmail. En el cabezote sólo el nombre; al abrirlo, un panel con el
+          detalle de la sesión. Haga clic en el nombre para probarlo.
+        </p>
+        <p class="dsu-opcion__ajuste">
+          <i class="pi pi-verified" aria-hidden="true"></i>
+          <span>
+            <strong>Ajustada según la revisión del 27/08/2026.</strong>
+            Se retiró el círculo de iniciales —el nombre y el código de usuario ya identifican
+            a quién está en sesión—, y las acciones <em>Mi perfil</em> y <em>Cambiar contraseña</em>,
+            que hoy no tienen pantalla asociada en CHIP 2.0. El panel queda con el detalle de la
+            sesión y <em>Cerrar sesión</em>.
+          </span>
         </p>
 
         <div class="dsu-mock" [class.dsu-mock--tablet]="vista === 'tablet'">
@@ -113,8 +122,7 @@
               <button type="button" class="dsu-trigger" (click)="panelB.toggle($event)"
                 [attr.aria-expanded]="panelBAbierto" aria-haspopup="dialog"
                 [attr.aria-label]="'Sesión de ' + u.nombreCompleto + '. Abrir el menú de la cuenta'">
-                <span class="chip-avatar" aria-hidden="true">{{ u.iniciales }}</span>
-                <span class="dsu-trigger__name">{{ u.primerNombre }}</span>
+                <span class="dsu-trigger__name">{{ u.nombreCompleto }}</span>
                 <i class="pi pi-chevron-down" aria-hidden="true"></i>
               </button>
               <span class="dsu-bar__a11y" aria-hidden="true">A+ A− Oscuro</span>
@@ -124,7 +132,6 @@
           <p-popover #panelB styleClass="dsu-pop" ariaLabel="Detalle de la sesión"
             (onShow)="panelBAbierto = true" (onHide)="panelBAbierto = false">
             <div class="dsu-pop__body">
-              <span class="chip-avatar chip-avatar--xl" aria-hidden="true">{{ u.iniciales }}</span>
               <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
               <p class="dsu-pop__user">{{ u.usuario }}</p>
 
@@ -142,10 +149,6 @@
               <p-divider />
 
               <div class="dsu-pop__acciones">
-                <p-button label="Mi perfil" icon="pi pi-user"
-                  [outlined]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
-                <p-button label="Cambiar contraseña" icon="pi pi-lock"
-                  [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
                 <p-button label="Cerrar sesión" icon="pi pi-sign-out"
                   [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
               </div>
@@ -159,7 +162,7 @@
             <ul>
               <li><i class="pi pi-check" aria-hidden="true"></i> Libera el cabezote: el co-branding respira.</li>
               <li><i class="pi pi-check" aria-hidden="true"></i> Patrón conocido — el usuario ya sabe dónde buscar.</li>
-              <li><i class="pi pi-check" aria-hidden="true"></i> Da lugar a las acciones de sesión sin inventar una pantalla.</li>
+              <li><i class="pi pi-check" aria-hidden="true"></i> Muestra sólo lo que el sistema tendrá de verdad, sin acciones vacías.</li>
               <li><i class="pi pi-check" aria-hidden="true"></i> Se comporta igual en escritorio, tablet y móvil.</li>
             </ul>
           </div>
@@ -168,6 +171,8 @@
             <ul>
               <li><i class="pi pi-minus" aria-hidden="true"></i> El perfil y la entidad quedan a un clic de distancia.</li>
               <li><i class="pi pi-minus" aria-hidden="true"></i> Si el usuario opera varias entidades, tener que abrir el panel para confirmar cuál está activa es un riesgo de error.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Sin el círculo, en móvil el disparador no tiene una forma compacta a la que reducirse: ocupa el ancho del nombre.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Al quitar <em>Cambiar contraseña</em>, el cambio voluntario a mitad de sesión queda sin ruta — hay que confirmar desde qué menú se llega.</li>
             </ul>
           </div>
         </div>
@@ -191,8 +196,7 @@
             <div class="dsu-bar__brand" aria-hidden="true">Co-branding CGN · CHIP</div>
             <div class="dsu-bar__right">
               <span class="dsu-trigger dsu-trigger--estatico">
-                <span class="chip-avatar" aria-hidden="true">{{ u.iniciales }}</span>
-                <span class="dsu-trigger__name">{{ u.primerNombre }}</span>
+                <span class="dsu-trigger__name">{{ u.nombreCompleto }}</span>
               </span>
               <span class="dsu-bar__a11y" aria-hidden="true">A+ A− Oscuro</span>
             </div>
@@ -256,8 +260,7 @@
               <button type="button" class="dsu-trigger" (click)="panelD.toggle($event)"
                 [attr.aria-expanded]="panelDAbierto" aria-haspopup="dialog"
                 [attr.aria-label]="'Sesión de ' + u.nombreCompleto + ', entidad activa ' + entidadActivaNombre + '. Abrir el menú de la cuenta'">
-                <span class="chip-avatar" aria-hidden="true">{{ u.iniciales }}</span>
-                <span class="dsu-trigger__name">{{ u.primerNombre }}</span>
+                <span class="dsu-trigger__name">{{ u.nombreCompleto }}</span>
                 <span class="dsu-trigger__entidad" aria-hidden="true">{{ entidadActivaSigla }}</span>
                 <i class="pi pi-chevron-down" aria-hidden="true"></i>
               </button>
@@ -268,7 +271,6 @@
           <p-popover #panelD styleClass="dsu-pop" ariaLabel="Detalle de la sesión y entidad activa"
             (onShow)="panelDAbierto = true" (onHide)="panelDAbierto = false">
             <div class="dsu-pop__body">
-              <span class="chip-avatar chip-avatar--xl" aria-hidden="true">{{ u.iniciales }}</span>
               <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
               <p class="dsu-pop__user">{{ u.usuario }}</p>
 
@@ -294,8 +296,6 @@
               <p-divider />
 
               <div class="dsu-pop__acciones">
-                <p-button label="Mi perfil" icon="pi pi-user"
-                  [outlined]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
                 <p-button label="Cerrar sesión" icon="pi pi-sign-out"
                   [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
               </div>
@@ -409,8 +409,7 @@
                 <button type="button" class="dsu-trigger" (click)="panelE1.toggle($event)"
                   [attr.aria-expanded]="panelE1Abierto" aria-haspopup="dialog"
                   [attr.aria-label]="'Sesión de ' + u.nombreCompleto + '. Abrir el menú de la cuenta'">
-                  <span class="chip-avatar" aria-hidden="true">{{ u.iniciales }}</span>
-                  <span class="dsu-trigger__name">{{ u.primerNombre }}</span>
+                  <span class="dsu-trigger__name">{{ u.nombreCompleto }}</span>
                   <i class="pi pi-chevron-down" aria-hidden="true"></i>
                 </button>
                 <span class="dsu-bar__a11y" aria-hidden="true">A+ A− Oscuro</span>
@@ -437,8 +436,7 @@
             <p-popover #panelE1 styleClass="dsu-pop" ariaLabel="Detalle de la sesión"
               (onShow)="panelE1Abierto = true" (onHide)="panelE1Abierto = false">
               <div class="dsu-pop__body">
-                <span class="chip-avatar chip-avatar--xl" aria-hidden="true">{{ u.iniciales }}</span>
-                <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
+                  <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
                 <p class="dsu-pop__user">{{ u.usuario }}</p>
 
                 <p-divider />
@@ -455,10 +453,6 @@
                 <p-divider />
 
                 <div class="dsu-pop__acciones">
-                  <p-button label="Mi perfil" icon="pi pi-user"
-                    [outlined]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
-                  <p-button label="Cambiar contraseña" icon="pi pi-lock"
-                    [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
                   <p-button label="Cerrar sesión" icon="pi pi-sign-out"
                     [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
                 </div>
@@ -473,8 +467,7 @@
                 <button type="button" class="dsu-trigger" (click)="panelE2.toggle($event)"
                   [attr.aria-expanded]="panelE2Abierto" aria-haspopup="dialog"
                   [attr.aria-label]="'Sesión de ' + u.nombreCompleto + ', entidad activa ' + entidadActivaNombre + '. Abrir el menú de la cuenta'">
-                  <span class="chip-avatar" aria-hidden="true">{{ u.iniciales }}</span>
-                  <span class="dsu-trigger__name">{{ u.primerNombre }}</span>
+                  <span class="dsu-trigger__name">{{ u.nombreCompleto }}</span>
                   <span class="dsu-trigger__entidad" aria-hidden="true">{{ entidadActivaSigla }}</span>
                   <i class="pi pi-chevron-down" aria-hidden="true"></i>
                 </button>
@@ -503,8 +496,7 @@
             <p-popover #panelE2 styleClass="dsu-pop" ariaLabel="Detalle de la sesión y entidad activa"
               (onShow)="panelE2Abierto = true" (onHide)="panelE2Abierto = false">
               <div class="dsu-pop__body">
-                <span class="chip-avatar chip-avatar--xl" aria-hidden="true">{{ u.iniciales }}</span>
-                <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
+                  <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
                 <p class="dsu-pop__user">{{ u.usuario }}</p>
 
                 <p-divider />
@@ -529,8 +521,6 @@
                 <p-divider />
 
                 <div class="dsu-pop__acciones">
-                  <p-button label="Mi perfil" icon="pi pi-user"
-                    [outlined]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
                   <p-button label="Cerrar sesión" icon="pi pi-sign-out"
                     [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
                 </div>
