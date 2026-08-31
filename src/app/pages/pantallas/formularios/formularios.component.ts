@@ -878,11 +878,16 @@ export class FormulariosComponent implements OnDestroy {
    * al menos uno, la importación es una reimportación y el diálogo exige
    * confirmación antes de arrancar.
    *
+   * Enviada la categoría la lista queda vacía: el envío cierra el proceso y no
+   * deja información local que reemplazar. El reenvío, entonces, no reimporta
+   * nada — arranca una importación limpia, sin aviso de reemplazo.
+   *
    * Ojo con el alcance: importación y validación local son del contexto, no de
    * la categoría. La categoría sólo entra en la validación central y el envío.
    */
   get formulariosAReimportar(): Formulario[] {
     if (this.escenarioImport === 'limpio') return [];
+    if (this.categoriaYaEnviada) return [];
     return this.filteredFormularios.filter(f => f.estado !== null);
   }
 
@@ -1104,8 +1109,10 @@ export class FormulariosComponent implements OnDestroy {
   /**
    * Botón "Continuar" / "Importar". La justificación del reenvío va primero y
    * no necesita archivo: el contexto ya dijo que la categoría se envió. Con eso
-   * resuelto se pide el archivo y, si el contexto ya tiene información, se
-   * avisa del reemplazo antes de arrancar.
+   * resuelto se pide el archivo y arranca el proceso.
+   *
+   * El aviso de reemplazo sólo aparece cuando hay información local que pisar,
+   * que nunca es el caso tras un reenvío: ahí la importación es limpia.
    */
   confirmImport() {
     if (this.importPaso === 'iniciado') return;
