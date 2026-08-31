@@ -549,7 +549,7 @@
 }
 
 :host ::ng-deep .dsu-tabla {
-  min-width: 900px;
+  min-width: 1080px;
 
   /* Reparto fijo: sin esto el navegador reparte por contenido y una celda
      larga estrecha a las demás, que entonces envuelven sin necesidad. */
@@ -580,11 +580,11 @@
     font-weight: 700;
     color: var(--chip-grey-800);
     text-align: left;
-    width: 24%;
+    width: 20%;
   }
 
   thead th:not(:first-child),
-  tbody td { width: 19%; }
+  tbody td { width: 16%; }
 }
 
 /* ── Los dos escenarios ─────────────────────────────────────── */
@@ -781,5 +781,108 @@
     grid-template-columns: auto 1fr;
 
     &__razon { grid-column: 1 / -1; }
+  }
+}
+
+/* ── Opción E — la que pidió CGN ─────────────────────────────── */
+.dsu-opcion--pedida {
+  border-color: var(--chip-success);
+  border-width: 2px;
+}
+
+/* Qué queda visible / qué se retiró. */
+.dsu-esp {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @include bp.down('md') { grid-template-columns: 1fr; }
+
+  &__col {
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--chip-grey-50);
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+      margin: 0 0 10px;
+
+      i { color: var(--chip-cobalt-700); }
+    }
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--chip-grey-700);
+
+      i {
+        flex-shrink: 0;
+        margin-top: 3px;
+        font-size: 11px;
+        color: var(--chip-grey-600);
+      }
+    }
+  }
+}
+
+/* Rótulo de cada caso de la opción E. */
+.dsu-caso {
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--chip-grey-700);
+  margin: 0 0 8px;
+}
+
+/* Disparador de dos líneas: código arriba, entidad abajo. */
+.dsu-trigger--e {
+  gap: 12px;
+  padding: 6px 14px;
+  text-align: left;
+
+  .dsu-trigger__stack {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.35;
+  }
+
+  .dsu-trigger__code {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: var(--chip-cobalt-700);
+  }
+
+  /* Longitud máxima fija: lo que no cabe se corta con puntos suspensivos.
+     El nombre completo no se pierde — aparece al desplegar el panel y en el
+     aria-label del botón, así que no depende del hover. */
+  .dsu-trigger__entidad-nombre {
+    max-width: 230px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--chip-grey-700);
   }
 }

@@ -4,12 +4,13 @@
   <header class="dsu-header">
     <h1 class="dsu-header__title">Datos del usuario en el cabezote</h1>
     <p class="dsu-header__desc">
-      Cuatro formas de mostrar quién está en sesión y con qué entidad trabaja.
+      Cinco formas de mostrar quién está en sesión y con qué entidad trabaja.
       La opción A es la que está implementada hoy; B, C y D son las alternativas
-      a comparar. Los mockups son simulaciones del cabezote: se pueden abrir y
-      probar, pero el cabezote real no cambia hasta que se elija una. Al final,
-      la decisión resuelta en <strong>dos escenarios</strong>, según si un usuario
-      puede operar una sola entidad o varias.
+      que se presentaron, y <strong>E es la que CGN pidió el 29/08/2026</strong>.
+      Los mockups son simulaciones del cabezote: se pueden abrir y probar, pero el
+      cabezote real no cambia hasta que se apruebe. Al final, la decisión resuelta en
+      <strong>dos escenarios</strong>, según si un usuario puede operar una sola
+      entidad o varias.
     </p>
   </header>
 
@@ -322,20 +323,162 @@
           </div>
         </div>
       </article>
+
+      <!-- ══════════════ OPCIÓN E — código de usuario y entidad ══════════════ -->
+      <article class="dsu-opcion dsu-opcion--pedida" aria-labelledby="dsu-op-e">
+        <header class="dsu-opcion__head">
+          <span class="dsu-opcion__num" aria-hidden="true">E</span>
+          <h2 class="dsu-opcion__title" id="dsu-op-e">Código de usuario y entidad</h2>
+          <p-tag value="Pedida por CGN" severity="success" />
+        </header>
+        <p class="dsu-opcion__resumen">
+          Lo que quedó acordado el 29/08/2026. En el cabezote, dos líneas: el
+          <strong>código de usuario</strong> arriba y el <strong>nombre de la entidad</strong> abajo.
+          Al desplegar, el detalle completo. Sin círculo de iniciales, sin último acceso y sin
+          acciones que hoy no tienen pantalla.
+        </p>
+
+        <div class="dsu-esp" role="region" aria-label="Qué se retiró y por qué">
+          <div class="dsu-esp__col">
+            <h3><i class="pi pi-eye" aria-hidden="true"></i> Queda visible en el cabezote</h3>
+            <ul>
+              <li><i class="pi pi-check" aria-hidden="true"></i> Código de usuario — para que salga en los pantallazos.</li>
+              <li><i class="pi pi-check" aria-hidden="true"></i> Nombre de la entidad, truncado si es largo.</li>
+            </ul>
+          </div>
+          <div class="dsu-esp__col">
+            <h3><i class="pi pi-times-circle" aria-hidden="true"></i> Se retiró</h3>
+            <ul>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> El círculo de iniciales, en el cabezote y en el panel.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Último acceso.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Mi perfil y Cambiar contraseña — sin pantalla asociada hoy.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Caso 1: entidad con nombre corto -->
+        <p class="dsu-caso">Entidad con nombre corto</p>
+        <div class="dsu-mock" [class.dsu-mock--tablet]="vista === 'tablet'">
+          <div class="dsu-bar">
+            <div class="dsu-bar__brand" aria-hidden="true">Co-branding CGN · CHIP</div>
+            <div class="dsu-bar__right">
+              <button type="button" class="dsu-trigger dsu-trigger--e" (click)="panelE.toggle($event)"
+                [attr.aria-expanded]="panelEAbierto" aria-haspopup="dialog"
+                [attr.aria-label]="'Sesión de ' + u.usuario + ', entidad ' + u.entidad.razonSocial + '. Abrir el menú de la cuenta'">
+                <span class="dsu-trigger__stack">
+                  <span class="dsu-trigger__code">{{ u.usuario }}</span>
+                  <span class="dsu-trigger__entidad-nombre">{{ u.entidad.razonSocial }}</span>
+                </span>
+                <i class="pi pi-chevron-down" aria-hidden="true"></i>
+              </button>
+              <span class="dsu-bar__a11y" aria-hidden="true">A+ A− Oscuro</span>
+            </div>
+          </div>
+
+          <p-popover #panelE styleClass="dsu-pop" ariaLabel="Detalle de la sesión"
+            (onShow)="panelEAbierto = true" (onHide)="panelEAbierto = false">
+            <div class="dsu-pop__body">
+              <p class="dsu-pop__name">{{ u.nombreCompleto }}</p>
+              <p class="dsu-pop__user">{{ u.usuario }}</p>
+
+              <p-divider />
+
+              <dl class="dsu-pop__datos">
+                <dt>Perfil</dt>
+                <dd>{{ u.perfil }}</dd>
+                <dt>Entidad</dt>
+                <dd>{{ u.entidad.razonSocial }}</dd>
+              </dl>
+
+              <p-divider />
+
+              <div class="dsu-pop__acciones">
+                <p-button label="Cerrar sesión" icon="pi pi-sign-out"
+                  [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
+              </div>
+            </div>
+          </p-popover>
+        </div>
+
+        <!-- Caso 2: entidad con nombre largo — el que obliga a truncar -->
+        <p class="dsu-caso">Entidad con nombre largo — se trunca en el cabezote y se ve completo al desplegar</p>
+        <div class="dsu-mock" [class.dsu-mock--tablet]="vista === 'tablet'">
+          <div class="dsu-bar">
+            <div class="dsu-bar__brand" aria-hidden="true">Co-branding CGN · CHIP</div>
+            <div class="dsu-bar__right">
+              <button type="button" class="dsu-trigger dsu-trigger--e" (click)="panelELargo.toggle($event)"
+                [attr.aria-expanded]="panelELargoAbierto" aria-haspopup="dialog"
+                [attr.aria-label]="'Sesión de ' + ejemploLargo.usuario + ', entidad ' + ejemploLargo.entidad + '. Abrir el menú de la cuenta'">
+                <span class="dsu-trigger__stack">
+                  <span class="dsu-trigger__code">{{ ejemploLargo.usuario }}</span>
+                  <span class="dsu-trigger__entidad-nombre">{{ ejemploLargo.entidad }}</span>
+                </span>
+                <i class="pi pi-chevron-down" aria-hidden="true"></i>
+              </button>
+              <span class="dsu-bar__a11y" aria-hidden="true">A+ A− Oscuro</span>
+            </div>
+          </div>
+
+          <p-popover #panelELargo styleClass="dsu-pop" ariaLabel="Detalle de la sesión"
+            (onShow)="panelELargoAbierto = true" (onHide)="panelELargoAbierto = false">
+            <div class="dsu-pop__body">
+              <p class="dsu-pop__name">{{ ejemploLargo.nombreCompleto }}</p>
+              <p class="dsu-pop__user">{{ ejemploLargo.usuario }}</p>
+
+              <p-divider />
+
+              <dl class="dsu-pop__datos">
+                <dt>Perfil</dt>
+                <dd>{{ ejemploLargo.perfil }}</dd>
+                <dt>Entidad</dt>
+                <dd>{{ ejemploLargo.entidad }}</dd>
+              </dl>
+
+              <p-divider />
+
+              <div class="dsu-pop__acciones">
+                <p-button label="Cerrar sesión" icon="pi pi-sign-out"
+                  [text]="true" severity="secondary" size="small" styleClass="dsu-pop__accion" />
+              </div>
+            </div>
+          </p-popover>
+        </div>
+
+        <div class="dsu-balance">
+          <div class="dsu-balance__col dsu-balance__col--pro">
+            <h3><i class="pi pi-check-circle" aria-hidden="true"></i> A favor</h3>
+            <ul>
+              <li><i class="pi pi-check" aria-hidden="true"></i> La entidad queda visible sin abrir nada — resuelve lo mismo que la barra de contexto de C, sin sumar una franja.</li>
+              <li><i class="pi pi-check" aria-hidden="true"></i> El código de usuario sale en cualquier pantallazo, que era el punto de la Dra. Sandra.</li>
+              <li><i class="pi pi-check" aria-hidden="true"></i> El nombre largo se resuelve donde hay espacio: dentro del panel.</li>
+              <li><i class="pi pi-check" aria-hidden="true"></i> Muestra sólo lo que el sistema tendrá de verdad, sin acciones vacías.</li>
+            </ul>
+          </div>
+          <div class="dsu-balance__col dsu-balance__col--contra">
+            <h3><i class="pi pi-exclamation-circle" aria-hidden="true"></i> A tener en cuenta</h3>
+            <ul>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> El perfil queda a un clic: en el cabezote sólo van código y entidad.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Sin el círculo no hay forma compacta a la que reducirse en móvil; el disparador ocupa el ancho del bloque de dos líneas.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Al quitar <em>Cambiar contraseña</em>, el cambio voluntario a mitad de sesión queda sin ruta — falta confirmar desde qué menú se llega.</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
     </section>
 
     <!-- ══════════════ COMPARATIVA ══════════════ -->
     <section class="dsu-comparativa" aria-label="Comparativa de las cuatro opciones">
       <h2 class="dsu-section-title">
         <i class="pi pi-table" aria-hidden="true"></i>
-        Las cuatro, criterio por criterio
+        Las cinco, criterio por criterio
       </h2>
 
       <div class="dsu-tabla-scroll">
         <p-table [value]="comparativa" [stripedRows]="true" [rowHover]="true" styleClass="dsu-tabla">
           <ng-template #caption>
             <span class="sr-only">
-              Comparativa de las cuatro propuestas para mostrar los datos del usuario en el cabezote.
+              Comparativa de las cinco propuestas para mostrar los datos del usuario en el cabezote.
             </span>
           </ng-template>
           <ng-template #header>
@@ -345,6 +488,7 @@
               <th scope="col">B · Panel</th>
               <th scope="col">C · Dos niveles</th>
               <th scope="col">D · Panel con entidad</th>
+              <th scope="col">E · Código y entidad</th>
             </tr>
           </ng-template>
           <ng-template #body let-fila>
@@ -354,6 +498,7 @@
               <td>{{ fila.b }}</td>
               <td>{{ fila.c }}</td>
               <td>{{ fila.d }}</td>
+              <td>{{ fila.e }}</td>
             </tr>
           </ng-template>
         </p-table>
