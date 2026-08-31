@@ -54,6 +54,7 @@ interface FilaComparativa {
   b: string;
   c: string;
   d: string;
+  e: string;
 }
 
 /** Entidad del selector de la opción D (usuario con varias entidades). */
@@ -129,6 +130,21 @@ export class PropuestaDatosUsuarioComponent {
       .toUpperCase();
   }
 
+  /**
+   * Segundo ejemplo de la opción E: entidad con razón social larga, que es
+   * el caso que obliga a truncar. El texto es el que trajo CGN.
+   */
+  readonly ejemploLargo = {
+    usuario: 'ESPCOLOSO8627',
+    nombreCompleto: 'Mónica Beltrán Salazar',
+    perfil: 'Responsable de Reporte',
+    entidad: 'E.S.P. EMPRESA MUNICIPAL DE ACUEDUCTO, ALCANTARILLADO Y ASEO',
+  };
+
+  /** Estado de los paneles de la opción E (aria-expanded de cada disparador). */
+  panelEAbierto = false;
+  panelELargoAbierto = false;
+
   // ─── Tabla comparativa ──────────────────────────────────────────────────
   readonly comparativa: FilaComparativa[] = [
     {
@@ -137,6 +153,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'Bajo — avatar y nombre',
       c: 'Medio — se reparte en dos filas',
       d: 'Bajo — avatar y sigla',
+      e: 'Bajo — dos líneas compactas',
     },
     {
       criterio: 'Perfil y entidad visibles sin hacer clic',
@@ -144,6 +161,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'No — hay que abrir el panel',
       c: 'Sí',
       d: 'Sólo la entidad',
+      e: 'La entidad sí; el perfil no',
     },
     {
       criterio: 'Qué pasa en tablet',
@@ -151,6 +169,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'Igual en todos los anchos',
       c: 'La barra de contexto se mantiene',
       d: 'Igual en todos los anchos',
+      e: 'Igual en todos los anchos',
     },
     {
       criterio: 'Acciones de sesión (perfil, clave, salir)',
@@ -158,6 +177,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'Sí, dentro del panel',
       c: 'No las ofrece',
       d: 'Sí, dentro del panel',
+      e: 'Sólo cerrar sesión',
     },
     {
       criterio: 'Usuario con varias entidades',
@@ -165,6 +185,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'No lo resuelve',
       c: 'No lo resuelve',
       d: 'Sí — se cambia desde el panel',
+      e: 'Muestra cuál, pero no la cambia',
     },
     {
       criterio: 'Familiaridad para el usuario',
@@ -172,6 +193,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'Alta — es el patrón de Gmail',
       c: 'Media',
       d: 'Alta',
+      e: 'Alta — desplegable conocido',
     },
     {
       criterio: 'Esfuerzo de desarrollo',
@@ -179,6 +201,7 @@ export class PropuestaDatosUsuarioComponent {
       b: 'Bajo',
       c: 'Medio — toca la barra de miga de pan',
       d: 'Alto — necesita servicio de cambio de entidad',
+      e: 'Bajo',
     },
   ];
 
@@ -217,18 +240,23 @@ export class PropuestaDatosUsuarioComponent {
           estado: 'descartada',
           razon: 'El selector no tendría nada que seleccionar.',
         },
+        {
+          opcion: 'E · Código y entidad',
+          estado: 'recomendada',
+          razon: 'Es la que pidió CGN, y deja la entidad visible en el cabezote sin necesitar una barra aparte.',
+        },
       ],
       conclusion:
-        'B + C. El panel se lleva la identidad y las acciones de sesión; la barra de contexto deja ' +
-        'el perfil y la entidad a la vista sin abrir nada.',
+        'E sola. Al subir la entidad al cabezote, absorbe lo que resolvía la barra de contexto de C: ' +
+        'el usuario ve con qué entidad trabaja sin abrir nada y sin sumar una franja a la pantalla.',
       puntos: [
         'La entidad se muestra como texto, nunca como control: si no se puede cambiar, no debe parecer clicable.',
         'Es el escenario de menor esfuerzo — no toca backend.',
-        'La barra de contexto ya tiene dónde vivir: se suma a la miga de pan que todas las pantallas usan.',
+        'El código de usuario queda visible en el cabezote, que es lo que pidió la Dra. Sandra para que salga en los pantallazos.',
       ],
       riesgo:
-        'Si más adelante aparece el usuario con varias entidades, hay que volver al cabezote: la barra ' +
-        'de contexto se conserva, pero la etiqueta de entidad tiene que convertirse en control.',
+        'Si más adelante aparece el usuario con varias entidades, hay que volver al cabezote: el sitio ' +
+        'donde hoy va la entidad se conserva, pero la etiqueta tiene que convertirse en control.',
     },
     {
       id: 'varias',
@@ -257,10 +285,15 @@ export class PropuestaDatosUsuarioComponent {
           estado: 'recomendada',
           razon: 'Único que convierte la entidad en control y hace visible el cambio.',
         },
+        {
+          opcion: 'E · Código y entidad',
+          estado: 'sirve',
+          razon: 'Deja la entidad activa siempre a la vista, pero no permite cambiarla: es la base sobre la que se monta D.',
+        },
       ],
       conclusion:
-        'D + C. El selector dentro del panel para cambiar de entidad; la barra de contexto para que la ' +
-        'entidad activa nunca quede oculta detrás de un clic.',
+        'E + el selector de D. El cabezote de E ya muestra la entidad activa; sólo falta que sea un control ' +
+        'y no una etiqueta, con el cambio dentro del panel.',
       puntos: [
         'El cambio de entidad debe pedir confirmación: recarga el trabajo en curso.',
         'La barra de contexto anuncia el cambio con aria-live, para que no pase inadvertido a lectores de pantalla.',
