@@ -10,10 +10,14 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { MenuModule } from 'primeng/menu';
 import { TabsModule } from 'primeng/tabs';
 import { DialogModule } from 'primeng/dialog';
-import { MessageService, MenuItem } from 'primeng/api';
+import { MessageService } from 'primeng/api';
+
+import {
+  BotonDescargarComponent,
+  DownloadFormatId,
+} from '../../../../components/boton-descargar/boton-descargar.component';
 
 /* ── Protocolo de Importación — sub-vista del Paso 2 ── */
 type ProtocoloTipoDato = 'Numérico' | 'Texto' | 'Fecha' | 'Lista';
@@ -65,17 +69,6 @@ interface ProtocoloLista {
   valores: ProtocoloRegistro[];
 }
 
-/** Formatos soportados por el botón estándar "Descargar". */
-type DownloadFormatId = 'csv' | 'xlsx' | 'pdf' | 'txt';
-
-interface DownloadFormat {
-  label: string;
-  icon: string;
-  format: DownloadFormatId;
-  /** Texto de tooltip con restricciones/características del formato. */
-  info: string;
-}
-
 @Component({
   selector: 'app-protocolo-importacion',
   standalone: true,
@@ -90,9 +83,9 @@ interface DownloadFormat {
     TooltipModule,
     IconFieldModule,
     InputIconModule,
-    MenuModule,
     TabsModule,
     DialogModule,
+    BotonDescargarComponent,
   ],
   // Sin providers: el MessageService lo provee la pantalla de formularios,
   // que es la que tiene el <p-toast>. Uno propio dejaría los toasts mudos.
@@ -513,46 +506,6 @@ export class ProtocoloImportacionComponent {
       life: 3000,
     });
   }
-
-  // ── Botón "Descargar" estándar: formatos disponibles + menús por destino ──
-  readonly downloadFormats: DownloadFormat[] = [
-    { label: 'CSV — Valores separados por comas', icon: 'pi pi-file', format: 'csv',
-      info: 'Sin límite de filas. Encoding UTF-8. Encabezados incluidos.' },
-    { label: 'Excel (XLSX)', icon: 'pi pi-file-excel', format: 'xlsx',
-      info: 'Máximo 50 MB por archivo. Hasta 1.048.576 filas por hoja. Múltiples hojas permitidas.' },
-    { label: 'PDF', icon: 'pi pi-file-pdf', format: 'pdf',
-      info: 'Máximo 10.000 líneas por archivo. División automática si excede el límite.' },
-    { label: 'TXT', icon: 'pi pi-file', format: 'txt',
-      info: 'Sin límite de filas. Encoding UTF-8. Formato de texto plano.' },
-  ];
-
-  // Para evitar que PrimeNG renderice un tooltip nativo sobre el item entero
-  // y duplique al del icono `?`, el texto del info viaja en `data` (campo
-  // libre del MenuItem) y se enlaza con [pTooltip] sólo sobre el icono.
-
-  /** MenuItem[] para el botón "Descargar" del tab Conceptos. */
-  readonly downloadItemsConceptos: MenuItem[] = this.downloadFormats.map(f => ({
-    label: f.label,
-    icon: f.icon,
-    command: () => this.descargarConceptos(f.format),
-    data: { info: f.info },
-  }));
-
-  /** MenuItem[] para el botón "Descargar" del modal Ver Lista. */
-  readonly downloadItemsLista: MenuItem[] = this.downloadFormats.map(f => ({
-    label: f.label,
-    icon: f.icon,
-    command: () => this.descargarLista(f.format),
-    data: { info: f.info },
-  }));
-
-  /** MenuItem[] para el botón "Descargar protocolo" del header del protocolo. */
-  readonly downloadItemsProtocolo: MenuItem[] = this.downloadFormats.map(f => ({
-    label: f.label,
-    icon: f.icon,
-    command: () => this.descargarProtocolo(f.format),
-    data: { info: f.info },
-  }));
 
   private generarConceptosProtocolo(): ProtocoloRegistro[] {
     return [

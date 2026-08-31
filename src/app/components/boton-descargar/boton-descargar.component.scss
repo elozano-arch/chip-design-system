@@ -1,0 +1,98 @@
+@use 'breakpoints' as bp;
+
+:host { display: inline-flex; }
+
+/* El trigger es un p-button con template content: icono + label + chevron. */
+:host ::ng-deep .dl-trigger {
+  .p-button {
+    gap: 8px;
+
+    .pi-download { font-size: 14px; }
+  }
+}
+
+.dl-trigger__chevron {
+  font-size: 0.75em;
+  opacity: 0.75;
+  margin-left: 2px;
+}
+
+/* Menu popup que aparece al clickear el trigger. */
+:host ::ng-deep .dl-menu {
+  &.p-menu {
+    min-width: 280px;
+    padding: 6px 0;
+  }
+
+  .p-menu-list { padding: 0; }
+  .p-menuitem { padding: 0; }
+
+  /* Anulamos el padding default del item link porque renderizamos un <button>
+     con nuestros propios paddings (custom template). */
+  .p-menuitem-link,
+  .p-menuitem-content {
+    padding: 0;
+    background: transparent;
+  }
+}
+
+/* El item sí lo renderiza nuestra plantilla, así que lleva el atributo de
+   encapsulación y la regla lo alcanza aunque el menú viva en <body>. */
+.dl-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--chip-grey-800);
+  text-align: left;
+  transition: background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--chip-cobalt-50);
+    color: var(--chip-cobalt-700);
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--chip-cobalt-500);
+    outline-offset: -2px;
+  }
+
+  &__icon {
+    font-size: 16px;
+    color: var(--chip-cobalt-700);
+    flex-shrink: 0;
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__info {
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--chip-grey-400);
+    cursor: help;
+    transition: color 0.15s;
+
+    &:hover { color: var(--chip-cobalt-700); }
+  }
+}
+
+/* P3 · Touch targets ≥44px en tablet y abajo (WCAG 2.5.5 / Kit UI). */
+@include bp.down('lg') {
+  :host ::ng-deep .dl-trigger { min-height: bp.$chip-touch-target; }
+  .dl-item { min-height: bp.$chip-touch-target; }
+}
