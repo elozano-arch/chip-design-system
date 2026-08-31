@@ -1,0 +1,24 @@
+<p-button [outlined]="true" severity="secondary" [size]="size"
+  styleClass="dl-trigger"
+  [ariaLabel]="ariaLabel"
+  (onClick)="dlMenu.toggle($event)">
+  <ng-template #content>
+    <i class="pi pi-download" aria-hidden="true"></i>
+    <span>{{ label }}</span>
+    <i class="pi pi-chevron-down dl-trigger__chevron" aria-hidden="true"></i>
+  </ng-template>
+</p-button>
+
+<p-menu #dlMenu [model]="items" [popup]="true" appendTo="body"
+  styleClass="dl-menu">
+  <ng-template #item let-item>
+    <button type="button" class="dl-item" (click)="item.command()">
+      <i [class]="item.icon" class="dl-item__icon" aria-hidden="true"></i>
+      <span class="dl-item__label">{{ item.label }}</span>
+      <i class="pi pi-info-circle dl-item__info"
+        [pTooltip]="item.data?.info"
+        tooltipPosition="left"
+        aria-hidden="true"></i>
+    </button>
+  </ng-template>
+</p-menu>

@@ -33,29 +33,9 @@
     </div>
 
     <div class="prot-info__actions">
-      <p-button [outlined]="true" severity="secondary"
-        styleClass="prot-download-trigger"
+      <app-boton-descargar label="Descargar protocolo"
         ariaLabel="Descargar protocolo en distintos formatos"
-        (onClick)="dlMenuProtocolo.toggle($event)">
-        <ng-template #content>
-          <i class="pi pi-download" aria-hidden="true"></i>
-          <span>Descargar protocolo</span>
-          <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
-        </ng-template>
-      </p-button>
-      <p-menu #dlMenuProtocolo [model]="downloadItemsProtocolo" [popup]="true" appendTo="body"
-        styleClass="prot-download-menu">
-        <ng-template #item let-item>
-          <button type="button" class="prot-download-item" (click)="item.command()">
-            <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
-            <span class="prot-download-item__label">{{ item.label }}</span>
-            <i class="pi pi-info-circle prot-download-item__info"
-              [pTooltip]="item.data?.info"
-              tooltipPosition="left"
-              aria-hidden="true"></i>
-          </button>
-        </ng-template>
-      </p-menu>
+        (formato)="descargarProtocolo($event)" />
     </div>
   </div>
 
@@ -143,29 +123,9 @@
           <span class="prot-conceptos__count" aria-live="polite">
             {{ conceptosFiltrados().length }} de {{ listas['CONCEPTOS'].valores.length }} conceptos
           </span>
-          <p-button [outlined]="true" severity="secondary" size="small"
-            styleClass="prot-download-trigger"
+          <app-boton-descargar size="small"
             ariaLabel="Descargar conceptos en distintos formatos"
-            (onClick)="dlMenuConceptos.toggle($event)">
-            <ng-template #content>
-              <i class="pi pi-download" aria-hidden="true"></i>
-              <span>Descargar</span>
-              <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
-            </ng-template>
-          </p-button>
-          <p-menu #dlMenuConceptos [model]="downloadItemsConceptos" [popup]="true" appendTo="body"
-            styleClass="prot-download-menu">
-            <ng-template #item let-item>
-              <button type="button" class="prot-download-item" (click)="item.command()">
-                <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
-                <span class="prot-download-item__label">{{ item.label }}</span>
-                <i class="pi pi-info-circle prot-download-item__info"
-                  [pTooltip]="item.data?.info"
-                  tooltipPosition="left"
-                  aria-hidden="true"></i>
-              </button>
-            </ng-template>
-          </p-menu>
+            (formato)="descargarConceptos($event)" />
         </div>
 
         <div class="form-table-scroll">
@@ -436,27 +396,8 @@
   <ng-template #footer>
     <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
       (onClick)="cerrarLista()" />
-    <p-button styleClass="prot-download-trigger"
+    <app-boton-descargar
       ariaLabel="Descargar lista en distintos formatos"
-      (onClick)="dlMenuLista.toggle($event)">
-      <ng-template #content>
-        <i class="pi pi-download" aria-hidden="true"></i>
-        <span>Descargar</span>
-        <i class="pi pi-chevron-down prot-download-trigger__chevron" aria-hidden="true"></i>
-      </ng-template>
-    </p-button>
-    <p-menu #dlMenuLista [model]="downloadItemsLista" [popup]="true" appendTo="body"
-      styleClass="prot-download-menu">
-      <ng-template #item let-item>
-        <button type="button" class="prot-download-item" (click)="item.command()">
-          <i [class]="item.icon" class="prot-download-item__icon" aria-hidden="true"></i>
-          <span class="prot-download-item__label">{{ item.label }}</span>
-          <i class="pi pi-info-circle prot-download-item__info"
-            [pTooltip]="item.data?.info"
-            tooltipPosition="left"
-            aria-hidden="true"></i>
-        </button>
-      </ng-template>
-    </p-menu>
+      (formato)="descargarLista($event)" />
   </ng-template>
 </p-dialog>

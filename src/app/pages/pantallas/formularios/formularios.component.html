@@ -474,14 +474,29 @@
             }
           </dl>
 
+          <!-- Simulación (demo): los dos patrones posibles para diligenciar la
+               justificación. En producción se implementa uno solo; aquí se
+               pueden comparar sin salir de la pantalla. -->
+          <div class="form-wizard__demo-switch" role="group"
+            aria-label="Simulación del patrón de justificación">
+            <i class="pi pi-flag" aria-hidden="true"></i>
+            <label for="ce-modo-just">Diligenciar justificación
+              <span class="form-wizard__demo-tag">demostración</span></label>
+            <p-select inputId="ce-modo-just" [options]="modoJustificacionOptions"
+              [(ngModel)]="modoJustificacion"
+              appendTo="body" styleClass="form-wizard__demo-select" />
+          </div>
+
           <!-- 2 · Deficiencias del formulario. Va fuera de .form-estado-screen
                (max-width 640px): la tabla necesita ancho completo y su propio
                scroll horizontal. -->
           <app-deficiencias-envio
+            [modo]="modoJustificacion"
             [formulario]="controlEnvioFormulario"
             [visibles]="deficienciasVisibles"
             [total]="deficienciasEnvio.length"
             [alcance]="alcanceDeficiencias"
+            [ultimoProcesoId]="ultimoProcesoId"
             [resumen]="resumenDeficiencias"
             (alcanceChange)="cambiarAlcanceDeficiencias($event)" />
         }
@@ -552,15 +567,15 @@
         </div>
       </div>
     } @else if (importPaso === 'justificacion') {
-      <!-- Reenvío: la categoría ya se reportó a la CGN, así que volver a
-           importar modifica información reportada y hay que motivarlo. -->
+      <!-- Reenvío: el último envío del contexto fue aceptado, así que volver
+           a importar modifica información ya aceptada y hay que motivarlo. -->
       <div class="form-import-warn" role="alert">
         <i class="pi pi-question-circle" aria-hidden="true"></i>
         <div class="form-import-warn__body">
-          <strong>Está modificando información ya reportada</strong>
+          <strong>Está modificando información ya aceptada</strong>
           <p>
-            La categoría <strong>{{ categoriaLabel }}</strong> ya fue enviada a la
-            CGN. Justifique el motivo de su reenvío para continuar.
+            El último envío para el contexto seleccionado fue aceptado.
+            Justifique el motivo de su reenvío para continuar.
           </p>
         </div>
       </div>
@@ -626,12 +641,10 @@
         <div class="form-import-warn__body">
           <strong>Hay formularios con información para el contexto seleccionado</strong>
           <p>
-            De lo que trae <span class="form-import-done__file">{{ importFileName }}</span>,
-            {{ formulariosAReimportar.length }}
-            {{ formulariosAReimportar.length === 1 ? 'formulario ya cuenta' : 'formularios ya cuentan' }}
-            con información para
-            <strong>{{ entidadLabel }} · {{ selectedAnio }} · {{ periodoLabel }}</strong>.
-            Al continuar, esa información se reemplaza y no se puede recuperar.
+            De los que trae <span class="form-import-done__file">{{ importFileName }}</span>,
+            <strong>{{ formulariosAReimportar.length }}</strong>
+            {{ formulariosAReimportar.length === 1 ? 'ya cuenta' : 'ya cuentan' }}
+            con información. Al continuar se reemplaza y no se puede recuperar.
           </p>
         </div>
       </div>

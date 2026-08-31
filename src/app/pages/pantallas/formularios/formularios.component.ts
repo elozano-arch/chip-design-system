@@ -38,9 +38,9 @@ import {
   ESTADOS_POR_ETAPA,
   RespuestaCentral,
   TipoDeficiencia,
-  TIPOS_DEFICIENCIA,
   DeficienciaEnvio,
-  PlantillaDeficiencia,
+  ProcesoDetalle,
+  filasDeProceso,
   etapaDe,
   estadoDe,
 } from './catalogo-proceso';
@@ -430,54 +430,77 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Deficiencias del ÚLTIMO proceso de importación, por tipo de error. Un
-   * proceso cierra con una sola familia de códigos —o el archivo está mal
-   * formado (estructura) o le falta información exigida por la categoría
-   * (completitud)—, y cada familia cuelga de su propio detalle de proceso.
-   * En producción esto llega del backend por formulario.
+   * Procesos del formulario que NO generaron deficiencias. El histórico los
+   * lista igual —aceptado, error técnico, todavía en curso—: son parte del
+   * expediente aunque sus columnas de deficiencia vayan vacías.
    */
-  private readonly deficienciasUltimoProceso: Readonly<
-    Record<TipoDeficiencia, readonly PlantillaDeficiencia[]>
+  private readonly procesosSinDeficiencia: readonly ProcesoDetalle[] = [
+    { etapa: 1, idDetalleProceso: 4801, estado: 'A', usuarioProceso: 'jmunoz', deficiencias: [] },
+    { etapa: 1, idDetalleProceso: 4815, estado: 'E', usuarioProceso: 'mrojas', deficiencias: [] },
+    { etapa: 2, idDetalleProceso: 4820, estado: 'W', usuarioProceso: 'jmunoz', deficiencias: [] },
+  ];
+
+  /**
+   * ÚLTIMO proceso de importación, por tipo de error. Un proceso cierra con una
+   * sola familia de códigos —o el archivo está mal formado (estructura) o le
+   * falta información exigida por la categoría (completitud)—, y cada familia
+   * cuelga de su propio detalle de proceso.
+   *
+   * Ninguna deficiencia de importación es permisible ni admite comentario: un
+   * archivo mal formado no se justifica, se corrige y se vuelve a importar.
+   */
+  private readonly importacionPorTipo: Readonly<
+    Record<TipoDeficiencia, ProcesoDetalle>
   > = {
-    // Etapa 1 · Importación — detalle de proceso 4831. Errores de ESTRUCTURA:
-    // el archivo no cumple el protocolo de importación.
-    estructura: [
-      { etapa: 1, idDetalleProceso: 4831, id: 1, tipo: 'estructura', codMensaje: 'EST-004', mensaje: 'Longitud de registro distinta a la declarada en el protocolo de importación.', permisible: false, requiereComentario: false },
-      { etapa: 1, idDetalleProceso: 4831, id: 2, tipo: 'estructura', codMensaje: 'EST-011', mensaje: 'Campo numérico con caracteres no válidos.', permisible: false, requiereComentario: false },
-      { etapa: 1, idDetalleProceso: 4831, id: 3, tipo: 'estructura', codMensaje: 'EST-019', mensaje: 'Código de concepto inexistente en la lista de la categoría.', permisible: false, requiereComentario: false },
-      { etapa: 1, idDetalleProceso: 4831, id: 4, tipo: 'estructura', codMensaje: 'EST-023', mensaje: 'Registro duplicado para el mismo concepto y tercero.', permisible: true, requiereComentario: true },
-    ],
-    // Etapa 1 · Importación — detalle de proceso 4832. Errores de COMPLETITUD:
-    // el archivo está bien formado, pero no trae todo lo que la categoría exige.
-    completitud: [
-      { etapa: 1, idDetalleProceso: 4832, id: 1, tipo: 'completitud', codMensaje: 'COMP-002', mensaje: 'Concepto obligatorio de la categoría sin registro en el archivo.', permisible: false, requiereComentario: false },
-      { etapa: 1, idDetalleProceso: 4832, id: 2, tipo: 'completitud', codMensaje: 'COMP-014', mensaje: 'El archivo no incluye todos los periodos exigidos por la categoría.', permisible: false, requiereComentario: false },
-      { etapa: 1, idDetalleProceso: 4832, id: 3, tipo: 'completitud', codMensaje: 'COMP-021', mensaje: 'Registro sin el tercero obligatorio para el concepto reportado.', permisible: false, requiereComentario: false },
-      { etapa: 1, idDetalleProceso: 4832, id: 4, tipo: 'completitud', codMensaje: 'COMP-036', mensaje: 'Concepto informado sin la nota explicativa que exige la categoría.', permisible: true, requiereComentario: true },
-    ],
+    // ESTRUCTURA: el archivo no cumple el protocolo de importación.
+    estructura: {
+      etapa: 1, idDetalleProceso: 4831, estado: 'D', usuarioProceso: 'lcastro',
+      deficiencias: [
+        { id: 1, codMensaje: 'EST-004', mensaje: 'Longitud de registro distinta a la declarada en el protocolo de importación. Registro 1.248: se esperaban 120 caracteres y se recibieron 134.', permisible: false, requiereComentario: false },
+        { id: 2, codMensaje: 'EST-011', mensaje: 'Campo numérico con caracteres no válidos. Registro 87, variable SLDO_INC: se recibió "1.2O5", donde la letra O no es un dígito.', permisible: false, requiereComentario: false },
+        { id: 3, codMensaje: 'EST-019', mensaje: 'Código de concepto inexistente en la lista de la categoría. Registro 302: el concepto 1.1.99 no pertenece a la lista de CGN2015_001.', permisible: false, requiereComentario: false },
+        { id: 4, codMensaje: 'EST-023', mensaje: 'Registro duplicado para el mismo concepto y tercero.', permisible: false, requiereComentario: false },
+      ],
+    },
+    // COMPLETITUD: el archivo está bien formado, pero no trae todo lo que la
+    // categoría exige.
+    completitud: {
+      etapa: 1, idDetalleProceso: 4832, estado: 'D', usuarioProceso: 'lcastro',
+      deficiencias: [
+        { id: 1, codMensaje: 'COMP-002', mensaje: 'Concepto obligatorio de la categoría sin registro en el archivo. Faltan los conceptos 1.1.05, 2.4.01 y 3.1.10.', permisible: false, requiereComentario: false },
+        { id: 2, codMensaje: 'COMP-014', mensaje: 'El archivo no incluye todos los periodos exigidos por la categoría.', permisible: false, requiereComentario: false },
+        { id: 3, codMensaje: 'COMP-021', mensaje: 'Registro sin el tercero obligatorio para el concepto reportado.', permisible: false, requiereComentario: false },
+        { id: 4, codMensaje: 'COMP-036', mensaje: 'Concepto informado sin la nota explicativa que exige la categoría.', permisible: false, requiereComentario: false },
+      ],
+    },
   };
 
   /**
-   * Procesos ANTERIORES del formulario (histórico). Son las deficiencias de
-   * validación local y central: no llevan tipo, porque el tipo describe cómo
-   * cerró una importación, no una validación.
+   * Procesos de validación del formulario. El consecutivo de la deficiencia
+   * vuelve a empezar en 1 en cada etapa: es por etapa, no global.
    */
-  private readonly historialDeficiencias: readonly PlantillaDeficiencia[] = [
-    // Etapa 2 · Validación local — detalle de proceso 4822. El consecutivo
-    // vuelve a empezar en 1: es por etapa, no global.
-    { etapa: 2, idDetalleProceso: 4822, id: 1, codMensaje: 'VAL-001', mensaje: 'El total de débitos no coincide con el total de créditos del formulario.', permisible: false, requiereComentario: false },
-    { etapa: 2, idDetalleProceso: 4822, id: 2, codMensaje: 'VAL-032', mensaje: 'Concepto obligatorio sin valor diligenciado.', permisible: false, requiereComentario: false },
-    { etapa: 2, idDetalleProceso: 4822, id: 3, codMensaje: 'VAL-045', mensaje: 'Saldo negativo en una cuenta que no admite naturaleza contraria.', permisible: true, requiereComentario: false },
-    { etapa: 2, idDetalleProceso: 4822, id: 4, codMensaje: 'VAL-051', mensaje: 'El saldo inicial no coincide con el saldo final del periodo anterior.', permisible: false, requiereComentario: false },
-
-    // Etapa 3 · Validación central — detalle de proceso 4823.
-    { etapa: 3, idDetalleProceso: 4823, id: 1, codMensaje: 'CEN-014', mensaje: 'Variación superior al 50% frente al periodo anterior.', permisible: true, requiereComentario: true },
-    { etapa: 3, idDetalleProceso: 4823, id: 2, codMensaje: 'CEN-027', mensaje: 'Operación recíproca sin contraparte reportada por la entidad par.', permisible: true, requiereComentario: true },
-    { etapa: 3, idDetalleProceso: 4823, id: 3, codMensaje: 'CEN-063', mensaje: 'Valor reportado en cero en un concepto con movimiento en el periodo anterior.', permisible: true, requiereComentario: true },
-    { etapa: 3, idDetalleProceso: 4823, id: 4, codMensaje: 'CEN-078', mensaje: 'Tercero reportado sin identificación válida.', permisible: true, requiereComentario: true },
-    { etapa: 3, idDetalleProceso: 4823, id: 5, codMensaje: 'CEN-084', mensaje: 'Cuenta reportada que no aplica para la naturaleza jurídica de la entidad.', permisible: true, requiereComentario: true },
-    { etapa: 3, idDetalleProceso: 4823, id: 6, codMensaje: 'CEN-092', mensaje: 'Depreciación acumulada mayor al valor bruto del activo.', permisible: false, requiereComentario: false },
-    { etapa: 3, idDetalleProceso: 4823, id: 7, codMensaje: 'CEN-105', mensaje: 'Concepto informado sin nota explicativa asociada.', permisible: true, requiereComentario: true },
+  private readonly procesosValidacion: readonly ProcesoDetalle[] = [
+    {
+      etapa: 2, idDetalleProceso: 4822, estado: 'D', usuarioProceso: 'mrojas',
+      deficiencias: [
+        { id: 1, codMensaje: 'VAL-001', mensaje: 'El total de débitos no coincide con el total de créditos del formulario. Débitos 4.812.900.400 · Créditos 4.812.899.100 · Diferencia 1.300.', permisible: false, requiereComentario: false },
+        { id: 2, codMensaje: 'VAL-032', mensaje: 'Concepto obligatorio sin valor diligenciado.', permisible: false, requiereComentario: false },
+        { id: 3, codMensaje: 'VAL-045', mensaje: 'Saldo negativo en una cuenta que no admite naturaleza contraria.', permisible: true, requiereComentario: false },
+        { id: 4, codMensaje: 'VAL-051', mensaje: 'El saldo inicial no coincide con el saldo final del periodo anterior.', permisible: false, requiereComentario: false },
+      ],
+    },
+    {
+      etapa: 3, idDetalleProceso: 4823, estado: 'M', usuarioProceso: 'mrojas',
+      deficiencias: [
+        { id: 1, codMensaje: 'CEN-014', mensaje: 'Variación superior al 50% frente al periodo anterior. Concepto 1.1.20: pasó de 120.000.000 a 410.000.000, una variación de +241,7%.', permisible: true, requiereComentario: true },
+        { id: 2, codMensaje: 'CEN-027', mensaje: 'Operación recíproca sin contraparte reportada por la entidad par. El tercero 899999068, por 85.400.000, no aparece en el reporte de la entidad recíproca.', permisible: true, requiereComentario: true },
+        { id: 3, codMensaje: 'CEN-063', mensaje: 'Valor reportado en cero en un concepto con movimiento en el periodo anterior.', permisible: true, requiereComentario: true },
+        { id: 4, codMensaje: 'CEN-078', mensaje: 'Tercero reportado sin identificación válida.', permisible: true, requiereComentario: true },
+        { id: 5, codMensaje: 'CEN-084', mensaje: 'Cuenta reportada que no aplica para la naturaleza jurídica de la entidad.', permisible: true, requiereComentario: true },
+        { id: 6, codMensaje: 'CEN-092', mensaje: 'Depreciación acumulada mayor al valor bruto del activo.', permisible: false, requiereComentario: false },
+        { id: 7, codMensaje: 'CEN-105', mensaje: 'Concepto informado sin nota explicativa asociada.', permisible: true, requiereComentario: true },
+      ],
+    },
   ];
 
   /**
@@ -501,26 +524,28 @@ export class FormulariosComponent implements OnDestroy {
     if (!form) return [];
     const existentes = this.deficienciasPorFormulario.get(form.id);
     if (existentes) return existentes;
-    const filas = this.construirDeficiencias(form).map(d => ({
-      ...d, comentario: '', comentarioGuardado: '', comentarioError: '',
-    }));
+    const filas = this.construirExpediente(form).flatMap(filasDeProceso);
     this.deficienciasPorFormulario.set(form.id, filas);
     return filas;
   }
 
   /**
-   * Arma el expediente de un formulario: primero el último proceso (la
-   * importación que acaba de cerrar, con su familia de códigos) y detrás los
-   * procesos anteriores. Un formulario sin deficiencias devuelve lista vacía —
-   * no todos los formularios de la categoría tienen por qué tener errores.
+   * Arma el expediente de un formulario: todos sus registros de detalle, en
+   * orden cronológico (el id del detalle crece con el tiempo). Los procesos que
+   * cerraron sin deficiencia van igual — el histórico los lista con las
+   * columnas de deficiencia vacías.
+   *
+   * Un formulario sin registro en el detalle no tiene proceso alguno: devuelve
+   * lista vacía y la vista muestra su estado vacío.
    */
-  private construirDeficiencias(form: Formulario): readonly PlantillaDeficiencia[] {
+  private construirExpediente(form: Formulario): readonly ProcesoDetalle[] {
+    if (form.estado === null) return [];
     const tipo = this.tipoDeficienciaPorFormulario.get(form.id);
-    if (tipo) return [...this.deficienciasUltimoProceso[tipo], ...this.historialDeficiencias];
-    // Rechazado por la validación central (sin importación fallida detrás):
-    // sólo tiene el expediente de validaciones.
-    if (form.estado === 'D') return this.historialDeficiencias;
-    return [];
+    const procesos: ProcesoDetalle[] = [...this.procesosSinDeficiencia];
+    // Rechazado por la validación central, con o sin importación fallida detrás.
+    if (tipo || form.estado === 'D') procesos.push(...this.procesosValidacion);
+    if (tipo) procesos.push(this.importacionPorTipo[tipo]);
+    return procesos.sort((a, b) => a.idDetalleProceso - b.idDetalleProceso);
   }
 
   // ── Alcance de la tabla de deficiencias ───────────────────────────────────
@@ -533,6 +558,18 @@ export class FormulariosComponent implements OnDestroy {
   /** Alcance activo de la tabla de deficiencias. */
   alcanceDeficiencias: 'ultimo' | 'historico' = 'historico';
 
+  /**
+   * Dónde se diligencia la justificación (SÓLO demostración). Son dos patrones
+   * para el mismo dato y el demo permite compararlos: la caja en la celda deja
+   * la grilla más densa y las filas de alturas distintas; el modal las empareja
+   * y le da al texto el ancho que necesita. En producción se elige uno.
+   */
+  modoJustificacion: 'modal' | 'grilla' = 'modal';
+  readonly modoJustificacionOptions = [
+    { label: 'En modal · botón que abre el formulario', value: 'modal' },
+    { label: 'En la grilla · caja de texto en la celda', value: 'grilla' },
+  ];
+
   /** Filas que ve la tabla — recalculadas al abrir o al cambiar de alcance. */
   deficienciasVisibles: DeficienciaEnvio[] = [];
 
@@ -541,11 +578,6 @@ export class FormulariosComponent implements OnDestroy {
     return this.deficienciasEnvio.reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
   }
 
-  /** Tipo de error del último proceso del formulario abierto, si lo tuvo. */
-  get tipoUltimoProceso(): TipoDeficiencia | null {
-    const form = this.controlEnvioFormulario;
-    return (form && this.tipoDeficienciaPorFormulario.get(form.id)) || null;
-  }
   cambiarAlcanceDeficiencias(alcance: 'ultimo' | 'historico'): void {
     this.alcanceDeficiencias = alcance;
     this.refrescarDeficienciasVisibles();
@@ -560,14 +592,17 @@ export class FormulariosComponent implements OnDestroy {
         : todas;
   }
 
-  /** Resumen del alcance activo, para el encabezado de la tabla. */
+  /**
+   * Resumen del alcance activo. Cuenta deficiencias, no filas: las de los
+   * procesos que cerraron sin ninguna no suman. Tampoco califica el tipo — un
+   * proceso registra deficiencias de una sola verificación, así que decir "de
+   * estructura" no agrega nada que la etapa no diga ya.
+   */
   get resumenDeficiencias(): string {
-    const total = this.deficienciasVisibles.length;
+    const total = this.deficienciasVisibles.filter(d => d.id !== null).length;
     const plural = total === 1 ? 'deficiencia' : 'deficiencias';
     if (this.alcanceDeficiencias === 'ultimo') {
-      const tipo = this.tipoUltimoProceso;
-      const detalle = tipo ? ` de ${TIPOS_DEFICIENCIA[tipo].label.toLowerCase()}` : '';
-      return `Proceso ${this.ultimoProcesoId} · ${total} ${plural}${detalle}`;
+      return `Proceso ${this.ultimoProcesoId} · ${total} ${plural}`;
     }
     const procesos = new Set(this.deficienciasEnvio.map(d => d.idDetalleProceso)).size;
     return `${procesos} proceso(s) · ${total} ${plural}`;
@@ -878,11 +913,16 @@ export class FormulariosComponent implements OnDestroy {
    * al menos uno, la importación es una reimportación y el diálogo exige
    * confirmación antes de arrancar.
    *
+   * Enviada la categoría la lista queda vacía: el envío cierra el proceso y no
+   * deja información local que reemplazar. El reenvío, entonces, no reimporta
+   * nada — arranca una importación limpia, sin aviso de reemplazo.
+   *
    * Ojo con el alcance: importación y validación local son del contexto, no de
    * la categoría. La categoría sólo entra en la validación central y el envío.
    */
   get formulariosAReimportar(): Formulario[] {
     if (this.escenarioImport === 'limpio') return [];
+    if (this.categoriaYaEnviada) return [];
     return this.filteredFormularios.filter(f => f.estado !== null);
   }
 
@@ -1104,8 +1144,10 @@ export class FormulariosComponent implements OnDestroy {
   /**
    * Botón "Continuar" / "Importar". La justificación del reenvío va primero y
    * no necesita archivo: el contexto ya dijo que la categoría se envió. Con eso
-   * resuelto se pide el archivo y, si el contexto ya tiene información, se
-   * avisa del reemplazo antes de arrancar.
+   * resuelto se pide el archivo y arranca el proceso.
+   *
+   * El aviso de reemplazo sólo aparece cuando hay información local que pisar,
+   * que nunca es el caso tras un reenvío: ahí la importación es limpia.
    */
   confirmImport() {
     if (this.importPaso === 'iniciado') return;

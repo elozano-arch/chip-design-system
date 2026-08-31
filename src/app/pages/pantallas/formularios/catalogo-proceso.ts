@@ -107,48 +107,95 @@ export type RespuestaCentral = 'ninguna' | 'enProceso' | 'aceptado' | 'rechazado
  */
 export type TipoDeficiencia = 'estructura' | 'completitud';
 
-export const TIPOS_DEFICIENCIA: Readonly<
-  Record<TipoDeficiencia, { label: string; severity: TagSeverity }>
-> = {
-  estructura: { label: 'Estructura', severity: 'danger' },
-  completitud: { label: 'Completitud', severity: 'warn' },
-};
-
 /**
- * Deficiencia listada en el control de envío. Cada una se produce dentro de una
- * etapa del proceso y cuelga de un registro del detalle del proceso:
- *   • `etapa`            → en qué etapa se generó (`tab_etapa_proceso`)
- *   • `idDetalleProceso` → registro del detalle del proceso al que pertenece
- *   • `id`               → consecutivo DENTRO de esa etapa, no global: dos
- *                          etapas distintas pueden tener ambas un id 1
- *   • `tipo`             → sólo en las deficiencias de importación: qué familia
- *                          de códigos las produjo. Las de validación local y
- *                          central no lo llevan.
+ * Mensaje de deficiencia tal como lo devuelve una verificación. El `id` es
+ * consecutivo DENTRO de la etapa, no global: dos etapas distintas pueden tener
+ * ambas un id 1.
+ *
  * `permisible` indica que la categoría se puede enviar aun con la deficiencia
  * presente; `requiereComentario` obliga a justificarla y es lo único que
- * habilita la caja de comentario de esa fila.
+ * habilita la caja de comentario de esa fila. Las deficiencias de importación
+ * llevan los dos en `false`: un archivo mal formado no se justifica, se corrige.
  */
-export interface DeficienciaEnvio {
-  etapa: EtapaId;
-  idDetalleProceso: number;
+export interface MensajeDeficiencia {
   id: number;
-  tipo?: TipoDeficiencia;
   codMensaje: string;
   mensaje: string;
   permisible: boolean;
   requiereComentario: boolean;
-  /** Texto en edición. */
-  comentario: string;
-  /** Último texto guardado; comparado con `comentario` revela cambios sin guardar. */
-  comentarioGuardado: string;
-  /** Mensaje de validación bajo la caja (vacío = sin error). */
-  comentarioError: string;
 }
 
-/** Deficiencia tal como llega del proceso, antes de abrirle caja de comentario. */
-export type PlantillaDeficiencia = Omit<
-  DeficienciaEnvio, 'comentario' | 'comentarioGuardado' | 'comentarioError'
->;
+/**
+ * Un registro del detalle del proceso. Es la unidad del control de envío: el
+ * histórico lista TODOS los procesos del formulario, hayan generado
+ * deficiencias o no — un proceso aceptado, uno con error técnico y uno en
+ * curso son parte del expediente igual que uno que falló.
+ */
+export interface ProcesoDetalle {
+  etapa: EtapaId;
+  idDetalleProceso: number;
+  /** Estado con que cerró el registro de detalle — `tab_estado`. */
+  estado: EstadoId;
+  /** Quien ejecutó el proceso. No es el autor del comentario. */
+  usuarioProceso: string;
+  /** Vacío = el proceso no generó deficiencias. */
+  deficiencias: readonly MensajeDeficiencia[];
+}
+
+/**
+ * Fila de la tabla del control de envío: los datos del registro de detalle más
+ * los de la deficiencia. Cuando el proceso no generó ninguna, `id` es `null` y
+ * las columnas de deficiencia van vacías.
+ */
+export interface DeficienciaEnvio {
+  etapa: EtapaId;
+  idDetalleProceso: number;
+  estado: EstadoId;
+  usuarioProceso: string;
+  /** `null` = el proceso no generó deficiencia. */
+  id: number | null;
+  codMensaje: string;
+  mensaje: string;
+  permisible: boolean;
+  requiereComentario: boolean;
+  /**
+   * Texto en edición de la variante "en la grilla". La variante "en modal"
+   * no lo usa: allí el borrador vive en el componente, para que cancelar no
+   * deje rastro en la fila.
+   */
+  comentario: string;
+  /** Error de validación bajo la caja, sólo en la variante "en la grilla". */
+  comentarioError: string;
+  /** Justificación confirmada, la escriba quien la escriba. */
+  comentarioGuardado: string;
+  /** Fecha en que se guardó la justificación (vacío = todavía sin justificar). */
+  fechaComentario: string;
+}
+
+/**
+ * Aplana un proceso en filas de tabla. Sin deficiencias devuelve una sola fila
+ * con los datos del proceso, que es como el histórico deja ver los procesos
+ * que terminaron bien.
+ */
+export function filasDeProceso(proceso: ProcesoDetalle): DeficienciaEnvio[] {
+  const cabecera = {
+    etapa: proceso.etapa,
+    idDetalleProceso: proceso.idDetalleProceso,
+    estado: proceso.estado,
+    usuarioProceso: proceso.usuarioProceso,
+  };
+  const vacios = {
+    comentario: '', comentarioError: '', comentarioGuardado: '', fechaComentario: '',
+  };
+  if (proceso.deficiencias.length === 0) {
+    return [{
+      ...cabecera, ...vacios,
+      id: null, codMensaje: '', mensaje: '',
+      permisible: false, requiereComentario: false,
+    }];
+  }
+  return proceso.deficiencias.map(d => ({ ...cabecera, ...d, ...vacios }));
+}
 
 /** Fila de `tab_etapa_proceso` que corresponde a una etapa. */
 export function etapaDe(id: EtapaId): EtapaProceso {
@@ -160,9 +207,3 @@ export function estadoDe(id: EstadoId): EstadoProceso {
   return ESTADOS_PROCESO.find(e => e.id === id) ?? ESTADOS_PROCESO[0];
 }
 
-/** Presentación (label + severity) de un tipo de deficiencia. */
-export function tipoDeficienciaDe(
-  tipo: TipoDeficiencia,
-): { label: string; severity: TagSeverity } {
-  return TIPOS_DEFICIENCIA[tipo];
-}
