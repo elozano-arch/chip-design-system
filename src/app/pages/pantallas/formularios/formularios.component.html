@@ -474,14 +474,29 @@
             }
           </dl>
 
+          <!-- Simulación (demo): los dos patrones posibles para diligenciar la
+               justificación. En producción se implementa uno solo; aquí se
+               pueden comparar sin salir de la pantalla. -->
+          <div class="form-wizard__demo-switch" role="group"
+            aria-label="Simulación del patrón de justificación">
+            <i class="pi pi-flag" aria-hidden="true"></i>
+            <label for="ce-modo-just">Diligenciar justificación
+              <span class="form-wizard__demo-tag">demostración</span></label>
+            <p-select inputId="ce-modo-just" [options]="modoJustificacionOptions"
+              [(ngModel)]="modoJustificacion"
+              appendTo="body" styleClass="form-wizard__demo-select" />
+          </div>
+
           <!-- 2 · Deficiencias del formulario. Va fuera de .form-estado-screen
                (max-width 640px): la tabla necesita ancho completo y su propio
                scroll horizontal. -->
           <app-deficiencias-envio
+            [modo]="modoJustificacion"
             [formulario]="controlEnvioFormulario"
             [visibles]="deficienciasVisibles"
             [total]="deficienciasEnvio.length"
             [alcance]="alcanceDeficiencias"
+            [ultimoProcesoId]="ultimoProcesoId"
             [resumen]="resumenDeficiencias"
             (alcanceChange)="cambiarAlcanceDeficiencias($event)" />
         }

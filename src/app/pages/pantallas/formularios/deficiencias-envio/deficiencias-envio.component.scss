@@ -61,20 +61,52 @@
     color: var(--chip-grey-600);
   }
 
-  /* Deficiencia sin tipo (viene de una validación, no de la importación). */
-  &__sin-tipo {
+  /* Fecha en que se guardó la justificación. */
+  &__fecha {
     font-size: 12.5px;
+    color: var(--chip-grey-600);
+    white-space: nowrap;
+  }
+
+  /* Usuario que ejecutó el proceso (no el autor del comentario). */
+  &__usuario {
+    font-size: 13px;
+    color: var(--chip-grey-800);
+  }
+
+  /* Fila de un proceso que cerró sin deficiencias: ocupa las seis columnas
+     de deficiencia con una sola nota, en vez de seis guiones sueltos. */
+  &__sin-deficiencia {
+    font-size: 13px;
+    font-style: italic;
     color: var(--chip-grey-600);
   }
 
-  /* Celda de comentario: caja + pie (contador y Guardar) + mensaje. */
+  /* Mensaje del catálogo + lo que la regla le inyecta: largo variable. Se
+     recorta a dos líneas y el botón "Ver más" lo expande — no un tooltip,
+     que en tablet no existe. */
+  &__mensaje {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--chip-grey-800);
+
+    &--corto {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  /* ── Variante "en la grilla": caja + pie (contador y Guardar) + mensaje ── */
   &__box {
     display: flex;
     flex-direction: column;
     gap: 6px;
   }
 
-  /* Caja de comentario: se habilita sólo si el mensaje lo exige. */
   &__comentario {
     width: 100%;
     max-width: 100%;
@@ -88,6 +120,134 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  /* Hueco fijo de mensaje: evita que la fila salte al aparecer el error. */
+  &__msg {
+    display: block;
+    min-height: 16px;
+    font-size: 11.5px;
+    line-height: 1.35;
+
+    i { font-size: 12px; margin-right: 3px; }
+
+    &--ok {
+      color: var(--chip-success-700);
+      display: inline-flex;
+      align-items: center;
+    }
+    &--hint { color: var(--chip-grey-600); }
+  }
+
+  /* ── Variante "en modal": estado + acción que abre el formulario ── */
+  &__just {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  /* Deficiencia que no admite justificación (importación, o no la exige). */
+  &__sin-comentario {
+    font-size: 12.5px;
+    color: var(--chip-grey-600);
+  }
+
+  /* Fila de un proceso anterior sin justificar: no hay nada que abrir. */
+  &__solo-lectura {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--chip-grey-600);
+
+    i { font-size: 11px; }
+  }
+
+  /* ── Modal de justificación ── */
+  &__modal {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  /* Contexto: qué deficiencia se está justificando. */
+  &__modal-ctx {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-3) var(--space-4);
+    background: var(--chip-bg-solitude);
+    border-left: 3px solid var(--chip-cobalt-500);
+    border-radius: var(--radius-sm);
+
+    p {
+      margin: 0;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  /* Aviso de consulta: el modal se abrió sobre un proceso anterior. */
+  &__modal-aviso {
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--chip-bg-corn-silk);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--chip-grey-800);
+
+    i { margin-top: 2px; font-size: 12px; }
+  }
+
+  &__modal-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--chip-grey-800);
+    }
+  }
+
+  /* Etiqueta del campo y fecha del comentario, en la misma línea. */
+  &__modal-label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  &__modal-fecha {
+    font-size: 12px;
+    color: var(--chip-grey-600);
+    font-variant-numeric: tabular-nums;
+
+    i { font-size: 11px; margin-right: 3px; }
+  }
+
+  &__modal-textarea {
+    width: 100%;
+    max-width: 100%;
+    resize: vertical;
+    font-size: 13.5px;
+  }
+
+  &__modal-msg {
+    display: block;
+    min-height: 16px;
+    font-size: 12px;
+    line-height: 1.35;
+
+    i { font-size: 12px; margin-right: 3px; }
   }
 
   &__count {
@@ -120,16 +280,24 @@
     &--hint { color: var(--chip-grey-600); }
   }
 }
-/* 9 columnas: Etapa 175 + Id detalle 120 + Id 64 + Tipo 130 + Cód. 130 +
-   Permisible 110 + Requiere 150 + Comentario 300, más el resto para Mensaje.
-   Por debajo de 1370px el contenedor scrollea (no el <body>). */
-:host ::ng-deep .form-defic-table table { min-width: 1370px; }
+/* 10 columnas: Id 64 + Id detalle 110 + Etapa 175 + Estado 150 + Usuario 150 +
+   Cód. 130 + Permisible 110 + Requiere 150 + Comentario 180, más el resto para
+   Mensaje. La fecha del comentario no es columna aquí: la muestra el modal.
+   Por debajo de 1520px el contenedor scrollea (no el <body>). */
+:host ::ng-deep .form-defic-table table { min-width: 1520px; }
 :host ::ng-deep .form-defic-table td { vertical-align: top; }
 
-/* P3 · Touch target del "Guardar" de la celda de comentario:
-   es size="small", hay que subirlo en tablet y abajo. */
+/* Sin modal, la grilla carga con todo: la columna Comentario pasa de 180 a
+   300px y vuelve la de Fecha comentario (130px). */
+:host ::ng-deep .form-defic-table--grilla .form-defic-table table {
+  min-width: 1770px;
+}
+
+/* P3 · Touch targets de los botones size="small" de la grilla. */
 @include bp.down('lg') {
-  :host ::ng-deep .form-defic__save { min-height: bp.$chip-touch-target; }
+  :host ::ng-deep .form-defic__just-btn,
+  :host ::ng-deep .form-defic__save,
+  :host ::ng-deep .form-defic__vermas { min-height: bp.$chip-touch-target; }
 }
 
 /* Helper de ayuda contextual del título. Es el mismo patrón del DS que usa la
@@ -158,4 +326,24 @@
 }
 @include bp.down('lg') {
   .panel-help { @include bp.touch-target; justify-content: center; }
+}
+
+/* "Ver más" del mensaje: enlace visual, alineado al borde izquierdo de la
+   celda para que no parezca una columna aparte. */
+:host ::ng-deep .form-defic__vermas.p-button {
+  padding: 2px 0;
+  margin-top: 2px;
+  font-size: 12.5px;
+  gap: 4px;
+
+  .p-button-icon { font-size: 11px; }
+}
+
+/* "Justificar" / "Editar" de la celda: enlace visual bajo el tag de estado. */
+:host ::ng-deep .form-defic__just-btn.p-button {
+  padding: 2px 0;
+  font-size: 12.5px;
+  gap: 4px;
+
+  .p-button-icon { font-size: 11px; }
 }
