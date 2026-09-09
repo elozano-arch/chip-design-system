@@ -189,18 +189,23 @@ $sidebar-width-collapsed: 60px;
   }
 }
 
-/* --- Sesión activa en el cabezote (CH-1737) ---
-   Identifica con qué usuario, perfil y entidad se está trabajando. */
+/* --- Sesión activa en el cabezote (CH-1737, opción E) ---
+   Dos líneas: el código de usuario arriba —el dato que debe salir en cualquier
+   pantallazo— y la razón social de la entidad abajo. El resto del detalle vive
+   en el panel desplegable, donde hay espacio. */
 .app-session {
   display: flex;
   align-items: center;
-  gap: 10px;
-  max-width: 320px;
-  padding: 4px 10px 4px 4px;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 14px;
+  background: none;
   border: 1px solid var(--chip-grey-200);
   border-radius: 999px;
-  text-decoration: none;
   color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
   transition: background-color 0.15s, border-color 0.15s;
 
   &:hover {
@@ -213,49 +218,109 @@ $sidebar-width-collapsed: 60px;
     outline-offset: 2px;
   }
 
-  &__data {
+  &__stack {
     display: flex;
     flex-direction: column;
     min-width: 0; /* permite que el ellipsis funcione dentro del flex */
-    line-height: 1.3;
-  }
-
-  &__name {
-    font-family: var(--font-heading);
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--chip-grey-800);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.35;
   }
 
   &__user {
     font-family: 'Courier New', monospace;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
+    letter-spacing: 0.3px;
     color: var(--chip-cobalt-700);
   }
 
-  /* Perfil · Entidad — el dato que responde "¿con cuál estoy trabajando?" */
-  &__context {
-    font-size: 11px;
-    color: var(--chip-grey-600);
-    white-space: nowrap;
+  /* Longitud máxima fija: la razón social que no cabe se corta con puntos
+     suspensivos. El nombre completo no se pierde — aparece al desplegar el
+     panel y en el aria-label del botón, así que no depende del hover. */
+  &__entidad {
+    max-width: 230px;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    color: var(--chip-grey-700);
   }
 
-  /* Tablet y abajo: sólo el avatar, para no comprimir el cobranding.
-     El texto sigue disponible para lectores de pantalla vía aria-label. */
+  .pi-chevron-down {
+    font-size: 12px;
+    color: var(--chip-grey-600);
+  }
+
+  /* Tablet y abajo: se oculta la entidad para no comprimir el co-branding.
+     El código de usuario se queda —es el motivo de la opción E— y la entidad
+     sigue a un toque en el panel, además del aria-label. */
   @media (max-width: 992px) {
-    max-width: none;
-    padding: 0;
-    border: none;
+    gap: 8px;
+    padding: 6px 12px;
 
-    &:hover { background: none; }
-    &__data { display: none; }
+    &__entidad { display: none; }
   }
+}
+
+/* El popover trae su propio padding; el cuerpo lo define abajo. */
+::ng-deep .app-session-pop .p-popover-content { padding: 0; }
+
+.app-session-pop {
+  &__body {
+    width: min(320px, calc(100vw - 32px));
+    padding: 20px;
+    text-align: center;
+  }
+
+  &__name {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--chip-grey-900);
+    margin: 0;
+  }
+
+  &__user {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-cobalt-700);
+    margin: 2px 0 0;
+  }
+
+  /* Perfil y entidad — etiqueta arriba, valor debajo. */
+  &__datos {
+    margin: 0;
+    text-align: left;
+
+    dt {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--chip-grey-600);
+    }
+
+    dd {
+      margin: 2px 0 12px;
+      font-size: 13px;
+      color: var(--chip-grey-800);
+
+      &:last-of-type { margin-bottom: 0; }
+    }
+  }
+
+  &__acciones {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* La acción del panel ocupa el ancho y alinea el texto a la izquierda,
+   como un menú. */
+::ng-deep .app-session-pop__accion {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 44px;
 }
 
 /* --- Accessibility Bar (inline in header) --- */

@@ -25,19 +25,43 @@
     </a>
   </div>
   <div class="app-header__right">
-    <!-- Sesión activa: identifica con qué usuario, perfil y entidad se trabaja (CH-1737) -->
+    <!-- Sesión activa: código de usuario y entidad con la que se trabaja.
+         Opción E, acordada con CGN el 29/08/2026 (CH-1737). -->
     @if (mostrarSesion() && usuarioSesion(); as sesion) {
-      <a class="app-session" routerLink="/pantallas/seguridad/perfil-usuario"
-        [attr.aria-label]="'Sesión de ' + sesion.nombreCompleto + ', perfil ' + sesion.perfil + ', entidad ' + sesion.entidad.razonSocial + '. Ir a mi perfil'">
-        <span class="chip-avatar" aria-hidden="true">{{ sesion.iniciales }}</span>
-        <span class="app-session__data">
-          <span class="app-session__name">
-            {{ sesion.nombreCompleto }}
-            <span class="app-session__user">{{ sesion.usuario }}</span>
-          </span>
-          <span class="app-session__context">{{ sesion.perfil }} · {{ sesion.entidad.razonSocial }}</span>
+      <button type="button" class="app-session" (click)="panelSesion.toggle($event)"
+        [attr.aria-expanded]="panelSesionAbierto" aria-haspopup="dialog"
+        [attr.aria-label]="'Sesión de ' + sesion.nombreCompleto + ', usuario ' + sesion.usuario + ', entidad ' + sesion.entidad.razonSocial + '. Abrir el menú de la cuenta'">
+        <span class="app-session__stack">
+          <span class="app-session__user">{{ sesion.usuario }}</span>
+          <span class="app-session__entidad">{{ sesion.entidad.razonSocial }}</span>
         </span>
-      </a>
+        <i class="pi pi-chevron-down" aria-hidden="true"></i>
+      </button>
+
+      <p-popover #panelSesion styleClass="app-session-pop" ariaLabel="Detalle de la sesión"
+        (onShow)="panelSesionAbierto = true" (onHide)="panelSesionAbierto = false">
+        <div class="app-session-pop__body">
+          <p class="app-session-pop__name">{{ sesion.nombreCompleto }}</p>
+          <p class="app-session-pop__user">{{ sesion.usuario }}</p>
+
+          <p-divider />
+
+          <dl class="app-session-pop__datos">
+            <dt>Perfil</dt>
+            <dd>{{ sesion.perfil }}</dd>
+            <dt>Entidad</dt>
+            <dd>{{ sesion.entidad.razonSocial }}</dd>
+          </dl>
+
+          <p-divider />
+
+          <div class="app-session-pop__acciones">
+            <p-button label="Cerrar sesión" icon="pi pi-sign-out"
+              [text]="true" severity="secondary" size="small" styleClass="app-session-pop__accion"
+              (onClick)="cerrarSesion(panelSesion)" />
+          </div>
+        </div>
+      </p-popover>
     }
 
     <div class="accessibility-bar" role="toolbar" aria-label="Opciones de accesibilidad">
@@ -196,6 +220,9 @@
           <a routerLink="/pantallas/seguridad/login" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-sign-in"></i> <span class="app-sidebar__label">Login</span>
           </a>
+          <a routerLink="/pantallas/seguridad/perfil-usuario" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
+            <i class="pi pi-user"></i> <span class="app-sidebar__label">Mi perfil</span>
+          </a>
           <a routerLink="/pantallas/seguridad/cambiar-contrasena" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link app-sidebar__sublink" (click)="mobileMenuOpen = false">
             <i class="pi pi-lock"></i> <span class="app-sidebar__label">Cambiar contraseña</span>
           </a>
@@ -213,6 +240,9 @@
       @if (sidebarCollapsed) {
         <a routerLink="/pantallas/seguridad/login" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Login" tooltipPosition="right">
           <i class="pi pi-sign-in"></i> <span class="app-sidebar__label">Login</span>
+        </a>
+        <a routerLink="/pantallas/seguridad/perfil-usuario" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Mi perfil" tooltipPosition="right">
+          <i class="pi pi-user"></i> <span class="app-sidebar__label">Mi perfil</span>
         </a>
         <a routerLink="/pantallas/seguridad/cambiar-contrasena" routerLinkActive="app-sidebar__link--active" class="app-sidebar__link" pTooltip="Cambiar contraseña" tooltipPosition="right">
           <i class="pi pi-lock"></i> <span class="app-sidebar__label">Cambiar contraseña</span>
