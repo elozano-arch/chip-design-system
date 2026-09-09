@@ -5,6 +5,9 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { MessageService } from 'primeng/api';
 
 import { SesionService } from './services/sesion.service';
@@ -23,6 +26,9 @@ const RUTAS_SIN_SESION = [
     RouterModule,
     ToastModule,
     TooltipModule,
+    ButtonModule,
+    DividerModule,
+    PopoverModule,
   ],
   providers: [MessageService],
   templateUrl: './app.component.html',
@@ -48,6 +54,9 @@ export class AppComponent {
     !RUTAS_SIN_SESION.some(r => this.urlActual().startsWith(r)),
   );
 
+  /** Panel de la sesión abierto — refleja el estado en aria-expanded. */
+  panelSesionAbierto = false;
+
   currentYear = new Date().getFullYear();
   showBackToTop = false;
   showServicePanel = false;
@@ -65,6 +74,13 @@ export class AppComponent {
   constructor() {
     const saved = localStorage.getItem('chip-sidebar-collapsed');
     this.sidebarCollapsed = saved === 'true';
+  }
+
+  /** Cierra la sesión y devuelve al login: sin usuario, el cabezote se vacía. */
+  cerrarSesion(panel: Popover) {
+    panel.hide();
+    this.sesion.cerrarSesion();
+    this.router.navigate(['/pantallas/seguridad/login']);
   }
 
   toggleSidebar() {

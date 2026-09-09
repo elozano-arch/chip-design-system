@@ -5,12 +5,12 @@
     <h1 class="dsu-header__title">Datos del usuario en el cabezote</h1>
     <p class="dsu-header__desc">
       Cinco formas de mostrar quién está en sesión y con qué entidad trabaja.
-      La opción A es la que está implementada hoy; B, C y D son las alternativas
-      que se presentaron, y <strong>E es la que CGN pidió el 29/08/2026</strong>.
-      Los mockups son simulaciones del cabezote: se pueden abrir y probar, pero el
-      cabezote real no cambia hasta que se apruebe. Al final, la decisión resuelta en
-      <strong>dos escenarios</strong>, según si un usuario puede operar una sola
-      entidad o varias.
+      A era la que estaba implementada; B, C y D son las alternativas que se
+      presentaron, y <strong>E es la definitiva</strong> — CGN la pidió el
+      29/08/2026 y la aprobó el 09/09/2026. Ya es el cabezote real de arriba;
+      A a D quedan como registro de lo que se comparó. Al final, la decisión
+      resuelta en <strong>dos escenarios</strong>, según si un usuario puede
+      operar una sola entidad o varias.
     </p>
   </header>
 
@@ -49,7 +49,7 @@
         <header class="dsu-opcion__head">
           <span class="dsu-opcion__num" aria-hidden="true">A</span>
           <h2 class="dsu-opcion__title" id="dsu-op-a">Píldora en el cabezote</h2>
-          <p-tag value="Implementada hoy" severity="secondary" />
+          <p-tag value="Reemplazada por la E" severity="secondary" />
         </header>
         <p class="dsu-opcion__resumen">
           Todo el dato a la vista, siempre: nombre, código de usuario, perfil y entidad
@@ -329,7 +329,7 @@
         <header class="dsu-opcion__head">
           <span class="dsu-opcion__num" aria-hidden="true">E</span>
           <h2 class="dsu-opcion__title" id="dsu-op-e">Código de usuario y entidad</h2>
-          <p-tag value="Pedida por CGN" severity="success" />
+          <p-tag value="Definitiva — implementada" severity="success" />
         </header>
         <p class="dsu-opcion__resumen">
           Lo que quedó acordado el 29/08/2026. En el cabezote, dos líneas: el
@@ -351,7 +351,7 @@
             <ul>
               <li><i class="pi pi-minus" aria-hidden="true"></i> El círculo de iniciales, en el cabezote y en el panel.</li>
               <li><i class="pi pi-minus" aria-hidden="true"></i> Último acceso.</li>
-              <li><i class="pi pi-minus" aria-hidden="true"></i> Mi perfil y Cambiar contraseña — sin pantalla asociada hoy.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Mi perfil y Cambiar contraseña — salen del panel; se llega a las dos desde <em>Seguridad</em> en el menú lateral.</li>
             </ul>
           </div>
         </div>
@@ -458,8 +458,8 @@
             <h3><i class="pi pi-exclamation-circle" aria-hidden="true"></i> A tener en cuenta</h3>
             <ul>
               <li><i class="pi pi-minus" aria-hidden="true"></i> El perfil queda a un clic: en el cabezote sólo van código y entidad.</li>
-              <li><i class="pi pi-minus" aria-hidden="true"></i> Sin el círculo no hay forma compacta a la que reducirse en móvil; el disparador ocupa el ancho del bloque de dos líneas.</li>
-              <li><i class="pi pi-minus" aria-hidden="true"></i> Al quitar <em>Cambiar contraseña</em>, el cambio voluntario a mitad de sesión queda sin ruta — falta confirmar desde qué menú se llega.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Sin el círculo no hay a qué reducirse en móvil. Resuelto bajo 992px ocultando la entidad y dejando el código: se conserva el dato que motiva la opción y la entidad sigue a un toque en el panel.</li>
+              <li><i class="pi pi-minus" aria-hidden="true"></i> Al quitar <em>Cambiar contraseña</em> del panel, el cambio a mitad de sesión se hace desde <em>Seguridad</em> en el menú lateral, no desde el cabezote.</li>
             </ul>
           </div>
         </div>
