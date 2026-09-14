@@ -39,13 +39,16 @@ import { Entidad } from '../../../components/directorio-entidades/directorio-ent
  *
  * Tipo de usuario (mock de demostración) — determina cómo se resuelve la Entidad:
  *   • 'L' (Local)            → opera una sola entidad: se carga por defecto (campo bloqueado).
+ *   • 'A' (Analista)         → no tiene entidad asociada: el campo queda bloqueado
+ *                               y vacío, y con él la Categoría, que depende de la
+ *                               entidad. Sin entidad no hay nada que consultar.
  *   • 'C' (Consolidadora/    → operan sobre varias entidades: eligen una desde el
  *         Estratégico)          Directorio de Entidades. C y E comparten comportamiento,
  *                               por eso se unifican en una sola opción.
  * En producción vendría de la sesión/backend; aquí se mockea con un selector.
  * No se incluye el escenario de entidad inactiva (alerta).
  */
-type TipoUsuario = 'L' | 'C';
+type TipoUsuario = 'L' | 'A' | 'C';
 
 @Component({
   selector: 'app-entidades-agregadas',
@@ -82,13 +85,40 @@ export class EntidadesAgregadasComponent {
   };
   readonly tiposUsuarioOptions = [
     { label: 'Tipo L · Entidad local (carga automática)', value: 'L' },
+    { label: 'Tipo A · Analista (sin entidad asociada)', value: 'A' },
     { label: 'Tipo C/E · Consolidadora o Estratégico (selecciona del directorio)', value: 'C' },
   ];
   tipoUsuario: TipoUsuario = 'L';
 
-  /** True cuando el tipo carga su entidad por defecto (campo bloqueado). */
-  get esTipoLocal(): boolean {
-    return this.tipoUsuario === 'L';
+  /**
+   * True cuando el usuario no elige entidad: el campo va bloqueado y el
+   * directorio no se abre. Por razones opuestas en cada caso — el local ya
+   * tiene la suya, el analista no tiene ninguna—, pero el campo se comporta
+   * igual: no se toca.
+   */
+  get entidadFija(): boolean {
+    return this.tipoUsuario === 'L' || this.tipoUsuario === 'A';
+  }
+
+  /** True cuando el tipo activo no tiene ninguna entidad que operar. */
+  get sinEntidadAsociada(): boolean {
+    return this.tipoUsuario === 'A';
+  }
+
+  /** Entidad que corresponde al tipo activo (`null` = no tiene o la elige él). */
+  private get entidadDelTipo(): Entidad | null {
+    return this.tipoUsuario === 'L' ? this.entidadLocalPorDefecto : null;
+  }
+
+  /**
+   * Por qué la Categoría está bloqueada. Con el analista no sirve el "seleccione
+   * una entidad primero": no puede seleccionarla, no tiene ninguna.
+   */
+  get ayudaCategoria(): string {
+    if (this.entidadSeleccionada) return '';
+    return this.sinEntidadAsociada
+      ? 'Su usuario no tiene una entidad asociada'
+      : 'Seleccione una entidad primero';
   }
 
   // Paso 1 — Filtros (Entidad principal + Categoría)
@@ -149,19 +179,19 @@ export class EntidadesAgregadasComponent {
 
   /**
    * Resuelve la Entidad según el tipo de usuario (mock):
-   *   L → carga la entidad local por defecto; C/E → la elige del directorio.
+   *   L y A → la traen resuelta; C/E → la eligen del directorio.
    * Cambiar de tipo reinicia categoría, búsqueda y listado.
    */
   onTipoUsuarioChange(): void {
     this.selectedCategoria = '';
     this.invalidarBusqueda();
     this.entidadDirectorioVisible = false;
-    this.selectedEntidad = this.esTipoLocal ? this.entidadLocalPorDefecto : null;
+    this.selectedEntidad = this.entidadDelTipo;
   }
 
   abrirDirectorioEntidad(): void {
-    // El usuario local no elige entidad: la suya viene cargada por defecto.
-    if (this.esTipoLocal) return;
+    // Local y analista no eligen entidad: la suya viene resuelta por la sesión.
+    if (this.entidadFija) return;
     this.entidadDirectorioVisible = true;
   }
 
@@ -197,9 +227,10 @@ export class EntidadesAgregadasComponent {
     this.filtersCollapsed = true;
   }
 
-  /** Limpia los filtros y reabre el panel (tipo L conserva su entidad local). */
+  /** Limpia los filtros y reabre el panel. Los tipos con entidad fija (L y A)
+      conservan la suya: no es un filtro que puedan cambiar. */
   limpiarFiltros(): void {
-    this.selectedEntidad = this.esTipoLocal ? this.entidadLocalPorDefecto : null;
+    this.selectedEntidad = this.entidadDelTipo;
     this.selectedCategoria = '';
     this.invalidarBusqueda();
     this.filtersCollapsed = false;

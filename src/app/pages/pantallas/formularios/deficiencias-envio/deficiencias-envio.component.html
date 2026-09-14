@@ -1,18 +1,14 @@
-<section class="form-defic" role="region" aria-label="Registros de detalle del proceso">
-  <h3 class="form-defic__title">
-    <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
-    Deficiencias
-    <button type="button" class="panel-help"
-      pTooltip="Cada fila es un registro del detalle del proceso. Los procesos que cerraron sin deficiencia aparecen con las columnas de deficiencia vacías. Las permisibles dejan enviar la categoría; las que exigen comentario necesitan una justificación escrita."
-      tooltipPosition="top" aria-label="Ayuda de la sección Deficiencias">
-      <i class="pi pi-info-circle" aria-hidden="true"></i>
-    </button>
-  </h3>
+<!-- Sin título propio: la sección no muestra "deficiencias", muestra los
+     procesos por los que ha pasado el formulario y con qué estado cerró cada
+     uno —haya habido deficiencia o no—. El encabezado de la pantalla,
+     "Historial proceso", ya lo nombra; repetirlo aquí con otro nombre era
+     anunciar como excepción lo que es el contenido normal. -->
+<section class="form-defic" role="region" aria-label="Procesos registrados del formulario">
 
   @if (!formulario) {
     <div class="usr-empty">
       <i class="pi pi-inbox" aria-hidden="true"></i>
-      <p>Abra el control de envío desde un formulario del listado para ver sus deficiencias.</p>
+      <p>Abra el historial desde un formulario del listado para ver sus procesos.</p>
     </div>
   } @else if (total === 0) {
     <div class="usr-empty">
@@ -20,225 +16,164 @@
       <p>Este formulario no tiene procesos registrados.</p>
     </div>
   } @else {
-    <!-- Alcance: los registros del último proceso (lo que acaba de correr) o
-         el histórico completo del formulario. -->
-    <div class="form-defic__alcance" role="region"
-      aria-label="Alcance de los procesos mostrados">
-      <div class="form-defic__alcance-tabs" role="group"
-        aria-label="Procesos que se muestran">
-        <p-button label="Último proceso" icon="pi pi-clock" size="small"
-          [text]="alcance !== 'ultimo'"
-          [outlined]="alcance === 'ultimo'"
-          severity="secondary"
-          [attr.aria-pressed]="alcance === 'ultimo'"
-          (onClick)="alcanceChange.emit('ultimo')" />
-        <p-button label="Histórico" icon="pi pi-history" size="small"
-          [text]="alcance !== 'historico'"
-          [outlined]="alcance === 'historico'"
-          severity="secondary"
-          [attr.aria-pressed]="alcance === 'historico'"
-          (onClick)="alcanceChange.emit('historico')" />
-      </div>
-      <p class="form-defic__alcance-resumen" aria-live="polite">
-        {{ resumen }}
-      </p>
-      <app-boton-descargar label="Exportar" size="small"
-        ariaLabel="Exportar las deficiencias en distintos formatos"
+    <!-- ═══════════════════════════════════════════════════════════════
+         Una sola vista: el expediente completo, procesos como nodos padre
+         y deficiencias como hijos, sobre el <app-tree-table> del DS. La
+         tabla aporta búsqueda global, orden por columna, expansión de una
+         sola rama, indentación y los dos paginadores; las celdas las pinta
+         esta pantalla con sus propias plantillas.
+         ═══════════════════════════════════════════════════════════════ -->
+    <app-tree-table
+      [nodos]="nodosProcesos"
+      [columnasFijas]="columnasProceso"
+      [columnasVariables]="[]"
+      [columnasHijo]="columnasDeficiencia"
+      [cellTemplates]="{
+        num: tplNum, idDetalle: tplIdDetalle, fecha: tplFecha,
+        etapa: tplEtapa, estado: tplEstado,
+        usuario: tplUsuario, deficiencias: tplResumen
+      }"
+      [cellTemplatesHijo]="{
+        num: tplHijoNum, codMensaje: tplHijoCod, mensaje: tplHijoMensaje,
+        perm: tplHijoPerm, comentario: tplHijoComentario
+      }"
+      [searchable]="true"
+      placeholderBusqueda="Buscar por proceso, etapa, usuario o mensaje…"
+      ariaLabelBusqueda="Buscar en el historial por id de proceso, fecha, etapa, estado, usuario, código o mensaje"
+      [textoBusqueda]="textoBusquedaNodo"
+      [ordenable]="true"
+      [valorOrden]="valorOrdenNodo"
+      [columnToggle]="false"
+      [permitirCambioModo]="false"
+      [mostrarRuta]="false"
+      [fijasSticky]="false"
+      [indicadorHoja]="true"
+      [unaRamaInicial]="true"
+      [rootPageable]="true"
+      [rootRows]="10"
+      [paginadorSiempreVisible]="true"
+      [tamanosPagina]="tamanosPaginaArbol">
+      <p ttcToolbar class="form-defic__total" aria-live="polite">{{ resumen }}</p>
+      <app-boton-descargar ttcToolbar label="Exportar" size="small"
+        ariaLabel="Exportar el historial en distintos formatos"
         (formato)="exportar($event)" />
-    </div>
+    </app-tree-table>
 
-    <div class="form-table-scroll"
-      [class.form-defic-table--grilla]="modo === 'grilla'">
-      <!-- Sin dataKey: el id de la deficiencia es consecutivo POR ETAPA, así
-           que se repite entre etapas y no sirve como clave única. -->
-      <p-table [value]="visibles" [stripedRows]="true" [rowHover]="true"
-        styleClass="form-defic-table"
-        [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}">
-        <ng-template #caption>
-          <span class="sr-only">Registros de detalle del proceso y sus deficiencias</span>
-        </ng-template>
-        <ng-template #header>
-          <tr>
-            <th scope="col" style="width: 64px">Id</th>
-            <th scope="col" style="width: 110px">Id detalle proceso</th>
-            <th scope="col" style="width: 175px">Etapa</th>
-            <th scope="col" style="width: 150px">Estado</th>
-            <th scope="col" style="width: 150px">Usuario del proceso</th>
-            <th scope="col" style="width: 130px">Cód. mensaje</th>
-            <th scope="col">Mensaje</th>
-            <th scope="col" style="width: 110px">Permisible</th>
-            <th scope="col" style="width: 150px">Requiere comentario</th>
-            <th scope="col" [style.width.px]="modo === 'grilla' ? 300 : 180">Comentario</th>
-            <!-- La fecha sólo es columna cuando no hay modal que la muestre. -->
-            @if (modo === 'grilla') {
-              <th scope="col" style="width: 130px">Fecha comentario</th>
-            }
-          </tr>
-        </ng-template>
+    <!-- ── Celdas del nodo proceso ── -->
+    <ng-template #tplNum let-nodo>
+      <span class="form-defic__num">{{ nodo.valores['num'] }}</span>
+    </ng-template>
 
-        <ng-template #body let-d>
-          <tr>
-            <!-- Consecutivo de la deficiencia dentro de la etapa. -->
-            <td>{{ d.id ?? '—' }}</td>
+    <ng-template #tplIdDetalle let-nodo>
+      {{ nodo.data.fila.idDetalleProceso }}
+    </ng-template>
 
-            <!-- ── Registro de detalle del proceso ── -->
-            <td><span class="form-table__code">{{ d.idDetalleProceso }}</span></td>
-            <td>
-              <span class="form-table__etapa">
-                <i class="pi" [ngClass]="etapaDe(d.etapa).icon" aria-hidden="true"></i>
-                {{ etapaDe(d.etapa).label }}
-              </span>
-            </td>
-            <td>
-              <p-tag [value]="estadoDe(d.estado).label"
-                [severity]="estadoDe(d.estado).severity" />
-            </td>
-            <td class="form-defic__usuario">{{ d.usuarioProceso }}</td>
+    <ng-template #tplFecha let-nodo>
+      <span class="form-defic__fechaproc">
+        <span>{{ fechaDia(nodo.data.fila) }}</span>
+        <span>{{ fechaHora(nodo.data.fila) }}</span>
+      </span>
+    </ng-template>
 
-            <!-- ── Deficiencia. Vacía cuando el proceso no generó ninguna. ── -->
-            @if (d.id === null) {
-              <td [attr.colspan]="modo === 'grilla' ? 6 : 5"
-                class="form-defic__sin-deficiencia">
-                El proceso no generó deficiencias.
-              </td>
-            } @else {
-              <td><span class="form-table__code">{{ d.codMensaje }}</span></td>
-              <td>
-                <!-- El mensaje es el texto del catálogo más lo que la regla le
-                     inyecta al invocarlo: su largo es variable, así que se
-                     recorta y se expande a demanda para no desalinear la fila. -->
-                <p class="form-defic__mensaje"
-                  [class.form-defic__mensaje--corto]="!estaExpandido(d)">
-                  {{ d.mensaje }}
-                </p>
-                @if (esMensajeLargo(d)) {
-                  <p-button size="small" [text]="true" severity="secondary"
-                    styleClass="form-defic__vermas"
-                    [label]="estaExpandido(d) ? 'Ver menos' : 'Ver más'"
-                    [icon]="estaExpandido(d) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
-                    iconPos="right"
-                    [attr.aria-expanded]="estaExpandido(d)"
-                    (onClick)="alternarMensaje(d)" />
-                }
-              </td>
-              <td>
-                <p-tag [value]="d.permisible ? 'Sí' : 'No'"
-                  [severity]="d.permisible ? 'success' : 'danger'" />
-              </td>
-              <td>
-                <p-tag [value]="d.requiereComentario ? 'Sí' : 'No'"
-                  [severity]="d.requiereComentario ? 'warn' : 'secondary'" />
-              </td>
-              <td>
-                @if (!d.requiereComentario) {
-                  <span class="form-defic__sin-comentario">No requiere</span>
-                } @else if (!puedeDiligenciar(d)) {
-                  <!-- Proceso anterior: la justificación ya viajó con ese envío.
-                       Se puede leer, no reescribir. Aplica a las dos variantes:
-                       la regla es del dato, no de dónde se diligencie. -->
-                  <div class="form-defic__just">
-                    <p-tag [value]="d.comentarioGuardado ? 'Justificada' : 'Sin justificar'"
-                      [severity]="d.comentarioGuardado ? 'success' : 'secondary'" />
-                    @if (d.comentarioGuardado) {
-                      <p-button size="small" [text]="true" severity="secondary"
-                        styleClass="form-defic__just-btn"
-                        icon="pi pi-eye" label="Ver"
-                        [attr.aria-label]="'Ver la justificación de la deficiencia ' + d.codMensaje"
-                        [pTooltip]="AYUDA_SOLO_LECTURA" tooltipPosition="top"
-                        (onClick)="abrirJustificacion(d)" />
-                    } @else {
-                      <span class="form-defic__solo-lectura"
-                        [pTooltip]="AYUDA_SOLO_LECTURA" tooltipPosition="top">
-                        <i class="pi pi-lock" aria-hidden="true"></i>
-                        Proceso anterior
-                      </span>
-                    }
-                  </div>
-                } @else if (modo === 'modal') {
-                  <!-- Sólo estado y acción: el texto se escribe en el modal,
-                       que es donde cabe. -->
-                  <div class="form-defic__just">
-                    <p-tag [value]="d.comentarioGuardado ? 'Justificada' : 'Pendiente'"
-                      [severity]="d.comentarioGuardado ? 'success' : 'warn'" />
-                    <p-button size="small" [text]="true"
-                      styleClass="form-defic__just-btn"
-                      icon="pi pi-pencil"
-                      [label]="d.comentarioGuardado ? 'Editar' : 'Justificar'"
-                      [attr.aria-label]="(d.comentarioGuardado ? 'Editar' : 'Justificar')
-                        + ' la deficiencia ' + d.codMensaje"
-                      (onClick)="abrirJustificacion(d)" />
-                  </div>
-                } @else {
-                  <!-- Diligenciado directo en la celda. -->
-                  <div class="form-defic__box">
-                    <textarea pTextarea rows="2" class="form-defic__comentario"
-                      [(ngModel)]="d.comentario"
-                      (ngModelChange)="onComentarioInput(d)"
-                      [attr.aria-label]="'Justificación para el mensaje ' + d.codMensaje"
-                      aria-required="true"
-                      [attr.aria-invalid]="d.comentarioError ? 'true' : null"
-                      [attr.aria-describedby]="'defic-msg-' + d.idDetalleProceso + '-' + d.id"
-                      placeholder="Justifique la deficiencia"></textarea>
+    <!-- Etapa y estado completos y en columnas propias: hay una fila por
+         proceso, así que caben escritos enteros y se ordenan por separado. -->
+    <ng-template #tplEtapa let-nodo>
+      <span class="form-table__etapa">
+        <i class="pi" [ngClass]="etapaDe(nodo.data.fila.etapa).icon" aria-hidden="true"></i>
+        {{ etapaDe(nodo.data.fila.etapa).label }}
+      </span>
+    </ng-template>
 
-                    <div class="form-defic__box-foot">
-                      <small class="form-defic__count"
-                        [class.form-defic__count--corto]="d.comentario.trim().length < COMENTARIO_MIN">
-                        {{ d.comentario.trim().length }}/{{ COMENTARIO_MIN }}
-                      </small>
-                      <p-button label="Guardar" icon="pi pi-check" size="small"
-                        styleClass="form-defic__save"
-                        [disabled]="!comentarioPendiente(d)"
-                        [pTooltip]="comentarioPendiente(d) ? '' : 'No hay cambios por guardar'"
-                        tooltipPosition="top"
-                        (onClick)="guardarEnGrilla(d)" />
-                    </div>
+    <ng-template #tplEstado let-nodo>
+      <span [ngClass]="claseEstado(nodo.data.fila)">
+        {{ estadoDe(nodo.data.fila.estado).label }}
+      </span>
+    </ng-template>
 
-                    <!-- Un solo hueco de mensaje: error o confirmación, nunca los dos. -->
-                    <small [id]="'defic-msg-' + d.idDetalleProceso + '-' + d.id"
-                      class="form-defic__msg" aria-live="polite">
-                      @if (d.comentarioError) {
-                        <span class="form-defic__msg--error" role="alert">
-                          <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
-                          {{ d.comentarioError }}
-                        </span>
-                      } @else if (d.comentarioGuardado && !comentarioPendiente(d)) {
-                        <span class="form-defic__msg--ok">
-                          <i class="pi pi-check-circle" aria-hidden="true"></i>
-                          Guardado
-                        </span>
-                      } @else {
-                        <span class="form-defic__msg--hint">
-                          Mínimo {{ COMENTARIO_MIN }} caracteres.
-                        </span>
-                      }
-                    </small>
-                  </div>
-                }
-              </td>
-              @if (modo === 'grilla') {
-                <td class="form-defic__fecha">{{ d.fechaComentario || '—' }}</td>
-              }
-            }
-          </tr>
-        </ng-template>
+    <ng-template #tplUsuario let-nodo>
+      {{ nodo.data.fila.usuarioProceso }}
+    </ng-template>
 
-        <ng-template #emptymessage>
-          <tr>
-            <td [attr.colspan]="modo === 'grilla' ? 11 : 10" class="usr-empty">
-              <i class="pi pi-inbox" aria-hidden="true"></i>
-              <p>No se encontraron registros en el alcance seleccionado.</p>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
+    <!-- Resumen del proceso. Se calcula sobre las filas vivas, así que al
+         guardar un comentario el contador de pendientes baja solo. -->
+    <ng-template #tplResumen let-nodo>
+      @if (nodo.data.deficiencias.length === 0) {
+        <span class="form-defic__vacio">—</span>
+      } @else {
+        <span class="form-defic__resumen">
+          {{ nodo.data.deficiencias.length }}
+          {{ nodo.data.deficiencias.length === 1 ? 'deficiencia' : 'deficiencias' }}
+          @if (pendientesDeProceso(nodo.data); as pendientes) {
+            <span class="form-defic__resumen-pend">
+              · {{ pendientes }} sin comentario
+            </span>
+          }
+        </span>
+      }
+    </ng-template>
+
+    <!-- ── Celdas del nodo deficiencia ── -->
+    <ng-template #tplHijoNum let-nodo>
+      <span class="form-defic__num">{{ nodo.valores['num'] }}</span>
+    </ng-template>
+
+    <ng-template #tplHijoCod let-nodo>
+      {{ nodo.data.codMensaje }}
+    </ng-template>
+
+    <ng-template #tplHijoMensaje let-nodo>
+      <p class="form-defic__mensaje form-defic__mensaje--corto">
+        {{ textoCompleto(nodo.data) }}
+      </p>
+      @if (esMensajeLargo(nodo.data)) {
+        <p-button size="small" [text]="true" severity="secondary"
+          styleClass="form-defic__vermas"
+          label="Ver completo" icon="pi pi-external-link" iconPos="right"
+          [attr.aria-label]="'Ver el mensaje completo de ' + nodo.data.codMensaje"
+          (onClick)="abrirDetalle(nodo.data)" />
+      }
+    </ng-template>
+
+    <ng-template #tplHijoPerm let-nodo>
+      <span class="form-defic__perm" [class.form-defic__perm--no]="!nodo.data.permisible">
+        {{ nodo.data.permisible ? 'Sí' : 'No' }}
+      </span>
+    </ng-template>
+
+    <ng-template #tplHijoComentario let-nodo>
+      @switch (estadoComentario(nodo.data)) {
+        @case ('noRequiere') {
+          <span class="form-defic__sin-comentario">No requiere</span>
+        }
+        @case ('registrado') {
+          <button type="button" class="form-defic__registrado"
+            [attr.aria-label]="'Ver el comentario de ' + nodo.data.codMensaje"
+            (click)="abrirDetalle(nodo.data)">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>
+            Registrado
+          </button>
+        }
+        @case ('registrar') {
+          <p-button size="small" [text]="true"
+            styleClass="form-defic__just-btn"
+            label="Registrar" icon="pi pi-pencil"
+            [attr.aria-label]="'Registrar el comentario de ' + nodo.data.codMensaje"
+            (onClick)="abrirDetalle(nodo.data)" />
+        }
+        @default {
+          <span class="form-defic__solo-lectura"
+            [pTooltip]="AYUDA_SOLO_LECTURA" tooltipPosition="top">
+            <i class="pi pi-lock" aria-hidden="true"></i>
+            Sin registrar
+          </span>
+        }
+      }
+    </ng-template>
   }
 </section>
 
 <!-- ============================================================= -->
-<!-- MODAL: justificación de una deficiencia                        -->
+<!-- MODAL: detalle de una deficiencia (y su justificación)         -->
 <!-- ============================================================= -->
 <p-dialog
   [visible]="!!deficienciaEnEdicion"
@@ -247,30 +182,50 @@
   [draggable]="false"
   [closeOnEscape]="true"
   [style]="{ width: '520px', maxWidth: '95vw' }"
-  [header]="modalSoloLectura ? 'Justificación de la deficiencia' : 'Justificar deficiencia'">
+  [header]="!modalPideJustificacion ? 'Detalle de la deficiencia'
+    : modalSoloLectura ? 'Justificación de la deficiencia' : 'Justificar deficiencia'">
 
   @if (deficienciaEnEdicion; as d) {
     <div class="form-defic__modal">
-      <!-- Contexto: qué se está justificando. El mensaje va completo, que aquí
-           sí hay ancho para mostrarlo. -->
+      <!-- Contexto: qué se está justificando. El mensaje va completo —
+           descripción del catálogo más el detalle que inyecta la regla—,
+           que aquí sí hay ancho para mostrarlo. -->
       <div class="form-defic__modal-ctx">
         <span class="form-table__code">{{ d.codMensaje }}</span>
         <p>{{ d.mensaje }}</p>
+        @if (d.mensajeAdicional) {
+          <p class="form-defic__modal-adicional">{{ d.mensajeAdicional }}</p>
+        }
       </div>
 
-      @if (modalSoloLectura) {
+      @if (modalPideJustificacion && modalSoloLectura) {
         <p class="form-defic__modal-aviso">
           <i class="pi pi-lock" aria-hidden="true"></i>
           {{ AYUDA_SOLO_LECTURA }}
         </p>
       }
 
+      @if (!modalPideJustificacion) {
+        <p class="form-defic__modal-aviso">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          Esta deficiencia no admite justificación: se corrige y se vuelve a procesar.
+        </p>
+      }
+
+      @if (modalPideJustificacion) {
       <div class="form-defic__modal-campo">
         <div class="form-defic__modal-label">
           <label for="defic-justificacion">
             Justificación
             @if (!modalSoloLectura) {
               <span class="field-required" aria-hidden="true">*</span>
+            } @else {
+              <!-- El campo se ve gris y sin manija de redimensión, pero eso por
+                   sí solo no dice por qué: la etiqueta lo nombra. -->
+              <span class="form-defic__modal-lectura">
+                <i class="pi pi-lock" aria-hidden="true"></i>
+                sólo lectura
+              </span>
             }
           </label>
           <!-- Fecha de la justificación guardada: de cuándo es el texto que se
@@ -282,8 +237,13 @@
             </span>
           }
         </div>
+        <!-- En consulta va `readonly`, no `disabled`: un campo deshabilitado no
+             recibe foco ni lo lee el lector de pantalla, y aquí el texto es
+             justamente lo que se viene a leer (y a copiar). El aspecto de
+             deshabilitado lo da la clase. -->
         <textarea pTextarea id="defic-justificacion" rows="5"
           class="form-defic__modal-textarea"
+          [class.form-defic__modal-textarea--consulta]="modalSoloLectura"
           [(ngModel)]="borrador"
           (ngModelChange)="onBorradorInput()"
           [readonly]="modalSoloLectura"
@@ -293,15 +253,16 @@
           aria-describedby="defic-justificacion-msg"
           placeholder="Explique por qué la deficiencia es aceptable en este reporte"></textarea>
 
+        <!-- En consulta no va nada aquí: la etiqueta ya dice "sólo lectura" y el
+             aviso de arriba explica por qué. El hueco se mantiene (min-height)
+             para que el modal no salte al cambiar de fila. -->
         <small id="defic-justificacion-msg" class="form-defic__modal-msg" aria-live="polite">
-          @if (modalSoloLectura) {
-            <span class="form-defic__msg--hint">Registro de consulta: no admite cambios.</span>
-          } @else if (borradorError) {
+          @if (borradorError) {
             <span class="form-defic__msg--error" role="alert">
               <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
               {{ borradorError }}
             </span>
-          } @else {
+          } @else if (!modalSoloLectura) {
             <span class="form-defic__count"
               [class.form-defic__count--corto]="borrador.trim().length < COMENTARIO_MIN">
               {{ borrador.trim().length }}/{{ COMENTARIO_MIN }} caracteres mínimos
@@ -309,6 +270,7 @@
           }
         </small>
       </div>
+      }
     </div>
   }
 

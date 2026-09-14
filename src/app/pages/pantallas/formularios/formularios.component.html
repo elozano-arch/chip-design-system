@@ -122,17 +122,41 @@
                     </p-iconField>
                   }
                 </div>
+                <!-- Cascada: cada lista espera a la anterior (Entidad → Categoría
+                     → Año → Periodo) y el motivo del bloqueo va visible bajo el
+                     campo, no en tooltip: un select deshabilitado no lo dispara. -->
                 <div class="chip-filters__field">
                   <label for="wiz-categoria">Categoría <span class="field-required" aria-hidden="true">*</span></label>
-                  <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria" (onChange)="onFiltroModificado()" placeholder="Seleccione categoría" appendTo="body" class="w-full" inputId="wiz-categoria" aria-required="true" />
+                  <p-select [options]="categoriaOptions" [(ngModel)]="selectedCategoria"
+                    (onChange)="onCategoriaChange()" placeholder="Seleccione categoría"
+                    appendTo="body" class="w-full" inputId="wiz-categoria" aria-required="true"
+                    [disabled]="!categoriaHabilitada"
+                    [attr.aria-describedby]="ayudaCategoria ? 'wiz-categoria-ayuda' : null" />
+                  @if (ayudaCategoria) {
+                    <small id="wiz-categoria-ayuda" class="chip-filters__hint">{{ ayudaCategoria }}</small>
+                  }
                 </div>
                 <div class="chip-filters__field">
                   <label for="wiz-anio">Año <span class="field-required" aria-hidden="true">*</span></label>
-                  <p-select [options]="anioOptions" [(ngModel)]="selectedAnio" (onChange)="onFiltroModificado()" placeholder="Seleccione año" appendTo="body" class="w-full" inputId="wiz-anio" aria-required="true" />
+                  <p-select [options]="anioOptions" [(ngModel)]="selectedAnio"
+                    (onChange)="onAnioChange()" placeholder="Seleccione año"
+                    appendTo="body" class="w-full" inputId="wiz-anio" aria-required="true"
+                    [disabled]="!anioHabilitado"
+                    [attr.aria-describedby]="ayudaAnio ? 'wiz-anio-ayuda' : null" />
+                  @if (ayudaAnio) {
+                    <small id="wiz-anio-ayuda" class="chip-filters__hint">{{ ayudaAnio }}</small>
+                  }
                 </div>
                 <div class="chip-filters__field">
                   <label for="wiz-periodo">Periodo <span class="field-required" aria-hidden="true">*</span></label>
-                  <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo" (onChange)="onFiltroModificado()" placeholder="Seleccione periodo" appendTo="body" class="w-full" inputId="wiz-periodo" aria-required="true" />
+                  <p-select [options]="periodoOptions" [(ngModel)]="selectedPeriodo"
+                    (onChange)="onFiltroModificado()" placeholder="Seleccione periodo"
+                    appendTo="body" class="w-full" inputId="wiz-periodo" aria-required="true"
+                    [disabled]="!periodoHabilitado"
+                    [attr.aria-describedby]="ayudaPeriodo ? 'wiz-periodo-ayuda' : null" />
+                  @if (ayudaPeriodo) {
+                    <small id="wiz-periodo-ayuda" class="chip-filters__hint">{{ ayudaPeriodo }}</small>
+                  }
                 </div>
               </div>
 
@@ -182,7 +206,7 @@
              · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
              · Exportar y Validar se habilitan al marcar al menos un formulario -->
         <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
-          <p-button label="Exportar" icon="pi pi-download"
+          <p-button label="Exportar" icon="pi pi-download" severity="success"
             [disabled]="selectedFormularios.length === 0"
             [pTooltip]="selectedFormularios.length === 0 ? 'Marque al menos un formulario para exportar' : ''"
             tooltipPosition="top"
@@ -208,7 +232,7 @@
             <div class="form-wizard__inline-form">
               <p-select [options]="exportFormatOptions" [(ngModel)]="selectedExportFormat"
                 appendTo="body" inputId="wiz-export-fmt" />
-              <p-button label="Exportar" icon="pi pi-download"
+              <p-button label="Exportar" icon="pi pi-download" severity="success"
                 (onClick)="confirmExport()" />
             </div>
           </div>
@@ -272,16 +296,10 @@
                         <i class="pi pi-minus-circle" aria-hidden="true"></i>
                         {{ sinRegistroLabel }}
                       </span>
-                    } @else if (esRechazado(formItem)) {
-                      <button type="button" class="form-estado-tagbtn"
-                        [attr.aria-label]="'Ver las deficiencias de ' + formItem.nombre + ' en el control de envío'"
-                        pTooltip="Clic para ver las deficiencias en el control de envío"
-                        tooltipPosition="top"
-                        (click)="verControlEnvio(formItem, 'ultimo')">
-                        <p-tag [value]="estadoDe(formItem.estado).label"
-                          [severity]="estadoDe(formItem.estado).severity" />
-                      </button>
                     } @else {
+                      <!-- El estado informa; no navega. Al detalle se entra por
+                           "Historial proceso" del menú de la fila, que es la
+                           única puerta a los dos modos del historial. -->
                       <p-tag [value]="estadoDe(formItem.estado).label"
                         [severity]="estadoDe(formItem.estado).severity"
                         [pTooltip]="estadoTooltip(formItem.estado)" tooltipPosition="top" />
@@ -363,19 +381,49 @@
           </h2>
         </header>
 
+        <!-- Demostración del paso Envíos: qué acción se simula y con qué caso.
+             Sólo las que deciden el envío; el control de envío y el diálogo de
+             importación llevan la suya, en la vista donde se nota el efecto. -->
+        <div class="form-wizard__demo-switch form-wizard__demo-switch--doble"
+          role="group" aria-label="Simulación de escenarios">
+          <!-- El título va en su propia línea: en la misma que las listas se
+               confundía con la etiqueta del primer campo. -->
+          <span class="form-wizard__demo-title">
+            <i class="pi pi-flag" aria-hidden="true"></i>
+            Demostración <span class="form-wizard__demo-tag">simulación</span>
+          </span>
+          <div class="form-wizard__demo-field">
+            <label for="demo-accion">Acción</label>
+            <p-select inputId="demo-accion" [options]="demoAccionOptions"
+              [(ngModel)]="demoAccion"
+              appendTo="body" styleClass="form-wizard__demo-select" />
+          </div>
+          <div class="form-wizard__demo-field">
+            <label for="demo-caso">Caso</label>
+            <p-select inputId="demo-caso" [options]="demoCasoOptions"
+              [(ngModel)]="demoCaso"
+              appendTo="body" styleClass="form-wizard__demo-select" />
+          </div>
+        </div>
+
         <!-- Toolbar de acciones del envío (mismo formato que el toolbar de Paso 2) -->
+        <!-- Los tooltips van en el <span> que envuelve cada botón, no en el
+             botón: PrimeNG le pone `pointer-events: none` al deshabilitado, así
+             que el suyo no dispararía nunca — y es justo cuando hay algo que
+             explicar. El wrapper sí recibe el hover. -->
         <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones del envío">
-          <p-button label="Enviar adjunto" icon="pi pi-paperclip"
-            pTooltip="Adjuntar archivo de soporte (memorando, certificado, etc.)"
-            tooltipPosition="top"
-            (onClick)="executeAction('enviarAdjunto')" />
-          <span class="form-action-badge-wrap">
+          <span [pTooltip]="ayudaAdjunto" tooltipPosition="top">
+            <p-button label="Enviar adjunto" icon="pi pi-paperclip"
+              [disabled]="!puedeEnviarAdjunto"
+              (onClick)="executeAction('enviarAdjunto')" />
+          </span>
+          <span class="form-action-badge-wrap"
+            [pTooltip]="entidadesAgregadasHabilitado
+              ? 'Seleccione las entidades agregadas para el envío de la categoría'
+              : 'Esta categoría no gestiona entidades agregadas'"
+            tooltipPosition="top">
             <p-button label="Entidades agregadas" icon="pi pi-sitemap"
               [disabled]="!entidadesAgregadasHabilitado"
-              [pTooltip]="entidadesAgregadasHabilitado
-                ? 'Seleccione las entidades agregadas para el envío de la categoría'
-                : 'Esta entidad no es agregadora'"
-              tooltipPosition="top"
               (onClick)="executeAction('entidadesAgregadas')" />
             @if (entidadesAgregadasHabilitado && selectedEntidades.length > 0) {
               <span class="form-action-badge"
@@ -386,28 +434,24 @@
           </span>
         </div>
 
-        <!-- Simulación (demo): qué responderá la validación central al enviar.
-             Vive junto a "Enviar Categoría", que es la acción que lo aplica.
-             En producción el resultado llega del backend tras enviar. -->
-        <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de la respuesta de validación central">
-          <i class="pi pi-flag" aria-hidden="true"></i>
-          <label for="ce-resp-central">Respuesta central al enviar <span class="form-wizard__demo-tag">demostración</span></label>
-          <p-select inputId="ce-resp-central" [options]="respuestaCentralOptions"
-            [(ngModel)]="respuestaCentral"
-            appendTo="body" styleClass="form-wizard__demo-select" />
-        </div>
-
         <!-- Estado del envío + acción Enviar Categoría. Solo el estado: el detalle
              del rechazo se consulta en el formulario rechazado (columna Estado). -->
         <div class="form-send-bar"
-          [class.form-send-bar--ready]="!resultadoEnvio && todosValidados"
+          [class.form-send-bar--ready]="!resultadoEnvio && todosValidados && !faltanEntidadesAgregadas"
+          [class.form-send-bar--aviso]="!resultadoEnvio && faltanEntidadesAgregadas"
           [ngClass]="resultadoEnvio?.clase">
-          <div class="form-send-bar__info">
+          <div class="form-send-bar__info" aria-live="polite">
             @if (resultadoEnvio; as rc) {
               <i class="pi {{ rc.icon }}" aria-hidden="true"></i>
               <div>
                 <strong>{{ rc.titulo }}</strong>
                 <span>{{ rc.detalle }}</span>
+              </div>
+            } @else if (faltanEntidadesAgregadas) {
+              <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+              <div>
+                <strong>Falta seleccionar entidades agregadas</strong>
+                <span>Esta categoría exige al menos una entidad para enviarse.</span>
               </div>
             } @else {
               <i class="pi"
@@ -431,26 +475,31 @@
               </div>
             }
           </div>
+          <!-- Sin botón propio: "Entidades agregadas" está en el toolbar de esta
+               misma sección, dos líneas arriba. Repetirlo aquí sería duplicar la
+               misma acción en la misma pantalla. -->
           <p-button label="Enviar Categoría" icon="pi pi-send" iconPos="right"
-            [disabled]="!todosValidados"
+            [disabled]="!todosValidados || faltanEntidadesAgregadas"
             (onClick)="enviarCategoria()" />
         </div>
 
       </section>
     }
-    <!-- Sub-vista: Control de envío como PANTALLA dedicada (desde la acción ⋮).
-         Reemplaza el listado, igual que Registro manual / Protocolo. -->
+    <!-- Sub-vista: Historial proceso como PANTALLA dedicada (desde la acción ⋮).
+         Reemplaza el listado, igual que Registro manual / Protocolo. No es sólo
+         el control del envío: lista todo lo que le ha pasado al formulario
+         —importaciones, validaciones y envíos—, con o sin deficiencia. -->
     @if (controlEnvioAbierto) {
-      <section class="form-wizard__panel form-wizard__panel--control-envio" aria-label="Control de envío de la categoría">
+      <section class="form-wizard__panel form-wizard__panel--control-envio" aria-label="Historial de procesos del formulario">
         <p-button label="Volver al listado" icon="pi pi-arrow-left"
           [text]="true" severity="secondary"
           styleClass="form-wizard__panel-back"
           (onClick)="cerrarControlEnvio()" />
         <header class="form-wizard__panel-header">
-          <h2><i class="pi pi-send" aria-hidden="true"></i> Control de envío
+          <h2><i class="pi pi-history" aria-hidden="true"></i> Historial proceso
             <button type="button" class="panel-help"
-              pTooltip="Estado de validación y envío de la categoría para el contexto aplicado."
-              tooltipPosition="top" aria-label="Ayuda de la sección Control de envío">
+              pTooltip="Procesos por los que ha pasado el formulario dentro de la categoría —importación, validación local, validación central y envío—, con el estado con que cerró cada uno."
+              tooltipPosition="top" aria-label="Ayuda de la sección Historial proceso">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
             </button>
           </h2>
@@ -474,37 +523,22 @@
             }
           </dl>
 
-          <!-- Simulación (demo): los dos patrones posibles para diligenciar la
-               justificación. En producción se implementa uno solo; aquí se
-               pueden comparar sin salir de la pantalla. -->
-          <div class="form-wizard__demo-switch" role="group"
-            aria-label="Simulación del patrón de justificación">
-            <i class="pi pi-flag" aria-hidden="true"></i>
-            <label for="ce-modo-just">Diligenciar justificación
-              <span class="form-wizard__demo-tag">demostración</span></label>
-            <p-select inputId="ce-modo-just" [options]="modoJustificacionOptions"
-              [(ngModel)]="modoJustificacion"
-              appendTo="body" styleClass="form-wizard__demo-select" />
-          </div>
-
           <!-- 2 · Deficiencias del formulario. Va fuera de .form-estado-screen
                (max-width 640px): la tabla necesita ancho completo y su propio
                scroll horizontal. -->
           <app-deficiencias-envio
-            [modo]="modoJustificacion"
             [formulario]="controlEnvioFormulario"
             [visibles]="deficienciasVisibles"
             [total]="deficienciasEnvio.length"
-            [alcance]="alcanceDeficiencias"
             [ultimoProcesoId]="ultimoProcesoId"
             [resumen]="resumenDeficiencias"
-            (alcanceChange)="cambiarAlcanceDeficiencias($event)" />
+            />
         }
 
         @if (!(filtersApplied && filterEntidad && filteredFormularios.length > 0)) {
           <div class="form-estado-empty">
             <i class="pi pi-inbox" aria-hidden="true"></i>
-            <p>Aplique los filtros para ver las deficiencias del formulario.</p>
+            <p>Aplique los filtros para ver el historial del formulario.</p>
           </div>
         }
       </section>
@@ -523,23 +557,8 @@
     [style]="{ width: '520px', maxWidth: '95vw' }"
     [header]="importPaso === 'justificacion'
       ? 'Justificación del reenvío'
-      : importPaso === 'confirmacion' ? 'Confirmar reimportación' : 'Importar archivo'">
-
-    <!-- Simulación (demo): el sistema real decide con el contexto si hay
-         información previa y si la categoría ya se envió. Aquí se fuerza para
-         poder ver los tres caminos: importación limpia, reimportación y
-         reenvío. Va fuera de los pasos porque el diálogo puede abrir
-         directamente en la justificación, y desde ahí hay que poder cambiarlo. -->
-    @if (importPaso !== 'iniciado') {
-      <div class="form-wizard__demo-switch" role="group" aria-label="Simulación del escenario de importación">
-        <i class="pi pi-flag" aria-hidden="true"></i>
-        <label for="imp-escenario">Escenario <span class="form-wizard__demo-tag">demostración</span></label>
-        <p-select inputId="imp-escenario" [options]="escenarioImportOptions"
-          [(ngModel)]="escenarioImport"
-          (onChange)="onEscenarioImportChange()"
-          appendTo="body" styleClass="form-wizard__demo-select" />
-      </div>
-    }
+      : importPaso === 'confirmacion' ? 'Reemplazo de información'
+      : importPaso === 'rechazado' ? 'El archivo no puede procesarse' : 'Importar archivo'">
 
     @if (importPaso === 'iniciado') {
       <!-- Alerta de proceso iniciado. Es un mensaje de resultado: va visible en
@@ -548,24 +567,37 @@
       <div class="form-import-done" role="status">
         <i class="pi pi-clock" aria-hidden="true"></i>
         <div class="form-import-done__body">
-          @if (esReimportacion) {
-            <strong>El proceso de reimportación se ha iniciado</strong>
-            <p>
-              <span class="form-import-done__file">{{ importFileName }}</span>
-              está reemplazando la información de los formularios del contexto
-              seleccionado. El resultado se notificará vía correo electrónico a
-              <strong>{{ correoUsuario }}</strong>.
-            </p>
-          } @else {
-            <strong>El archivo ya inició su proceso de importación</strong>
-            <p>
-              <span class="form-import-done__file">{{ importFileName }}</span>
-              está en la cola de proceso. El resultado se notificará vía correo
-              electrónico a <strong>{{ correoUsuario }}</strong>.
-            </p>
-          }
+          <strong>La carga fue recibida y será procesada</strong>
+          <p>
+            <span class="form-import-done__file">{{ importFileName }}</span>
+            ingresó a la cola de proceso. El resultado llegará por correo
+            electrónico a <strong>{{ correoUsuario }}</strong> y podrá
+            consultarlo en el historial del proceso.
+          </p>
         </div>
       </div>
+    } @else if (importPaso === 'rechazado') {
+      <!-- Verificaciones previas: el archivo no se transmite. Un solo mensaje
+           relaciona TODAS las situaciones detectadas, para que el usuario
+           corrija de una vez. -->
+      <div class="form-import-error" role="alert">
+        <i class="pi pi-times-circle" aria-hidden="true"></i>
+        <div class="form-import-error__body">
+          <strong>El archivo no puede procesarse.</strong>
+          <p>Se presentaron las siguientes situaciones:</p>
+        </div>
+      </div>
+      <ul class="form-import-error__list" aria-label="Situaciones detectadas">
+        @for (s of situacionesImport; track s) {
+          <li class="form-import-error__item">
+            <p class="form-import-error__texto">{{ s }}</p>
+          </li>
+        }
+      </ul>
+      <p class="form-import-zone__hint">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        Corrija y vuelva a cargarlo.
+      </p>
     } @else if (importPaso === 'justificacion') {
       <!-- Reenvío: el último envío del contexto fue aceptado, así que volver
            a importar modifica información ya aceptada y hay que motivarlo. -->
@@ -575,7 +607,7 @@
           <strong>Está modificando información ya aceptada</strong>
           <p>
             El último envío para el contexto seleccionado fue aceptado.
-            Justifique el motivo de su reenvío para continuar.
+            Justifique el motivo de su reenvío para iniciar la importación.
           </p>
         </div>
       </div>
@@ -633,18 +665,15 @@
         <span class="form-import-done__file">{{ importFileName }}</span>
       </p>
     } @else if (importPaso === 'confirmacion') {
-      <!-- Aviso de reemplazo. La importación trabaja sobre el CONTEXTO
-           (entidad · año · periodo), no sobre la categoría: la categoría sólo
-           entra en juego en la validación central y en el envío. -->
+      <!-- Advertencia de reemplazo. La relación es de los formularios con
+           información registrada en el CONTEXTO (entidad · año · periodo), no
+           de los que trae el archivo: el archivo no se lee en el navegador. -->
       <div class="form-import-warn" role="alert">
         <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
         <div class="form-import-warn__body">
-          <strong>Hay formularios con información para el contexto seleccionado</strong>
           <p>
-            De los que trae <span class="form-import-done__file">{{ importFileName }}</span>,
-            <strong>{{ formulariosAReimportar.length }}</strong>
-            {{ formulariosAReimportar.length === 1 ? 'ya cuenta' : 'ya cuentan' }}
-            con información. Al continuar se reemplaza y no se puede recuperar.
+            Los siguientes formularios cuentan con información registrada para
+            el contexto seleccionado:
           </p>
         </div>
       </div>
@@ -659,9 +688,29 @@
       </ul>
       <p class="form-import-zone__hint">
         <i class="pi pi-info-circle" aria-hidden="true"></i>
-        ¿Desea continuar?
+        Si el archivo contiene información de alguno de ellos, se reemplazará la
+        información almacenada y no será posible recuperarla.
       </p>
+      <p class="form-import-zone__hint"><strong>¿Desea continuar?</strong></p>
     } @else {
+      <!-- Demostración de la importación: el escenario decide si el contexto
+           tiene información registrada, si la categoría ya se envió (reenvío),
+           si hay un proceso en ejecución o si el archivo no pasa las
+           verificaciones previas. Vive aquí, que es donde se ve. -->
+      <div class="form-wizard__demo-switch form-wizard__demo-switch--doble"
+        role="group" aria-label="Simulación del escenario de importación">
+        <span class="form-wizard__demo-title">
+          <i class="pi pi-flag" aria-hidden="true"></i>
+          Demostración <span class="form-wizard__demo-tag">simulación</span>
+        </span>
+        <div class="form-wizard__demo-field">
+          <label for="demo-caso-import">Escenario</label>
+          <p-select inputId="demo-caso-import" [options]="escenarioImportOptions"
+            [(ngModel)]="escenarioImport" (onChange)="onEscenarioImportChange()"
+            appendTo="body" styleClass="form-wizard__demo-select" />
+        </div>
+      </div>
+
       <div class="form-import-zone" role="region" aria-label="Carga de archivo">
         <div class="form-import-zone__pick">
           <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
@@ -674,13 +723,10 @@
           </span>
         </div>
       </div>
-      @if (importFileError) {
-        <p-message severity="error" styleClass="w-full" [text]="importFileError" />
-      }
       <p class="form-import-zone__hint">
         <i class="pi pi-info-circle" aria-hidden="true"></i>
-        Sólo archivos de texto plano (.txt). La importación reemplaza los datos no
-        validados de los formularios para el contexto seleccionado.
+        Sólo archivos de texto plano (.txt), de máximo 5 MB. El resultado del
+        procesamiento llegará por correo electrónico.
       </p>
     }
 
@@ -688,16 +734,24 @@
       @if (importPaso === 'iniciado') {
         <p-button label="Cerrar" icon="pi pi-check"
           (onClick)="cerrarImportDialog()" />
+      } @else if (importPaso === 'rechazado') {
+        <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
+          (onClick)="cerrarImportDialog()" />
+        <p-button label="Cargar otro archivo" icon="pi pi-folder-open"
+          (onClick)="volverACargarArchivo()" />
       } @else if (importPaso === 'justificacion') {
         <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
           (onClick)="cancelarReenvio()" />
-        <p-button label="Continuar" icon="pi pi-arrow-right" iconPos="right"
+        <!-- Con el archivo ya cargado y verificado, justificar es el último
+             paso: este botón arranca el proceso, así que lleva el label de la
+             acción real y no un "Continuar" que no continúa a ninguna parte. -->
+        <p-button label="Importar" icon="pi pi-upload"
           (onClick)="confirmImport()" />
       } @else if (importPaso === 'confirmacion') {
         <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
           (onClick)="cancelarReimportacion()" />
-        <!-- Reemplaza información existente: acción destructiva. -->
-        <p-button label="Sí, reimportar" icon="pi pi-refresh" severity="danger"
+        <!-- Puede reemplazar información existente: acción destructiva. -->
+        <p-button label="Continuar" icon="pi pi-check" severity="danger"
           (onClick)="confirmImport()" />
       } @else {
         <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
@@ -708,6 +762,60 @@
           tooltipPosition="top"
           (onClick)="confirmImport()" />
       }
+    </ng-template>
+  </p-dialog>
+
+  <!-- ============================================================= -->
+  <!-- DIÁLOGO: ENVIAR ADJUNTO (soporte del envío de la categoría)     -->
+  <!-- ============================================================= -->
+  <p-dialog
+    [(visible)]="showAdjuntoDialog"
+    [modal]="true"
+    [draggable]="false"
+    [closeOnEscape]="true"
+    [style]="{ width: '520px', maxWidth: '95vw' }"
+    header="Enviar adjunto"
+    (onHide)="cerrarAdjuntoDialog()">
+
+    <p class="form-entidades__desc">
+      Adjunte el soporte del envío de <strong>{{ categoriaLabel }}</strong>
+      (memorando, certificación o acta).
+    </p>
+
+    <div class="form-import-zone" role="region" aria-label="Carga del adjunto">
+      <div class="form-import-zone__pick">
+        <p-button label="Seleccionar archivo" icon="pi pi-folder-open" [outlined]="true"
+          (onClick)="adjuntoDialogInput.click()" />
+        <input #adjuntoDialogInput type="file" accept="application/pdf,.pdf" hidden
+          (change)="seleccionarArchivoAdjunto($event)" />
+        <span class="form-import-zone__filename"
+          [class.form-import-zone__filename--empty]="!adjuntoFileName">
+          {{ adjuntoFileName || 'Ningún archivo seleccionado' }}
+          @if (adjuntoFileSize) {
+            <span class="form-import-zone__size">· {{ adjuntoFileSize }}</span>
+          }
+        </span>
+      </div>
+    </div>
+
+    @if (adjuntoFileError) {
+      <p-message severity="error" styleClass="w-full" [text]="adjuntoFileError" />
+    }
+
+    <p class="form-import-zone__hint">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      Sólo documentos PDF (.pdf), de máximo 10 MB.
+    </p>
+
+    <ng-template #footer>
+      <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="cerrarAdjuntoDialog()" />
+      <span [pTooltip]="!adjuntoFileName ? 'Seleccione un archivo PDF primero' : ''"
+        tooltipPosition="top">
+        <p-button label="Enviar adjunto" icon="pi pi-paperclip"
+          [disabled]="!adjuntoFileName"
+          (onClick)="confirmarAdjunto()" />
+      </span>
     </ng-template>
   </p-dialog>
 
@@ -800,13 +908,13 @@
           }
         </label>
         <span class="form-entidades__counter" aria-live="polite">
-          {{ selectedEntidades.length }} de {{ entidadesDisponibles.length }} seleccionadas
+          {{ entidadesBorrador.length }} de {{ entidadesDisponibles.length }} seleccionadas
         </span>
       </div>
 
       <p-table
         [value]="entidadesFiltradas"
-        [(selection)]="selectedEntidades"
+        [(selection)]="entidadesBorrador"
         dataKey="id"
         [scrollable]="true"
         scrollHeight="320px"
@@ -845,9 +953,9 @@
       <p-button label="Cancelar" icon="pi pi-times" [text]="true" severity="secondary"
         (onClick)="cerrarEntidadesModal()" />
       <p-button
-        [label]="'Asignar (' + selectedEntidades.length + ')'"
+        [label]="'Asignar (' + entidadesBorrador.length + ')'"
         icon="pi pi-check"
-        [disabled]="selectedEntidades.length === 0"
+        [disabled]="!puedeConfirmarEntidades"
         (onClick)="confirmarAsignacionEntidades()" />
     </ng-template>
   </p-dialog>

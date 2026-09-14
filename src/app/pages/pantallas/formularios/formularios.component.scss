@@ -180,6 +180,18 @@
     }
   }
 
+  /* Bloqueo previo al envío: faltan entidades agregadas (amarillo aviso). */
+  &--aviso {
+    background: var(--chip-bg-corn-silk);
+    border-color: var(--chip-warning);
+
+    .form-send-bar__info {
+      > i { color: var(--chip-warning-700); }
+      strong { color: var(--chip-warning-700); }
+      span { color: var(--chip-grey-700); }
+    }
+  }
+
   /* Resultado central "En proceso" — informativo (azul/cobalto). */
   &--proceso {
     background: var(--chip-bg-solitude);
@@ -478,6 +490,11 @@
   .form-summary {
     flex-direction: column;
   }
+
+  .form-send-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 /* Hacer clicable el nombre del formulario (sin look de link feo) */
@@ -663,6 +680,11 @@
     background: var(--chip-bg-white-smoke);
     border: 1px solid var(--chip-grey-200);
     border-radius: var(--radius-md);
+
+    /* Los botones con tooltip van envueltos en un <span> para que el tooltip
+       dispare aunque el botón esté deshabilitado; el wrapper no debe alterar
+       la alineación de la barra. */
+    > span { display: inline-flex; }
 
     /* Asegura que cualquier p-button respete los 40px globales de inputs */
     p-button .p-button {
@@ -1025,6 +1047,13 @@
     }
   }
 
+  /* Peso del archivo junto al nombre: en un adjunto con tope de tamaño, saber
+     cuánto pesa el que se eligió es parte de la validación, no un adorno. */
+  &__size {
+    color: var(--chip-grey-600);
+    font-weight: 600;
+  }
+
   &__hint {
     display: flex;
     align-items: flex-start;
@@ -1123,6 +1152,22 @@
   border-radius: var(--radius-md);
   font-family: var(--font-body);
 
+  /* Cuando el switch encabeza una sección, 16px lo dejaban pegado al bloque de
+     contexto que le sigue: se lee como parte de él y no como un control de la
+     demostración. Con aire propio arriba y abajo se separa de los dos. */
+  &--suelto {
+    margin-top: 8px;
+    margin-bottom: 28px;
+  }
+
+  /* Panel de dos listas (acción + caso): cada una con su etiqueta encima, para
+     que se lean como dos campos y no como una frase con dos desplegables. */
+  &--doble {
+    align-items: flex-start;
+    gap: 10px 16px;
+    margin-bottom: 20px;
+  }
+
   > i {
     font-size: 15px;
     color: var(--chip-grey-700);
@@ -1136,6 +1181,54 @@
     font-weight: 700;
     color: var(--chip-grey-700);
   }
+
+}
+
+/* Título del panel de dos listas: nombra el bloque entero, no un campo, así que
+   no es un <label> — cada lista tiene el suyo. Ocupa una fila completa:
+   compartiendo línea con los campos se leía como la etiqueta del primero.
+   Ojo: es un elemento de `form-wizard`, no de `form-wizard__demo-switch`; por
+   eso va suelto y no anidado (anidado compilaba a una clase inexistente y el
+   bloque entero se quedaba sin estilo, con el select montado sobre su label). */
+.form-wizard__demo-title {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--chip-grey-700);
+
+  i { font-size: 15px; }
+}
+
+.form-wizard__demo-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+  /* La acción es un texto corto; el caso describe el escenario y necesita más
+     ancho. Los dos se encogen antes de desbordar. */
+  flex: 0 1 240px;
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--chip-grey-600);
+  }
+
+  &:last-of-type { flex: 1 1 360px; }
+
+  /* Sin esto el p-select se queda con su ancho de contenido y las dos listas
+     quedan de tamaños distintos. */
+  p-select { width: 100%; }
+  ::ng-deep .p-select { width: 100%; }
+
+  /* En tablet cada lista toma la fila completa: a 240px el texto del caso se
+     corta a la mitad. */
+  @include bp.down('md') { flex: 1 1 100%; }
 }
 
 .form-wizard__alert {
@@ -1616,34 +1709,6 @@ $estado-panel-width: 300px;
   .form-estado-panel { top: 0; height: 100vh; }
 }
 
-/* ── Estado "Rechazado por deficiencia" clickable (V3) ── */
-.form-estado-tagbtn {
-  border: 0;
-  background: transparent;
-  padding: 3px 7px;
-  margin: -3px -7px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border-radius: 8px;
-  transition: background .15s ease;
-
-  &:hover {
-    background: rgba(244, 67, 54, 0.10);
-  }
-  /* Subrayado tipo hipervínculo para reforzar que es clickeable. */
-  &:hover ::ng-deep .p-tag-label {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
-    outline-offset: 2px;
-  }
-}
-
 /* ── Alerta "proceso de importación iniciado" (cuerpo del diálogo) ── */
 .form-import-done {
   display: flex;
@@ -1790,22 +1855,80 @@ $estado-panel-width: 300px;
   }
 }
 
+/* ── Rechazo por verificaciones previas (cuerpo del diálogo) ──
+   Mismo esqueleto que .form-import-warn, en rojo: aquí no hay nada que
+   confirmar — el archivo no se procesó y hay que corregirlo. */
+.form-import-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid #FFCDD2;
+  border-left: 3px solid var(--chip-danger, #f44336);
+  border-radius: 8px;
+  background: #FFEBEE;
+
+  > i {
+    font-size: 22px;
+    /* danger-700 y no el token base: #F44336 sobre #FFEBEE no llega a 3:1. */
+    color: var(--chip-danger-700, #c62828);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+
+    strong { color: var(--chip-grey-900, #2b2b2b); }
+    p { margin: 0; line-height: 1.55; color: var(--chip-grey-800, #3b3b3b); }
+  }
+
+  /* Situaciones detectadas: acotadas, con scroll si son muchas. */
+  &__list {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    max-height: 210px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--chip-grey-200, #d6d6d6);
+  }
+
+  &__texto {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--chip-danger-700, #c62828);
+  }
+}
+
 /* Contexto del control de envío a ancho completo (fuera del panel de 640px).
    El formulario abierto ocupa toda la fila: su nombre es lo más largo. */
 .form-estado-ctx--wide {
   max-width: none;
   display: grid;
-  /* minmax(0,1fr) y no 1fr: sin el 0 las celdas no se dejan encoger y
-     .cell-ellipsis nunca llega a truncar. */
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Cuatro datos del mismo rango —categoría, entidad, periodo y formulario— en
+     una sola fila. minmax(0,1fr) y no 1fr: sin el 0 las celdas no se dejan
+     encoger y .cell-ellipsis nunca llega a truncar. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px 24px;
 
   /* P2 del mínimo viable tablet: máx. 2 columnas en tablet, 1 en móvil. */
   @include bp.down('lg') { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @include bp.down('md') { grid-template-columns: minmax(0, 1fr); }
-
-  /* El formulario abierto ocupa la fila entera: su nombre es el valor largo. */
-  .form-estado-ctx__form { grid-column: 1 / -1; }
 }
 
 /* ── Pantalla dedicada "Control de envío" (desde acción ⋮ o tag Deficiencia) ── */
@@ -1873,7 +1996,6 @@ $estado-panel-width: 300px;
 /* P3 · Touch targets ≥44×44 en tablet-y-abajo (WCAG 2.5.5 / Kit UI). */
 @include bp.down('lg') {
   :host ::ng-deep .p-button.p-button-icon-only { @include bp.touch-target; }
-  .form-estado-tagbtn { min-height: bp.$chip-touch-target; }
   .chip-colpager__btn { @include bp.touch-target; }
 
   /* Checkbox de selección de fila: .p-checkbox trae width/height explícitos

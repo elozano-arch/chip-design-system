@@ -37,7 +37,8 @@
     @if (!filtersCollapsed) {
       <div class="chip-filters__body" id="ea-filters-body">
 
-        <!-- Simulación de tipo de usuario (mock demo): L carga la entidad; C/E la eligen del directorio. -->
+        <!-- Simulación de tipo de usuario (mock demo): L y A traen su entidad
+             resuelta; C/E la eligen del directorio. -->
         <div class="ent-demo-switch" role="group" aria-label="Simulación de tipo de usuario">
           <i class="pi pi-user" aria-hidden="true"></i>
           <label for="ea-tipo-usuario">Tipo de usuario <span class="ent-demo-switch__tag">demostración</span></label>
@@ -49,11 +50,11 @@
 
         <div class="chip-filters__fields chip-filters__fields--2col">
 
-          <!-- Entidad (obligatorio). Tipo L: cargada por defecto (bloqueada).
-               Tipo C/E: campo-trigger que abre el Directorio de Entidades. -->
+          <!-- Entidad (obligatorio). Tipos L y A: la traen resuelta y el campo
+               va bloqueado. Tipo C/E: campo-trigger que abre el Directorio. -->
           <div class="chip-filters__field">
             <label for="ea-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
-            @if (esTipoLocal) {
+            @if (entidadFija) {
               <p-iconField iconPosition="right" styleClass="w-full ent-entidad-iconfield ent-entidad-iconfield--locked">
                 <input pInputText id="ea-entidad"
                   class="w-full ent-entidad-locked"
@@ -61,7 +62,10 @@
                   readonly
                   aria-required="true"
                   aria-readonly="true"
-                  [attr.aria-label]="selectedEntidad ? ('Entidad local asignada: ' + selectedEntidad.razonSocial) : ''"
+                  placeholder="Sin entidad asociada"
+                  [attr.aria-label]="selectedEntidad
+                    ? ('Entidad asignada: ' + selectedEntidad.razonSocial)
+                    : 'Su usuario no tiene una entidad asociada'"
                   [pTooltip]="entidadLabel" tooltipPosition="top" [showDelay]="500" />
                 <p-inputIcon styleClass="pi pi-lock ent-entidad-lock" />
               </p-iconField>
@@ -113,7 +117,7 @@
               [disabled]="!entidadSeleccionada"
               aria-required="true"
               (onChange)="onCategoriaChange()"
-              [pTooltip]="entidadSeleccionada ? '' : 'Seleccione una entidad primero'"
+              [pTooltip]="ayudaCategoria"
               tooltipPosition="top" />
           </div>
         </div>

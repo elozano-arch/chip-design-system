@@ -101,12 +101,11 @@ export class BotonesComponent {
   [outlined]="true" />
 <p-button label="Buscar" icon="pi pi-search" />`,
 
-    F6: `<p-button label="Descargar PDF" icon="pi pi-file-pdf" severity="success" />
-<p-button
-  label="Exportar Excel"
-  icon="pi pi-file-excel"
-  severity="secondary"
-  [outlined]="true" />
+    F6: `<!-- Varios formatos: componente compartido, label "Exportar" -->
+<app-boton-descargar (formato)="exportar($event)" />
+
+<!-- Formato único y comportamiento definido -->
+<p-button label="Descargar PDF" icon="pi pi-file-pdf" severity="success" />
 <p-button
   icon="pi pi-download"
   [rounded]="true"

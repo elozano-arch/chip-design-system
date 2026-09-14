@@ -247,18 +247,26 @@
       <span class="btn-family__id">F6</span>
       <h2 id="f6-title" class="btn-family__title">Descarga / exportación</h2>
     </header>
-    <p class="btn-family__desc">Descarga un archivo (PDF, Excel, CSV, plantilla) o exporta datos. Cuando el formato es ambiguo, el label lo aclara ("Descargar PDF" mejor que "Descargar").</p>
+    <p class="btn-family__desc">
+      El label lo decide el comportamiento, no el verbo que suene mejor:
+      <strong>"Exportar"</strong> cuando el botón abre el menú de formatos (CSV,
+      XLSX, PDF, TXT) — ese caso siempre se resuelve con el componente
+      compartido <code>&lt;app-boton-descargar&gt;</code>, en verde—, y
+      <strong>"Descargar [qué]"</strong> cuando baja un archivo concreto con un
+      comportamiento único, que conserva la severity que le corresponda por
+      contexto.
+    </p>
 
     <div class="btn-family__examples">
+      <p-button label="Exportar" icon="pi pi-download" severity="success" />
       <p-button label="Descargar PDF" icon="pi pi-file-pdf" severity="success" />
-      <p-button label="Exportar Excel" icon="pi pi-file-excel" severity="secondary" [outlined]="true" />
       <p-button icon="pi pi-download" [rounded]="true" [text]="true" severity="secondary" pTooltip="Descargar archivo" aria-label="Descargar archivo" />
     </div>
 
     <div class="btn-family__detail">
       <dl class="spec-list">
-        <dt>Severity</dt><dd><code>success</code> · <code>secondary [outlined]</code> · icon-only en tabla</dd>
-        <dt>Labels</dt><dd>Descargar PDF/XLSX · Exportar</dd>
+        <dt>Severity</dt><dd><code>success</code> · icon-only en tabla · la del contexto si la descarga es de un caso con color propio (p. ej. deficiencias en <code>danger</code>)</dd>
+        <dt>Labels</dt><dd>Exportar (varios formatos) · Descargar PDF/XLSX/.html (formato único)</dd>
         <dt>Iconos</dt><dd><code>pi-download</code> · <code>pi-file-pdf</code> · <code>pi-file-excel</code></dd>
         <dt>Ubicación</dt><dd>Header derecha · Toolbar tabla · Fila tabla</dd>
       </dl>

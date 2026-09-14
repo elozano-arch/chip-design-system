@@ -2,12 +2,6 @@
 
 :host { display: block; }
 
-/* Scroll horizontal controlado: .p-datatable-table-container de
-   PrimeNG 19 no trae overflow salvo con [scrollable]="true". */
-.form-table-scroll {
-  @include bp.scroll-x;
-}
-
 /* Copia de la celda de etapa del listado: la misma presentación en
    los dos sitios, pero la encapsulación de vista no la cruza. */
 .form-table__etapa {
@@ -25,65 +19,19 @@
   }
 }
 
-/* ── Deficiencias de la validación central (Control de envío) ── */
+/* ── Historial de procesos del formulario ── */
 .form-defic {
   margin-top: 24px;
 
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 12px;
-    font-size: 16px;
-    color: var(--chip-grey-900, #2b2b2b);
-
-    i { color: var(--chip-warning, #fbc02d); }
-  }
-
-  /* Selector de alcance: último proceso vs histórico del formulario. */
-  &__alcance {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-    margin-bottom: 12px;
-  }
-
-  &__alcance-tabs {
-    display: flex;
-    gap: 8px;
-  }
-
-  &__alcance-resumen {
+  /* Resumen del expediente, en la barra del árbol junto a Exportar. */
+  &__total {
     margin: 0;
     font-size: 12.5px;
     color: var(--chip-grey-600);
   }
 
-  /* Fecha en que se guardó la justificación. */
-  &__fecha {
-    font-size: 12.5px;
-    color: var(--chip-grey-600);
-    white-space: nowrap;
-  }
-
-  /* Usuario que ejecutó el proceso (no el autor del comentario). */
-  &__usuario {
-    font-size: 13px;
-    color: var(--chip-grey-800);
-  }
-
-  /* Fila de un proceso que cerró sin deficiencias: ocupa las seis columnas
-     de deficiencia con una sola nota, en vez de seis guiones sueltos. */
-  &__sin-deficiencia {
-    font-size: 13px;
-    font-style: italic;
-    color: var(--chip-grey-600);
-  }
-
   /* Mensaje del catálogo + lo que la regla le inyecta: largo variable. Se
-     recorta a dos líneas y el botón "Ver más" lo expande — no un tooltip,
+     recorta a dos líneas y "Ver completo" abre el modal — no un tooltip,
      que en tablet no existe. */
   &__mensaje {
     margin: 0;
@@ -100,51 +48,71 @@
     }
   }
 
-  /* ── Variante "en la grilla": caja + pie (contador y Guardar) + mensaje ── */
-  &__box {
+  /* Consecutivo de lectura del proceso y de la deficiencia. */
+  &__num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Fecha del proceso en dos líneas: día arriba, hora abajo. */
+  &__fechaproc {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 
-  &__comentario {
-    width: 100%;
-    max-width: 100%;
-    min-height: 56px;
-    resize: vertical;
-    font-size: 13px;
+  /* Color de la letra del estado, por naturaleza. Los tonos son las variantes
+     oscuras de los informativos: los del Kit son de relleno y como texto no
+     llegan a 4.5:1. `info` y `secondary` se quedan en gris — el color se
+     reserva para lo que exige atención. */
+  &__est--success { color: var(--chip-success-700); }
+  &__est--danger { color: var(--chip-danger-700); }
+  &__est--warn { color: var(--chip-warning-700); }
+
+  /* Permisible sin recuadro: sólo el texto en color. */
+  &__perm {
+    color: var(--chip-success-700);
+
+    &--no { color: var(--chip-danger-700); }
   }
 
-  &__box-foot {
-    display: flex;
+  /* Proceso que cerró sin deficiencias. */
+  &__vacio {
+    color: var(--chip-grey-500);
+  }
+
+  /* Resumen del proceso en el árbol: cuántas deficiencias trae y cuántas
+     siguen sin comentario. El pendiente va en ámbar porque es lo que bloquea
+     el envío; el total, en el color normal de la fila. */
+  &__resumen {
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  &__resumen-pend {
+    color: var(--chip-warning-700);
+    font-weight: 700;
+  }
+
+  /* Comentario ya diligenciado: no es un tag, es la confirmación de que está
+     registrado — y sigue siendo la puerta al modal para leerlo. */
+  &__registrado {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  /* Hueco fijo de mensaje: evita que la fila salte al aparecer el error. */
-  &__msg {
-    display: block;
-    min-height: 16px;
-    font-size: 11.5px;
-    line-height: 1.35;
-
-    i { font-size: 12px; margin-right: 3px; }
-
-    &--ok {
-      color: var(--chip-success-700);
-      display: inline-flex;
-      align-items: center;
-    }
-    &--hint { color: var(--chip-grey-600); }
-  }
-
-  /* ── Variante "en modal": estado + acción que abre el formulario ── */
-  &__just {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     gap: 4px;
+    border: 0;
+    background: transparent;
+    padding: 2px 0;
+    font: inherit;
+    color: var(--chip-success-700);
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+    &:focus-visible {
+      outline: 2px solid var(--chip-cobalt-500);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
   }
 
   /* Deficiencia que no admite justificación (importación, o no la exige). */
@@ -186,6 +154,13 @@
       font-size: 13.5px;
       line-height: 1.5;
       color: var(--chip-grey-800);
+    }
+
+    /* Detalle que inyecta la regla al dispararse: bajo la descripción del
+       catálogo y en tono secundario, porque es el dato del caso concreto. */
+    p.form-defic__modal-adicional {
+      font-size: 13px;
+      color: var(--chip-grey-700);
     }
   }
 
@@ -239,6 +214,31 @@
     max-width: 100%;
     resize: vertical;
     font-size: 13.5px;
+
+    /* Consulta: aspecto de campo deshabilitado —fondo gris, borde apagado y sin
+       manija de redimensión— para que se lea como un dato y no como algo que se
+       puede escribir. Sigue enfocable y seleccionable: es `readonly`, no
+       `disabled`. */
+    &--consulta {
+      background: var(--chip-grey-100);
+      border-color: var(--chip-grey-200);
+      color: var(--chip-grey-700);
+      resize: none;
+      cursor: default;
+    }
+  }
+
+  /* "sólo lectura" junto a la etiqueta del campo. */
+  &__modal-lectura {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 6px;
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--chip-grey-600);
+
+    i { font-size: 11px; }
   }
 
   &__modal-msg {
@@ -258,79 +258,40 @@
     &--corto { color: var(--chip-grey-700); }
   }
 
-  /* Hueco fijo de mensaje: evita que la fila salte al aparecer el error. */
   &__msg {
-    display: block;
-    min-height: 16px;
-    font-size: 11.5px;
-    line-height: 1.35;
-
-    i { font-size: 12px; margin-right: 3px; }
-
     &--error {
       color: var(--chip-danger-700);
       display: inline-flex;
       align-items: flex-start;
     }
-    &--ok {
-      color: var(--chip-success-700);
-      display: inline-flex;
-      align-items: center;
-    }
-    &--hint { color: var(--chip-grey-600); }
   }
 }
-/* 10 columnas: Id 64 + Id detalle 110 + Etapa 175 + Estado 150 + Usuario 150 +
-   Cód. 130 + Permisible 110 + Requiere 150 + Comentario 180, más el resto para
-   Mensaje. La fecha del comentario no es columna aquí: la muestra el modal.
-   Por debajo de 1520px el contenedor scrollea (no el <body>). */
-:host ::ng-deep .form-defic-table table { min-width: 1520px; }
-:host ::ng-deep .form-defic-table td { vertical-align: top; }
 
-/* Sin modal, la grilla carga con todo: la columna Comentario pasa de 180 a
-   300px y vuelve la de Fecha comentario (130px). */
-:host ::ng-deep .form-defic-table--grilla .form-defic-table table {
-  min-width: 1770px;
+/* PrimeNG repinta el fondo del textarea en :hover y en :focus, y un `readonly`
+   sigue contando como `:enabled`: sin esto el gris de consulta se perdía justo
+   al interactuar con el campo. Se fija sólo el fondo y el color — el anillo de
+   foco se deja intacto, que es lo que dice que el campo existe para el teclado. */
+textarea.form-defic__modal-textarea--consulta:hover,
+textarea.form-defic__modal-textarea--consulta:focus {
+  background: var(--chip-grey-100);
+  color: var(--chip-grey-700);
 }
 
-/* P3 · Touch targets de los botones size="small" de la grilla. */
+/* P3 · Touch targets de los enlaces de celda en tablet. */
 @include bp.down('lg') {
   :host ::ng-deep .form-defic__just-btn,
-  :host ::ng-deep .form-defic__save,
   :host ::ng-deep .form-defic__vermas { min-height: bp.$chip-touch-target; }
+
+  .form-defic__registrado { min-height: bp.$chip-touch-target; }
 }
 
-/* Helper de ayuda contextual del título. Es el mismo patrón del DS que usa la
-   pantalla de formularios; la encapsulación de vista obliga a repetirlo aquí
-   (igual que ya ocurre en historico-envios). */
-.panel-help {
-  border: 0;
-  background: transparent;
-  padding: 0;
-  margin-left: 6px;
-  cursor: help;
-  color: var(--chip-grey-500, #6b6b6b);
-  display: inline-flex;
-  align-items: center;
-  vertical-align: middle;
-  line-height: 1;
-  transition: color .15s ease;
-
-  i { font-size: 15px; }
-  &:hover { color: var(--chip-cobalt-700, #0943b5); }
-  &:focus-visible {
-    outline: 2px solid var(--chip-cobalt-500, #2f6ee0);
-    outline-offset: 2px;
-    border-radius: 4px;
-  }
-}
-@include bp.down('lg') {
-  .panel-help { @include bp.touch-target; justify-content: center; }
-}
-
-/* "Ver más" del mensaje: enlace visual, alineado al borde izquierdo de la
+/* "Ver completo" del mensaje: enlace visual, alineado al borde izquierdo de la
    celda para que no parezca una columna aparte. */
 :host ::ng-deep .form-defic__vermas.p-button {
+  /* Excepción al alto uniforme de botón: dentro de una celda esto es un
+     enlace, no un botón, y 40px de alto duplicarían la fila. En tablet
+     recupera el área táctil (bloque P3). */
+  min-height: 0;
   padding: 2px 0;
   margin-top: 2px;
   font-size: 12.5px;
@@ -339,8 +300,9 @@
   .p-button-icon { font-size: 11px; }
 }
 
-/* "Justificar" / "Editar" de la celda: enlace visual bajo el tag de estado. */
+/* "Registrar" de la celda Comentario: mismo tratamiento de enlace. */
 :host ::ng-deep .form-defic__just-btn.p-button {
+  min-height: 0;
   padding: 2px 0;
   font-size: 12.5px;
   gap: 4px;

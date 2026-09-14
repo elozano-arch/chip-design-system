@@ -33,8 +33,8 @@
     </div>
 
     <div class="prot-info__actions">
-      <app-boton-descargar label="Descargar protocolo"
-        ariaLabel="Descargar protocolo en distintos formatos"
+      <app-boton-descargar label="Exportar protocolo"
+        ariaLabel="Exportar el protocolo en distintos formatos"
         (formato)="descargarProtocolo($event)" />
     </div>
   </div>
@@ -124,7 +124,7 @@
             {{ conceptosFiltrados().length }} de {{ listas['CONCEPTOS'].valores.length }} conceptos
           </span>
           <app-boton-descargar size="small"
-            ariaLabel="Descargar conceptos en distintos formatos"
+            ariaLabel="Exportar los conceptos en distintos formatos"
             (formato)="descargarConceptos($event)" />
         </div>
 
@@ -397,7 +397,7 @@
     <p-button label="Cerrar" icon="pi pi-times" [text]="true" severity="secondary"
       (onClick)="cerrarLista()" />
     <app-boton-descargar
-      ariaLabel="Descargar lista en distintos formatos"
+      ariaLabel="Exportar la lista en distintos formatos"
       (formato)="descargarLista($event)" />
   </ng-template>
 </p-dialog>

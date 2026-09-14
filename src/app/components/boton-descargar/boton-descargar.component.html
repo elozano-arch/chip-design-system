@@ -1,4 +1,6 @@
-<p-button [outlined]="true" severity="secondary" [size]="size"
+<!-- Verde sólido: es el color de la familia F6 (descarga / exportación) y lo
+     usan todos los disparadores de descarga del DS, no sólo este. -->
+<p-button severity="success" [size]="size"
   styleClass="dl-trigger"
   [ariaLabel]="ariaLabel"
   (onClick)="dlMenu.toggle($event)">

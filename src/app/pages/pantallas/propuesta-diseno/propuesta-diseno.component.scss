@@ -417,8 +417,12 @@
     border-bottom: 1px solid var(--chip-grey-100);
     min-width: 560px;
 
-    /* Iconos pequeños para que armonicen con la tipografía 10px. */
+    /* Iconos pequeños para que armonicen con la tipografía 10px.
+       Excepción al alto uniforme de botón: esto es una maqueta a escala de
+       un paginador, no botonería real de la app. */
     ::ng-deep .p-button {
+      min-height: 0;
+      min-width: 0;
       width: 20px;
       height: 20px;
       padding: 0;

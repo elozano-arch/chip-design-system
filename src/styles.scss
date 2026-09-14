@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 /* ==========================================================================
    CHIP 2.0 Design System - Global Styles
    Based on Kit UI v9.2 (GOV.CO) + CGN Corporate Identity
@@ -48,6 +50,7 @@
      el mismo matiz y pasan AA también sobre la fila rayada (#F5F5F5). */
   --chip-danger-700: #C62828;   /* 5.63:1 sobre blanco · 5.17:1 sobre #F5F5F5 */
   --chip-success-700: #2E7D32;  /* 5.19:1 sobre blanco · 4.76:1 sobre #F5F5F5 */
+  --chip-warning-700: #8A6100;  /* 5.59:1 sobre blanco · 5.10:1 sobre #F5F5F5 */
 
   /* --- Backgrounds (Kit UI v9.2) --- */
   --chip-bg-solitude: #EBF0FA;
@@ -585,6 +588,17 @@ p-breadcrumb .p-breadcrumb {
   }
 }
 
+/* Motivo por el que un filtro en cascada está bloqueado. Va debajo del campo y
+   visible: el tooltip no sirve —en tablet no hay hover y un control
+   deshabilitado no lo dispara— y el lector de pantalla lo lee vía
+   aria-describedby. Gris 600 sobre blanco: 7:1, muy por encima de AA. */
+.chip-filters__hint {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--chip-grey-600);
+}
+
 /* Utilidades de ancho — globales para que apliquen en cualquier componente
    con view encapsulation (estaba solo en home.component.scss antes) */
 .w-full { width: 100% !important; }
@@ -658,6 +672,45 @@ textarea.p-inputtext:not(.p-inputtext-sm):not(.p-inputtext-lg),
 textarea.p-inputtext {
   min-height: var(--chip-input-height);
   height: auto;
+}
+
+/* ============================================================
+   ALTURA UNIFORME DE TODA LA BOTONERÍA
+   ============================================================
+   Un solo alto para todos los p-button de la app, igual al de los
+   inputs, para que un botón junto a un select en una toolbar o en un
+   panel de filtros alinee. El LARGO sí varía con el label — si no
+   cabe, la botonera parte a una segunda línea; el alto no cambia.
+   `size="small"` / `size="large"` siguen ajustando tipografía y
+   padding horizontal, pero ya no la altura.
+   El icono mide lo mismo en todos los botones, con o sin label: es lo
+   que hace que la altura óptica coincida y no sólo la caja.
+   Las excepciones legítimas (enlaces dentro de una celda, maquetas a
+   escala) se anulan en el SCSS del componente con `min-height: 0`. */
+
+:root {
+  --chip-button-height: var(--chip-input-height);
+  /* Kit UI: iconografía base 16px. */
+  --chip-button-icon-size: 16px;
+}
+
+.p-button {
+  min-height: var(--chip-button-height);
+  box-sizing: border-box;
+}
+
+/* Icon-only cuadrado: si no, un [rounded] deja de ser un círculo. */
+.p-button.p-button-icon-only {
+  min-width: var(--chip-button-height);
+}
+
+.p-button .p-button-icon {
+  font-size: var(--chip-button-icon-size);
+}
+
+/* Tablet y abajo: el alto sube al área táctil mínima (WCAG 2.5.5). */
+@include bp.down('lg') {
+  :root { --chip-button-height: #{bp.$chip-touch-target}; }
 }
 
 .chip-filters__required,

@@ -16,8 +16,13 @@ interface DownloadFormat {
 }
 
 /**
- * Botón "Descargar" estándar del DS: un trigger con chevron que abre el menú
+ * Botón "Exportar" estándar del DS: un trigger con chevron que abre el menú
  * de los cuatro formatos, cada uno con el detalle de sus limitaciones.
+ *
+ * El label es "Exportar" y no "Descargar" por convención del DS: una descarga
+ * que ofrece varios formatos es una exportación. "Descargar" queda para las
+ * que tienen un comportamiento único y definido — una plantilla .html, un
+ * archivo concreto —, que no usan este componente.
  *
  * Vive aquí y no en cada pantalla porque el catálogo de formatos y sus límites
  * son los mismos en todas: duplicarlo es garantizar que se desincronicen.
@@ -31,8 +36,8 @@ interface DownloadFormat {
   styleUrl: './boton-descargar.component.scss',
 })
 export class BotonDescargarComponent {
-  @Input() label = 'Descargar';
-  @Input() ariaLabel = 'Descargar en distintos formatos';
+  @Input() label = 'Exportar';
+  @Input() ariaLabel = 'Exportar en distintos formatos';
   /** `small` para toolbars densas; vacío para el tamaño normal. */
   @Input() size: 'small' | undefined;
 
