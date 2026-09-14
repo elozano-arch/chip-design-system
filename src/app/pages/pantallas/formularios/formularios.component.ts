@@ -81,6 +81,30 @@ interface AccionPermiso {
 }
 
 /**
+ * Verificaciones previas de la importación. El front NO abre ni interpreta el
+ * archivo: sólo revisa su tamaño y que el contexto no tenga otro proceso en
+ * ejecución. Si alguna falla, el archivo no se transmite y se presenta UN SOLO
+ * mensaje que relaciona la totalidad de las situaciones.
+ *
+ * La extensión no se verifica aquí: el explorador de archivos sólo deja
+ * elegir .txt (`accept=".txt"` del input).
+ *
+ * Lo que depende del contenido —cabecera contra el contexto, formulario
+ * duplicado, pertenencia a la categoría, formulario que no admite
+ * importación— lo verifica el procesamiento asíncrono y se informa por correo.
+ */
+const TEXTO_SITUACION_IMPORT = {
+  tamano: 'El archivo supera el tamaño máximo permitido de 5 MB',
+  enProceso: 'El contexto se encuentra en procesamiento. Espere a que concluya para volver a cargar',
+} as const;
+
+/**
+ * Estados que indican un proceso en ejecución sobre el formulario: mientras
+ * alguno del contexto esté en uno de ellos, no se admite otra carga.
+ */
+const ESTADOS_EN_EJECUCION: readonly EstadoId[] = ['G', 'N', 'W', 'V'];
+
+/**
  * Comportamiento del envío de una categoría respecto a las entidades agregadas.
  *   noAplica    → no gestiona entidades (botón inactivo, envío directo)
  *   obligatoria → exige ≥1 entidad (bloquea si no hay)
@@ -373,8 +397,8 @@ export class FormulariosComponent implements OnDestroy {
       command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
     },
     {
-      label: 'Ver control de envío',
-      icon: 'pi pi-send',
+      label: 'Historial proceso',
+      icon: 'pi pi-history',
       command: () => this.verControlEnvio(this.selectedFormularioForMenu),
     },
     { separator: true },
@@ -404,18 +428,10 @@ export class FormulariosComponent implements OnDestroy {
    */
   controlEnvioFormulario: Formulario | null = null;
 
-  /**
-   * Abre el control de envío. El alcance depende de por dónde se entre: desde
-   * el tag "Deficiencia" del listado interesa el último proceso; desde la
-   * acción ⋮, el histórico completo del formulario.
-   */
-  verControlEnvio(
-    form: Formulario | null = null,
-    alcance: 'ultimo' | 'historico' = 'historico',
-  ): void {
+  /** Abre el historial de procesos del formulario (acción ⋮ de la fila). */
+  verControlEnvio(form: Formulario | null = null): void {
     if (!this.filtersApplied) return;
     this.controlEnvioFormulario = form ?? this.selectedFormularioForMenu;
-    this.alcanceDeficiencias = alcance;
     this.refrescarDeficienciasVisibles();
     this.cerrarDetalle();
     this.cerrarProtocolo();
@@ -435,9 +451,9 @@ export class FormulariosComponent implements OnDestroy {
    * expediente aunque sus columnas de deficiencia vayan vacías.
    */
   private readonly procesosSinDeficiencia: readonly ProcesoDetalle[] = [
-    { etapa: 1, idDetalleProceso: 4801, estado: 'A', usuarioProceso: 'jmunoz', deficiencias: [] },
-    { etapa: 1, idDetalleProceso: 4815, estado: 'E', usuarioProceso: 'mrojas', deficiencias: [] },
-    { etapa: 2, idDetalleProceso: 4820, estado: 'W', usuarioProceso: 'jmunoz', deficiencias: [] },
+    { etapa: 1, idDetalleProceso: 4801, estado: 'A', fechaProceso: '11/03/2024 08:52', usuarioProceso: 'jmunoz', deficiencias: [] },
+    { etapa: 1, idDetalleProceso: 4815, estado: 'E', fechaProceso: '11/03/2024 15:20', usuarioProceso: 'mrojas', deficiencias: [] },
+    { etapa: 2, idDetalleProceso: 4820, estado: 'W', fechaProceso: '12/03/2024 09:07', usuarioProceso: 'jmunoz', deficiencias: [] },
   ];
 
   /**
@@ -454,23 +470,25 @@ export class FormulariosComponent implements OnDestroy {
   > = {
     // ESTRUCTURA: el archivo no cumple el protocolo de importación.
     estructura: {
-      etapa: 1, idDetalleProceso: 4831, estado: 'D', usuarioProceso: 'lcastro',
+      etapa: 1, idDetalleProceso: 4831, estado: 'D',
+      fechaProceso: '15/03/2024 16:38', usuarioProceso: 'lcastro',
       deficiencias: [
-        { id: 1, codMensaje: 'EST-004', mensaje: 'Longitud de registro distinta a la declarada en el protocolo de importación. Registro 1.248: se esperaban 120 caracteres y se recibieron 134.', permisible: false, requiereComentario: false },
-        { id: 2, codMensaje: 'EST-011', mensaje: 'Campo numérico con caracteres no válidos. Registro 87, variable SLDO_INC: se recibió "1.2O5", donde la letra O no es un dígito.', permisible: false, requiereComentario: false },
-        { id: 3, codMensaje: 'EST-019', mensaje: 'Código de concepto inexistente en la lista de la categoría. Registro 302: el concepto 1.1.99 no pertenece a la lista de CGN2015_001.', permisible: false, requiereComentario: false },
-        { id: 4, codMensaje: 'EST-023', mensaje: 'Registro duplicado para el mismo concepto y tercero.', permisible: false, requiereComentario: false },
+        { id: 1, codMensaje: 'EST-004', mensaje: 'Longitud de registro distinta a la declarada en el protocolo de importación.', mensajeAdicional: 'Registro 1.248: se esperaban 120 caracteres y se recibieron 134.', permisible: false, requiereComentario: false },
+        { id: 2, codMensaje: 'EST-011', mensaje: 'Campo numérico con caracteres no válidos.', mensajeAdicional: 'Registro 87, variable SLDO_INC: se recibió "1.2O5", donde la letra O no es un dígito.', permisible: false, requiereComentario: false },
+        { id: 3, codMensaje: 'EST-019', mensaje: 'Código de concepto inexistente en la lista de la categoría.', mensajeAdicional: 'Registro 302: el concepto 1.1.99 no pertenece a la lista de CGN2015_001.', permisible: false, requiereComentario: false },
+        { id: 4, codMensaje: 'EST-023', mensaje: 'Registro duplicado para el mismo concepto y tercero.', mensajeAdicional: '', permisible: false, requiereComentario: false },
       ],
     },
     // COMPLETITUD: el archivo está bien formado, pero no trae todo lo que la
     // categoría exige.
     completitud: {
-      etapa: 1, idDetalleProceso: 4832, estado: 'D', usuarioProceso: 'lcastro',
+      etapa: 1, idDetalleProceso: 4832, estado: 'D',
+      fechaProceso: '15/03/2024 16:38', usuarioProceso: 'lcastro',
       deficiencias: [
-        { id: 1, codMensaje: 'COMP-002', mensaje: 'Concepto obligatorio de la categoría sin registro en el archivo. Faltan los conceptos 1.1.05, 2.4.01 y 3.1.10.', permisible: false, requiereComentario: false },
-        { id: 2, codMensaje: 'COMP-014', mensaje: 'El archivo no incluye todos los periodos exigidos por la categoría.', permisible: false, requiereComentario: false },
-        { id: 3, codMensaje: 'COMP-021', mensaje: 'Registro sin el tercero obligatorio para el concepto reportado.', permisible: false, requiereComentario: false },
-        { id: 4, codMensaje: 'COMP-036', mensaje: 'Concepto informado sin la nota explicativa que exige la categoría.', permisible: false, requiereComentario: false },
+        { id: 1, codMensaje: 'COMP-002', mensaje: 'Concepto obligatorio de la categoría sin registro en el archivo.', mensajeAdicional: 'Faltan los conceptos 1.1.05, 2.4.01 y 3.1.10.', permisible: false, requiereComentario: false },
+        { id: 2, codMensaje: 'COMP-014', mensaje: 'El archivo no incluye todos los periodos exigidos por la categoría.', mensajeAdicional: '', permisible: false, requiereComentario: false },
+        { id: 3, codMensaje: 'COMP-021', mensaje: 'Registro sin el tercero obligatorio para el concepto reportado.', mensajeAdicional: '', permisible: false, requiereComentario: false },
+        { id: 4, codMensaje: 'COMP-036', mensaje: 'Concepto informado sin la nota explicativa que exige la categoría.', mensajeAdicional: '', permisible: false, requiereComentario: false },
       ],
     },
   };
@@ -481,24 +499,43 @@ export class FormulariosComponent implements OnDestroy {
    */
   private readonly procesosValidacion: readonly ProcesoDetalle[] = [
     {
-      etapa: 2, idDetalleProceso: 4822, estado: 'D', usuarioProceso: 'mrojas',
+      // Ronda anterior de validación central. Su deficiencia YA se justificó y
+      // el comentario viajó con ese envío: es la fila que deja ver el modo
+      // consulta —se lee, con la fecha en que se diligenció, y no se reescribe.
+      etapa: 3, idDetalleProceso: 4818, estado: 'M',
+      fechaProceso: '12/03/2024 16:05', usuarioProceso: 'jmunoz',
       deficiencias: [
-        { id: 1, codMensaje: 'VAL-001', mensaje: 'El total de débitos no coincide con el total de créditos del formulario. Débitos 4.812.900.400 · Créditos 4.812.899.100 · Diferencia 1.300.', permisible: false, requiereComentario: false },
-        { id: 2, codMensaje: 'VAL-032', mensaje: 'Concepto obligatorio sin valor diligenciado.', permisible: false, requiereComentario: false },
-        { id: 3, codMensaje: 'VAL-045', mensaje: 'Saldo negativo en una cuenta que no admite naturaleza contraria.', permisible: true, requiereComentario: false },
-        { id: 4, codMensaje: 'VAL-051', mensaje: 'El saldo inicial no coincide con el saldo final del periodo anterior.', permisible: false, requiereComentario: false },
+        {
+          id: 1, codMensaje: 'CEN-014',
+          mensaje: 'Variación superior al 50% frente al periodo anterior.',
+          mensajeAdicional: 'Concepto 1.1.20: pasó de 73.000.000 a 120.000.000, una variación de +64,4%.',
+          permisible: true, requiereComentario: true,
+          comentarioGuardado: 'La variación corresponde al traslado del convenio interadministrativo 2023-118, registrado en el periodo por instrucción de la Secretaría de Hacienda.',
+          fechaComentario: '12/03/2024 17:20',
+        },
       ],
     },
     {
-      etapa: 3, idDetalleProceso: 4823, estado: 'M', usuarioProceso: 'mrojas',
+      etapa: 2, idDetalleProceso: 4822, estado: 'D',
+      fechaProceso: '13/03/2024 10:44', usuarioProceso: 'mrojas',
       deficiencias: [
-        { id: 1, codMensaje: 'CEN-014', mensaje: 'Variación superior al 50% frente al periodo anterior. Concepto 1.1.20: pasó de 120.000.000 a 410.000.000, una variación de +241,7%.', permisible: true, requiereComentario: true },
-        { id: 2, codMensaje: 'CEN-027', mensaje: 'Operación recíproca sin contraparte reportada por la entidad par. El tercero 899999068, por 85.400.000, no aparece en el reporte de la entidad recíproca.', permisible: true, requiereComentario: true },
-        { id: 3, codMensaje: 'CEN-063', mensaje: 'Valor reportado en cero en un concepto con movimiento en el periodo anterior.', permisible: true, requiereComentario: true },
-        { id: 4, codMensaje: 'CEN-078', mensaje: 'Tercero reportado sin identificación válida.', permisible: true, requiereComentario: true },
-        { id: 5, codMensaje: 'CEN-084', mensaje: 'Cuenta reportada que no aplica para la naturaleza jurídica de la entidad.', permisible: true, requiereComentario: true },
-        { id: 6, codMensaje: 'CEN-092', mensaje: 'Depreciación acumulada mayor al valor bruto del activo.', permisible: false, requiereComentario: false },
-        { id: 7, codMensaje: 'CEN-105', mensaje: 'Concepto informado sin nota explicativa asociada.', permisible: true, requiereComentario: true },
+        { id: 1, codMensaje: 'VAL-001', mensaje: 'El total de débitos no coincide con el total de créditos del formulario.', mensajeAdicional: 'Débitos 4.812.900.400 · Créditos 4.812.899.100 · Diferencia 1.300.', permisible: false, requiereComentario: false },
+        { id: 2, codMensaje: 'VAL-032', mensaje: 'Concepto obligatorio sin valor diligenciado.', mensajeAdicional: '', permisible: false, requiereComentario: false },
+        { id: 3, codMensaje: 'VAL-045', mensaje: 'Saldo negativo en una cuenta que no admite naturaleza contraria.', mensajeAdicional: '', permisible: true, requiereComentario: false },
+        { id: 4, codMensaje: 'VAL-051', mensaje: 'El saldo inicial no coincide con el saldo final del periodo anterior.', mensajeAdicional: '', permisible: false, requiereComentario: false },
+      ],
+    },
+    {
+      etapa: 3, idDetalleProceso: 4823, estado: 'M',
+      fechaProceso: '14/03/2024 11:27', usuarioProceso: 'mrojas',
+      deficiencias: [
+        { id: 1, codMensaje: 'CEN-014', mensaje: 'Variación superior al 50% frente al periodo anterior.', mensajeAdicional: 'Concepto 1.1.20: pasó de 120.000.000 a 410.000.000, una variación de +241,7%.', permisible: true, requiereComentario: true },
+        { id: 2, codMensaje: 'CEN-027', mensaje: 'Operación recíproca sin contraparte reportada por la entidad par.', mensajeAdicional: 'El tercero 899999068, por 85.400.000, no aparece en el reporte de la entidad recíproca.', permisible: true, requiereComentario: true },
+        { id: 3, codMensaje: 'CEN-063', mensaje: 'Valor reportado en cero en un concepto con movimiento en el periodo anterior.', mensajeAdicional: '', permisible: true, requiereComentario: true },
+        { id: 4, codMensaje: 'CEN-078', mensaje: 'Tercero reportado sin identificación válida.', mensajeAdicional: '', permisible: true, requiereComentario: true },
+        { id: 5, codMensaje: 'CEN-084', mensaje: 'Cuenta reportada que no aplica para la naturaleza jurídica de la entidad.', mensajeAdicional: '', permisible: true, requiereComentario: true },
+        { id: 6, codMensaje: 'CEN-092', mensaje: 'Depreciación acumulada mayor al valor bruto del activo.', mensajeAdicional: '', permisible: false, requiereComentario: false },
+        { id: 7, codMensaje: 'CEN-105', mensaje: 'Concepto informado sin nota explicativa asociada.', mensajeAdicional: '', permisible: true, requiereComentario: true },
       ],
     },
   ];
@@ -542,35 +579,77 @@ export class FormulariosComponent implements OnDestroy {
     if (form.estado === null) return [];
     const tipo = this.tipoDeficienciaPorFormulario.get(form.id);
     const procesos: ProcesoDetalle[] = [...this.procesosSinDeficiencia];
-    // Rechazado por la validación central, con o sin importación fallida detrás.
-    if (tipo || form.estado === 'D') procesos.push(...this.procesosValidacion);
+    // Los procesos de validación sólo entran si el formulario llegó a
+    // validarse: uno que cerró la importación con deficiencia (etapa 1) nunca
+    // pasó de ahí, y colgarle deficiencias de validación central sería mentir.
+    if (this.tieneDeficiencias(form) && form.etapa >= 2) procesos.push(...this.procesosValidacion);
     if (tipo) procesos.push(this.importacionPorTipo[tipo]);
     return procesos.sort((a, b) => a.idDetalleProceso - b.idDetalleProceso);
   }
 
-  // ── Alcance de la tabla de deficiencias ───────────────────────────────────
-  // El mismo control de envío se abre desde dos sitios y no muestran lo mismo:
-  //   • tag "Deficiencia" del listado → las del ÚLTIMO proceso, que es lo que
-  //     el usuario acaba de ver fallar;
-  //   • acción ⋮ "Ver control de envío" → el histórico completo del formulario.
-  // El selector deja pasar de una vista a la otra sin salir de la pantalla.
+  // ── Panel de demostración ─────────────────────────────────────────────────
+  // Un solo formato —qué acción se simula y con qué caso— y un panel por
+  // contexto: el panel vive donde se ve su efecto. Meterlos todos en el paso
+  // Envíos dejaba las simulaciones del control de envío y de la importación
+  // fuera de la vista donde se notan, y había que volver atrás para cambiarlas.
+  // En producción nada de esto existe: el caso lo determina el backend.
 
-  /** Alcance activo de la tabla de deficiencias. */
-  alcanceDeficiencias: 'ultimo' | 'historico' = 'historico';
+  /** Acción simulada en el paso Envíos (el control de envío tiene la suya). */
+  private demoAccionEnvio: 'entidades' | 'envio' = 'entidades';
 
-  /**
-   * Dónde se diligencia la justificación (SÓLO demostración). Son dos patrones
-   * para el mismo dato y el demo permite compararlos: la caja en la celda deja
-   * la grilla más densa y las filas de alturas distintas; el modal las empareja
-   * y le da al texto el ancho que necesita. En producción se elige uno.
-   */
-  modoJustificacion: 'modal' | 'grilla' = 'modal';
-  readonly modoJustificacionOptions = [
-    { label: 'En modal · botón que abre el formulario', value: 'modal' },
-    { label: 'En la grilla · caja de texto en la celda', value: 'grilla' },
+  /** Acción activa del panel de demostración. */
+  get demoAccion(): 'importar' | 'entidades' | 'envio' {
+    return this.demoAccionEnvio;
+  }
+  set demoAccion(valor: 'importar' | 'entidades' | 'envio') {
+    if (valor === 'entidades' || valor === 'envio') this.demoAccionEnvio = valor;
+  }
+
+  /** Acciones simulables desde el paso Envíos: las que deciden el envío. */
+  readonly demoAccionOptions = [
+    { label: 'Entidades agregadas', value: 'entidades' },
+    { label: 'Enviar categoría', value: 'envio' },
   ];
 
-  /** Filas que ve la tabla — recalculadas al abrir o al cambiar de alcance. */
+  /** Casos de la acción activa. Devuelve el array existente, no una copia:
+      recrearlo en cada ciclo obligaría al p-select a repintar su lista. */
+  get demoCasoOptions(): { label: string; value: string }[] {
+    switch (this.demoAccion) {
+      case 'entidades': return this.modoEntidadesOptions;
+      case 'importar': return this.escenarioImportOptions;
+      default: return this.respuestaCentralOptions;
+    }
+  }
+
+  /** El caso activo se lee y se escribe sobre el estado real de cada acción. */
+  get demoCaso(): string {
+    switch (this.demoAccion) {
+      case 'entidades': return this.demoModoEntidades;
+      case 'importar': return this.escenarioImport;
+      default: return this.respuestaCentral;
+    }
+  }
+  set demoCaso(valor: string) {
+    switch (this.demoAccion) {
+      case 'entidades':
+        this.demoModoEntidades = valor as typeof this.demoModoEntidades;
+        break;
+      case 'importar':
+        this.escenarioImport = valor as typeof this.escenarioImport;
+        // El escenario cambia el contexto simulado: el diálogo de importación
+        // descarta lo diligenciado, igual que cuando el switch vivía dentro.
+        this.onEscenarioImportChange();
+        break;
+      default:
+        this.respuestaCentral = valor as typeof this.respuestaCentral;
+        break;
+    }
+  }
+
+  /**
+   * Expediente que ve el árbol. Se cachea en un campo, en vez de enlazar el
+   * getter, para que el árbol no se reconstruya en cada ciclo de detección.
+   */
   deficienciasVisibles: DeficienciaEnvio[] = [];
 
   /** Id del detalle de proceso más reciente del formulario abierto (0 = ninguno). */
@@ -578,44 +657,37 @@ export class FormulariosComponent implements OnDestroy {
     return this.deficienciasEnvio.reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
   }
 
-  cambiarAlcanceDeficiencias(alcance: 'ultimo' | 'historico'): void {
-    this.alcanceDeficiencias = alcance;
-    this.refrescarDeficienciasVisibles();
-  }
 
-  /** Aplica el alcance activo sobre el expediente del formulario abierto. */
+  /** Toma el expediente del formulario abierto. */
   private refrescarDeficienciasVisibles(): void {
-    const todas = this.deficienciasEnvio;
-    this.deficienciasVisibles =
-      this.alcanceDeficiencias === 'ultimo'
-        ? todas.filter(d => d.idDetalleProceso === this.ultimoProcesoId)
-        : todas;
+    this.deficienciasVisibles = this.deficienciasEnvio;
   }
 
   /**
-   * Resumen del alcance activo. Cuenta deficiencias, no filas: las de los
-   * procesos que cerraron sin ninguna no suman. Tampoco califica el tipo — un
-   * proceso registra deficiencias de una sola verificación, así que decir "de
-   * estructura" no agrega nada que la etapa no diga ya.
+   * Resumen del expediente. Cuenta deficiencias, no filas: las de los
+   * procesos que cerraron sin ninguna no suman.
    */
   get resumenDeficiencias(): string {
     const total = this.deficienciasVisibles.filter(d => d.id !== null).length;
     const plural = total === 1 ? 'deficiencia' : 'deficiencias';
-    if (this.alcanceDeficiencias === 'ultimo') {
-      return `Proceso ${this.ultimoProcesoId} · ${total} ${plural}`;
-    }
     const procesos = new Set(this.deficienciasEnvio.map(d => d.idDetalleProceso)).size;
     return `${procesos} proceso(s) · ${total} ${plural}`;
   }
 
-  // ── Rechazo por deficiencia ───────────────────────────────────────────────
-  // Desde la columna Estado, las filas con estado Deficiencia (D) abren el
-  // control de envío de ESE formulario, que es donde vive el detalle de las
-  // deficiencias (mismo destino que la acción ⋮ "Ver control de envío").
+  // ── Estados con hallazgos ─────────────────────────────────────────────────
+  // El estado de la grilla es información, no navegación: al detalle se llega
+  // por la acción "Historial proceso" del menú de la fila, que es la única
+  // puerta. Un tag clicable duplicaba el acceso y hacía creer que cada estado
+  // llevaba a un sitio distinto.
 
-  /** True si el formulario fue rechazado por deficiencia (hace clicable el tag). */
-  esRechazado(form: Formulario): boolean {
-    return form.estado === 'D';
+  /**
+   * True si el formulario tiene deficiencias en su expediente. Son dos estados,
+   * no uno: Deficiencia (D) —el hallazgo obliga a corregir y reimportar— y
+   * Requiere comentario (M) —el hallazgo es permisible y se resuelve
+   * justificándolo—. Los dos cuelgan procesos de validación del expediente.
+   */
+  tieneDeficiencias(form: Formulario): boolean {
+    return form.estado === 'D' || form.estado === 'M';
   }
 
   // ── Tipo de usuario (mock de demostración) ──
@@ -654,6 +726,69 @@ export class FormulariosComponent implements OnDestroy {
   selectedPeriodo = '';
   filtersApplied = false;
   filtersCollapsed = false;
+
+  // ── Cascada de filtros: Entidad → Categoría → Año → Periodo ──────────────
+  // El contexto se arma en ese orden y cada eslabón depende del anterior: las
+  // categorías las habilita la entidad, los años dependen de la categoría y los
+  // periodos del año. Sin la cascada se puede armar un contexto imposible —una
+  // categoría que la entidad no reporta, o un periodo inexistente para el año—
+  // y el error sólo aparecería al aplicar. Cada lista se habilita cuando la
+  // anterior tiene valor, y cambiar un eslabón limpia los que cuelgan de él.
+
+  /** La categoría la habilita una entidad activa: la inactiva no reporta ninguna. */
+  get categoriaHabilitada(): boolean {
+    return !!this.filterEntidad && !this.entidadInactiva;
+  }
+
+  get anioHabilitado(): boolean {
+    return this.categoriaHabilitada && !!this.selectedCategoria;
+  }
+
+  get periodoHabilitado(): boolean {
+    return this.anioHabilitado && !!this.selectedAnio;
+  }
+
+  /**
+   * Por qué está bloqueada la lista. Sólo lo explica el PRIMER eslabón que
+   * falta —el siguiente paso accionable—: si aún no hay entidad, año y periodo
+   * no repiten el aviso, que ya se está dando arriba.
+   *
+   * Va como texto visible bajo el campo, no como tooltip: en tablet no hay
+   * hover y un select deshabilitado no dispara el suyo.
+   */
+  get ayudaCategoria(): string {
+    // La entidad inactiva ya tiene su propia alerta arriba; no se duplica.
+    if (this.categoriaHabilitada || this.entidadInactiva) return '';
+    return 'Seleccione una entidad primero';
+  }
+
+  get ayudaAnio(): string {
+    return !this.anioHabilitado && this.categoriaHabilitada
+      ? 'Seleccione una categoría primero' : '';
+  }
+
+  get ayudaPeriodo(): string {
+    return !this.periodoHabilitado && this.anioHabilitado
+      ? 'Seleccione un año primero' : '';
+  }
+
+  /**
+   * Cambiar la categoría invalida el año y el periodo elegidos para la anterior
+   * — y también las entidades agregadas: se asignan POR categoría, así que
+   * arrastrarlas enviaría la categoría nueva con las entidades de la anterior.
+   */
+  onCategoriaChange() {
+    this.selectedAnio = '';
+    this.selectedPeriodo = '';
+    this.selectedEntidades = [];
+    this.onFiltroModificado();
+  }
+
+  /** Cambiar el año invalida el periodo elegido para el anterior. */
+  onAnioChange() {
+    this.selectedPeriodo = '';
+    this.onFiltroModificado();
+  }
 
   /** Etiqueta visible de la entidad seleccionada (código - razón social). */
   get entidadLabel(): string {
@@ -711,8 +846,17 @@ export class FormulariosComponent implements OnDestroy {
     this.resetContextoEntidad();
   }
 
-  /** Reinicia el contexto dependiente cuando cambia la entidad. */
+  /**
+   * Reinicia el contexto dependiente cuando cambia la entidad — también al
+   * cambiar de tipo de usuario, que resuelve otra entidad. Categoría, año y
+   * periodo cuelgan de ella: conservarlos dejaría el contexto de la entidad
+   * anterior sobre una entidad nueva.
+   */
   private resetContextoEntidad() {
+    this.selectedCategoria = '';
+    this.selectedAnio = '';
+    this.selectedPeriodo = '';
+    this.selectedEntidades = [];
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.cerrarControlEnvio();
@@ -789,29 +933,40 @@ export class FormulariosComponent implements OnDestroy {
   // ── Importar (acción transversal de los 3 pasos) ──
   //
   // La importación sólo admite TXT (plano, según el protocolo de importación) y
-  // es asíncrona: al confirmar, el archivo entra a la cola de proceso y el
-  // resultado se notifica por correo. El diálogo recorre hasta tres momentos:
-  //   1. 'seleccion'     → se elige el archivo y se valida la extensión
-  //   2. 'justificacion' → SÓLO si la categoría ya fue enviada: reimportar
-  //                        modifica información YA REPORTADA y hay que motivarlo
-  //   3. 'confirmacion'  → SÓLO si el contexto ya tiene información importada:
-  //                        avisa qué formularios se reemplazan y pide confirmar
-  //   4. 'iniciado'      → alerta de proceso (o reproceso) iniciado + correo
-  /** Única extensión admitida por la importación. */
-  private readonly EXTENSION_IMPORT = '.txt';
+  // es asíncrona. El front no lee el archivo: verifica su tamaño y lo transmite
+  // (la extensión la restringe el explorador). Todas las confirmaciones ocurren
+  // ANTES de transmitir, para que un archivo de hasta 5 MB no viaje para después
+  // cancelarse. El diálogo recorre:
+  //   1. 'seleccion'     → se elige el archivo
+  //   ·  'rechazado'     → tamaño o contexto en proceso: un solo mensaje con
+  //                        todas las situaciones; no se transmite
+  //   2. 'confirmacion'  → SÓLO si el contexto tiene formularios con información
+  //                        registrada: advertencia de reemplazo
+  //   3. 'justificacion' → SÓLO si la categoría ya fue enviada: motivo y
+  //                        justificación del reenvío
+  //   4. 'iniciado'      → la carga fue recibida y será procesada; el resultado
+  //                        llega por correo y queda en el historial del proceso
+  /** Tamaño máximo del archivo de importación, en MB. */
+  private readonly MAX_IMPORT_MB = 5;
 
+  /** Archivo elegido. Se conserva hasta transmitirlo o descartarlo. */
+  private importFile: File | null = null;
   importFileName = '';
-  /** Mensaje de rechazo del archivo elegido (extensión no admitida). */
-  importFileError = '';
+  /** Situaciones de las verificaciones previas (vacío = el archivo pasó). */
+  situacionesImport: string[] = [];
+  /** El usuario ya aceptó la advertencia de reemplazo de esta carga. */
+  private reemplazoConfirmado = false;
   /** Momento del diálogo de importación. */
-  importPaso: 'seleccion' | 'justificacion' | 'confirmacion' | 'iniciado' = 'seleccion';
+  importPaso: 'seleccion' | 'justificacion' | 'confirmacion' | 'iniciado' | 'rechazado' = 'seleccion';
   /** True cuando lo iniciado reemplaza información ya importada. */
   esReimportacion = false;
 
   /* ── Justificación del reenvío ─────────────────────────────────────────
      Si la categoría ya se envió a la CGN, volver a importar modifica
      información YA REPORTADA. No se bloquea, pero exige motivo Y justificación
-     escrita: los dos campos son obligatorios.
+     escrita: los dos campos son obligatorios. Se piden con el archivo ya
+     cargado y verificado — lo que se justifica es un reenvío real, no la
+     intención de hacerlo.
      El envío es, junto con la validación central, lo único que se razona
      por categoría; el resto del flujo es del contexto. */
   readonly REENVIO_JUSTIFICACION_MAX = 500;
@@ -843,21 +998,7 @@ export class FormulariosComponent implements OnDestroy {
   abrirImportDialog() {
     if (!this.filtersApplied) return;
     this.resetImportDialog();
-    this.evaluarReenvio();
     this.showImportDialog = true;
-  }
-
-  /**
-   * El contexto del Paso 1 ya dice si la categoría se envió, así que el reenvío
-   * se sabe antes de elegir archivo: cuando aplica, el diálogo abre en la
-   * justificación y el archivo se pide después.
-   */
-  private evaluarReenvio(): void {
-    if (this.categoriaYaEnviada && !this.reenvioJustificado) {
-      this.importPaso = 'justificacion';
-    } else if (this.importPaso === 'justificacion') {
-      this.importPaso = 'seleccion';
-    }
   }
 
   /**
@@ -866,12 +1007,16 @@ export class FormulariosComponent implements OnDestroy {
    * filtros. Lo ya diligenciado se descarta: corresponde a otro escenario.
    */
   onEscenarioImportChange(): void {
+    // El rechazo y las confirmaciones son de la carga en curso: con otro
+    // escenario ya no aplican y el diálogo vuelve a la selección.
+    if (this.importPaso !== 'iniciado') this.importPaso = 'seleccion';
+    this.situacionesImport = [];
+    this.reemplazoConfirmado = false;
     this.reenvioJustificado = false;
     this.reenvioMotivo = null;
     this.reenvioJustificacion = '';
     this.reenvioMotivoError = '';
     this.reenvioJustificacionError = '';
-    this.evaluarReenvio();
   }
 
   cerrarImportDialog() {
@@ -880,8 +1025,10 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   private resetImportDialog() {
+    this.importFile = null;
     this.importFileName = '';
-    this.importFileError = '';
+    this.situacionesImport = [];
+    this.reemplazoConfirmado = false;
     this.importPaso = 'seleccion';
     this.esReimportacion = false;
     this.reenvioJustificado = false;
@@ -899,19 +1046,52 @@ export class FormulariosComponent implements OnDestroy {
    *   'auto'    → según los datos (lo que hará el sistema real)
    *   'limpio'  → fuerza "sin información previa": importación de primera vez
    *   'reenvio' → fuerza "categoría ya enviada": pide justificar el reenvío
+   *   'enProceso' → fuerza "el contexto tiene un proceso en ejecución". Sin
+   *                 esto habría que cargar dos veces seguidas para verlo.
+   *   'rechazo'   → fuerza las dos verificaciones previas a la vez —archivo de
+   *                 más de 5 MB y contexto en proceso—, para ver el mensaje
+   *                 único con todas las situaciones sin buscar un archivo grande.
    */
-  escenarioImport: 'auto' | 'limpio' | 'reenvio' = 'auto';
+  escenarioImport: 'auto' | 'limpio' | 'reenvio' | 'enProceso' | 'rechazo' = 'auto';
   readonly escenarioImportOptions = [
     { label: 'Con información en el contexto · reimportación', value: 'auto' },
     { label: 'Sin información en el contexto · importación limpia', value: 'limpio' },
     { label: 'Categoría ya enviada · reenvío', value: 'reenvio' },
+    { label: 'Contexto con un proceso en ejecución', value: 'enProceso' },
+    { label: 'Archivo que no pasa las verificaciones previas', value: 'rechazo' },
   ];
 
+  /** True si algún formulario del contexto tiene un proceso en ejecución. */
+  get contextoEnProceso(): boolean {
+    if (this.escenarioImport === 'enProceso' || this.escenarioImport === 'rechazo') return true;
+    return this.filteredFormularios
+      .some(f => f.estado !== null && ESTADOS_EN_EJECUCION.includes(f.estado));
+  }
+
   /**
-   * Formularios que ya cuentan con información para el CONTEXTO seleccionado
-   * (entidad · año · periodo) y que, por tanto, el archivo reemplazaría. Si hay
-   * al menos uno, la importación es una reimportación y el diálogo exige
-   * confirmación antes de arrancar.
+   * Verificaciones previas a transmitir. Devuelve TODAS las situaciones que no
+   * se cumplen —no se detiene en la primera—, para que el usuario corrija de
+   * una vez. El contenido del archivo no se lee.
+   */
+  private verificarArchivoImport(archivo: File): string[] {
+    const situaciones: string[] = [];
+    const superaTamano = this.escenarioImport === 'rechazo'
+      || archivo.size > this.MAX_IMPORT_MB * 1024 * 1024;
+    if (superaTamano) {
+      situaciones.push(TEXTO_SITUACION_IMPORT.tamano);
+    }
+    if (this.contextoEnProceso) {
+      situaciones.push(TEXTO_SITUACION_IMPORT.enProceso);
+    }
+    return situaciones;
+  }
+
+  /**
+   * Formularios del CONTEXTO seleccionado (entidad · año · periodo) que ya
+   * cuentan con información registrada. Es lo que el sistema consulta antes de
+   * transmitir: la relación es de los formularios con información en el
+   * contexto, no de los que trae el archivo — el archivo no se lee. Si hay al
+   * menos uno, se presenta la advertencia de reemplazo.
    *
    * Enviada la categoría la lista queda vacía: el envío cierra el proceso y no
    * deja información local que reemplazar. El reenvío, entonces, no reimporta
@@ -927,30 +1107,17 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Validación de la extensión en el momento de elegir el archivo: si no es
-   * .txt no se acepta, se explica por qué y se limpia el input para que el
-   * usuario pueda volver a elegir (incluso el mismo archivo).
+   * Guarda el archivo elegido, sin verificarlo todavía: extensión, tamaño y
+   * proceso en ejecución se revisan juntos al pulsar Importar, para presentar
+   * todas las situaciones en un solo mensaje. El input se limpia para poder
+   * volver a elegir el mismo archivo tras corregirlo.
    */
   seleccionarArchivoImport(event: Event) {
     const input = event.target as HTMLInputElement;
-    const archivo = input.files?.[0];
-    this.importFileName = '';
-    this.importFileError = '';
-    if (!archivo) return;
-
-    if (!archivo.name.toLowerCase().endsWith(this.EXTENSION_IMPORT)) {
-      this.importFileError =
-        `"${archivo.name}" no es un archivo .txt. La importación sólo admite archivos de texto plano (.txt).`;
-      input.value = '';
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Archivo no admitido',
-        detail: 'Seleccione un archivo con extensión .txt.',
-        life: 5000,
-      });
-      return;
-    }
-    this.importFileName = archivo.name;
+    const archivo = input.files?.[0] ?? null;
+    input.value = '';
+    this.importFile = archivo;
+    this.importFileName = archivo?.name ?? '';
   }
 
   // ── Exportar ──
@@ -998,9 +1165,120 @@ export class FormulariosComponent implements OnDestroy {
       return;
     }
     if (key === 'enviarAdjunto') {
-      this.messageService.add({ severity: 'info', summary: 'Enviar Adjunto', detail: 'Adjunte el archivo correspondiente a la categoría.' });
+      this.abrirAdjuntoDialog();
       return;
     }
+  }
+
+  // ── Enviar adjunto ────────────────────────────────────────────────────────
+  // El adjunto es el soporte del envío (memorando, certificación, acta), así
+  // que sólo tiene sentido cuando hay envío al que respaldar: la categoría debe
+  // haberse enviado y no venir rechazada. Con la categoría rechazada lo que
+  // toca es corregir y reenviar, no adjuntar soportes de un envío que no cerró.
+
+  /** Única extensión admitida por el adjunto. */
+  private readonly EXTENSION_ADJUNTO = '.pdf';
+  /** Tamaño máximo del adjunto, en MB. */
+  private readonly MAX_ADJUNTO_MB = 10;
+
+  showAdjuntoDialog = false;
+  adjuntoFileName = '';
+  /** Tamaño del archivo elegido, ya legible ("4,2 MB"). */
+  adjuntoFileSize = '';
+  /** Motivo del rechazo del archivo (extensión o tamaño). */
+  adjuntoFileError = '';
+
+  /** La categoría admite adjunto cuando ya se envió y no volvió rechazada. */
+  get puedeEnviarAdjunto(): boolean {
+    return this.categoriaYaEnviada && this.respuestaCentral !== 'rechazado';
+  }
+
+  /** Por qué no se puede adjuntar todavía (texto del tooltip). */
+  get ayudaAdjunto(): string {
+    if (this.puedeEnviarAdjunto) {
+      return 'Adjuntar el soporte del envío de la categoría (PDF, máx. 10 MB)';
+    }
+    return this.respuestaCentral === 'rechazado' && this.categoriaEnviada
+      ? 'La categoría fue rechazada: corrija y reenvíe antes de adjuntar soportes'
+      : 'Disponible cuando la categoría esté enviada o aceptada';
+  }
+
+  abrirAdjuntoDialog() {
+    if (!this.puedeEnviarAdjunto) return;
+    this.resetAdjuntoDialog();
+    this.showAdjuntoDialog = true;
+  }
+
+  cerrarAdjuntoDialog() {
+    this.showAdjuntoDialog = false;
+    this.resetAdjuntoDialog();
+  }
+
+  private resetAdjuntoDialog() {
+    this.adjuntoFileName = '';
+    this.adjuntoFileSize = '';
+    this.adjuntoFileError = '';
+  }
+
+  /**
+   * Verifica extensión y tamaño al elegir el archivo, no al enviar: el error se
+   * ve donde se cometió y el input se limpia para poder reintentar con el mismo
+   * archivo. Se valida primero la extensión —un .zip de 40 MB no es "muy
+   * grande", es del tipo equivocado— y luego el peso.
+   */
+  seleccionarArchivoAdjunto(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    this.resetAdjuntoDialog();
+    if (!archivo) return;
+
+    if (!archivo.name.toLowerCase().endsWith(this.EXTENSION_ADJUNTO)) {
+      this.adjuntoFileError =
+        `"${archivo.name}" no es un archivo PDF. El adjunto sólo admite documentos .pdf.`;
+      input.value = '';
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo no admitido',
+        detail: 'Seleccione un archivo con extensión .pdf.',
+        life: 5000,
+      });
+      return;
+    }
+
+    const mb = archivo.size / (1024 * 1024);
+    if (mb > this.MAX_ADJUNTO_MB) {
+      this.adjuntoFileError =
+        `"${archivo.name}" pesa ${this.formatearMb(mb)} y el máximo permitido es `
+        + `${this.MAX_ADJUNTO_MB} MB. Comprima el documento o divídalo antes de adjuntarlo.`;
+      input.value = '';
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Archivo demasiado grande',
+        detail: `El adjunto no puede superar ${this.MAX_ADJUNTO_MB} MB.`,
+        life: 5000,
+      });
+      return;
+    }
+
+    this.adjuntoFileName = archivo.name;
+    this.adjuntoFileSize = this.formatearMb(mb);
+  }
+
+  /** Tamaño en MB con un decimal y coma decimal (es-CO). */
+  private formatearMb(mb: number): string {
+    return `${mb.toFixed(1).replace('.', ',')} MB`;
+  }
+
+  confirmarAdjunto() {
+    if (!this.adjuntoFileName) return;
+    const nombre = this.adjuntoFileName;
+    this.cerrarAdjuntoDialog();
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Adjunto enviado',
+      detail: `"${nombre}" quedó asociado al envío de ${this.categoriaLabel}.`,
+      life: 5000,
+    });
   }
 
   /**
@@ -1031,8 +1309,24 @@ export class FormulariosComponent implements OnDestroy {
   /** Diálogo de confirmación "entidad agregadora sin entidades" (Alerta 2). */
   showAgregadoraDialog = false;
 
+  /**
+   * Forzar el modo de entidades agregadas (SÓLO demostración). En producción no
+   * existe: el modo lo trae la categoría. Aquí evita tener que cambiar de
+   * categoría —y con ella todo el contexto— para ver los tres caminos del
+   * envío. 'auto' devuelve el mando a la categoría.
+   */
+  demoModoEntidades: ModoEntidades | 'auto' = 'auto';
+
+  readonly modoEntidadesOptions = [
+    { label: 'Según la categoría seleccionada', value: 'auto' },
+    { label: 'No gestiona entidades agregadas · envía directo', value: 'noAplica' },
+    { label: 'Exige al menos una entidad · bloquea el envío', value: 'obligatoria' },
+    { label: 'Entidad agregadora · confirma responsabilidad', value: 'agregadora' },
+  ];
+
   /** Modo de entidades agregadas de la categoría seleccionada (default noAplica). */
   get modoEntidades(): ModoEntidades {
+    if (this.demoModoEntidades !== 'auto') return this.demoModoEntidades;
     return this.categoriaOptions.find(o => o.value === this.selectedCategoria)?.modoEntidades
       ?? 'noAplica';
   }
@@ -1053,16 +1347,22 @@ export class FormulariosComponent implements OnDestroy {
       ?? 'la categoría';
   }
 
+  /**
+   * True cuando la categoría exige entidades agregadas y todavía no hay
+   * ninguna. Es una condición previa al envío, no el resultado de una acción:
+   * por eso se muestra fija en la barra de envío —con el botón que la resuelve—
+   * y no en un toast que el usuario puede perderse.
+   */
+  get faltanEntidadesAgregadas(): boolean {
+    return this.entidadesAgregadasHabilitado
+      && !this.categoriaEsAgregadora
+      && this.selectedEntidades.length === 0;
+  }
+
   enviarCategoria() {
-    if (!this.todosValidados) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Categoría no enviable',
-        detail: 'Todos los formularios deben estar en Validación local · Aceptado antes de enviar la categoría.',
-        life: 5000,
-      });
-      return;
-    }
+    // Guarda defensiva, sin aviso: el botón está deshabilitado en este caso y
+    // la barra de envío ya dice qué falta. Un toast aquí no lo vería nadie.
+    if (!this.todosValidados) return;
 
     // La categoría gestiona entidades agregadas y no hay ninguna configurada →
     // dos escenarios según el modo. Las categorías 'noAplica' se saltan esta
@@ -1071,15 +1371,10 @@ export class FormulariosComponent implements OnDestroy {
       if (this.categoriaEsAgregadora) {
         // Alerta 2: entidad agregadora — confirma asunción de responsabilidad.
         this.showAgregadoraDialog = true;
-      } else {
-        // Alerta 1: bloqueo — es obligatorio seleccionar al menos una entidad.
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Seleccione entidades agregadas',
-          detail: 'Debe agregar al menos una entidad antes de enviar la categoría. Use el botón "Entidades agregadas" para configurarlas.',
-          life: 6000,
-        });
       }
+      // Modo 'obligatoria': el bloqueo ya está visible en la barra de envío,
+      // con su botón, y "Enviar Categoría" está deshabilitado. Repetirlo en un
+      // toast sería avisar de algo que el usuario ya tiene delante.
       return;
     }
 
@@ -1142,31 +1437,37 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Botón "Continuar" / "Importar". La justificación del reenvío va primero y
-   * no necesita archivo: el contexto ya dijo que la categoría se envió. Con eso
-   * resuelto se pide el archivo y arranca el proceso.
-   *
-   * El aviso de reemplazo sólo aparece cuando hay información local que pisar,
-   * que nunca es el caso tras un reenvío: ahí la importación es limpia.
+   * Botón "Importar" / "Continuar". Avanza el flujo en el orden acordado, y
+   * todo ocurre ANTES de transmitir el archivo:
+   *   1. verificaciones previas (extensión, tamaño, proceso en ejecución)
+   *   2. advertencia de reemplazo, si el contexto tiene información registrada
+   *   3. motivo y justificación, si la categoría ya fue enviada
+   *   4. transmisión y creación del proceso
    */
   confirmImport() {
-    if (this.importPaso === 'iniciado') return;
+    if (this.importPaso === 'iniciado' || !this.importFile) return;
 
+    if (this.importPaso === 'seleccion') {
+      this.situacionesImport = this.verificarArchivoImport(this.importFile);
+      if (this.situacionesImport.length > 0) {
+        this.importPaso = 'rechazado';
+        return;
+      }
+    }
+
+    // El paso en el que se pulsó el botón es el que queda confirmado.
+    if (this.importPaso === 'confirmacion') this.reemplazoConfirmado = true;
     if (this.importPaso === 'justificacion') {
       if (!this.validarJustificacionReenvio()) return;
       this.reenvioJustificado = true;
-      this.importPaso = 'seleccion';
-      return;
     }
 
-    if (!this.importFileName) return;
-
-    if (this.importPaso === 'seleccion' && this.categoriaYaEnviada && !this.reenvioJustificado) {
-      this.importPaso = 'justificacion';
-      return;
-    }
-    if (this.importPaso !== 'confirmacion' && this.formulariosAReimportar.length > 0) {
+    if (!this.reemplazoConfirmado && this.formulariosAReimportar.length > 0) {
       this.importPaso = 'confirmacion';
+      return;
+    }
+    if (this.categoriaYaEnviada && !this.reenvioJustificado) {
+      this.importPaso = 'justificacion';
       return;
     }
     this.iniciarProcesoImportacion();
@@ -1204,14 +1505,36 @@ export class FormulariosComponent implements OnDestroy {
     return valido;
   }
 
-  /** "Cancelar" en la justificación: sin motivo no hay reenvío, así que se
-      abandona la importación entera. */
+  /** "Cancelar" en la justificación: vuelve a la selección de archivo sin
+      transmitir nada. Lo diligenciado y la confirmación del reemplazo se
+      descartan: acompañan a la carga que se vaya a transmitir. */
   cancelarReenvio() {
-    this.cerrarImportDialog();
+    this.reenvioMotivo = null;
+    this.reenvioJustificacion = '';
+    this.reenvioMotivoError = '';
+    this.reenvioJustificacionError = '';
+    this.reemplazoConfirmado = false;
+    this.importPaso = 'seleccion';
   }
 
-  /** Vuelve del aviso de reemplazo a la selección de archivo, sin arrancar nada. */
+  /**
+   * "Cancelar" en la advertencia de reemplazo: el archivo no se transmite y no
+   * queda registro de la operación. Vuelve a la selección.
+   */
   cancelarReimportacion() {
+    this.reemplazoConfirmado = false;
+    this.importPaso = 'seleccion';
+  }
+
+  /**
+   * "Cargar otro archivo" tras un rechazo. El archivo anterior se descarta: hay
+   * que corregirlo y volver a elegirlo. No se transmite nada hasta que la
+   * totalidad de las situaciones esté corregida.
+   */
+  volverACargarArchivo() {
+    this.importFile = null;
+    this.importFileName = '';
+    this.situacionesImport = [];
     this.importPaso = 'seleccion';
   }
 
@@ -1240,10 +1563,8 @@ export class FormulariosComponent implements OnDestroy {
     this.activePanel = null;
     this.messageService.add({
       severity: 'info',
-      summary: this.esReimportacion ? 'Reimportación iniciada' : 'Importación iniciada',
-      detail: this.esReimportacion
-        ? `"${this.importFileName}" inició su proceso de reimportación sobre el contexto seleccionado. El resultado se notificará a ${this.correoUsuario}.`
-        : `"${this.importFileName}" inició su proceso de importación. El resultado se notificará a ${this.correoUsuario}.`,
+      summary: 'Carga recibida',
+      detail: `"${this.importFileName}" fue recibido y será procesado. El resultado llegará a ${this.correoUsuario}.`,
       life: 6000,
     });
   }
@@ -1382,7 +1703,16 @@ export class FormulariosComponent implements OnDestroy {
    * salga vacío para combinaciones que no estén "cableadas" en el mock.
    */
   private readonly plantillasFormulario: Array<{
-    nombre: string; etapa: EtapaId; estado: EstadoId | null;
+    nombre: string;
+    etapa: EtapaId;
+    estado: EstadoId | null;
+    /**
+     * Con qué familia de códigos cerró su importación. Sólo para el formulario
+     * que arranca con deficiencias de importación: sin esto habría que simular
+     * una importación para poder ver los códigos EST-/COMP- en el control de
+     * envío, y el demo empezaría sin un ejemplo de esa etapa.
+     */
+    deficienciaImportacion?: TipoDeficiencia;
   }> = [
     // El orden sigue el ciclo de vida, para que el listado del demo muestre de
     // arriba a abajo todos los casos que la columna Estado sabe representar.
@@ -1394,10 +1724,17 @@ export class FormulariosComponent implements OnDestroy {
     { nombre: 'Balance General', etapa: 1, estado: 'A' },
     { nombre: 'Estado de Resultados', etapa: 1, estado: 'A' },
     { nombre: 'Flujo de Efectivo', etapa: 1, estado: 'A' },
+    // La importación cerró con deficiencias: el archivo no cumple el protocolo
+    // y hay que corregirlo y volver a importar. No se justifica ni se envía.
+    { nombre: 'Situación Financiera y Económica', etapa: 1, estado: 'D',
+      deficienciaImportacion: 'estructura' },
     // Ya validado localmente.
     { nombre: 'Estado de Cambios en el Patrimonio', etapa: 2, estado: 'A' },
-    // Devuelto por la validación central con deficiencia.
-    { nombre: 'Información Complementaria', etapa: 3, estado: 'D' },
+    // Devuelto por la validación central con deficiencias permisibles: no hay
+    // nada que corregir en el archivo, hay que justificar cada hallazgo. Por eso
+    // queda en Requiere comentario (M) y no en Deficiencia (D) — su último
+    // proceso (4823) es justamente el que exige comentario.
+    { nombre: 'Información Complementaria', etapa: 3, estado: 'M' },
   ];
 
   searchFormulario = '';
@@ -1445,6 +1782,15 @@ export class FormulariosComponent implements OnDestroy {
       estado: plantilla.estado,
       ultimaModificacion: `0${(idx % 9) + 1}/${(idx % 12) + 1}/${anioNum}`,
     }));
+
+    // Los formularios que arrancan con la importación fallida registran su
+    // familia de códigos, igual que lo haría el resultado de una importación.
+    this.plantillasFormulario.forEach((plantilla, idx) => {
+      if (plantilla.deficienciaImportacion) {
+        this.tipoDeficienciaPorFormulario.set(idx + 1, plantilla.deficienciaImportacion);
+      }
+    });
+
     // Contexto nuevo: aún no se ha enviado.
     this.categoriaEnviada = false;
   }
@@ -1507,6 +1853,7 @@ export class FormulariosComponent implements OnDestroy {
     this.selectedCategoria = '';
     this.selectedAnio = '';
     this.selectedPeriodo = '';
+    this.selectedEntidades = [];
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.searchFormulario = '';
@@ -1524,18 +1871,36 @@ export class FormulariosComponent implements OnDestroy {
   // ──────────────────────────────────────────────────────────────────────
   showEntidadesModal = false;
   entidadesBusqueda = '';
+
+  /**
+   * Entidades ASIGNADAS a la categoría — lo que se envía. Sólo cambia al
+   * confirmar el modal; se limpia con la categoría y con el contexto, porque
+   * la asignación es de esa categoría y no del usuario.
+   */
   selectedEntidades: EntidadAgregada[] = [];
+
+  /**
+   * Selección EN EDICIÓN dentro del modal. La tabla escribe aquí y no sobre la
+   * asignación: así "Cancelar" cancela de verdad —antes la tabla ya había
+   * escrito el cambio y cerrar sin aceptar lo dejaba aplicado— y al reabrir se
+   * parte de lo asignado, que es lo que el usuario espera ver marcado.
+   */
+  entidadesBorrador: EntidadAgregada[] = [];
 
   /** Catálogo mock de entidades disponibles (~300, combinatorias tipo×municipio). */
   readonly entidadesDisponibles: EntidadAgregada[] = this.generarEntidadesMock();
 
   abrirEntidadesModal() {
     this.entidadesBusqueda = '';
+    // Se parte de lo ya asignado: reabrir muestra la selección vigente.
+    this.entidadesBorrador = [...this.selectedEntidades];
     this.showEntidadesModal = true;
   }
 
+  /** Cancelar / Esc / ✕ — descarta la edición y deja la asignación como estaba. */
   cerrarEntidadesModal() {
     this.entidadesBusqueda = '';
+    this.entidadesBorrador = [];
     this.showEntidadesModal = false;
   }
 
@@ -1550,11 +1915,11 @@ export class FormulariosComponent implements OnDestroy {
     );
   }
 
-  /** True cuando todas las entidades filtradas están seleccionadas. */
+  /** True cuando todas las entidades filtradas están marcadas en el borrador. */
   get allFilteredSelected(): boolean {
     const filtradas = this.entidadesFiltradas;
     if (filtradas.length === 0) return false;
-    const seleccionadasIds = new Set(this.selectedEntidades.map(e => e.id));
+    const seleccionadasIds = new Set(this.entidadesBorrador.map(e => e.id));
     return filtradas.every(e => seleccionadasIds.has(e.id));
   }
 
@@ -1564,22 +1929,36 @@ export class FormulariosComponent implements OnDestroy {
     if (filtradas.length === 0) return;
     if (this.allFilteredSelected) {
       const filtradasIds = new Set(filtradas.map(e => e.id));
-      this.selectedEntidades = this.selectedEntidades.filter(e => !filtradasIds.has(e.id));
+      this.entidadesBorrador = this.entidadesBorrador.filter(e => !filtradasIds.has(e.id));
     } else {
-      const seleccionadasIds = new Set(this.selectedEntidades.map(e => e.id));
+      const seleccionadasIds = new Set(this.entidadesBorrador.map(e => e.id));
       const nuevas = filtradas.filter(e => !seleccionadasIds.has(e.id));
-      this.selectedEntidades = [...this.selectedEntidades, ...nuevas];
+      this.entidadesBorrador = [...this.entidadesBorrador, ...nuevas];
     }
   }
 
+  /**
+   * "Asignar" es lo único que toca la asignación real. Se habilita también con
+   * cero seleccionadas cuando ya había asignación: es la única forma de
+   * quitarlas, y sin eso la asignación sería irreversible.
+   */
+  get puedeConfirmarEntidades(): boolean {
+    return this.entidadesBorrador.length > 0 || this.selectedEntidades.length > 0;
+  }
+
   confirmarAsignacionEntidades() {
+    if (!this.puedeConfirmarEntidades) return;
+    this.selectedEntidades = [...this.entidadesBorrador];
     const count = this.selectedEntidades.length;
     this.showEntidadesModal = false;
     this.entidadesBusqueda = '';
+    this.entidadesBorrador = [];
     this.messageService.add({
-      severity: 'success',
-      summary: 'Entidades asignadas',
-      detail: `${count} entidad${count === 1 ? '' : 'es'} asignada${count === 1 ? '' : 's'} a la categoría.`,
+      severity: count > 0 ? 'success' : 'info',
+      summary: count > 0 ? 'Entidades asignadas' : 'Sin entidades asignadas',
+      detail: count > 0
+        ? `${count} entidad${count === 1 ? '' : 'es'} asignada${count === 1 ? '' : 's'} a la categoría.`
+        : 'Se quitaron todas las entidades agregadas de la categoría.',
       life: 3500,
     });
   }

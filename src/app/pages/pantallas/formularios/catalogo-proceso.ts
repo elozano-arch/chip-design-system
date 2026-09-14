@@ -29,6 +29,12 @@ export interface EtapaProceso {
   nombre: string;
   /** Etiqueta legible para la UI (la de BD viene en snake_case). */
   label: string;
+  /**
+   * Código de dos letras para la celda "Etapa/est." del control de envío, que
+   * presenta el par como `IM/A`. El código del estado no se define aquí: ya es
+   * `id_estado` (la letra del catálogo).
+   */
+  codigo: string;
   icon: string;
 }
 
@@ -44,10 +50,10 @@ export interface EstadoProceso {
 }
 
 export const ETAPAS_PROCESO: readonly EtapaProceso[] = [
-  { id: 1, nombre: 'Importacion',        label: 'Importación',        icon: 'pi pi-file-import' },
-  { id: 2, nombre: 'Validacion_Local',   label: 'Validación local',   icon: 'pi pi-check-square' },
-  { id: 3, nombre: 'Validacion_Central', label: 'Validación central', icon: 'pi pi-building' },
-  { id: 4, nombre: 'Envio',              label: 'Envío',              icon: 'pi pi-send' },
+  { id: 1, nombre: 'Importacion',        label: 'Importación',        codigo: 'IM', icon: 'pi pi-file-import' },
+  { id: 2, nombre: 'Validacion_Local',   label: 'Validación local',   codigo: 'VL', icon: 'pi pi-check-square' },
+  { id: 3, nombre: 'Validacion_Central', label: 'Validación central', codigo: 'VC', icon: 'pi pi-building' },
+  { id: 4, nombre: 'Envio',              label: 'Envío',              codigo: 'EN', icon: 'pi pi-send' },
 ];
 
 export const ESTADOS_PROCESO: readonly EstadoProceso[] = [
@@ -116,13 +122,29 @@ export type TipoDeficiencia = 'estructura' | 'completitud';
  * presente; `requiereComentario` obliga a justificarla y es lo único que
  * habilita la caja de comentario de esa fila. Las deficiencias de importación
  * llevan los dos en `false`: un archivo mal formado no se justifica, se corrige.
+ *
+ * El texto que ve el usuario son DOS campos del modelo, no uno:
+ *   • `mensaje`          → `deficiencia.mensaje`, la descripción del catálogo.
+ *     Es igual en todas las veces que se dispara la regla.
+ *   • `mensajeAdicional` → `control_deficiencia.mensj_adicional`, el dato
+ *     concreto que la regla inyecta al invocarse (registro, concepto, cifras).
+ *     Vacío cuando la regla no aporta detalle.
  */
 export interface MensajeDeficiencia {
   id: number;
   codMensaje: string;
   mensaje: string;
+  mensajeAdicional: string;
   permisible: boolean;
   requiereComentario: boolean;
+  /**
+   * Comentario ya registrado sobre la deficiencia — `control_deficiencia`
+   * guarda el texto y su fecha en la misma fila. Sólo lo traen las de procesos
+   * anteriores, que es donde el comentario ya viajó con el envío y por eso se
+   * presenta en consulta.
+   */
+  comentarioGuardado?: string;
+  fechaComentario?: string;
 }
 
 /**
@@ -136,6 +158,8 @@ export interface ProcesoDetalle {
   idDetalleProceso: number;
   /** Estado con que cerró el registro de detalle — `tab_estado`. */
   estado: EstadoId;
+  /** Cuándo corrió el proceso — `ce_proceso.fecha_inicial`. */
+  fechaProceso: string;
   /** Quien ejecutó el proceso. No es el autor del comentario. */
   usuarioProceso: string;
   /** Vacío = el proceso no generó deficiencias. */
@@ -151,11 +175,15 @@ export interface DeficienciaEnvio {
   etapa: EtapaId;
   idDetalleProceso: number;
   estado: EstadoId;
+  fechaProceso: string;
   usuarioProceso: string;
   /** `null` = el proceso no generó deficiencia. */
   id: number | null;
   codMensaje: string;
+  /** Descripción del catálogo. Es la que va en la grilla. */
   mensaje: string;
+  /** Detalle que inyecta la regla. Vacío si no aporta ninguno. */
+  mensajeAdicional: string;
   permisible: boolean;
   requiereComentario: boolean;
   /**
@@ -182,6 +210,7 @@ export function filasDeProceso(proceso: ProcesoDetalle): DeficienciaEnvio[] {
     etapa: proceso.etapa,
     idDetalleProceso: proceso.idDetalleProceso,
     estado: proceso.estado,
+    fechaProceso: proceso.fechaProceso,
     usuarioProceso: proceso.usuarioProceso,
   };
   const vacios = {
@@ -190,11 +219,20 @@ export function filasDeProceso(proceso: ProcesoDetalle): DeficienciaEnvio[] {
   if (proceso.deficiencias.length === 0) {
     return [{
       ...cabecera, ...vacios,
-      id: null, codMensaje: '', mensaje: '',
+      id: null, codMensaje: '', mensaje: '', mensajeAdicional: '',
       permisible: false, requiereComentario: false,
     }];
   }
-  return proceso.deficiencias.map(d => ({ ...cabecera, ...d, ...vacios }));
+  // El comentario ya registrado entra como GUARDADO, no como borrador: la fila
+  // lo presenta en consulta y `comentario` queda vacío para que "hay cambios
+  // por guardar" siga midiendo lo que el usuario escribe ahora.
+  return proceso.deficiencias.map(d => ({
+    ...cabecera,
+    ...vacios,
+    ...d,
+    comentarioGuardado: d.comentarioGuardado ?? '',
+    fechaComentario: d.fechaComentario ?? '',
+  }));
 }
 
 /** Fila de `tab_etapa_proceso` que corresponde a una etapa. */

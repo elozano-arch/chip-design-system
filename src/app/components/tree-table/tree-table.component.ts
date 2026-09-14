@@ -1,4 +1,6 @@
-import { Component, Input, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import {
+  Component, Input, OnInit, TemplateRef, ViewChild, computed, inject, signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -26,6 +28,18 @@ export interface ColumnaConfig {
   alineacion?: 'right' | 'center' | 'left';
   opciones?: string[];
   fija?: boolean;
+  /**
+   * Con `[ordenable]` activo en la tabla, todas las columnas del nivel raíz se
+   * ordenan; `false` saca una en concreto (un consecutivo de lectura, por
+   * ejemplo, que no es un dato por el que tenga sentido ordenar).
+   */
+  ordenable?: boolean;
+}
+
+/** Orden activo del nivel raíz: columna y sentido (1 ascendente, -1 descendente). */
+export interface OrdenArbol {
+  key: string;
+  dir: 1 | -1;
 }
 
 export interface NodoArbol {
@@ -35,6 +49,16 @@ export interface NodoArbol {
   nivel: number;
   hijos: NodoArbol[];
   valores: Record<string, string | number>;
+  /**
+   * Objeto de dominio de la fila. La tabla no lo lee ni lo transforma: existe
+   * para que las plantillas de celda del consumidor trabajen con su propio
+   * modelo (`nodo.data`) en vez de con `valores`, que sólo admite texto.
+   *
+   * Viaja POR REFERENCIA — el clon interno no lo copia—, así que si el
+   * consumidor muta el objeto (guardar un comentario, por ejemplo), la celda
+   * lo refleja sin volver a construir el árbol.
+   */
+  data?: any;
 }
 
 interface CambioPendiente {
@@ -94,7 +118,22 @@ export class TreeTableComponent implements OnInit {
 
   /* ─────────── Datos ─────────── */
   @Input({ required: true }) set nodos(v: NodoArbol[]) {
-    this.arbol.set(structuredClone(v));
+    this.arbol.set(this.clonar(v));
+  }
+
+  /**
+   * Copia propia del árbol para que la edición inline no toque el array del
+   * consumidor. No usa `structuredClone` porque `data` tiene que seguir siendo
+   * la MISMA referencia: es el objeto de dominio del consumidor, y clonarlo
+   * dejaría a las plantillas pintando una copia congelada.
+   */
+  private clonar(nodos: NodoArbol[]): NodoArbol[] {
+    return nodos.map(n => ({
+      ...n,
+      valores: { ...n.valores },
+      hijos: this.clonar(n.hijos),
+      data: n.data,
+    }));
   }
 
   @Input() columnasFijas: ColumnaConfig[] = [
@@ -104,13 +143,81 @@ export class TreeTableComponent implements OnInit {
 
   @Input() columnasVariables: ColumnaConfig[] = [];
 
+  /* ─────────── Celdas con contenido propio ───────────
+     Por defecto una celda es texto (o un tag si la columna es de selección).
+     Cuando el consumidor necesita algo más —dos líneas, parte del texto en
+     color, un enlace que abre un modal— registra aquí una plantilla por clave
+     de columna y la tabla la pinta en su lugar, con el nodo como contexto:
+
+       <ng-template #fechaTpl let-nodo>…{{ nodo.data.fecha }}…</ng-template>
+       <app-tree-table [cellTemplates]="{ fecha: fechaTpl }" … />
+
+     La plantilla se evalúa en el ámbito del consumidor, así que sus botones
+     llaman a métodos del consumidor sin que la tabla tenga que emitir nada. */
+  @Input() cellTemplates: Record<string, TemplateRef<unknown>> = {};
+
+  /* ─────────── Nivel hijo con esquema propio ───────────
+     Vacío: los hijos son filas de la misma tabla, indentadas, con las mismas
+     columnas que el padre (comportamiento por defecto del árbol).
+     Con valor: al expandir, los hijos se pintan en una tabla anidada con SU
+     cabecera y SUS columnas — para jerarquías donde padre e hijo no son la
+     misma entidad (un proceso y sus deficiencias, por ejemplo). Sólo aplica
+     al primer nivel de hijos. */
+  @Input() columnasHijo: ColumnaConfig[] | null = null;
+  @Input() cellTemplatesHijo: Record<string, TemplateRef<unknown>> = {};
+
   /* ─────────── Flags de configuración (definen la variante) ─────────── */
   /** Habilita edición inline + barra sticky de cambios pendientes. */
   @Input() editable = false;
   /** Muestra la barra de búsqueda global del árbol. */
   @Input() searchable = true;
+  /** Placeholder del buscador: debe decir sobre qué datos busca. */
+  @Input() placeholderBusqueda = 'Buscar por código o concepto…';
+  /** Nombre accesible del buscador. */
+  @Input() ariaLabelBusqueda = 'Búsqueda global en el árbol';
+  /**
+   * Texto contra el que se compara la búsqueda en cada nodo. Por defecto,
+   * código y nombre — que es donde viven los datos de un árbol contable—.
+   * Cuando las celdas se pintan con plantillas desde `nodo.data`, el
+   * consumidor dice aquí qué campos de su modelo son buscables.
+   */
+  @Input() textoBusqueda: ((nodo: NodoArbol) => string) | null = null;
+  /** Habilita el orden ascendente/descendente por columna en el nivel raíz. */
+  @Input() ordenable = false;
+  /**
+   * Valor por el que se ordena una columna. Por defecto el de `valores` (o
+   * código/nombre); el consumidor lo sobreescribe cuando el dato visible no
+   * ordena bien como texto —una fecha dd/mm/aaaa, un conteo—.
+   */
+  @Input() valorOrden: ((nodo: NodoArbol, key: string) => string | number | null | undefined) | null = null;
   /** Muestra el paginador interno por nodo padre. */
   @Input() pageable = true;
+  /**
+   * El paginador del nodo se muestra aunque los hijos quepan en una página.
+   * Por defecto sólo aparece cuando hace falta paginar; hay vistas donde tenerlo
+   * siempre a la vista pesa más que el ahorro de espacio.
+   */
+  @Input() paginadorSiempreVisible = false;
+  /** Pagina también el nivel raíz (por defecto se pintan todos los padres). */
+  @Input() rootPageable = false;
+  /** Tamaño de página inicial del nivel raíz. */
+  @Input() rootRows = 10;
+  /** Muestra la miga de pan del nodo activo (usa código y nombre del nodo). */
+  @Input() mostrarRuta = true;
+  /**
+   * Ancla las columnas fijas al hacer scroll horizontal. El anclaje está
+   * calculado para las dos columnas fijas originales (código y concepto): con
+   * más de dos, apagarlo — si no, todas quedan `sticky` sin desplazamiento
+   * propio y se montan unas sobre otras.
+   */
+  @Input() fijasSticky = true;
+  /**
+   * Pinta un guion apagado donde iría el expansor en los nodos sin hijos. Por
+   * defecto ese hueco va vacío (sólo reserva el espacio); activarlo cuando el
+   * "no se puede expandir" es información para el usuario y no un detalle de
+   * maquetación.
+   */
+  @Input() indicadorHoja = false;
   /** Muestra el paginador horizontal de columnas variables (4 a la vez). */
   @Input() columnPager = false;
   /** Añade la columna "Acciones" con menú contextual por fila. */
@@ -124,7 +231,12 @@ export class TreeTableComponent implements OnInit {
   /** Texto del destino al guardar (sticky bar). */
   @Input() destinoGuardado = 'CHIP local';
 
-  readonly opcionesTamanoPagina = TAMANOS_PAGINA.map(n => ({ label: `${n}`, value: n }));
+  /** Tamaños ofrecidos por los selectores de página (raíz y nodo). */
+  @Input() set tamanosPagina(v: readonly number[]) {
+    this.opcionesTamanoPagina = v.map(n => ({ label: `${n}`, value: n }));
+  }
+  opcionesTamanoPagina: { label: string; value: number }[] =
+    TAMANOS_PAGINA.map(n => ({ label: `${n}`, value: n as number }));
 
   /* ─────────── Estado de la tabla ─────────── */
   arbol = signal<NodoArbol[]>([]);
@@ -199,26 +311,140 @@ export class TreeTableComponent implements OnInit {
 
   /* ═════════════ Búsqueda ═════════════ */
   arbolFiltrado = computed<NodoArbol[]>(() => {
-    const q = this.busqueda().trim().toLowerCase();
+    const q = this.normalizar(this.busqueda().trim());
     if (!q) return this.arbol();
     return this.filtrarArbol(this.arbol(), q);
   });
 
-  limpiarBusqueda(): void {
-    this.busqueda.set('');
+  /**
+   * Aplica la búsqueda. Vuelve a la primera página —en la tercera página de
+   * un resultado de una sola fila no se vería nada— y abre las ramas cuya
+   * coincidencia está en un hijo: si no, el padre aparece sin decir por qué.
+   */
+  buscar(texto: string): void {
+    this.busqueda.set(texto);
+    this.paginaRaiz.set(0);
+    this.paginasNodo.set({});
+    const q = this.normalizar(texto.trim());
+    if (!q) return;
+    const abrir = this.ramasConCoincidenciaEnHijos(this.arbol(), q);
+    this.nodosExpandidos.set(new Set(this.modoUnaRama() ? abrir.slice(0, 1) : abrir));
+    this.nodoActivoId.set(abrir[0] ?? null);
   }
 
+  limpiarBusqueda(): void {
+    this.buscar('');
+  }
+
+  /** Minúsculas y sin tildes: "validacion" encuentra "Validación". */
+  private normalizar(texto: string): string {
+    return texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+  }
+
+  private coincide(nodo: NodoArbol, q: string): boolean {
+    const texto = this.textoBusqueda
+      ? this.textoBusqueda(nodo)
+      : `${nodo.codigo} ${nodo.nombre}`;
+    return this.normalizar(texto).includes(q);
+  }
+
+  /**
+   * Un padre que coincide se queda con TODOS sus hijos: si la búsqueda dio con
+   * el proceso, lo que se quiere ver es el proceso completo. Un padre que no
+   * coincide sólo se queda con los hijos que sí.
+   */
   private filtrarArbol(nodos: NodoArbol[], q: string): NodoArbol[] {
     const resultado: NodoArbol[] = [];
     for (const nodo of nodos) {
-      const coincide = nodo.codigo.toLowerCase().includes(q) ||
-                       nodo.nombre.toLowerCase().includes(q);
+      if (this.coincide(nodo, q)) {
+        resultado.push(nodo);
+        continue;
+      }
       const hijosFiltrados = this.filtrarArbol(nodo.hijos, q);
-      if (coincide || hijosFiltrados.length > 0) {
+      if (hijosFiltrados.length > 0) {
         resultado.push({ ...nodo, hijos: hijosFiltrados });
       }
     }
     return resultado;
+  }
+
+  /** Ids de los nodos que no coinciden pero tienen algún descendiente que sí. */
+  private ramasConCoincidenciaEnHijos(nodos: NodoArbol[], q: string): string[] {
+    const ids: string[] = [];
+    for (const nodo of nodos) {
+      if (this.coincide(nodo, q)) continue;
+      const internas = this.ramasConCoincidenciaEnHijos(nodo.hijos, q);
+      if (internas.length > 0 || nodo.hijos.some(h => this.coincide(h, q))) {
+        ids.push(nodo.id, ...internas);
+      }
+    }
+    return ids;
+  }
+
+  /* ═════════════ Orden del nivel raíz ═════════════ */
+  orden = signal<OrdenArbol | null>(null);
+
+  esOrdenable(col: ColumnaConfig): boolean {
+    return this.ordenable && col.ordenable !== false;
+  }
+
+  /** Primer clic: ascendente. Clic sobre la columna activa: invierte el sentido. */
+  ordenarPor(col: ColumnaConfig): void {
+    const actual = this.orden();
+    const dir: 1 | -1 = actual?.key === col.key && actual.dir === 1 ? -1 : 1;
+    this.orden.set({ key: col.key, dir });
+    this.paginaRaiz.set(0);
+  }
+
+  ariaSort(col: ColumnaConfig): 'ascending' | 'descending' | 'none' | null {
+    if (!this.esOrdenable(col)) return null;
+    const o = this.orden();
+    if (o?.key !== col.key) return 'none';
+    return o.dir === 1 ? 'ascending' : 'descending';
+  }
+
+  iconoOrden(col: ColumnaConfig): string {
+    const o = this.orden();
+    if (o?.key !== col.key) return 'pi-sort-alt';
+    return o.dir === 1 ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down';
+  }
+
+  /**
+   * Sólo se ordena el nivel raíz. Con hijos de la misma forma que el padre, el
+   * orden baja también a cada rama; con `columnasHijo` los hijos tienen otras
+   * columnas y conservan el orden en que llegaron.
+   */
+  arbolOrdenado = computed<NodoArbol[]>(() => {
+    const nodos = this.arbolFiltrado();
+    const o = this.orden();
+    if (!o) return nodos;
+    return this.ordenarNivel(nodos, o, !this.columnasHijo);
+  });
+
+  private ordenarNivel(nodos: NodoArbol[], o: OrdenArbol, recursivo: boolean): NodoArbol[] {
+    const colator = new Intl.Collator('es', { numeric: true, sensitivity: 'base' });
+    const ordenados = [...nodos].sort((a, b) => {
+      const va = this.valorParaOrden(a, o.key);
+      const vb = this.valorParaOrden(b, o.key);
+      // Los vacíos van al final en los dos sentidos: no son "menores" que nada.
+      if (va === null || va === undefined || va === '') return vb === null || vb === undefined || vb === '' ? 0 : 1;
+      if (vb === null || vb === undefined || vb === '') return -1;
+      const cmp = typeof va === 'number' && typeof vb === 'number'
+        ? va - vb
+        : colator.compare(String(va), String(vb));
+      return cmp * o.dir;
+    });
+    if (!recursivo) return ordenados;
+    return ordenados.map(n =>
+      n.hijos.length > 0 ? { ...n, hijos: this.ordenarNivel(n.hijos, o, true) } : n);
+  }
+
+  private valorParaOrden(nodo: NodoArbol, key: string): string | number | null | undefined {
+    if (this.valorOrden) return this.valorOrden(nodo, key);
+    if (nodo.valores[key] !== undefined) return nodo.valores[key];
+    if (key === 'codigo') return nodo.codigo;
+    if (key === 'nombre') return nodo.nombre;
+    return undefined;
   }
 
   /* ═════════════ Expansión de nodos ═════════════ */
@@ -293,6 +519,47 @@ export class TreeTableComponent implements OnInit {
     }
   }
 
+  /* ═════════════ Paginación del nivel raíz ═════════════ */
+  paginaRaiz = signal(0);
+  tamanoPaginaRaiz = signal(0);
+
+  /** Tamaño de página de la raíz (0 = todavía sin tocar: manda `rootRows`). */
+  tamanoRaiz(): number {
+    return this.tamanoPaginaRaiz() || this.rootRows;
+  }
+
+  /** Padres visibles. Sin `rootPageable` son todos, como hasta ahora. */
+  raizVisible = computed<NodoArbol[]>(() => {
+    const todos = this.arbolOrdenado();
+    if (!this.rootPageable) return todos;
+    const tamano = this.tamanoRaiz();
+    const pagina = this.paginaRaiz();
+    return todos.slice(pagina * tamano, (pagina + 1) * tamano);
+  });
+
+  totalPaginasRaiz(): number {
+    return Math.max(1, Math.ceil(this.arbolFiltrado().length / this.tamanoRaiz()));
+  }
+
+  cambiarPaginaRaiz(delta: number): void {
+    const nueva = Math.max(0, Math.min(this.totalPaginasRaiz() - 1, this.paginaRaiz() + delta));
+    this.paginaRaiz.set(nueva);
+  }
+
+  cambiarTamanoPaginaRaiz(tamano: number): void {
+    this.tamanoPaginaRaiz.set(tamano);
+    this.paginaRaiz.set(0);
+  }
+
+  rangoRegistrosRaiz(): string {
+    const total = this.arbolFiltrado().length;
+    if (total === 0) return 'Sin registros';
+    const tamano = this.tamanoRaiz();
+    const inicio = this.paginaRaiz() * tamano + 1;
+    const fin = Math.min(inicio + tamano - 1, total);
+    return `Mostrando ${inicio} a ${fin} de ${total} registros`;
+  }
+
   /* ═════════════ Paginación interna por nodo ═════════════ */
   paginaActualNodo(nodo: NodoArbol): number {
     return this.paginasNodo()[nodo.id] ?? 0;
@@ -326,7 +593,9 @@ export class TreeTableComponent implements OnInit {
 
   /** El nodo padre necesita paginador propio si tiene más hijos que el tamaño de página. */
   necesitaPaginador(nodo: NodoArbol): boolean {
-    return this.pageable && nodo.hijos.length > this.tamanoPaginaNodo(nodo);
+    if (!this.pageable) return false;
+    return this.paginadorSiempreVisible
+      || nodo.hijos.length > this.tamanoPaginaNodo(nodo);
   }
 
   rangoRegistrosNodo(nodo: NodoArbol): string {
@@ -499,6 +768,19 @@ export class TreeTableComponent implements OnInit {
   }
 
   /* ═════════════ Helpers de presentación ═════════════ */
+
+  /**
+   * Valor de una columna fija. `codigo` y `nombre` viven en el propio nodo —así
+   * nacieron las dos columnas fijas originales— y el resto en `valores`, igual
+   * que las variables. De ese modo una tabla puede declarar seis columnas fijas
+   * sin que las dos históricas dejen de pintarse donde siempre.
+   */
+  valorFijo(nodo: NodoArbol, col: ColumnaConfig): string | number | undefined {
+    if (col.key === 'codigo' && nodo.valores['codigo'] === undefined) return nodo.codigo;
+    if (col.key === 'nombre' && nodo.valores['nombre'] === undefined) return nodo.nombre;
+    return nodo.valores[col.key];
+  }
+
   formatearValor(valor: string | number | undefined, col: ColumnaConfig): string {
     if (valor === undefined || valor === null || valor === '') return '—';
     if (col.tipo === 'numero' && typeof valor === 'number') {

@@ -10,10 +10,10 @@
         <div class="ttc-toolbar__left">
           <p-iconfield iconPosition="left">
             <p-inputicon styleClass="pi pi-search" />
-            <input pInputText type="text"
-              [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event)"
-              placeholder="Buscar por código o concepto…"
-              aria-label="Búsqueda global en el árbol" />
+            <input pInputText type="search"
+              [ngModel]="busqueda()" (ngModelChange)="buscar($event)"
+              [placeholder]="placeholderBusqueda"
+              [attr.aria-label]="ariaLabelBusqueda" />
             @if (busqueda()) {
               <button type="button" class="ttc-toolbar__clear" (click)="limpiarBusqueda()"
                 aria-label="Limpiar búsqueda">
@@ -25,6 +25,9 @@
       }
 
       <div class="ttc-toolbar__right">
+        <!-- Acciones propias del consumidor (exportar, un resumen…): van en la
+             misma barra que el buscador en vez de abrir otra fila encima. -->
+        <ng-content select="[ttcToolbar]" />
         @if (columnToggle) {
           <p-multiSelect
             [options]="opcionesColumnas()"
@@ -51,7 +54,7 @@
   }
 
   <!-- Miga de pan del nodo activo -->
-  @if (rutaActiva().length > 0) {
+  @if (mostrarRuta && rutaActiva().length > 0) {
     <nav class="ttc-crumb" aria-label="Ruta del nodo activo">
       <i class="pi pi-map-marker" aria-hidden="true"></i>
       <span class="ttc-crumb__label">Estás en:</span>
@@ -121,13 +124,28 @@
       <thead>
         <tr>
           @for (col of columnasFijas; track col.key) {
-            <th [style.width]="col.ancho" scope="col" class="ttc-th ttc-th--fija">{{ col.label }}</th>
+            <th [style.width]="col.ancho" scope="col" class="ttc-th"
+              [class.ttc-th--fija]="fijasSticky"
+              [class.ttc-th--ordenable]="esOrdenable(col)"
+              [attr.aria-sort]="ariaSort(col)">
+              @if (esOrdenable(col)) {
+                <ng-container *ngTemplateOutlet="thOrden; context: { $implicit: col }"></ng-container>
+              } @else {
+                {{ col.label }}
+              }
+            </th>
           }
           @for (col of columnasMostradas(); track col.key) {
             <th scope="col" class="ttc-th"
               [class.ttc-th--right]="col.alineacion === 'right'"
-              [class.ttc-th--center]="col.alineacion === 'center'">
-              {{ col.label }}
+              [class.ttc-th--center]="col.alineacion === 'center'"
+              [class.ttc-th--ordenable]="esOrdenable(col)"
+              [attr.aria-sort]="ariaSort(col)">
+              @if (esOrdenable(col)) {
+                <ng-container *ngTemplateOutlet="thOrden; context: { $implicit: col }"></ng-container>
+              } @else {
+                {{ col.label }}
+              }
               @if (esEditableCelda(col)) {
                 <i class="pi pi-pencil ttc-th__edit" aria-hidden="true"
                   pTooltip="Columna editable" tooltipPosition="top"></i>
@@ -140,9 +158,46 @@
         </tr>
       </thead>
       <tbody>
-        @for (padre of arbolFiltrado(); track padre.id) {
+        @for (padre of raizVisible(); track padre.id) {
           <ng-container *ngTemplateOutlet="filaNodo; context: { $implicit: padre }"></ng-container>
         }
+
+        <!-- Paginador del nivel raíz: cuenta nodos padre, no filas del árbol. -->
+        @if (rootPageable && arbolFiltrado().length > 0) {
+          <tr class="ttc-paginator-row ttc-paginator-row--raiz">
+            <td [attr.colspan]="colspanTotal()" class="ttc-paginator">
+              <div class="ttc-paginator__inner">
+                <span class="ttc-paginator__label" aria-live="polite">{{ rangoRegistrosRaiz() }}</span>
+                <div class="ttc-paginator__controls">
+                  <button type="button" class="ttc-paginator__btn"
+                    (click)="cambiarPaginaRaiz(-1)"
+                    [disabled]="paginaRaiz() === 0"
+                    aria-label="Página anterior">
+                    <i class="pi pi-chevron-left" aria-hidden="true"></i>
+                  </button>
+                  <span class="ttc-paginator__page">
+                    {{ paginaRaiz() + 1 }} / {{ totalPaginasRaiz() }}
+                  </span>
+                  <button type="button" class="ttc-paginator__btn"
+                    (click)="cambiarPaginaRaiz(1)"
+                    [disabled]="paginaRaiz() >= totalPaginasRaiz() - 1"
+                    aria-label="Página siguiente">
+                    <i class="pi pi-chevron-right" aria-hidden="true"></i>
+                  </button>
+                  <p-select [options]="opcionesTamanoPagina"
+                    optionLabel="label" optionValue="value"
+                    [ngModel]="tamanoRaiz()"
+                    (ngModelChange)="cambiarTamanoPaginaRaiz($event)"
+                    styleClass="ttc-paginator__select"
+                    appendTo="body"
+                    ariaLabel="Registros por página"
+                    [style]="{ minWidth: '70px' }" />
+                </div>
+              </div>
+            </td>
+          </tr>
+        }
+
         @if (arbolFiltrado().length === 0) {
           <tr>
             <td [attr.colspan]="colspanTotal()" class="ttc-empty">
@@ -170,23 +225,50 @@
     [class.ttc-row--activa]="esNodoActivo(nodo)"
     [attr.aria-expanded]="nodo.hijos.length > 0 ? estaExpandido(nodo) : null">
 
-    <!-- Columnas fijas -->
-    <td class="ttc-td ttc-td--fija ttc-td--codigo" [attr.data-nivel]="nodo.nivel">
-      <div class="ttc-td__codigo-wrap" [style.paddingLeft.px]="(nodo.nivel - 1) * 20">
-        @if (nodo.hijos.length > 0) {
-          <button type="button" class="ttc-toggle"
-            (click)="toggleNodo(nodo)"
-            [attr.aria-label]="(estaExpandido(nodo) ? 'Colapsar ' : 'Expandir ') + nodo.codigo">
-            <i class="pi" [class.pi-chevron-down]="estaExpandido(nodo)"
-              [class.pi-chevron-right]="!estaExpandido(nodo)" aria-hidden="true"></i>
-          </button>
+    <!-- Columnas fijas. El expansor va en la primera, con la indentación del
+         nivel; las demás se pintan como cualquier columna: plantilla del
+         consumidor si la hay, y si no el valor formateado. -->
+    @for (col of columnasFijas; track col.key; let primera = $first) {
+      <td class="ttc-td"
+        [class.ttc-td--fija]="fijasSticky"
+        [class.ttc-td--codigo]="primera"
+        [class.ttc-td--nombre]="col.key === 'nombre'"
+        [class.ttc-td--right]="col.alineacion === 'right'"
+        [class.ttc-td--center]="col.alineacion === 'center'"
+        [attr.data-nivel]="primera ? nodo.nivel : null">
+        @if (primera) {
+          <div class="ttc-td__codigo-wrap" [style.paddingLeft.px]="(nodo.nivel - 1) * 20">
+            @if (nodo.hijos.length > 0) {
+              <button type="button" class="ttc-toggle"
+                (click)="toggleNodo(nodo)"
+                [attr.aria-label]="(estaExpandido(nodo) ? 'Colapsar ' : 'Expandir ') + nodo.codigo">
+                <i class="pi" [class.pi-chevron-down]="estaExpandido(nodo)"
+                  [class.pi-chevron-right]="!estaExpandido(nodo)" aria-hidden="true"></i>
+              </button>
+            } @else {
+              <span class="ttc-toggle ttc-toggle--leaf" aria-hidden="true">
+                @if (indicadorHoja) {
+                  <i class="pi pi-minus" aria-hidden="true"></i>
+                }
+              </span>
+            }
+            @if (cellTemplates[col.key]; as tpl) {
+              <ng-container *ngTemplateOutlet="tpl; context: { $implicit: nodo, col: col }"></ng-container>
+            } @else if (col.key === 'codigo') {
+              <code class="ttc-code">{{ valorFijo(nodo, col) }}</code>
+            } @else {
+              {{ formatearValor(valorFijo(nodo, col), col) }}
+            }
+          </div>
         } @else {
-          <span class="ttc-toggle ttc-toggle--leaf" aria-hidden="true"></span>
+          @if (cellTemplates[col.key]; as tpl) {
+            <ng-container *ngTemplateOutlet="tpl; context: { $implicit: nodo, col: col }"></ng-container>
+          } @else {
+            {{ formatearValor(valorFijo(nodo, col), col) }}
+          }
         }
-        <code class="ttc-code">{{ nodo.codigo }}</code>
-      </div>
-    </td>
-    <td class="ttc-td ttc-td--fija ttc-td--nombre">{{ nodo.nombre }}</td>
+      </td>
+    }
 
     <!-- Columnas variables -->
     @for (col of columnasMostradas(); track col.key) {
@@ -228,7 +310,9 @@
               autofocus />
           }
         } @else {
-          @if (esColumnaConTag(col)) {
+          @if (cellTemplates[col.key]; as tpl) {
+            <ng-container *ngTemplateOutlet="tpl; context: { $implicit: nodo, col: col }"></ng-container>
+          } @else if (esColumnaConTag(col)) {
             <p-tag [value]="formatearValor(nodo.valores[col.key], col)"
               [severity]="severidadValor(nodo.valores[col.key], col)"
               [rounded]="true" />
@@ -261,45 +345,118 @@
 
   <!-- Hijos del nodo expandido + paginador del nodo padre -->
   @if (estaExpandido(nodo) && nodo.hijos.length > 0) {
-    @for (hijo of filasVisiblesNodo(nodo); track hijo.id) {
-      <ng-container *ngTemplateOutlet="filaNodo; context: { $implicit: hijo }"></ng-container>
-    }
-
-    @if (necesitaPaginador(nodo)) {
-      <tr class="ttc-paginator-row">
-        <td [attr.colspan]="colspanTotal()" class="ttc-paginator">
-          <div class="ttc-paginator__inner">
-            <div class="ttc-paginator__left">
-              <code class="ttc-paginator__nodo">{{ nodo.codigo }}</code>
-              <span class="ttc-paginator__label">{{ rangoRegistrosNodo(nodo) }}</span>
-            </div>
-            <div class="ttc-paginator__controls">
-              <button type="button" class="ttc-paginator__btn"
-                (click)="cambiarPaginaNodo(nodo, -1)"
-                [disabled]="paginaActualNodo(nodo) === 0"
-                [attr.aria-label]="'Página anterior de ' + nodo.codigo">
-                <i class="pi pi-chevron-left" aria-hidden="true"></i>
-              </button>
-              <span class="ttc-paginator__page">
-                {{ paginaActualNodo(nodo) + 1 }} / {{ totalPaginasNodo(nodo) }}
-              </span>
-              <button type="button" class="ttc-paginator__btn"
-                (click)="cambiarPaginaNodo(nodo, 1)"
-                [disabled]="paginaActualNodo(nodo) >= totalPaginasNodo(nodo) - 1"
-                [attr.aria-label]="'Página siguiente de ' + nodo.codigo">
-                <i class="pi pi-chevron-right" aria-hidden="true"></i>
-              </button>
-              <p-select [options]="opcionesTamanoPagina"
-                optionLabel="label" optionValue="value"
-                [ngModel]="tamanoPaginaNodo(nodo)"
-                (ngModelChange)="cambiarTamanoPaginaNodo(nodo, $event)"
-                styleClass="ttc-paginator__select"
-                appendTo="body"
-                [style]="{ minWidth: '70px' }" />
-            </div>
+    @if (columnasHijo) {
+      <!-- Nivel hijo con esquema propio: una tabla anidada, con su cabecera y
+           su paginador, indentada respecto del padre. -->
+      <tr class="ttc-nested-row">
+        <td [attr.colspan]="colspanTotal()" class="ttc-nested-cell">
+          <div class="ttc-nested" [style.marginLeft.px]="nodo.nivel * 20">
+            <table class="ttc-nested__table">
+              <caption class="sr-only">Detalle de {{ nodo.codigo || nodo.nombre }}</caption>
+              <thead>
+                <tr>
+                  @for (col of columnasHijo; track col.key) {
+                    <th scope="col" class="ttc-nested__th"
+                      [style.width]="col.ancho"
+                      [class.ttc-th--right]="col.alineacion === 'right'"
+                      [class.ttc-th--center]="col.alineacion === 'center'">
+                      {{ col.label }}
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (hijo of filasVisiblesNodo(nodo); track hijo.id) {
+                  <tr class="ttc-nested__row">
+                    @for (col of columnasHijo; track col.key) {
+                      <td class="ttc-nested__td"
+                        [class.ttc-td--right]="col.alineacion === 'right'"
+                        [class.ttc-td--center]="col.alineacion === 'center'">
+                        @if (cellTemplatesHijo[col.key]; as tpl) {
+                          <ng-container *ngTemplateOutlet="tpl; context: { $implicit: hijo, col: col }"></ng-container>
+                        } @else {
+                          {{ formatearValor(hijo.valores[col.key], col) }}
+                        }
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (necesitaPaginador(nodo)) {
+              <ng-container *ngTemplateOutlet="paginadorNodo; context: { $implicit: nodo }"></ng-container>
+            }
           </div>
         </td>
       </tr>
+    } @else {
+      @for (hijo of filasVisiblesNodo(nodo); track hijo.id) {
+        <ng-container *ngTemplateOutlet="filaNodo; context: { $implicit: hijo }"></ng-container>
+      }
+
+      @if (necesitaPaginador(nodo)) {
+        <tr class="ttc-paginator-row">
+          <td [attr.colspan]="colspanTotal()" class="ttc-paginator">
+            <ng-container *ngTemplateOutlet="paginadorNodo; context: { $implicit: nodo }"></ng-container>
+          </td>
+        </tr>
+      }
     }
   }
+</ng-template>
+
+<!-- ════════════════════════════════════════════════════════════
+     Cabecera ordenable. Es un <button> dentro del <th>: el orden se
+     acciona con Enter/Espacio y el estado lo anuncia `aria-sort` del
+     <th>. El icono sigue el patrón de p-table (pSortableColumn).
+     ════════════════════════════════════════════════════════════ -->
+<ng-template #thOrden let-col>
+  <button type="button" class="ttc-th__sort"
+    [class.ttc-th__sort--activa]="orden()?.key === col.key"
+    [attr.aria-label]="'Ordenar por ' + col.label"
+    (click)="ordenarPor(col)">
+    <span>{{ col.label }}</span>
+    <i class="pi" [ngClass]="iconoOrden(col)" aria-hidden="true"></i>
+  </button>
+</ng-template>
+
+<!-- ════════════════════════════════════════════════════════════
+     Paginador de un nodo padre. Vive aparte porque lo usan los dos
+     modos: como fila de la tabla principal (hijos con las mismas
+     columnas) y dentro de la tabla anidada (hijos con esquema propio).
+     ════════════════════════════════════════════════════════════ -->
+<ng-template #paginadorNodo let-nodo>
+  <div class="ttc-paginator__inner">
+    <div class="ttc-paginator__left">
+      @if (nodo.codigo) {
+        <code class="ttc-paginator__nodo">{{ nodo.codigo }}</code>
+      }
+      <span class="ttc-paginator__label">{{ rangoRegistrosNodo(nodo) }}</span>
+    </div>
+    <div class="ttc-paginator__controls">
+      <button type="button" class="ttc-paginator__btn"
+        (click)="cambiarPaginaNodo(nodo, -1)"
+        [disabled]="paginaActualNodo(nodo) === 0"
+        [attr.aria-label]="'Página anterior de ' + (nodo.codigo || nodo.nombre)">
+        <i class="pi pi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <span class="ttc-paginator__page">
+        {{ paginaActualNodo(nodo) + 1 }} / {{ totalPaginasNodo(nodo) }}
+      </span>
+      <button type="button" class="ttc-paginator__btn"
+        (click)="cambiarPaginaNodo(nodo, 1)"
+        [disabled]="paginaActualNodo(nodo) >= totalPaginasNodo(nodo) - 1"
+        [attr.aria-label]="'Página siguiente de ' + (nodo.codigo || nodo.nombre)">
+        <i class="pi pi-chevron-right" aria-hidden="true"></i>
+      </button>
+      <p-select [options]="opcionesTamanoPagina"
+        optionLabel="label" optionValue="value"
+        [ngModel]="tamanoPaginaNodo(nodo)"
+        (ngModelChange)="cambiarTamanoPaginaNodo(nodo, $event)"
+        styleClass="ttc-paginator__select"
+        appendTo="body"
+        ariaLabel="Registros por página"
+        [style]="{ minWidth: '70px' }" />
+    </div>
+  </div>
 </ng-template>
