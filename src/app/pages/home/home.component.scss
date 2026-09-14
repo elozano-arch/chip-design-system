@@ -393,6 +393,11 @@
   margin-bottom: 16px;
 }
 
+/* Fila que documenta los tamaños nativos de p-button. Única excepción al alto
+   uniforme del DS: si se aplicara, los tres botones se verían idénticos y la
+   muestra dejaría de mostrar nada. */
+.component-row--tamanos ::ng-deep .p-button { min-height: 0; }
+
 /* --- Form Grid --- */
 .form-grid {
   display: grid;

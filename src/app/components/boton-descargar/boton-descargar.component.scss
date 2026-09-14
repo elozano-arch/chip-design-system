@@ -7,7 +7,9 @@
   .p-button {
     gap: 8px;
 
-    .pi-download { font-size: 14px; }
+    /* El icono lo pinta nuestra plantilla, así que no lleva la clase
+       .p-button-icon y hay que darle a mano el tamaño global. */
+    .pi-download { font-size: var(--chip-button-icon-size); }
   }
 }
 
