@@ -83,6 +83,13 @@ export interface RegistroManualFormulario {
 export class RegistroManualComponent implements OnDestroy {
   @Input({ required: true }) formulario!: RegistroManualFormulario;
 
+  /**
+   * Modo lectura ("Ver información", HU-FOR-002 nota 4): sin guardar, sin
+   * validar y sin edición por fila. La edición web está pendiente de
+   * definición; el componente la conserva para cuando se habilite.
+   */
+  @Input() soloLectura = false;
+
   /** Volver al listado — el padre decide qué hacer con la sub-vista. */
   @Output() volver = new EventEmitter<void>();
   /** Validar el formulario abierto — cambia etapa/estado en el listado. */

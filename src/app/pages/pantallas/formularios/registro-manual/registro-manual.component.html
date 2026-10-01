@@ -1,4 +1,4 @@
-<div class="form-detalle" aria-label="Registro manual del formulario">
+<div class="form-detalle" [attr.aria-label]="soloLectura ? 'Información reportada del formulario' : 'Registro manual del formulario'">
   <div class="form-detalle__header">
     <p-button label="Volver al listado" icon="pi pi-arrow-left" [text]="true" severity="secondary"
       (onClick)="volver.emit()" />
@@ -9,15 +9,17 @@
         {{ formulario.categoria }} · {{ formulario.periodo }} · {{ formulario.anio }}
       </p>
     </div>
-    <div class="form-detalle__title-actions">
-      <p-button label="Guardar cambios" icon="pi pi-save" [outlined]="true" size="small"
-        severity="secondary"
-        (onClick)="guardarCambios()" />
-      <p-button label="Validar formulario" icon="pi pi-check-circle" size="small"
-        (onClick)="validar.emit()"
-        pTooltip="Marca este formulario como Validado y regresa al listado"
-        tooltipPosition="bottom" />
-    </div>
+    @if (!soloLectura) {
+      <div class="form-detalle__title-actions">
+        <p-button label="Guardar cambios" icon="pi pi-save" [outlined]="true" size="small"
+          severity="secondary"
+          (onClick)="guardarCambios()" />
+        <p-button label="Validar formulario" icon="pi pi-check-circle" size="small"
+          (onClick)="validar.emit()"
+          pTooltip="Marca este formulario como Validado y regresa al listado"
+          tooltipPosition="bottom" />
+      </div>
+    }
   </div>
 
   <!-- Paginador global de columnas (periodos visibles) -->
@@ -42,9 +44,11 @@
       aria-label="Periodos siguientes" />
   </div>
 
-  <p-message severity="info" class="form-detalle__edit-hint">
-    <strong>Edición en modal:</strong> use el botón <i class="pi pi-pencil" aria-hidden="true"></i> de cada fila para abrir la ventana de edición.
-  </p-message>
+  @if (!soloLectura) {
+    <p-message severity="info" class="form-detalle__edit-hint">
+      <strong>Edición en modal:</strong> use el botón <i class="pi pi-pencil" aria-hidden="true"></i> de cada fila para abrir la ventana de edición.
+    </p-message>
+  }
 
   <!-- Conceptos padres — cada uno con su propio paginador interno -->
   @for (concepto of conceptos; track concepto.id) {
@@ -66,7 +70,9 @@
               @for (col of columnasVisibles; track col.key) {
                 <th class="form-concepto__th-val">{{ col.label }}</th>
               }
-              <th class="form-concepto__th-actions">Acciones</th>
+              @if (!soloLectura) {
+                <th class="form-concepto__th-actions">Acciones</th>
+              }
             </tr>
           </thead>
           <tbody>
@@ -83,12 +89,14 @@
                     }
                   </td>
                 }
-                <td class="form-concepto__td-actions">
-                  <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small"
-                    severity="secondary"
-                    [attr.aria-label]="'Editar registro ' + variable.nombre"
-                    (onClick)="abrirModalEditar(concepto, variable)" />
-                </td>
+                @if (!soloLectura) {
+                  <td class="form-concepto__td-actions">
+                    <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" size="small"
+                      severity="secondary"
+                      [attr.aria-label]="'Editar registro ' + variable.nombre"
+                      (onClick)="abrirModalEditar(concepto, variable)" />
+                  </td>
+                }
               </tr>
             }
           </tbody>

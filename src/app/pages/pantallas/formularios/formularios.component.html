@@ -58,14 +58,29 @@
           @if (!filtersCollapsed) {
             <div class="chip-filters__body" id="wiz-filters-body">
 
-              <!-- Simulación de tipo de usuario (mock demo): dispara los 2 eventos de
-                   resolución de entidad — Local (carga automática) vs A/C/E (directorio). -->
-              <div class="form-wizard__demo-switch" role="group" aria-label="Simulación de tipo de usuario">
-                <i class="pi pi-user" aria-hidden="true"></i>
-                <label for="wiz-tipo-usuario">Tipo de usuario <span class="form-wizard__demo-tag">demostración</span></label>
-                <p-select inputId="wiz-tipo-usuario" [options]="tiposUsuarioOptions"
-                  [(ngModel)]="tipoUsuario" (onChange)="onTipoUsuarioChange()"
-                  appendTo="body" styleClass="form-wizard__demo-select" />
+              <!-- Simulación (mock demo):
+                   · Tipo de usuario: dispara los 2 eventos de resolución de
+                     entidad — Local (carga automática) vs A/C/E (directorio).
+                   · Consulta del listado: duración de la consulta de la
+                     sección 2, para ver cada capa de carga y el error. -->
+              <div class="form-wizard__demo-switch form-wizard__demo-switch--doble"
+                role="group" aria-label="Simulación de escenarios del contexto">
+                <span class="form-wizard__demo-title">
+                  <i class="pi pi-flag" aria-hidden="true"></i>
+                  Demostración <span class="form-wizard__demo-tag">simulación</span>
+                </span>
+                <div class="form-wizard__demo-field">
+                  <label for="wiz-tipo-usuario">Tipo de usuario</label>
+                  <p-select inputId="wiz-tipo-usuario" [options]="tiposUsuarioOptions"
+                    [(ngModel)]="tipoUsuario" (onChange)="onTipoUsuarioChange()"
+                    appendTo="body" styleClass="form-wizard__demo-select" />
+                </div>
+                <div class="form-wizard__demo-field">
+                  <label for="wiz-carga-listado">Consulta del listado</label>
+                  <p-select inputId="wiz-carga-listado" [options]="cargaListadoOptions"
+                    [(ngModel)]="demoCargaListado"
+                    appendTo="body" styleClass="form-wizard__demo-select" />
+                </div>
               </div>
 
               <!-- Alerta: entidad inactiva (sin categorías activas) -->
@@ -194,7 +209,7 @@
         <header class="form-wizard__panel-header">
           <h2>2 · Formularios de la categoría
             <button type="button" class="panel-help"
-              pTooltip="Importe, exporte, valide o genere protocolos sobre los formularios de esta categoría. Use Editar en una fila para diligenciar el registro manual."
+              pTooltip="Formularios vigentes del contexto con la etapa y el estado de su proceso más reciente. Marque filas para exportar o validar en bloque; el menú de cada fila habilita las acciones según su estado."
               tooltipPosition="top" aria-label="Ayuda de la sección Formularios de la categoría">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
             </button>
@@ -203,19 +218,22 @@
 
         <!-- Toolbar de acciones globales — operan sobre la selección
              · Importar es transversal (botón en la cabecera del wizard)
-             · Registro manual y Generar protocolo viven en el menú ⋮ de cada fila
-             · Exportar y Validar se habilitan al marcar al menos un formulario -->
+             · Ver información, Historial y Protocolo viven en el menú ⋮ de cada fila
+             · Exportar y Validar se habilitan con al menos un formulario marcado
+               y sólo si TODA la selección admite la acción (HU-FOR-002, crit. 13).
+             Los tooltips van en el <span>: PrimeNG inhabilita los eventos del
+             botón deshabilitado y el motivo no se vería nunca. -->
         <div class="form-wizard__actions-bar" role="toolbar" aria-label="Acciones globales sobre los formularios seleccionados">
-          <p-button label="Exportar" icon="pi pi-download" severity="success"
-            [disabled]="selectedFormularios.length === 0"
-            [pTooltip]="selectedFormularios.length === 0 ? 'Marque al menos un formulario para exportar' : ''"
-            tooltipPosition="top"
-            (onClick)="executeAction('exportar')" />
-          <p-button label="Validar formulario" icon="pi pi-check-circle"
-            [disabled]="!canValidate"
-            [pTooltip]="!canValidate ? 'Marque al menos un formulario para validar' : ''"
-            tooltipPosition="top"
-            (onClick)="confirmValidation()" />
+          <span [pTooltip]="exportarTooltip" tooltipPosition="top">
+            <p-button label="Exportar" icon="pi pi-download" severity="success"
+              [disabled]="!canExport"
+              (onClick)="executeAction('exportar')" />
+          </span>
+          <span [pTooltip]="validarTooltip" tooltipPosition="top">
+            <p-button label="Validar formulario" icon="pi pi-check-circle"
+              [disabled]="!canValidate"
+              (onClick)="confirmValidation()" />
+          </span>
         </div>
 
         <!-- Sub-sección: Exportar (visible cuando se activa el panel) -->
@@ -243,32 +261,71 @@
           <h3 class="form-wizard__subsection-title">
             <i class="pi pi-list" aria-hidden="true"></i>
             Formularios disponibles
-            <small>· {{ filteredFormularios.length }} resultado(s) para los filtros aplicados</small>
+            @if (listadoListo) {
+              <small>· {{ filteredFormularios.length }} resultado(s) para los filtros aplicados</small>
+            }
           </h3>
 
-          @if (filteredFormularios.length === 0) {
-            <div class="form-wizard__empty">
-              <i class="pi pi-search" aria-hidden="true"></i>
-              <h3>Sin formularios para los filtros aplicados</h3>
-              <p>
-                No hay formularios activos para la combinación de
-                <strong>{{ activeFilters.length }}</strong>
-                {{ activeFilters.length === 1 ? 'criterio seleccionado' : 'criterios seleccionados' }}.
-                Importe uno arriba o vuelva al paso anterior para ajustar los filtros.
-              </p>
-              <p-button label="Ver filtros" icon="pi pi-arrow-up"
-                (onClick)="filtersCollapsed = false" />
-            </div>
-          } @else {
+          <!-- Capas de carga según la duración de la consulta (HU-FOR-002, esc. 9).
+               < 200 ms no muestra nada; el skeleton va sin texto; el spinner y la
+               barra llevan texto descriptivo. Todas anuncian por aria-live. -->
+          @switch (estadoListado) {
+            @case ('skeleton') {
+              <div class="form-list-skeleton" role="status" aria-live="polite" aria-label="Consultando formularios">
+                @for (fila of [1, 2, 3, 4, 5]; track fila) {
+                  <div class="form-list-skeleton__row">
+                    <p-skeleton width="20px" height="20px" borderRadius="4px" />
+                    <p-skeleton width="110px" height="1rem" />
+                    <p-skeleton width="100%" height="1rem" />
+                    <p-skeleton width="140px" height="1rem" />
+                    <p-skeleton width="120px" height="1.5rem" borderRadius="12px" />
+                  </div>
+                }
+              </div>
+            }
+            @case ('spinner') {
+              <div class="form-list-loading" role="status" aria-live="polite">
+                <p-progressSpinner strokeWidth="4" ariaLabel="Consultando formularios"
+                  [style]="{ width: '40px', height: '40px' }" />
+                <p>Consultando los formularios de la categoría…</p>
+              </div>
+            }
+            @case ('progreso') {
+              <div class="form-list-loading form-list-loading--progreso" role="status" aria-live="polite">
+                <p>Consultando los formularios de la categoría. Esto puede tardar unos segundos.</p>
+                <p-progressBar [value]="progresoListado" [showValue]="true"
+                  styleClass="form-list-loading__bar" />
+              </div>
+            }
+            @case ('error') {
+              <!-- Error en la consulta (esc. 8): mensaje visible, contexto
+                   conservado (los chips del Paso 1 siguen) y reintento. -->
+              <div class="form-list-error" role="alert">
+                <p-message severity="error" icon="pi pi-times-circle" styleClass="w-full">
+                  No fue posible consultar los formularios. Los filtros aplicados se conservan.
+                </p-message>
+                <p-button label="Reintentar" icon="pi pi-refresh"
+                  [outlined]="true" severity="secondary"
+                  (onClick)="reintentarConsulta()" />
+              </div>
+            }
+            @case ('listo') {
             <div class="form-table-scroll">
             <p-table [value]="filteredFormularios" [stripedRows]="true" [rowHover]="true"
-              [paginator]="filteredFormularios.length > 5" [rows]="5" [rowsPerPageOptions]="[5, 10]"
-              [(selection)]="selectedFormularios" dataKey="id" styleClass="form-list-table">
+              [paginator]="true" [rows]="10" [rowsPerPageOptions]="[5, 10, 25]"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+              [(selection)]="selectedFormularios" dataKey="id"
+              [rowSelectable]="esSeleccionable"
+              styleClass="form-list-table">
+              <ng-template #caption>
+                <span class="sr-only">Formularios de la categoría con su etapa y estado</span>
+              </ng-template>
               <ng-template #header>
                 <tr>
                   <th style="width: 44px"><p-tableHeaderCheckbox /></th>
                   <th pSortableColumn="codigo" style="width: 140px">Código <p-sortIcon field="codigo" /></th>
-                  <th pSortableColumn="nombre">Nombre Formulario <p-sortIcon field="nombre" /></th>
+                  <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
                   <!-- Etapa ordena por id_etapa_proceso: el orden del listado es el del flujo. -->
                   <th pSortableColumn="etapa" style="width: 180px">Etapa <p-sortIcon field="etapa" /></th>
                   <th pSortableColumn="estado" style="width: 190px">Estado <p-sortIcon field="estado" /></th>
@@ -277,14 +334,29 @@
               </ng-template>
               <ng-template #body let-formItem>
                 <tr>
-                  <td><p-tableCheckbox [value]="formItem" /></td>
+                  <!-- Sólo se marca lo que admite exportar o validar; el resto
+                       queda inhabilitado con el motivo en tooltip. -->
+                  <td>
+                    <span [pTooltip]="esSeleccionable({ data: formItem }) ? '' : 'En su estado actual no admite exportar ni validar'"
+                      tooltipPosition="top">
+                      <p-tableCheckbox [value]="formItem"
+                        [disabled]="!esSeleccionable({ data: formItem })"
+                        [ariaLabel]="'Seleccionar ' + formItem.nombre" />
+                    </span>
+                  </td>
                   <td><span class="form-table__code">{{ formItem.codigo }}</span></td>
                   <td><span class="form-table__name">{{ formItem.nombre }}</span></td>
                   <td>
-                    <span class="form-table__etapa">
-                      <i class="pi" [ngClass]="etapaDe(formItem.etapa).icon" aria-hidden="true"></i>
-                      {{ etapaDe(formItem.etapa).label }}
-                    </span>
+                    <!-- Sin registro: la etapa va sin contenido (HU-FOR-002, esc. 2). -->
+                    @if (!formItem.estado) {
+                      <span class="form-table__vacio" aria-hidden="true">—</span>
+                      <span class="sr-only">Sin etapa</span>
+                    } @else {
+                      <span class="form-table__etapa">
+                        <i class="pi" [ngClass]="etapaDe(formItem.etapa).icon" aria-hidden="true"></i>
+                        {{ etapaDe(formItem.etapa).label }}
+                      </span>
+                    }
                   </td>
                   <td>
                     <!-- Sin estado = sin registro: no se ha importado. Es una
@@ -316,11 +388,20 @@
                   </td>
                 </tr>
               </ng-template>
+              <ng-template #emptymessage>
+                <tr>
+                  <td colspan="6" class="chip-empty">
+                    <i class="pi pi-inbox" aria-hidden="true"></i>
+                    <p>No se encontraron resultados para los filtros aplicados.</p>
+                  </td>
+                </tr>
+              </ng-template>
             </p-table>
             </div>
             <p-menu #menuFormulario [model]="menuFormularioItems"
               [popup]="true" appendTo="body"
               styleClass="form-actions-menu" />
+            }
           }
         </div>
 
@@ -350,26 +431,29 @@
       </section>
     }
 
-    <!-- Paso 2 (sub-vista): Registro manual del formulario abierto -->
+    <!-- Paso 2 (sub-vista): Ver información del formulario abierto. Sólo
+         visualización (HU-FOR-002, nota 4): la edición web está pendiente. -->
     @if (detalleAbierto) {
-      <section class="form-wizard__panel form-wizard__panel--detalle" aria-label="Registro manual del formulario">
+      <section class="form-wizard__panel form-wizard__panel--detalle" aria-label="Información reportada del formulario">
         <header class="form-wizard__panel-header">
-          <h2>Registro manual · {{ detalleAbierto.nombre }}
+          <h2>Ver información · {{ detalleAbierto.nombre }}
             <button type="button" class="panel-help"
-              pTooltip="Edite, valide o genere el protocolo de este formulario. Use Volver al listado para elegir otro o avance a Envíos cuando todos estén validados."
-              tooltipPosition="top" aria-label="Ayuda de la sección Registro manual">
+              pTooltip="Información importada del formulario, por concepto y periodo. En esta versión sólo se consulta; para validar o exportar use el menú de la fila en el listado."
+              tooltipPosition="top" aria-label="Ayuda de la sección Ver información">
               <i class="pi pi-info-circle" aria-hidden="true"></i>
             </button>
           </h2>
         </header>
-        <app-registro-manual [formulario]="detalleAbierto"
+        <app-registro-manual [formulario]="detalleAbierto" [soloLectura]="true"
           (volver)="cerrarDetalle()"
           (validar)="validarFormularioActual()" />
       </section>
     }
 
-    <!-- Paso 3: Envíos (Toolbar con adjunto + entidades, luego Enviar Categoría) -->
-    @if (filtersApplied && !detalleAbierto && !protocoloAbierto && !controlEnvioAbierto) {
+    <!-- Paso 3: Envíos (Toolbar con adjunto + entidades, luego Enviar Categoría).
+         Se sustenta en la situación de los formularios, así que espera a que
+         el listado de la sección 2 haya llegado. -->
+    @if (listadoListo && !detalleAbierto && !protocoloAbierto && !controlEnvioAbierto) {
       <section class="form-wizard__panel" aria-label="Envíos">
         <header class="form-wizard__panel-header">
           <h2>3 · Envíos

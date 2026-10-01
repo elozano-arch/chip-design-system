@@ -21,7 +21,7 @@ export type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 export type EtapaId = 1 | 2 | 3 | 4;
 
 /** `tab_estado.id_estado`. */
-export type EstadoId = 'V' | 'M' | 'D' | 'A' | 'E' | 'G' | 'W' | 'S' | 'N';
+export type EstadoId = 'V' | 'M' | 'D' | 'A' | 'E' | 'G' | 'W' | 'S';
 
 export interface EtapaProceso {
   id: EtapaId;
@@ -65,18 +65,19 @@ export const ESTADOS_PROCESO: readonly EstadoProceso[] = [
   { id: 'G', nombre: 'CARGA_ARCHIVO',       descripcion: 'CARGANDO ARCHIVO',                label: 'Importando',          severity: 'info' },
   { id: 'W', nombre: 'EN ESPERA',           descripcion: 'PROCESO EN ESPERA',               label: 'En espera',           severity: 'warn' },
   { id: 'S', nombre: 'ENVIADO',             descripcion: 'PROCESO ENVIADO A CENTRAL',       label: 'Enviado',             severity: 'info' },
-  { id: 'N', nombre: 'REIMPORTANDO',        descripcion: 'REIMPORTACION DE INFORMACION',    label: 'Reimportando',        severity: 'warn' },
 ];
 
 /**
  * "Sin registro" NO es un estado del catálogo: es una presentación. Se muestra
- * cuando el formulario no tiene registro en el detalle, para comunicar que está
- * en la etapa 1 (Importación) sin haberse importado todavía. Por eso se pinta
- * como texto neutro y no como `p-tag` — un tag lo haría parecer un estado más.
+ * cuando el formulario no tiene registro en el detalle, para comunicar que
+ * todavía no se ha importado. Las columnas Etapa y Estado van sin contenido y
+ * la indicación se pinta como texto neutro, no como `p-tag` — un tag lo haría
+ * parecer un estado más.
  *
  * IMPORTANTE — un formulario sin registro SÍ se puede seleccionar y validar:
  * cuando la categoría no exige archivo, pasa a validado y la entidad lo
  * presenta vacío. No bloquear su checkbox ni el botón "Validar formulario".
+ * Lo que NO admite es exportar ni ver información: no hay nada almacenado.
  */
 export const SIN_REGISTRO_LABEL = 'Sin registro';
 export const SIN_REGISTRO_AYUDA =
@@ -88,11 +89,80 @@ export const SIN_REGISTRO_AYUDA =
  * formulario puede quedar en un par (etapa, estado) fuera de esta matriz.
  */
 export const ESTADOS_POR_ETAPA: Readonly<Record<EtapaId, readonly EstadoId[]>> = {
-  1: ['A', 'D', 'E', 'G', 'N', 'V', 'W'],
-  2: ['A', 'D', 'M', 'N', 'V', 'W'],
-  3: ['A', 'D', 'M', 'N', 'V', 'W'],
+  1: ['A', 'D', 'E', 'G', 'V', 'W'],
+  2: ['A', 'D', 'M', 'V', 'W'],
+  3: ['A', 'D', 'M', 'V', 'W'],
   4: ['E', 'S', 'W'],
 };
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Matriz estado ↔ acción — HU-FOR-002, escenario 3.
+   Las acciones del menú ⋮ de cada fila se derivan de la etapa y el estado del
+   registro de detalle más reciente. Ningún componente decide por su cuenta
+   qué habilitar: todos consultan `accionesDe`.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/** Acciones que un formulario puede habilitar desde el listado. */
+export type AccionFormulario =
+  | 'exportar'
+  | 'validar'
+  | 'historial'
+  | 'protocolo'
+  | 'verInformacion';
+
+/** Acciones que exigen información almacenada (HU-FOR-002, criterios 13 y 17). */
+const ACCIONES_CON_INFORMACION: readonly AccionFormulario[] =
+  ['exportar', 'validar', 'historial', 'protocolo', 'verInformacion'];
+
+/** Acciones de un formulario en proceso o con deficiencias: sólo consulta. */
+const ACCIONES_SOLO_CONSULTA: readonly AccionFormulario[] = ['historial', 'protocolo'];
+
+/**
+ * Sin registro: el protocolo siempre, y validar por la regla de la categoría
+ * sin archivo (ver `SIN_REGISTRO_AYUDA`). Sin historial: no hay proceso que
+ * consultar.
+ */
+const ACCIONES_SIN_REGISTRO: readonly AccionFormulario[] = ['validar', 'protocolo'];
+
+/**
+ * True cuando el formulario conserva información almacenada. Un error técnico
+ * en la etapa de importación deja el formulario sin información (criterio 12);
+ * en las etapas posteriores la conserva.
+ */
+export function tieneInformacion(etapa: EtapaId, estado: EstadoId | null): boolean {
+  if (estado === null) return false;
+  if (estado === 'E') return etapa !== 1;
+  return true;
+}
+
+/**
+ * Acciones habilitadas para el par (etapa, estado), según la matriz de la HU:
+ *   • sin registro                          → protocolo (+ validar, regla DS)
+ *   • en espera / en validación / importando→ historial, protocolo
+ *   • con deficiencias                      → historial, protocolo
+ *   • error técnico en importación          → historial, protocolo
+ *   • aceptado / requiere comentario /
+ *     error técnico posterior               → exportar, validar, historial,
+ *                                             protocolo, ver información
+ *   • enviado                               → historial, protocolo
+ */
+export function accionesDe(etapa: EtapaId, estado: EstadoId | null): readonly AccionFormulario[] {
+  if (estado === null) return ACCIONES_SIN_REGISTRO;
+  switch (estado) {
+    case 'A':
+    case 'M':
+      return ACCIONES_CON_INFORMACION;
+    case 'E':
+      return etapa === 1 ? ACCIONES_SOLO_CONSULTA : ACCIONES_CON_INFORMACION;
+    default:
+      return ACCIONES_SOLO_CONSULTA;
+  }
+}
+
+/** Atajo: ¿el par (etapa, estado) habilita la acción? */
+export function admiteAccion(etapa: EtapaId, estado: EstadoId | null, accion: AccionFormulario): boolean {
+  return accionesDe(etapa, estado).includes(accion);
+}
 
 /**
  * Resultado de la validación central de la categoría (simulación demo).
