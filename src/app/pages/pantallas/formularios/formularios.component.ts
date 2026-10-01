@@ -21,6 +21,9 @@ import { StepperModule } from 'primeng/stepper';
 import { DialogModule } from 'primeng/dialog';
 import { PaginatorModule } from 'primeng/paginator';
 import { TextareaModule } from 'primeng/textarea';
+import { SkeletonModule } from 'primeng/skeleton';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { MessageService, MenuItem } from 'primeng/api';
 
 import { SesionService } from '../../../services/sesion.service';
@@ -43,6 +46,9 @@ import {
   filasDeProceso,
   etapaDe,
   estadoDe,
+  AccionFormulario,
+  accionesDe,
+  admiteAccion,
 } from './catalogo-proceso';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
@@ -102,7 +108,22 @@ const TEXTO_SITUACION_IMPORT = {
  * Estados que indican un proceso en ejecución sobre el formulario: mientras
  * alguno del contexto esté en uno de ellos, no se admite otra carga.
  */
-const ESTADOS_EN_EJECUCION: readonly EstadoId[] = ['G', 'N', 'W', 'V'];
+const ESTADOS_EN_EJECUCION: readonly EstadoId[] = ['G', 'W', 'V'];
+
+/**
+ * Escenario de demostración de la consulta del listado (HU-FOR-002, escenarios
+ * 8 y 9). Cada uno simula una duración y, con ella, la capa de carga que
+ * corresponde:
+ *   • instantanea → < 200 ms: ningún indicador.
+ *   • corta       → 200 ms a 1 s: skeleton, sin texto.
+ *   • media       → 1 a 5 s: spinner con texto descriptivo.
+ *   • larga       → > 5 s: barra de progreso (simulada hasta 85 %).
+ *   • error       → la consulta falla: mensaje + Reintentar, contexto intacto.
+ */
+type CargaListado = 'instantanea' | 'corta' | 'media' | 'larga' | 'error';
+
+/** Capa que el listado muestra mientras se consulta. */
+type EstadoListado = 'pendiente' | 'skeleton' | 'spinner' | 'progreso' | 'error' | 'listo';
 
 /**
  * Comportamiento del envío de una categoría respecto a las entidades agregadas.
@@ -159,6 +180,9 @@ type TipoUsuario = 'L' | 'L_INACTIVA' | 'ACE';
     DialogModule,
     PaginatorModule,
     TextareaModule,
+    SkeletonModule,
+    ProgressSpinnerModule,
+    ProgressBarModule,
     AppBreadcrumbComponent,
     DirectorioEntidadesComponent,
     ProtocoloImportacionComponent,
@@ -185,6 +209,7 @@ export class FormulariosComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.cancelarAvanceProceso();
+    this.cancelarCargaListado();
   }
 
   /**
@@ -262,15 +287,18 @@ export class FormulariosComponent implements OnDestroy {
   ];
 
   // ─────────────────────────────────────────────────────────────────────────
-  // Vista Registro Manual (detalle del formulario)
-  // Refleja la POC de Wilmar: cada concepto padre maneja su propio paginador
-  // de filas (variables), y arriba un paginador global de columnas (periodos)
-  // — porque un formulario puede tener hasta 60+ variables y muchas columnas.
+  // Vista "Ver información" (detalle del formulario). HU-FOR-002, nota 4: la
+  // edición web está pendiente de definición, así que el alcance es sólo la
+  // visualización de la información importada. El componente de registro
+  // manual se abre en modo lectura; conserva su capacidad de edición para
+  // cuando se defina. Cada concepto padre maneja su propio paginador de filas
+  // y arriba hay un paginador global de columnas (periodos).
   // ─────────────────────────────────────────────────────────────────────────
   detalleAbierto: Formulario | null = null;
 
   abrirDetalle(form: Formulario) {
     this.controlEnvioAbierto = false;
+    this.protocoloAbierto = null;
     this.detalleAbierto = form;
     // En el wizard de 3 pasos, abrir un formulario NO cambia de paso:
     // el registro manual vive dentro del paso "Formularios" (step 1).
@@ -387,31 +415,139 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Menú ⋮ por fila — sólo acciones que NO se pueden aplicar masivamente desde
-   * la toolbar (Exportar y Validar viven en la toolbar y operan sobre la selección).
+   * Menú ⋮ por fila. Se arma al abrirlo, con las acciones que la matriz
+   * estado↔acción habilita para ese formulario (HU-FOR-002, escenario 3). Las
+   * que no aplican no se muestran inhabilitadas: no se muestran.
+   *
+   * Orden: acción principal (Ver información), acciones sobre el formulario
+   * (Exportar, Validar), consulta (Historial) y, tras el separador, el
+   * protocolo, que es el único que no depende de que haya información.
    */
-  menuFormularioItems: MenuItem[] = [
+  menuFormularioItems: MenuItem[] = [];
+
+  /** Definición de cada acción del menú; la matriz decide cuáles entran. */
+  private readonly ACCIONES_MENU: ReadonlyArray<{
+    accion: AccionFormulario;
+    item: MenuItem;
+    separadorAntes?: boolean;
+  }> = [
     {
-      label: 'Registro manual',
-      icon: 'pi pi-table',
-      command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
+      accion: 'verInformacion',
+      item: {
+        label: 'Ver información',
+        icon: 'pi pi-eye',
+        command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
+      },
     },
     {
-      label: 'Historial proceso',
-      icon: 'pi pi-history',
-      command: () => this.verControlEnvio(this.selectedFormularioForMenu),
+      accion: 'exportar',
+      item: {
+        label: 'Exportar',
+        icon: 'pi pi-download',
+        command: () => this.exportarDesdeMenu(this.selectedFormularioForMenu),
+      },
     },
-    { separator: true },
     {
-      label: 'Generar protocolo de importación',
-      icon: 'pi pi-file-export',
-      command: () => this.abrirProtocolo(this.selectedFormularioForMenu),
+      accion: 'validar',
+      item: {
+        label: 'Validar',
+        icon: 'pi pi-check-circle',
+        command: () => this.validarDesdeMenu(this.selectedFormularioForMenu),
+      },
+    },
+    {
+      accion: 'historial',
+      item: {
+        label: 'Historial proceso',
+        icon: 'pi pi-history',
+        command: () => this.verControlEnvio(this.selectedFormularioForMenu),
+      },
+    },
+    {
+      accion: 'protocolo',
+      separadorAntes: true,
+      item: {
+        label: 'Generar protocolo de importación',
+        icon: 'pi pi-file-export',
+        command: () => this.abrirProtocolo(this.selectedFormularioForMenu),
+      },
     },
   ];
 
   abrirMenuFormulario(event: Event, form: Formulario) {
     this.selectedFormularioForMenu = form;
+    this.menuFormularioItems = this.construirMenuFormulario(form);
     this.menuFormulario.toggle(event);
+  }
+
+  /** Acciones habilitadas para un formulario, según la matriz del catálogo. */
+  accionesDe(form: Formulario): readonly AccionFormulario[] {
+    return accionesDe(form.etapa, form.estado);
+  }
+
+  private construirMenuFormulario(form: Formulario): MenuItem[] {
+    const habilitadas = this.accionesDe(form);
+    const items: MenuItem[] = [];
+    for (const def of this.ACCIONES_MENU) {
+      if (!habilitadas.includes(def.accion)) continue;
+      // Sin la acción de validación por permisos, Validar tampoco entra.
+      if (def.accion === 'validar' && !this.hasPermission('validar')) continue;
+      if (def.separadorAntes && items.length > 0) items.push({ separator: true });
+      items.push(def.item);
+    }
+    return items;
+  }
+
+  /**
+   * Exportar y Validar desde el menú de la fila operan sobre ESE formulario:
+   * la selección pasa a ser él solo y la acción sigue el mismo camino que
+   * desde la barra de acciones.
+   */
+  private exportarDesdeMenu(form: Formulario | null): void {
+    if (!form) return;
+    this.selectedFormularios = [form];
+    this.executeAction('exportar');
+  }
+
+  private validarDesdeMenu(form: Formulario | null): void {
+    if (!form) return;
+    this.selectedFormularios = [form];
+    this.confirmValidation();
+  }
+
+  /* ── Selección (HU-FOR-002, criterios 11 y 13) ────────────────────────── */
+
+  /**
+   * Una fila se puede marcar sólo si admite alguna acción que opere sobre la
+   * selección (exportar o validar). `p-table` lo consulta por fila y también
+   * al marcar todas con la casilla del encabezado.
+   */
+  readonly esSeleccionable = (row: { data: Formulario }): boolean =>
+    this.admite(row.data, 'exportar') || this.admite(row.data, 'validar');
+
+  admite(form: Formulario, accion: AccionFormulario): boolean {
+    return admiteAccion(form.etapa, form.estado, accion);
+  }
+
+  /** Exportar: toda la selección debe tener información almacenada. */
+  get canExport(): boolean {
+    return this.selectedFormularios.length > 0
+      && this.selectedFormularios.every(f => this.admite(f, 'exportar'));
+  }
+
+  /** Motivo por el que Exportar está inhabilitado; vacío cuando está activo. */
+  get exportarTooltip(): string {
+    if (this.selectedFormularios.length === 0) return 'Marque al menos un formulario para exportar';
+    if (!this.canExport) return 'La selección incluye formularios sin información almacenada, que no admiten exportación';
+    return '';
+  }
+
+  /** Motivo por el que Validar está inhabilitado; vacío cuando está activo. */
+  get validarTooltip(): string {
+    if (!this.hasPermission('validar')) return 'No tiene permiso para validar formularios';
+    if (this.selectedFormularios.length === 0) return 'Marque al menos un formulario para validar';
+    if (!this.canValidate) return 'La selección incluye formularios que no admiten validación en su estado actual';
+    return '';
   }
 
   /**
@@ -859,6 +995,7 @@ export class FormulariosComponent implements OnDestroy {
     this.selectedEntidades = [];
     this.filtersApplied = false;
     this.filtersCollapsed = false;
+    this.cancelarCargaListado();
     this.cerrarControlEnvio();
     this.showImportDialog = false;
     this.cerrarPanelesPaso1();
@@ -958,8 +1095,6 @@ export class FormulariosComponent implements OnDestroy {
   private reemplazoConfirmado = false;
   /** Momento del diálogo de importación. */
   importPaso: 'seleccion' | 'justificacion' | 'confirmacion' | 'iniciado' | 'rechazado' = 'seleccion';
-  /** True cuando lo iniciado reemplaza información ya importada. */
-  esReimportacion = false;
 
   /* ── Justificación del reenvío ─────────────────────────────────────────
      Si la categoría ya se envió a la CGN, volver a importar modifica
@@ -1030,7 +1165,6 @@ export class FormulariosComponent implements OnDestroy {
     this.situacionesImport = [];
     this.reemplazoConfirmado = false;
     this.importPaso = 'seleccion';
-    this.esReimportacion = false;
     this.reenvioJustificado = false;
     this.reenvioMotivo = null;
     this.reenvioJustificacion = '';
@@ -1544,16 +1678,13 @@ export class FormulariosComponent implements OnDestroy {
    * y de que el resultado NO llega a esta pantalla sino a su correo.
    */
   private iniciarProcesoImportacion() {
-    // Se calcula ANTES de tocar los estados: después, todos tienen registro.
-    this.esReimportacion = this.formulariosAReimportar.length > 0;
-
-    // Todo el contexto vuelve a la etapa Importación. Sólo una reimportación
-    // arranca en Reimportando (N), y sólo para lo que ya tenía información; en
-    // una importación limpia todo el contexto arranca en Importando (G).
+    // Todo el contexto vuelve a la etapa Importación y arranca en Importando
+    // (G), sea una carga limpia o una reimportación: el catálogo ya no
+    // distingue la reimportación con un estado propio.
     this._formulariosBase = this._formulariosBase.map(f => ({
       ...f,
       etapa: 1 as EtapaId,
-      estado: (this.esReimportacion && f.estado !== null ? 'N' : 'G') as EstadoId,
+      estado: 'G' as EstadoId,
     }));
     this.selectedFormularios = [];
     this.categoriaEnviada = false;
@@ -1573,9 +1704,9 @@ export class FormulariosComponent implements OnDestroy {
   // En producción el proceso corre en el servidor y el resultado llega por
   // correo; aquí se anima la secuencia real de estados para que la pantalla
   // muestre por dónde va cada formulario:
-  //   limpia        →  Importando → En espera → Validando → Aceptado/Deficiencia
-  //   reimportación →  Reimportando → Importando → En espera → Validando → …
-  // Todo ocurre dentro de la etapa 1 (Importación).
+  //   Importando → En espera → Validando → Aceptado/Deficiencia
+  // Todo ocurre dentro de la etapa 1 (Importación), sea carga limpia o
+  // reimportación.
 
   /** Duración de cada paso de la secuencia, en ms. */
   private readonly PASO_PROCESO_MS = 2200;
@@ -1597,9 +1728,6 @@ export class FormulariosComponent implements OnDestroy {
   private programarAvanceProceso(): void {
     this.cancelarAvanceProceso();
     const pasos: Array<() => void> = [];
-    // La reimportación gasta un paso extra: primero Reimportando, luego ya
-    // entra al mismo carril que una importación limpia.
-    if (this.esReimportacion) pasos.push(() => this.aplicarEstadoATodos('G'));
     pasos.push(() => this.aplicarEstadoATodos('W'));
     pasos.push(() => this.aplicarEstadoATodos('V'));
     pasos.push(() => this.aplicarResultadoImportacion());
@@ -1655,7 +1783,7 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   confirmExport() {
-    this.messageService.add({ severity: 'success', summary: 'Exportación iniciada', detail: `Exportando ${this.filteredFormularios.length} formulario(s) en formato ${this.selectedExportFormat.toUpperCase()}...` });
+    this.messageService.add({ severity: 'success', summary: 'Exportación iniciada', detail: `Exportando ${this.selectedFormularios.length} formulario(s) en formato ${this.selectedExportFormat.toUpperCase()}...` });
     this.activePanel = null;
   }
 
@@ -1693,8 +1821,11 @@ export class FormulariosComponent implements OnDestroy {
     }
   }
 
+  /** Validar: toda la selección debe admitir la acción en su estado actual. */
   get canValidate(): boolean {
-    return this.hasPermission('validar') && this.selectedFormularios.length > 0;
+    return this.hasPermission('validar')
+      && this.selectedFormularios.length > 0
+      && this.selectedFormularios.every(f => this.admite(f, 'validar'));
   }
 
   /**
@@ -1800,10 +1931,113 @@ export class FormulariosComponent implements OnDestroy {
       this.messageService.add({ severity: 'warn', summary: 'Filtros requeridos', detail: 'Debe seleccionar Entidad, Categoría, Año y Periodo.' });
       return;
     }
-    this.recomputarFormulariosBase();
     this.filtersApplied = true;
     // Al aplicar, el acordeón de filtros se colapsa a su resumen de chips.
     this.filtersCollapsed = true;
+    this.consultarListado();
+  }
+
+  // ── Consulta del listado: capas de carga y error (HU-FOR-002, esc. 8 y 9) ──
+  // En producción la duración la pone el servidor; aquí la elige el selector
+  // de demostración del Paso 1 para poder ver cada capa. La sección 2 sólo
+  // presenta la tabla cuando la consulta terminó (`listadoListo`).
+
+  readonly cargaListadoOptions: Array<{ label: string; value: CargaListado }> = [
+    { label: 'Instantánea (< 200 ms) · sin indicador', value: 'instantanea' },
+    { label: 'Corta (200 ms a 1 s) · skeleton', value: 'corta' },
+    { label: 'Media (1 a 5 s) · spinner con texto', value: 'media' },
+    { label: 'Larga (> 5 s) · barra de progreso', value: 'larga' },
+    { label: 'Error en la consulta · reintentar', value: 'error' },
+  ];
+  demoCargaListado: CargaListado = 'corta';
+
+  estadoListado: EstadoListado = 'pendiente';
+  /** Avance de la barra (0 a 100) en la carga larga. */
+  progresoListado = 0;
+  private timersListado: number[] = [];
+
+  /** Duración simulada de cada escenario, en ms. */
+  private readonly DURACION_CARGA: Readonly<Record<CargaListado, number>> = {
+    instantanea: 120,
+    corta: 700,
+    media: 3000,
+    larga: 7000,
+    error: 700,
+  };
+
+  /** Tope de la barra mientras el servidor no confirma el fin de la operación. */
+  private readonly PROGRESO_MAX_SIMULADO = 85;
+
+  /** True cuando la consulta terminó bien y el listado se puede presentar. */
+  get listadoListo(): boolean {
+    return this.filtersApplied && this.estadoListado === 'listo';
+  }
+
+  /**
+   * Lanza la consulta del listado para el contexto aplicado. `forzarExito`
+   * se usa al reintentar tras un error: en la demo el reintento sale bien,
+   * para que se vea que el contexto se conservó y el listado llegó.
+   */
+  private consultarListado(forzarExito = false): void {
+    this.cancelarCargaListado();
+    this.selectedFormularios = [];
+    // Mientras se consulta no hay listado: lo anterior era de otro contexto.
+    this._formulariosBase = [];
+    const escenario: CargaListado =
+      forzarExito && this.demoCargaListado === 'error' ? 'corta' : this.demoCargaListado;
+    const duracion = this.DURACION_CARGA[escenario];
+
+    switch (escenario) {
+      case 'instantanea': this.estadoListado = 'pendiente'; break;
+      case 'corta':
+      case 'error': this.estadoListado = 'skeleton'; break;
+      case 'media': this.estadoListado = 'spinner'; break;
+      case 'larga':
+        this.estadoListado = 'progreso';
+        this.progresoListado = 0;
+        this.programarProgresoSimulado(duracion);
+        break;
+    }
+
+    this.timersListado.push(window.setTimeout(() => {
+      if (escenario === 'error') {
+        this.estadoListado = 'error';
+        return;
+      }
+      this.progresoListado = 100;
+      this.recomputarFormulariosBase();
+      this.estadoListado = 'listo';
+    }, duracion));
+  }
+
+  /**
+   * Barra de progreso sin avance real del servidor: sube de forma continua
+   * hasta el 85 % y ahí espera la confirmación para completar.
+   */
+  private programarProgresoSimulado(duracion: number): void {
+    const pasos = 20;
+    const intervalo = Math.round((duracion * 0.7) / pasos);
+    for (let i = 1; i <= pasos; i++) {
+      this.timersListado.push(window.setTimeout(() => {
+        this.progresoListado = Math.min(
+          this.PROGRESO_MAX_SIMULADO,
+          Math.round((this.PROGRESO_MAX_SIMULADO * i) / pasos),
+        );
+      }, intervalo * i));
+    }
+  }
+
+  /** Reintenta la consulta con el mismo contexto (escenario 8). */
+  reintentarConsulta(): void {
+    this.consultarListado(true);
+  }
+
+  /** Cancela una consulta en curso y deja el listado sin presentar. */
+  private cancelarCargaListado(): void {
+    this.timersListado.forEach(id => window.clearTimeout(id));
+    this.timersListado = [];
+    this.estadoListado = 'pendiente';
+    this.progresoListado = 0;
   }
 
   /**
@@ -1814,6 +2048,7 @@ export class FormulariosComponent implements OnDestroy {
   onFiltroModificado() {
     if (this.filtersApplied) {
       this.filtersApplied = false;
+      this.cancelarCargaListado();
       this.cerrarControlEnvio();
       this.showImportDialog = false;
       this.categoriaEnviada = false;
@@ -1857,6 +2092,7 @@ export class FormulariosComponent implements OnDestroy {
     this.filtersApplied = false;
     this.filtersCollapsed = false;
     this.searchFormulario = '';
+    this.cancelarCargaListado();
     this.cerrarControlEnvio();
     this.showImportDialog = false;
     this.categoriaEnviada = false;
