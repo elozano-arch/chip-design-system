@@ -419,12 +419,13 @@ export class FormulariosComponent implements OnDestroy {
    * estado↔acción habilita para ese formulario (HU-FOR-002, escenario 3). Las
    * que no aplican no se muestran inhabilitadas: no se muestran.
    *
-   * Exportar no entra: vive sólo en la barra de acciones, sobre la selección.
-   * Repetirla aquí duplicaba la misma acción en la misma pantalla.
+   * Exportar y Validar no entran: viven sólo en la barra de acciones, sobre
+   * la selección. Repetirlas aquí duplicaba la misma acción en la misma
+   * pantalla. La matriz las sigue usando para decidir qué filas se marcan.
    *
-   * Orden: acción principal (Ver información), Validar, consulta (Historial)
-   * y, tras el separador, el protocolo, que es el único que no depende de que
-   * haya información.
+   * Orden: acción principal (Ver información), consulta (Historial) y, tras
+   * el separador, el protocolo, que es el único que no depende de que haya
+   * información.
    */
   menuFormularioItems: MenuItem[] = [];
 
@@ -440,14 +441,6 @@ export class FormulariosComponent implements OnDestroy {
         label: 'Ver información',
         icon: 'pi pi-eye',
         command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
-      },
-    },
-    {
-      accion: 'validar',
-      item: {
-        label: 'Validar',
-        icon: 'pi pi-check-circle',
-        command: () => this.validarDesdeMenu(this.selectedFormularioForMenu),
       },
     },
     {
@@ -485,22 +478,10 @@ export class FormulariosComponent implements OnDestroy {
     const items: MenuItem[] = [];
     for (const def of this.ACCIONES_MENU) {
       if (!habilitadas.includes(def.accion)) continue;
-      // Sin la acción de validación por permisos, Validar tampoco entra.
-      if (def.accion === 'validar' && !this.hasPermission('validar')) continue;
       if (def.separadorAntes && items.length > 0) items.push({ separator: true });
       items.push(def.item);
     }
     return items;
-  }
-
-  /**
-   * Validar desde el menú de la fila opera sobre ESE formulario: la selección
-   * pasa a ser él solo y la acción sigue el mismo camino que desde la barra.
-   */
-  private validarDesdeMenu(form: Formulario | null): void {
-    if (!form) return;
-    this.selectedFormularios = [form];
-    this.confirmValidation();
   }
 
   /* ── Selección (HU-FOR-002, criterios 11 y 13) ────────────────────────── */
