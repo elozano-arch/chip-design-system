@@ -419,9 +419,12 @@ export class FormulariosComponent implements OnDestroy {
    * estado↔acción habilita para ese formulario (HU-FOR-002, escenario 3). Las
    * que no aplican no se muestran inhabilitadas: no se muestran.
    *
-   * Orden: acción principal (Ver información), acciones sobre el formulario
-   * (Exportar, Validar), consulta (Historial) y, tras el separador, el
-   * protocolo, que es el único que no depende de que haya información.
+   * Exportar no entra: vive sólo en la barra de acciones, sobre la selección.
+   * Repetirla aquí duplicaba la misma acción en la misma pantalla.
+   *
+   * Orden: acción principal (Ver información), Validar, consulta (Historial)
+   * y, tras el separador, el protocolo, que es el único que no depende de que
+   * haya información.
    */
   menuFormularioItems: MenuItem[] = [];
 
@@ -437,14 +440,6 @@ export class FormulariosComponent implements OnDestroy {
         label: 'Ver información',
         icon: 'pi pi-eye',
         command: () => { if (this.selectedFormularioForMenu) this.abrirDetalle(this.selectedFormularioForMenu); },
-      },
-    },
-    {
-      accion: 'exportar',
-      item: {
-        label: 'Exportar',
-        icon: 'pi pi-download',
-        command: () => this.exportarDesdeMenu(this.selectedFormularioForMenu),
       },
     },
     {
@@ -499,16 +494,9 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
-   * Exportar y Validar desde el menú de la fila operan sobre ESE formulario:
-   * la selección pasa a ser él solo y la acción sigue el mismo camino que
-   * desde la barra de acciones.
+   * Validar desde el menú de la fila opera sobre ESE formulario: la selección
+   * pasa a ser él solo y la acción sigue el mismo camino que desde la barra.
    */
-  private exportarDesdeMenu(form: Formulario | null): void {
-    if (!form) return;
-    this.selectedFormularios = [form];
-    this.executeAction('exportar');
-  }
-
   private validarDesdeMenu(form: Formulario | null): void {
     if (!form) return;
     this.selectedFormularios = [form];
