@@ -21,7 +21,7 @@ export type TagSeverity = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 export type EtapaId = 1 | 2 | 3 | 4;
 
 /** `tab_estado.id_estado`. */
-export type EstadoId = 'V' | 'M' | 'D' | 'A' | 'E' | 'G' | 'W' | 'S';
+export type EstadoId = 'V' | 'M' | 'D' | 'A' | 'E' | 'G' | 'W' | 'S' | 'U';
 
 export interface EtapaProceso {
   id: EtapaId;
@@ -65,6 +65,9 @@ export const ESTADOS_PROCESO: readonly EstadoProceso[] = [
   { id: 'G', nombre: 'CARGA_ARCHIVO',       descripcion: 'CARGANDO ARCHIVO',                label: 'Importando',          severity: 'info' },
   { id: 'W', nombre: 'EN ESPERA',           descripcion: 'PROCESO EN ESPERA',               label: 'En espera',           severity: 'warn' },
   { id: 'S', nombre: 'ENVIADO',             descripcion: 'PROCESO ENVIADO A CENTRAL',       label: 'Enviado',             severity: 'info' },
+  // Gris neutro: la información cambió y queda a la espera de una validación
+  // nueva. No es un error ni un resultado; el ámbar ya lo usan W y M.
+  { id: 'U', nombre: 'MODIFICADO',          descripcion: 'INFORMACION MODIFICADA',          label: 'Modificado',          severity: 'secondary' },
 ];
 
 /**
@@ -90,7 +93,9 @@ export const SIN_REGISTRO_AYUDA =
  */
 export const ESTADOS_POR_ETAPA: Readonly<Record<EtapaId, readonly EstadoId[]>> = {
   1: ['A', 'D', 'E', 'G', 'V', 'W'],
-  2: ['A', 'D', 'M', 'V', 'W'],
+  // Modificado (U) sólo existe en Validación local: modificar un formulario
+  // que ya estaba en Validación central lo devuelve aquí.
+  2: ['A', 'D', 'M', 'U', 'V', 'W'],
   3: ['A', 'D', 'M', 'V', 'W'],
   4: ['E', 'S', 'W'],
 };
@@ -142,15 +147,20 @@ export function tieneInformacion(etapa: EtapaId, estado: EstadoId | null): boole
  *   • con deficiencias                      → historial, protocolo
  *   • error técnico en importación          → historial, protocolo
  *   • aceptado / requiere comentario /
- *     error técnico posterior               → exportar, validar, historial,
+ *     modificado / error técnico posterior  → exportar, validar, historial,
  *                                             protocolo, ver información
  *   • enviado                               → historial, protocolo
+ *
+ * Requiere comentario admite Validar en la matriz, pero la validación no se
+ * ejecuta mientras queden comentarios pendientes (HU-FOR-033, criterio 5): lo
+ * decide la pantalla al pulsar, para poder informar cuántos faltan.
  */
 export function accionesDe(etapa: EtapaId, estado: EstadoId | null): readonly AccionFormulario[] {
   if (estado === null) return ACCIONES_SIN_REGISTRO;
   switch (estado) {
     case 'A':
     case 'M':
+    case 'U':
       return ACCIONES_CON_INFORMACION;
     case 'E':
       return etapa === 1 ? ACCIONES_SOLO_CONSULTA : ACCIONES_CON_INFORMACION;

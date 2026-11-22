@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -21,7 +21,19 @@ import {
   TreeTableComponent,
   ColumnaConfig,
   NodoArbol,
+  OrdenArbol,
 } from '../../../../components/tree-table/tree-table.component';
+
+/**
+ * Aviso a la pantalla de que se guardó un comentario. La pantalla hace las
+ * veces del servicio: es la que comprueba si el proceso quedó completo y
+ * cambia el estado (HU-FOR-033, criterio 4). Este componente no decide nada.
+ */
+export interface ComentarioGuardadoEvento {
+  idDetalleProceso: number;
+  /** Comentarios que el proceso sigue exigiendo tras este guardado. */
+  pendientes: number;
+}
 
 /**
  * Un proceso y sus deficiencias, que es lo que cuelga de cada nodo padre del
@@ -92,6 +104,9 @@ export class DeficienciasEnvioComponent {
    */
   @Input() ultimoProcesoId = 0;
 
+  /** Se guardó un comentario: la pantalla resuelve si el proceso cierra. */
+  @Output() comentarioGuardado = new EventEmitter<ComentarioGuardadoEvento>();
+
   /** El expediente como árbol de procesos → deficiencias. */
   nodosProcesos: NodoArbol[] = [];
 
@@ -160,7 +175,7 @@ export class DeficienciasEnvioComponent {
   ];
 
   readonly columnasDeficiencia: ColumnaConfig[] = [
-    { key: 'num', label: '#', editable: false, tipo: 'numero', ancho: '48px' },
+    { key: 'num', label: '#', editable: false, tipo: 'numero', ancho: '48px', ordenable: false },
     { key: 'codMensaje', label: 'Cód. mensaje', editable: false, tipo: 'texto', ancho: '124px' },
     { key: 'mensaje', label: 'Mensaje', editable: false, tipo: 'texto' },
     { key: 'perm', label: 'Perm.', editable: false, tipo: 'texto', ancho: '68px' },
@@ -211,11 +226,65 @@ export class DeficienciasEnvioComponent {
     }
   };
 
+  /**
+   * Orden inicial de las deficiencias (HU-FOR-033, criterio 8): primero las no
+   * permisibles, después las permisibles y al final las que requieren
+   * comentario. Es el orden ascendente de la columna "Perm." (ver
+   * `valorOrdenDeficiencia`); el usuario lo cambia desde las cabeceras.
+   */
+  readonly ordenInicialDeficiencias: OrdenArbol = { key: 'perm', dir: 1 };
+
+  /**
+   * Valor de orden de cada columna de la deficiencia. "Perm." y "Comentario"
+   * no ordenan por el texto que muestran: "Perm." ordena por tipo de
+   * deficiencia y "Comentario" deja lo que falta por registrar arriba.
+   */
+  readonly valorOrdenDeficiencia = (nodo: NodoArbol, key: string): string | number | undefined => {
+    const d = nodo.data as DeficienciaEnvio;
+    switch (key) {
+      case 'codMensaje': return d.codMensaje;
+      case 'mensaje': return this.textoCompleto(d);
+      case 'perm': return this.rangoTipo(d);
+      case 'comentario': return this.RANGO_COMENTARIO[this.estadoComentario(d)];
+      default: return nodo.valores[key];
+    }
+  };
+
+  /** 0 no permisible · 1 permisible · 2 requiere comentario. */
+  private rangoTipo(d: DeficienciaEnvio): number {
+    if (!d.permisible) return 0;
+    return d.requiereComentario ? 2 : 1;
+  }
+
+  private readonly RANGO_COMENTARIO = {
+    registrar: 0, bloqueado: 1, registrado: 2, noRequiere: 3,
+  } as const;
+
   /** dd/mm/aaaa hh:mm → aaaammddhhmm, que ordena bien como número. */
   private fechaOrdenable(fecha: string): number {
     const [dia = '', hora = '00:00'] = fecha.split(' ');
     const [dd = '00', mm = '00', aaaa = '0000'] = dia.split('/');
     return Number(`${aaaa}${mm}${dd}${hora.replace(':', '')}`);
+  }
+
+  /** Deficiencias del proceso de `d` (las mismas instancias del expediente). */
+  private deficienciasDelProceso(d: DeficienciaEnvio): DeficienciaEnvio[] {
+    return this._visibles.filter(
+      f => f.id !== null && f.idDetalleProceso === d.idDetalleProceso,
+    );
+  }
+
+  /**
+   * Avance de los comentarios del proceso de `d`, para el contador del modal
+   * ("3 de 8 diligenciados"). Vive en el modal y no en la pantalla principal
+   * para no recargarla: es lo que el usuario necesita justo al diligenciar.
+   */
+  progresoComentarios(d: DeficienciaEnvio): { diligenciados: number; total: number } {
+    const exigidas = this.deficienciasDelProceso(d).filter(f => f.requiereComentario);
+    return {
+      diligenciados: exigidas.filter(f => !!f.comentarioGuardado).length,
+      total: exigidas.length,
+    };
   }
 
   /** Deficiencias del proceso que exigen comentario y siguen sin diligenciar. */
@@ -355,15 +424,33 @@ export class DeficienciasEnvioComponent {
       });
       return;
     }
+    const eraPendiente = !d.comentarioGuardado;
     d.comentario = texto;
     d.comentarioGuardado = texto;
     d.fechaComentario = this.ahora();
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Justificación guardada',
-      detail: `Se guardó la justificación del mensaje ${d.codMensaje}.`,
-      life: 4000,
-    });
+
+    const { diligenciados, total } = this.progresoComentarios(d);
+    const pendientes = total - diligenciados;
+    // Último pendiente: se avisa que el estado va a cambiar. El cambio no lo
+    // hace esta vista, lo resuelve el servicio (aquí, la pantalla).
+    if (eraPendiente && pendientes === 0) {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Comentarios completos',
+        detail: `Se guardó la última deficiencia que requería comentario (${d.codMensaje}). `
+          + 'El estado del formulario cambiará a Aceptado.',
+        life: 6000,
+      });
+    } else {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Justificación guardada',
+        detail: `Se guardó la justificación del mensaje ${d.codMensaje}. `
+          + `${diligenciados} de ${total} diligenciados.`,
+        life: 4000,
+      });
+    }
+    this.comentarioGuardado.emit({ idDetalleProceso: d.idDetalleProceso, pendientes });
     this.cerrarJustificacion();
   }
 

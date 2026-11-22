@@ -43,6 +43,9 @@
       [textoBusqueda]="textoBusquedaNodo"
       [ordenable]="true"
       [valorOrden]="valorOrdenNodo"
+      [ordenableHijo]="true"
+      [ordenHijoInicial]="ordenInicialDeficiencias"
+      [valorOrdenHijo]="valorOrdenDeficiencia"
       [columnToggle]="false"
       [permitirCambioModo]="false"
       [mostrarRuta]="false"
@@ -205,11 +208,30 @@
         </p>
       }
 
-      @if (!modalPideJustificacion) {
+      <!-- Sólo la no permisible obliga a corregir (HU-FOR-033, crit. 1 y 3).
+           Una permisible sin comentario no exige nada: decirle que corrija
+           sería pedirle un trabajo que no tiene que hacer. -->
+      @if (!d.permisible) {
         <p class="form-defic__modal-aviso">
           <i class="pi pi-info-circle" aria-hidden="true"></i>
-          Esta deficiencia no admite justificación: se corrige y se vuelve a procesar.
+          Deficiencia no permisible: corrija la información reportada para continuar. No admite comentario.
         </p>
+      } @else if (!modalPideJustificacion) {
+        <p class="form-defic__modal-aviso">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          Deficiencia permisible: no requiere comentario.
+        </p>
+      }
+
+      <!-- Avance del proceso: cuántos lleva y cuántos le faltan, justo donde
+           diligencia. Sólo en el proceso que admite escritura. -->
+      @if (modalPideJustificacion && !modalSoloLectura) {
+        @if (progresoComentarios(d); as p) {
+          <p class="form-defic__modal-progreso" aria-live="polite">
+            <i class="pi pi-check-square" aria-hidden="true"></i>
+            <strong>{{ p.diligenciados }} de {{ p.total }}</strong> diligenciados en este proceso
+          </p>
+        }
       }
 
       @if (modalPideJustificacion) {

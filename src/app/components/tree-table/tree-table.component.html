@@ -359,8 +359,20 @@
                     <th scope="col" class="ttc-nested__th"
                       [style.width]="col.ancho"
                       [class.ttc-th--right]="col.alineacion === 'right'"
-                      [class.ttc-th--center]="col.alineacion === 'center'">
-                      {{ col.label }}
+                      [class.ttc-th--center]="col.alineacion === 'center'"
+                      [class.ttc-th--ordenable]="esOrdenableHijo(col)"
+                      [attr.aria-sort]="ariaSortHijo(col)">
+                      @if (esOrdenableHijo(col)) {
+                        <button type="button" class="ttc-th__sort"
+                          [class.ttc-th__sort--activa]="ordenHijo()?.key === col.key"
+                          [attr.aria-label]="'Ordenar por ' + col.label"
+                          (click)="ordenarHijoPor(col)">
+                          <span>{{ col.label }}</span>
+                          <i class="pi" [ngClass]="iconoOrdenHijo(col)" aria-hidden="true"></i>
+                        </button>
+                      } @else {
+                        {{ col.label }}
+                      }
                     </th>
                   }
                 </tr>

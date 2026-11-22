@@ -180,6 +180,23 @@
     i { margin-top: 2px; font-size: 12px; }
   }
 
+  /* Contador "N de M diligenciados": informativo, en el azul de fondo
+     informativo del Kit, para no confundirse con el aviso ámbar. */
+  &__modal-progreso {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--chip-cobalt-50);
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    color: var(--chip-grey-800);
+
+    i { font-size: 12px; color: var(--chip-cobalt-700); }
+    strong { color: var(--chip-cobalt-700); }
+  }
+
   &__modal-campo {
     display: flex;
     flex-direction: column;
