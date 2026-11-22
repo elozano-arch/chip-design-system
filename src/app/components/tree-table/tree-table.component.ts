@@ -30,8 +30,9 @@ export interface ColumnaConfig {
   fija?: boolean;
   /**
    * Con `[ordenable]` activo en la tabla, todas las columnas del nivel raíz se
-   * ordenan; `false` saca una en concreto (un consecutivo de lectura, por
-   * ejemplo, que no es un dato por el que tenga sentido ordenar).
+   * ordenan (y con `[ordenableHijo]`, las de `columnasHijo`); `false` saca una
+   * en concreto (un consecutivo de lectura, por ejemplo, que no es un dato por
+   * el que tenga sentido ordenar).
    */
   ordenable?: boolean;
 }
@@ -190,6 +191,22 @@ export class TreeTableComponent implements OnInit {
    * ordena bien como texto —una fecha dd/mm/aaaa, un conteo—.
    */
   @Input() valorOrden: ((nodo: NodoArbol, key: string) => string | number | null | undefined) | null = null;
+  /**
+   * Habilita el orden por columna en la tabla anidada de `columnasHijo`. Cada
+   * columna se excluye igual que en la raíz, con `ordenable: false`. Un solo
+   * orden vale para todas las ramas: al abrir otra, sus hijos llegan igual
+   * ordenados.
+   */
+  @Input() ordenableHijo = false;
+  /**
+   * Orden con que arranca la tabla anidada, antes de que el usuario toque una
+   * cabecera. `null` = el orden en que llegaron los hijos.
+   */
+  @Input() set ordenHijoInicial(o: OrdenArbol | null) {
+    this.ordenHijo.set(o);
+  }
+  /** Valor de orden de las columnas hijo. Por defecto, el de `valores`. */
+  @Input() valorOrdenHijo: ((nodo: NodoArbol, key: string) => string | number | null | undefined) | null = null;
   /** Muestra el paginador interno por nodo padre. */
   @Input() pageable = true;
   /**
@@ -410,9 +427,9 @@ export class TreeTableComponent implements OnInit {
   }
 
   /**
-   * Sólo se ordena el nivel raíz. Con hijos de la misma forma que el padre, el
-   * orden baja también a cada rama; con `columnasHijo` los hijos tienen otras
-   * columnas y conservan el orden en que llegaron.
+   * Orden del nivel raíz. Con hijos de la misma forma que el padre, el orden
+   * baja también a cada rama; con `columnasHijo` los hijos tienen otras
+   * columnas y se ordenan aparte, con `ordenableHijo`.
    */
   arbolOrdenado = computed<NodoArbol[]>(() => {
     const nodos = this.arbolFiltrado();
@@ -421,11 +438,54 @@ export class TreeTableComponent implements OnInit {
     return this.ordenarNivel(nodos, o, !this.columnasHijo);
   });
 
-  private ordenarNivel(nodos: NodoArbol[], o: OrdenArbol, recursivo: boolean): NodoArbol[] {
+  /* ═════════════ Orden de la tabla anidada (columnasHijo) ═════════════ */
+  ordenHijo = signal<OrdenArbol | null>(null);
+
+  esOrdenableHijo(col: ColumnaConfig): boolean {
+    return this.ordenableHijo && col.ordenable !== false;
+  }
+
+  /** Mismo ciclo que la raíz. Vuelve a la primera página de cada rama. */
+  ordenarHijoPor(col: ColumnaConfig): void {
+    const actual = this.ordenHijo();
+    const dir: 1 | -1 = actual?.key === col.key && actual.dir === 1 ? -1 : 1;
+    this.ordenHijo.set({ key: col.key, dir });
+    this.paginasNodo.set({});
+  }
+
+  ariaSortHijo(col: ColumnaConfig): 'ascending' | 'descending' | 'none' | null {
+    if (!this.esOrdenableHijo(col)) return null;
+    const o = this.ordenHijo();
+    if (o?.key !== col.key) return 'none';
+    return o.dir === 1 ? 'ascending' : 'descending';
+  }
+
+  iconoOrdenHijo(col: ColumnaConfig): string {
+    const o = this.ordenHijo();
+    if (o?.key !== col.key) return 'pi-sort-alt';
+    return o.dir === 1 ? 'pi-sort-amount-up-alt' : 'pi-sort-amount-down';
+  }
+
+  /** Hijos del nodo en el orden activo de la tabla anidada. */
+  private hijosOrdenados(nodo: NodoArbol): NodoArbol[] {
+    const o = this.ordenHijo();
+    if (!this.columnasHijo || !this.ordenableHijo || !o) return nodo.hijos;
+    const valor = this.valorOrdenHijo
+      ?? ((n: NodoArbol, key: string) => n.valores[key]);
+    return this.ordenarNivel(nodo.hijos, o, false, valor);
+  }
+
+  private ordenarNivel(
+    nodos: NodoArbol[],
+    o: OrdenArbol,
+    recursivo: boolean,
+    valor: (nodo: NodoArbol, key: string) => string | number | null | undefined
+      = (n, key) => this.valorParaOrden(n, key),
+  ): NodoArbol[] {
     const colator = new Intl.Collator('es', { numeric: true, sensitivity: 'base' });
     const ordenados = [...nodos].sort((a, b) => {
-      const va = this.valorParaOrden(a, o.key);
-      const vb = this.valorParaOrden(b, o.key);
+      const va = valor(a, o.key);
+      const vb = valor(b, o.key);
       // Los vacíos van al final en los dos sentidos: no son "menores" que nada.
       if (va === null || va === undefined || va === '') return vb === null || vb === undefined || vb === '' ? 0 : 1;
       if (vb === null || vb === undefined || vb === '') return -1;
@@ -570,10 +630,11 @@ export class TreeTableComponent implements OnInit {
   }
 
   filasVisiblesNodo(nodo: NodoArbol): NodoArbol[] {
-    if (!this.pageable) return nodo.hijos;
+    const hijos = this.hijosOrdenados(nodo);
+    if (!this.pageable) return hijos;
     const tamano = this.tamanoPaginaNodo(nodo);
     const pagina = this.paginaActualNodo(nodo);
-    return nodo.hijos.slice(pagina * tamano, (pagina + 1) * tamano);
+    return hijos.slice(pagina * tamano, (pagina + 1) * tamano);
   }
 
   totalPaginasNodo(nodo: NodoArbol): number {

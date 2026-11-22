@@ -616,6 +616,7 @@
             [total]="deficienciasEnvio.length"
             [ultimoProcesoId]="ultimoProcesoId"
             [resumen]="resumenDeficiencias"
+            (comentarioGuardado)="onComentarioGuardado($event)"
             />
         }
 
@@ -775,6 +776,18 @@
         Si el archivo contiene información de alguno de ellos, se reemplazará la
         información almacenada y no será posible recuperarla.
       </p>
+      <!-- HU-FOR-033, criterio 7: modificar un formulario con comentarios ya
+           diligenciados obliga a diligenciarlos de nuevo. Se advierte antes
+           de confirmar, no después. -->
+      @if (comentariosEnReimportacion; as c) {
+        <p class="form-import-zone__hint form-import-zone__hint--warn" role="alert">
+          <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+          <span>
+            {{ c.total }} {{ c.total === 1 ? 'comentario diligenciado' : 'comentarios diligenciados' }}
+            ({{ c.formularios }}) deberán diligenciarse nuevamente.
+          </span>
+        </p>
+      }
       <p class="form-import-zone__hint"><strong>¿Desea continuar?</strong></p>
     } @else {
       <!-- Demostración de la importación: el escenario decide si el contexto

@@ -605,6 +605,16 @@
     padding: var(--space-2) var(--space-3);
     border-bottom: 1px solid var(--chip-grey-200);
     white-space: nowrap;
+
+    /* Ordenable: el botón pone el padding (toda la cabecera es clicable) con
+       la medida compacta de esta cabecera, no la de la raíz. */
+    &.ttc-th--ordenable {
+      padding: 0;
+
+      .ttc-th__sort {
+        padding: var(--space-2) var(--space-3);
+      }
+    }
   }
 
   &__row {

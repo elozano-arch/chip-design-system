@@ -696,6 +696,17 @@
       font-size: 14px;
       margin-top: 2px;
     }
+
+    /* Consecuencia de confirmar (comentarios que se pierden): fondo de aviso
+       del Kit para que no pase como una nota más. */
+    &--warn {
+      padding: 8px 12px;
+      background: var(--chip-bg-corn-silk);
+      border-radius: var(--radius-sm);
+      color: var(--chip-grey-800);
+
+      i { color: var(--chip-grey-800); }
+    }
   }
 }
 

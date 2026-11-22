@@ -54,7 +54,10 @@ import {
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
 import { ProtocoloImportacionComponent } from './protocolo-importacion/protocolo-importacion.component';
 import { RegistroManualComponent } from './registro-manual/registro-manual.component';
-import { DeficienciasEnvioComponent } from './deficiencias-envio/deficiencias-envio.component';
+import {
+  DeficienciasEnvioComponent,
+  ComentarioGuardadoEvento,
+} from './deficiencias-envio/deficiencias-envio.component';
 import {
   DirectorioEntidadesComponent,
   Entidad,
@@ -313,11 +316,15 @@ export class FormulariosComponent implements OnDestroy {
    */
   validarFormularioActual() {
     if (!this.detalleAbierto) return;
+    if (this.validacionBloqueada([this.detalleAbierto])) return;
     const id = this.detalleAbierto.id;
     const nombre = this.detalleAbierto.nombre;
-    this._formulariosBase = this._formulariosBase.map(f =>
-      f.id === id ? { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId } : f,
-    );
+    this._formulariosBase = this._formulariosBase.map(f => {
+      if (f.id !== id) return f;
+      const validado = { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId };
+      this.registrarProceso(validado, 2, 'A');
+      return validado;
+    });
     // Al re-validar tras un rechazo, el resultado del envío anterior deja de aplicar.
     this.categoriaEnviada = false;
     this.messageService.add({
@@ -663,12 +670,115 @@ export class FormulariosComponent implements OnDestroy {
   /** Deficiencias del formulario abierto en el control de envío. */
   get deficienciasEnvio(): DeficienciaEnvio[] {
     const form = this.controlEnvioFormulario;
-    if (!form) return [];
+    return form ? this.expedienteDe(form) : [];
+  }
+
+  /**
+   * Expediente (filas) de un formulario. Se arma la primera vez y se conserva:
+   * los comentarios se guardan sobre estas filas, así que rehacerlas los
+   * borraría.
+   */
+  private expedienteDe(form: Formulario): DeficienciaEnvio[] {
     const existentes = this.deficienciasPorFormulario.get(form.id);
     if (existentes) return existentes;
     const filas = this.construirExpediente(form).flatMap(filasDeProceso);
     this.deficienciasPorFormulario.set(form.id, filas);
     return filas;
+  }
+
+  /**
+   * Procesos que el formulario generó en esta sesión del demo: cada validación
+   * (y cada modificación) crea uno nuevo (HU-FOR-033, criterio 6). Se suman al
+   * expediente mock; en producción los registra el backend.
+   */
+  private readonly procesosNuevos = new Map<number, ProcesoDetalle[]>();
+  /** Consecutivo de los procesos nuevos: siguen a los del mock (≤ 4832). */
+  private siguienteIdProceso = 4900;
+
+  /**
+   * Registra un proceso nuevo en el expediente del formulario. Si el
+   * expediente ya estaba armado, se le agregan las filas (sin rehacerlo, para
+   * no perder comentarios); el arreglo se reemplaza para que el árbol se
+   * reconstruya. Los procesos anteriores quedan en consulta: sólo el último
+   * admite comentario.
+   */
+  private registrarProceso(form: Formulario, etapa: EtapaId, estado: EstadoId): void {
+    const proceso: ProcesoDetalle = {
+      etapa,
+      idDetalleProceso: this.siguienteIdProceso++,
+      estado,
+      fechaProceso: this.ahoraProceso(),
+      usuarioProceso: this.sesion.usuario()?.correo?.split('@')[0] ?? 'usuario',
+      deficiencias: [],
+    };
+    this.procesosNuevos.set(form.id, [...(this.procesosNuevos.get(form.id) ?? []), proceso]);
+    const cache = this.deficienciasPorFormulario.get(form.id);
+    if (cache) {
+      this.deficienciasPorFormulario.set(form.id, [...cache, ...filasDeProceso(proceso)]);
+    }
+  }
+
+  /** dd/mm/aaaa hh:mm, el formato de fecha del expediente. */
+  private ahoraProceso(): string {
+    const f = new Date();
+    const dos = (n: number) => String(n).padStart(2, '0');
+    return `${dos(f.getDate())}/${dos(f.getMonth() + 1)}/${f.getFullYear()}`
+      + ` ${dos(f.getHours())}:${dos(f.getMinutes())}`;
+  }
+
+  /** Id del último proceso del formulario en la etapa en que se encuentra. */
+  private ultimoProcesoDe(form: Formulario): number {
+    const filas = this.expedienteDe(form);
+    const enEtapa = filas.filter(d => d.etapa === form.etapa);
+    return (enEtapa.length ? enEtapa : filas)
+      .reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
+  }
+
+  /**
+   * Deficiencias del último proceso que exigen comentario y siguen sin él.
+   * Sólo cuenta en Requiere comentario: en otro estado no hay nada pendiente.
+   */
+  comentariosPendientes(form: Formulario): number {
+    if (form.estado !== 'M') return 0;
+    const ultimo = this.ultimoProcesoDe(form);
+    return this.expedienteDe(form).filter(d =>
+      d.idDetalleProceso === ultimo && d.requiereComentario && !d.comentarioGuardado,
+    ).length;
+  }
+
+  /**
+   * Comentarios ya diligenciados en el último proceso. Son los que una
+   * modificación obliga a diligenciar de nuevo (criterio 7). Sólo mira
+   * expedientes ya armados: un comentario sólo se escribe desde el historial,
+   * que es el que arma el expediente.
+   */
+  comentariosDiligenciados(form: Formulario): number {
+    const filas = this.deficienciasPorFormulario.get(form.id);
+    if (!filas) return 0;
+    const ultimo = filas.reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
+    return filas.filter(d =>
+      d.idDetalleProceso === ultimo && d.requiereComentario && !!d.comentarioGuardado,
+    ).length;
+  }
+
+  /**
+   * Respuesta del "servicio" al guardar un comentario (HU-FOR-033, criterios
+   * 1, 3 y 4): si el proceso ya no tiene pendientes, pasa de Requiere
+   * comentario a Aceptado, sin ejecutar validaciones. La interfaz sólo refleja
+   * el resultado; aquí se simula lo que decide el backend.
+   */
+  onComentarioGuardado(evento: ComentarioGuardadoEvento): void {
+    const form = this.controlEnvioFormulario;
+    if (!form || evento.pendientes > 0) return;
+
+    // El proceso cierra: sus filas pasan a Aceptado y conservan sus comentarios.
+    this.expedienteDe(form)
+      .filter(d => d.idDetalleProceso === evento.idDetalleProceso)
+      .forEach(d => { d.estado = 'A'; });
+
+    const actualizado: Formulario = { ...form, estado: 'A' };
+    this._formulariosBase = this._formulariosBase.map(f => f.id === form.id ? actualizado : f);
+    this.controlEnvioFormulario = actualizado;
   }
 
   /**
@@ -689,6 +799,7 @@ export class FormulariosComponent implements OnDestroy {
     // pasó de ahí, y colgarle deficiencias de validación central sería mentir.
     if (this.tieneDeficiencias(form) && form.etapa >= 2) procesos.push(...this.procesosValidacion);
     if (tipo) procesos.push(this.importacionPorTipo[tipo]);
+    procesos.push(...(this.procesosNuevos.get(form.id) ?? []));
     return procesos.sort((a, b) => a.idDetalleProceso - b.idDetalleProceso);
   }
 
@@ -757,9 +868,13 @@ export class FormulariosComponent implements OnDestroy {
    */
   deficienciasVisibles: DeficienciaEnvio[] = [];
 
-  /** Id del detalle de proceso más reciente del formulario abierto (0 = ninguno). */
+  /**
+   * Último proceso de la etapa del formulario abierto (0 = ninguno). Es el
+   * único que admite comentario (HU-FOR-033, criterio 2).
+   */
   get ultimoProcesoId(): number {
-    return this.deficienciasEnvio.reduce((max, d) => Math.max(max, d.idDetalleProceso), 0);
+    const form = this.controlEnvioFormulario;
+    return form ? this.ultimoProcesoDe(form) : 0;
   }
 
 
@@ -1210,6 +1325,22 @@ export class FormulariosComponent implements OnDestroy {
   }
 
   /**
+   * Comentarios ya diligenciados en los formularios que la carga reemplazaría
+   * (HU-FOR-033, criterio 7). `null` si no hay ninguno: la advertencia de
+   * reemplazo se presenta sin esa línea.
+   */
+  get comentariosEnReimportacion(): { total: number; formularios: string } | null {
+    const con = this.formulariosAReimportar
+      .map(f => ({ f, n: this.comentariosDiligenciados(f) }))
+      .filter(x => x.n > 0);
+    if (con.length === 0) return null;
+    return {
+      total: con.reduce((s, x) => s + x.n, 0),
+      formularios: con.map(x => x.f.nombre).join(', '),
+    };
+  }
+
+  /**
    * Guarda el archivo elegido, sin verificarlo todavía: extensión, tamaño y
    * proceso en ejecución se revisan juntos al pulsar Importar, para presentar
    * todas las situaciones en un solo mensaje. El input se limpia para poder
@@ -1394,9 +1525,14 @@ export class FormulariosComponent implements OnDestroy {
     return lista.length > 0 && lista.every(f => this.esValidadoLocal(f));
   }
 
-  /** Validado localmente: etapa Validación local (2) + estado Aceptado (A). */
+  /**
+   * Listo para enviar: Aceptado (A) en Validación local (2) o en Validación
+   * central (3). El 3·A es el que cierra un proceso de Requiere comentario de
+   * la validación central al diligenciar el último comentario (HU-FOR-033,
+   * criterio 1): se envía sin volver a validar.
+   */
   private esValidadoLocal(form: Formulario): boolean {
-    return form.etapa === 2 && form.estado === 'A';
+    return (form.etapa === 2 || form.etapa === 3) && form.estado === 'A';
   }
 
   /** Enviado a validación central: etapa Envío (4) + estado Enviado (S). */
@@ -1756,15 +1892,47 @@ export class FormulariosComponent implements OnDestroy {
     this.activePanel = null;
   }
 
+  /**
+   * HU-FOR-033, criterio 5: en Requiere comentario no se ejecuta una
+   * validación nueva. Si algún formulario de la lista tiene comentarios
+   * pendientes, se informa cuántos y en cuáles, y devuelve true (bloqueada).
+   * Se consulta la versión vigente de cada formulario: la de la selección
+   * puede ser anterior a que cerrara su proceso.
+   */
+  private validacionBloqueada(forms: Formulario[]): boolean {
+    const vigentes = forms.map(s => this._formulariosBase.find(f => f.id === s.id) ?? s);
+    const conPendientes = vigentes
+      .map(f => ({ f, n: this.comentariosPendientes(f) }))
+      .filter(x => x.n > 0);
+    if (conPendientes.length === 0) return false;
+
+    const total = conPendientes.reduce((s, x) => s + x.n, 0);
+    const detalle = conPendientes.map(x => `${x.f.nombre} (${x.n})`).join(', ');
+    this.messageService.add({
+      severity: 'warn',
+      summary: 'La validación no se ejecutó',
+      detail: `${total} ${total === 1 ? 'comentario pendiente' : 'comentarios pendientes'}: ${detalle}. `
+        + 'Diligéncielos en Historial proceso.',
+      life: 7000,
+    });
+    return true;
+  }
+
   confirmValidation() {
+    if (this.validacionBloqueada(this.selectedFormularios)) return;
     const count = this.selectedFormularios.length;
     // Los seleccionados avanzan a etapa Validación local (2) / estado Aceptado (A).
     // Incluye los que están "Sin registro": si la categoría no exige archivo,
     // se validan igual y la entidad los presenta vacíos.
     const seleccionadosIds = new Set(this.selectedFormularios.map(f => f.id));
-    this._formulariosBase = this._formulariosBase.map(f =>
-      seleccionadosIds.has(f.id) ? { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId } : f,
-    );
+    this._formulariosBase = this._formulariosBase.map(f => {
+      if (!seleccionadosIds.has(f.id)) return f;
+      const validado = { ...f, etapa: 2 as EtapaId, estado: 'A' as EstadoId };
+      // Cada validación genera un proceso nuevo (criterio 6). Uno sin registro
+      // no tiene expediente previo: su primer proceso es éste.
+      this.registrarProceso(validado, 2, 'A');
+      return validado;
+    });
     this.selectedFormularios = [];
     this.activePanel = null;
     // Al re-validar tras un rechazo, el resultado del envío anterior deja de aplicar.
@@ -1866,6 +2034,7 @@ export class FormulariosComponent implements OnDestroy {
     this.cancelarAvanceProceso();
     this.deficienciasPorFormulario.clear();
     this.tipoDeficienciaPorFormulario.clear();
+    this.procesosNuevos.clear();
     const periodoLabel = this.selectedPeriodo || 'T1';
     const anioNum = this.selectedAnio ? +this.selectedAnio : 2024;
     const catCode = this.selectedCategoria || 'ICP';
