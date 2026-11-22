@@ -291,6 +291,26 @@
   padding: 0 4px;
 }
 
+/* Deshabilitado: gris atenuado, distinto del sólido y del borde, para que un
+   botón inactivo no se confunda con el estilo "masivo" (outlined). */
+:host ::ng-deep .lvr-actions .p-button:disabled {
+  opacity: 1;
+  background: var(--chip-grey-100);
+  border-color: var(--chip-grey-200);
+  color: var(--chip-grey-500);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ─── Mensajes del panel de filtros (sin categorías / faltantes) ─── */
+.lvr-filters-msg {
+  margin-bottom: 16px;
+
+  &--bottom {
+    margin: 16px 0 0;
+  }
+}
+
 /* ─── Ayuda al pie de la sección ─── */
 .lvr-help {
   display: flex;
