@@ -13,9 +13,11 @@ import { ChipModule } from 'primeng/chip';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
+import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 
 import { AppBreadcrumbComponent } from '../../../components/app-breadcrumb/app-breadcrumb.component';
+import { SesionService } from '../../../services/sesion.service';
 import {
   DirectorioEntidadesComponent,
   Entidad,
@@ -42,6 +44,26 @@ interface Mensaje {
 
 type Tipo = 'local' | 'central';
 
+/** Tipo de usuario CHIP: Central, Estratégico, Local, Analista. */
+type TipoUsuario = 'C' | 'E' | 'L' | 'A';
+
+/** Deriva el tipo de usuario del tipo de la entidad en sesión. */
+function tipoUsuarioDe(tipoEntidad: string | undefined): TipoUsuario {
+  const t = (tipoEntidad ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  switch (t) {
+    case 'central': return 'C';
+    case 'estrategico': return 'E';
+    case 'local': return 'L';
+    default: return 'A';
+  }
+}
+
+/** Sólo los usuarios Central y Estratégico tienen categorías habilitadas. */
+const TIPOS_USUARIO_CON_CATEGORIAS: readonly TipoUsuario[] = ['C', 'E'];
+
+/** Niveles de la cascada: limpiar uno limpia todo lo que depende de él. */
+type NivelFiltro = 'entidad' | 'categoria' | 'anio';
+
 @Component({
   selector: 'app-levantamiento-restricciones',
   standalone: true,
@@ -49,7 +71,7 @@ type Tipo = 'local' | 'central';
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, IconFieldModule, InputIconModule,
     SelectModule, ListboxModule, DialogModule, ChipModule, TooltipModule,
-    TagModule, ToastModule,
+    TagModule, ToastModule, MessageModule,
     AppBreadcrumbComponent, DirectorioEntidadesComponent,
   ],
   providers: [MessageService],
@@ -57,92 +79,217 @@ type Tipo = 'local' | 'central';
   styleUrl: './levantamiento-restricciones.component.scss',
 })
 export class LevantamientoRestriccionesComponent {
-  constructor(private messageService: MessageService) {}
+  constructor(
+    private messageService: MessageService,
+    private sesion: SesionService,
+  ) {}
 
   // ───────────────────────────────────────────────
   // Estado del panel de filtros
+  // Orden y cascada (HU-ET-022):
+  //   Entidad → Categoría → Año → Período → Tipo deficiencia
+  //   Categoría        depende de Entidad
+  //   Año              depende de Entidad + Categoría
+  //   Período          depende de Entidad + Categoría + Año
+  //   Tipo deficiencia depende sólo de Categoría
   // ───────────────────────────────────────────────
   filtersCollapsed = false;
 
-  filterTipo: Tipo | null = null;
   filterEntidad: Entidad | null = null;
-  filterAnio: string | null = null;
   filterCategoria: string | null = null;
+  filterAnio: string | null = null;
   filterPeriodo: string | null = null;
+  filterTipo: Tipo | null = null;
 
   /** Snapshot de filtros aplicados en la última consulta (para chips y resumen). */
   filtrosAplicados: {
-    tipo: Tipo;
     entidad: Entidad;
-    anio: string;
     categoria: Categoria;
+    anio: string;
     periodo: string;
+    tipo: Tipo;
   } | null = null;
 
   mostrarDirectorioEntidades = false;
 
-  readonly tipoOptions = [
-    { label: 'Local', value: 'local' as Tipo },
-    { label: 'Central', value: 'central' as Tipo },
-  ];
+  /** Se activa al pulsar "Aplicar filtros" con obligatorios vacíos. */
+  intentoAplicar = false;
 
-  readonly anioOptions = [
-    { label: '2024', value: '2024' },
-    { label: '2025', value: '2025' },
-    { label: '2026', value: '2026' },
-  ];
-
+  /** Mock: categorías configuradas, cada una con su periodicidad de reporte. */
   readonly categorias: Categoria[] = [
     { id: 'gob', nombre: 'Entidades de Gobierno', tipoPeriodo: 'trimestral' },
     { id: 'emp', nombre: 'Empresas Públicas', tipoPeriodo: 'trimestral' },
     { id: 'liq', nombre: 'Entidades en Liquidación', tipoPeriodo: 'semestral' },
     { id: 'uni', nombre: 'Entes Universitarios Autónomos', tipoPeriodo: 'mensual' },
+    { id: 'cgr', nombre: 'CGR Personal y Costos', tipoPeriodo: 'anual' },
   ];
 
-  readonly categoriaOptions = this.categorias.map(c => ({ label: c.nombre, value: c.id }));
+  private readonly TIPO_DEFICIENCIA_OPTIONS = [
+    { label: 'Local', value: 'local' as Tipo },
+    { label: 'Central', value: 'central' as Tipo },
+  ];
 
-  /** Períodos derivados del tipo de período de la categoría seleccionada. */
-  get periodoOptions(): OpcionPeriodo[] {
-    const cat = this.categorias.find(c => c.id === this.filterCategoria);
-    return cat ? periodosDe(cat.tipoPeriodo) : [];
+  // Opciones de los filtros dependientes: vacías hasta que su(s) padre(s) tengan valor.
+  categoriaOptions: { label: string; value: string }[] = [];
+  anioOptions: { label: string; value: string }[] = [];
+  periodoOptions: OpcionPeriodo[] = [];
+  tipoOptions: { label: string; value: Tipo }[] = [];
+
+  // ─── Perfil del usuario ───
+  get tipoUsuario(): TipoUsuario {
+    return tipoUsuarioDe(this.sesion.usuario()?.entidad.tipo);
   }
 
-  onCategoriaChange() {
-    // Si cambia la categoría, reset período (tipo de período distinto) y tipo
-    this.filterPeriodo = null;
-    this.filterTipo = null;
+  /** Categorías habilitadas para el usuario en sesión (sólo Central y Estratégico). */
+  get categoriasHabilitadas(): Categoria[] {
+    return TIPOS_USUARIO_CON_CATEGORIAS.includes(this.tipoUsuario) ? this.categorias : [];
   }
 
-  /** Tipo se habilita sólo cuando los demás filtros están completos (depende de ellos). */
+  get sinCategoriasHabilitadas(): boolean {
+    return this.categoriasHabilitadas.length === 0;
+  }
+
+  // ─── Habilitación por dependencias ───
+  get categoriaHabilitada(): boolean {
+    return !!this.filterEntidad;
+  }
+
+  get anioHabilitado(): boolean {
+    return !!(this.filterEntidad && this.filterCategoria);
+  }
+
+  get periodoHabilitado(): boolean {
+    return !!(this.filterEntidad && this.filterCategoria && this.filterAnio);
+  }
+
   get tipoHabilitado(): boolean {
-    return !!(this.filterEntidad && this.filterAnio
-      && this.filterCategoria && this.filterPeriodo);
+    return !!this.filterCategoria;
   }
 
-  /** Todos los filtros obligatorios completos. */
+  private get categoriaSeleccionada(): Categoria | undefined {
+    return this.categorias.find(c => c.id === this.filterCategoria);
+  }
+
+  /** Placeholder del período: indica la periodicidad de la categoría. */
+  get periodoPlaceholder(): string {
+    const cat = this.categoriaSeleccionada;
+    if (!this.periodoHabilitado || !cat) return 'Complete los filtros previos';
+    return `Seleccione el período (${cat.tipoPeriodo})`;
+  }
+
+  /**
+   * Limpia y deshabilita los filtros que dependen del nivel indicado.
+   * entidad → categoría, año, período, tipo
+   * categoría → año, período, tipo
+   * año → período
+   */
+  private limpiarDependientesDe(nivel: NivelFiltro) {
+    if (nivel === 'entidad') {
+      this.filterCategoria = null;
+      this.categoriaOptions = [];
+    }
+    if (nivel === 'entidad' || nivel === 'categoria') {
+      this.filterAnio = null;
+      this.anioOptions = [];
+      this.filterTipo = null;
+      this.tipoOptions = [];
+    }
+    this.filterPeriodo = null;
+    this.periodoOptions = [];
+  }
+
+  // ─── Carga de opciones (sólo con el padre diligenciado) ───
+  private cargarCategorias() {
+    if (!this.filterEntidad) return;
+    this.categoriaOptions = this.categoriasHabilitadas.map(c => ({ label: c.nombre, value: c.id }));
+  }
+
+  private cargarAnios() {
+    const cat = this.categoriaSeleccionada;
+    if (!this.filterEntidad || !cat) return;
+    // Mock: en producción los años vienen del backend según entidad + categoría.
+    // Los entes universitarios reportan en CHIP desde 2025.
+    const anios = cat.id === 'uni' ? ['2025', '2026'] : ['2024', '2025', '2026'];
+    this.anioOptions = anios.map(a => ({ label: a, value: a }));
+  }
+
+  private cargarPeriodos() {
+    const cat = this.categoriaSeleccionada;
+    if (!this.periodoHabilitado || !cat) return;
+    this.periodoOptions = periodosDe(cat.tipoPeriodo);
+  }
+
+  private cargarTiposDeficiencia() {
+    if (!this.filterCategoria) return;
+    this.tipoOptions = [...this.TIPO_DEFICIENCIA_OPTIONS];
+  }
+
+  // ─── Cambios en los filtros ───
+  onCategoriaChange() {
+    this.limpiarDependientesDe('categoria');
+    this.cargarAnios();
+    this.cargarTiposDeficiencia();
+  }
+
+  onAnioChange() {
+    this.limpiarDependientesDe('anio');
+    this.cargarPeriodos();
+  }
+
+  // ─── Validación ───
+  /** Obligatorios sin diligenciar, en el orden del panel. */
+  get filtrosFaltantes(): string[] {
+    const faltantes: string[] = [];
+    if (!this.filterEntidad) faltantes.push('Entidad');
+    if (!this.filterCategoria) faltantes.push('Categoría');
+    if (!this.filterAnio) faltantes.push('Año');
+    if (!this.filterPeriodo) faltantes.push('Período');
+    if (!this.filterTipo) faltantes.push('Tipo deficiencia');
+    return faltantes;
+  }
+
   get filtrosValidos(): boolean {
-    return !!(this.filterTipo && this.filterEntidad && this.filterAnio
-      && this.filterCategoria && this.filterPeriodo);
+    return this.filtrosFaltantes.length === 0;
+  }
+
+  get mostrarFaltantes(): boolean {
+    return this.intentoAplicar && !this.filtrosValidos;
+  }
+
+  /** "Entidad, Año y Período" */
+  get faltantesTexto(): string {
+    const f = this.filtrosFaltantes;
+    return f.length <= 1 ? f.join('') : `${f.slice(0, -1).join(', ')} y ${f[f.length - 1]}`;
+  }
+
+  campoInvalido(nombre: string): boolean {
+    return this.intentoAplicar && this.filtrosFaltantes.includes(nombre);
   }
 
   get activeFilterCount(): number {
-    return [this.filterTipo, this.filterEntidad, this.filterAnio,
-            this.filterCategoria, this.filterPeriodo].filter(v => !!v).length;
+    return [this.filterEntidad, this.filterCategoria, this.filterAnio,
+            this.filterPeriodo, this.filterTipo].filter(v => !!v).length;
   }
 
   // ───────────────────────────────────────────────
-  // Directorio de entidades
+  // Directorio de entidades (HU-ET-024)
+  // La entidad se elige siempre desde el modal; no hay carga automática.
   // ───────────────────────────────────────────────
   abrirDirectorioEntidades() {
+    if (this.sinCategoriasHabilitadas) return;
     this.mostrarDirectorioEntidades = true;
   }
 
   onEntidadSeleccionada(e: Entidad) {
+    if (this.filterEntidad?.codigo === e.codigo) return;
     this.filterEntidad = e;
+    this.limpiarDependientesDe('entidad');
+    this.cargarCategorias();
   }
 
   limpiarEntidad() {
     this.filterEntidad = null;
+    this.limpiarDependientesDe('entidad');
   }
 
   // ───────────────────────────────────────────────
@@ -151,14 +298,18 @@ export class LevantamientoRestriccionesComponent {
   busquedaRealizada = false;
 
   aplicarFiltros() {
-    if (!this.filtrosValidos) return;
-    const cat = this.categorias.find(c => c.id === this.filterCategoria)!;
+    if (!this.filtrosValidos) {
+      this.intentoAplicar = true;
+      return;
+    }
+    this.intentoAplicar = false;
+    const cat = this.categoriaSeleccionada!;
     this.filtrosAplicados = {
-      tipo: this.filterTipo!,
       entidad: this.filterEntidad!,
-      anio: this.filterAnio!,
       categoria: cat,
+      anio: this.filterAnio!,
       periodo: this.filterPeriodo!,
+      tipo: this.filterTipo!,
     };
     this.busquedaRealizada = true;
     this.filtersCollapsed = true;
@@ -174,11 +325,9 @@ export class LevantamientoRestriccionesComponent {
   }
 
   limpiarFiltros() {
-    this.filterTipo = null;
     this.filterEntidad = null;
-    this.filterAnio = null;
-    this.filterCategoria = null;
-    this.filterPeriodo = null;
+    this.limpiarDependientesDe('entidad');
+    this.intentoAplicar = false;
     this.filtrosAplicados = null;
     this.busquedaRealizada = false;
   }

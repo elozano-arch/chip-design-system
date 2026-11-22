@@ -28,8 +28,8 @@
         @if (filtersCollapsed && filtrosAplicados) {
           <span class="chip-filters__chips" aria-live="polite">
             <p-chip [label]="'Entidad: ' + resumenEntidad" />
-            <p-chip [label]="'Año: ' + filtrosAplicados.anio" />
             <p-chip [label]="'Categoría: ' + filtrosAplicados.categoria.nombre" />
+            <p-chip [label]="'Año: ' + filtrosAplicados.anio" />
             <p-chip [label]="'Período: ' + resumenPeriodoLabel" />
             <p-chip [label]="'Tipo deficiencia: ' + (filtrosAplicados.tipo === 'local' ? 'Local' : 'Central')" />
           </span>
@@ -42,19 +42,33 @@
     @if (!filtersCollapsed) {
       <div class="chip-filters__body" id="lvr-filters-body">
 
+        <!-- Usuario sin categorías habilitadas (p. ej. Local o Analista) -->
+        @if (sinCategoriasHabilitadas) {
+          <div class="lvr-filters-msg" role="status">
+            <p-message severity="info">
+              Su perfil no tiene categorías habilitadas. Esta funcionalidad aplica sólo a usuarios Central y Estratégico.
+            </p-message>
+          </div>
+        }
+
         <div class="chip-filters__fields chip-filters__fields--3col">
 
-          <!-- Entidad (obligatorio, abre el Directorio de Entidades) -->
+          <!-- 1. Entidad (obligatorio, abre el Directorio de Entidades HU-ET-024) -->
           <div class="chip-filters__field">
             <label for="lvr-f-entidad">Entidad <span class="field-required" aria-hidden="true">*</span></label>
             <p-iconField iconPosition="right" styleClass="w-full lvr-entidad-iconfield">
               <input pInputText id="lvr-f-entidad"
                 class="w-full lvr-entidad-trigger-input"
+                [class.ng-invalid]="campoInvalido('Entidad')"
+                [class.ng-dirty]="campoInvalido('Entidad')"
                 [value]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
                 readonly
-                placeholder="Seleccionar entidad"
+                [disabled]="sinCategoriasHabilitadas"
+                [placeholder]="sinCategoriasHabilitadas ? 'Sin categorías habilitadas' : 'Seleccionar entidad'"
                 role="combobox" aria-haspopup="dialog"
                 aria-required="true"
+                [attr.aria-invalid]="campoInvalido('Entidad') || null"
+                [attr.aria-describedby]="campoInvalido('Entidad') ? 'lvr-f-faltantes' : null"
                 [attr.aria-expanded]="mostrarDirectorioEntidades"
                 [attr.aria-label]="filterEntidad ? ('Entidad seleccionada: ' + filterEntidad.razonSocial + '. Clic para cambiar.') : 'Abrir Directorio de Entidades'"
                 [pTooltip]="filterEntidad ? (filterEntidad.codigo + ' - ' + filterEntidad.razonSocial) : ''"
@@ -77,46 +91,69 @@
             </p-iconField>
           </div>
 
-          <!-- Año (obligatorio) -->
-          <div class="chip-filters__field">
-            <label for="lvr-f-anio">Año <span class="field-required" aria-hidden="true">*</span></label>
-            <p-select inputId="lvr-f-anio"
-              [options]="anioOptions" optionLabel="label" optionValue="value"
-              [(ngModel)]="filterAnio" placeholder="Seleccione el año"
-              styleClass="w-full" aria-required="true" />
-          </div>
-
-          <!-- Categoría (obligatorio) -->
+          <!-- 2. Categoría (obligatorio, depende de Entidad) -->
           <div class="chip-filters__field">
             <label for="lvr-f-categoria">Categoría <span class="field-required" aria-hidden="true">*</span></label>
             <p-select inputId="lvr-f-categoria"
               [options]="categoriaOptions" optionLabel="label" optionValue="value"
               [(ngModel)]="filterCategoria" (onChange)="onCategoriaChange()"
-              placeholder="Seleccione una categoría"
+              [placeholder]="categoriaHabilitada ? 'Seleccione una categoría' : 'Seleccione una entidad primero'"
+              [disabled]="!categoriaHabilitada"
+              [showClear]="true"
+              [class.ng-invalid]="campoInvalido('Categoría')" [class.ng-dirty]="campoInvalido('Categoría')"
               styleClass="w-full" aria-required="true" />
           </div>
 
-          <!-- Período (obligatorio, depende de categoría) -->
+          <!-- 3. Año (obligatorio, depende de Entidad + Categoría) -->
+          <div class="chip-filters__field">
+            <label for="lvr-f-anio">Año <span class="field-required" aria-hidden="true">*</span></label>
+            <p-select inputId="lvr-f-anio"
+              [options]="anioOptions" optionLabel="label" optionValue="value"
+              [(ngModel)]="filterAnio" (onChange)="onAnioChange()"
+              [placeholder]="anioHabilitado ? 'Seleccione el año' : 'Complete los filtros previos'"
+              [disabled]="!anioHabilitado"
+              [showClear]="true"
+              [class.ng-invalid]="campoInvalido('Año')" [class.ng-dirty]="campoInvalido('Año')"
+              styleClass="w-full" aria-required="true" />
+          </div>
+
+          <!-- 4. Período (obligatorio, depende de Entidad + Categoría + Año;
+               opciones según la periodicidad de la categoría) -->
           <div class="chip-filters__field">
             <label for="lvr-f-periodo">Período <span class="field-required" aria-hidden="true">*</span></label>
             <p-select inputId="lvr-f-periodo"
               [options]="periodoOptions" optionLabel="label" optionValue="value"
               [(ngModel)]="filterPeriodo"
-              [placeholder]="filterCategoria ? 'Seleccione el período' : 'Seleccione una categoría primero'"
-              [disabled]="!filterCategoria"
+              [placeholder]="periodoPlaceholder"
+              [disabled]="!periodoHabilitado"
+              [showClear]="true"
+              [class.ng-invalid]="campoInvalido('Período')" [class.ng-dirty]="campoInvalido('Período')"
               styleClass="w-full" aria-required="true" />
           </div>
 
-          <!-- Tipo deficiencia (obligatorio, último porque depende de los demás) -->
+          <!-- 5. Tipo deficiencia (obligatorio, depende sólo de Categoría) -->
           <div class="chip-filters__field">
             <label for="lvr-f-tipo">Tipo deficiencia <span class="field-required" aria-hidden="true">*</span></label>
             <p-select inputId="lvr-f-tipo"
               [options]="tipoOptions" optionLabel="label" optionValue="value"
               [(ngModel)]="filterTipo"
-              [placeholder]="tipoHabilitado ? 'Seleccione el tipo de deficiencia' : 'Complete los filtros previos'"
+              [placeholder]="tipoHabilitado ? 'Seleccione el tipo de deficiencia' : 'Seleccione una categoría primero'"
               [disabled]="!tipoHabilitado"
+              [showClear]="true"
+              [class.ng-invalid]="campoInvalido('Tipo deficiencia')" [class.ng-dirty]="campoInvalido('Tipo deficiencia')"
               styleClass="w-full" aria-required="true" />
           </div>
+        </div>
+
+        <!-- Obligatorios faltantes al intentar aplicar -->
+        <div aria-live="polite">
+          @if (mostrarFaltantes) {
+            <div class="lvr-filters-msg lvr-filters-msg--bottom" id="lvr-f-faltantes">
+              <p-message severity="warn">
+                Para aplicar los filtros, complete: <strong>{{ faltantesTexto }}</strong>.
+              </p-message>
+            </div>
+          }
         </div>
 
         <div class="chip-filters__actions">
@@ -124,7 +161,7 @@
             [text]="true" severity="secondary"
             (onClick)="limpiarFiltros()" />
           <p-button label="Aplicar filtros" icon="pi pi-search"
-            [disabled]="!filtrosValidos"
+            [disabled]="sinCategoriasHabilitadas"
             (onClick)="aplicarFiltros()" />
         </div>
       </div>
@@ -214,7 +251,10 @@
           </p-listbox>
         </div>
 
-        <!-- Botones de transferencia (centro) -->
+        <!-- Botones de transferencia (centro)
+             Patrón: individual (> <) = sólido · masivo (>> <<) = borde.
+             Color por dirección: cobalto → Permisibles, rojo → No permisibles.
+             Deshabilitado = gris atenuado (ver .lvr-actions en el SCSS). -->
         <div class="lvr-actions" role="group" aria-label="Transferir mensajes entre listas">
           <p-button icon="pi pi-angle-right"
             [disabled]="selectedNoPermisibles.length === 0"
@@ -228,13 +268,13 @@
             pTooltip="Convertir todos a permisibles" tooltipPosition="left"
             ariaLabel="Convertir todos los mensajes a permisibles" />
           <p-button icon="pi pi-angle-left"
-            [outlined]="true" severity="danger"
+            severity="danger"
             [disabled]="selectedPermisibles.length === 0"
             (onClick)="moverSeleccionadosANoPermisibles()"
             pTooltip="Revertir seleccionados a no permisibles" tooltipPosition="left"
             ariaLabel="Revertir mensajes seleccionados a no permisibles" />
           <p-button icon="pi pi-angle-double-left"
-            severity="danger"
+            [outlined]="true" severity="danger"
             [disabled]="mensajesPermisibles.length === 0"
             (onClick)="confirmarTodosANoPermisibles()"
             pTooltip="Revertir todos a no permisibles" tooltipPosition="left"
